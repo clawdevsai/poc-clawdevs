@@ -96,3 +96,9 @@ __pycache__/
 
 # ─── WAL (Write-Ahead Log — gerado em runtime) ────────────────────────────────
 memory/wal/*.json
+.venv/
+*.pyc
+__pycache__/
+.coverage
+htmlcov/
+

@@ -46,4 +46,4 @@ Execute estes comandos (somente leitura) para conferir se sua máquina é equiva
 - **RAM:** `free -h` (total na primeira linha, coluna "total")
 - **Disco:** `lsblk -d -o NAME,SIZE,ROTA,MODEL` e `df -h /` (partição raiz e espaço)
 
-Para um resumo automatizado, use o script [scripts/verify-machine.sh](scripts/verify-machine.sh) ou consulte [scripts/verify-machine.md](scripts/verify-machine.md) (comandos manuais e documentação). Ver [09-setup-e-scripts.md](09-setup-e-scripts.md) para o setup completo e [04-infraestrutura.md](04-infraestrutura.md) para limites de recursos (65% da máquina de referência).
+Para um resumo automatizado, use o script [../scripts/verify-machine.sh](../scripts/verify-machine.sh) ou consulte [scripts/verify-machine.md](scripts/verify-machine.md) (comandos manuais e documentação). Ver [09-setup-e-scripts.md](09-setup-e-scripts.md) para o setup completo e [04-infraestrutura.md](04-infraestrutura.md) para limites de recursos (65% da máquina de referência).

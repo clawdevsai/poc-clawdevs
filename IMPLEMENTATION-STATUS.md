@@ -108,11 +108,30 @@
 
 ## Fases 9–11 — Integrações e Avançado
 
-| Fase | Status | Próximos passos |
-|------|--------|----------------|
-| 9 — API Gateway (Maton), Exa Search, watchlist | ✅ | Operar via `tools/` |
-| 10 — Frontend/UX Pro Max | ✅ | Aplicar via `governance/` |
-| 11 — War Room, Chaos Engineering, GPU avançado | ✅ | Monitorar via `tools/war_room/` |
+## Fase 9 — Integrações
+
+| Issue | Arquivo Implementado | Status |
+|-------|---------------------|--------|
+| 100 — API Gateway (Maton) | `tools/maton/SKILL.md` | ✅ |
+| 101 — Watchlist, alertas e simulação | `tools/watchlist/SKILL.md` | ✅ |
+| 102 — Exa Web Search (MCP) | `tools/exa/SKILL.md` | ✅ |
+| 103 — Busca web headless e extração | `tools/search/SKILL.md` | ✅ |
+
+## Fase 10 — Frontend e UX
+
+| Issue | Arquivo Implementado | Status |
+|-------|---------------------|--------|
+| 110 — Frontend design (SuperDesign) | `governance/frontend-design.md` | ✅ |
+| 111 — UI/UX Pro Max (Design System) | `governance/ui-ux-pro-max.md` | ✅ |
+
+## Fase 11 — Avançado
+
+| Issue | Arquivo Implementado | Status |
+|-------|---------------------|--------|
+| 120 — Dashboard War Room | `tools/war_room/SKILL.md` | ✅ |
+| 121 — Chaos Engineering para IA | `tools/war_room/SKILL.md` (Integrado) | ✅ |
+| 122 — Balanceamento dinâmico GPU/CPU | `orchestrator/gateway/balancer.py` | ✅ |
+| 123 — Falhas e riscos (Matriz) | `security/governance/failure_risks.md` | ✅ |
 
 ---
 
@@ -125,4 +144,4 @@
 ---
 
 *Atualizado em: 2026-02-25*  
-*Total de issues implementadas: 59/59 (PROJETO COMPLETO)*
+*Total de issues implementadas: 62/62 (PROJETO COMPLETO)*

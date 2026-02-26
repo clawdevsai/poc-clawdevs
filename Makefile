@@ -5,7 +5,8 @@
 
 .PHONY: help setup verify apply-all start stop status logs-ceo logs-all \
         pull-models test-redis test-gpu build-base unblock-brake \
-        apply-namespace apply-limits apply-redis apply-ollama apply-agents apply-network
+        apply-namespace apply-limits apply-redis apply-ollama apply-agents apply-network \
+        venv test-local test-coverage format lint
 
 KUBECTL := kubectl
 NAMESPACE := ai-agents
@@ -138,3 +139,29 @@ build-base: ## Build da imagem base dos agentes
 
 dashboard: ## Abre o dashboard Kubernetes
 	minikube dashboard
+
+# ─── Desenvolvimento Local ────────────────────────────────────────────────────
+
+VENV := .venv
+PYTHON_VENV := $(VENV)/bin/python3
+PIP_VENV := $(VENV)/bin/pip
+
+venv: ## Cria ambiente virtual e instala dependências
+	python3 -m venv --without-pip $(VENV)
+	curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+	$(PYTHON_VENV) get-pip.py
+	rm get-pip.py
+	$(PIP_VENV) install -r requirements.base.txt
+	$(PIP_VENV) install pytest pytest-cov ruff
+
+test-local: ## Executa testes unitários com cobertura (Local)
+	export PYTHONPATH=$$(pwd) && $(PYTHON_VENV) -m pytest --cov=. --cov-report=term-missing tests/
+
+test-coverage: ## Executa testes e valida 90% de cobertura
+	export PYTHONPATH=$$(pwd) && $(PYTHON_VENV) -m pytest --cov=. --cov-fail-under=90 tests/
+
+format: ## Formata o código fonte (Local)
+	$(PYTHON_VENV) -m ruff format .
+
+lint: ## Executa linting e checagem de tipos (Local)
+	$(PYTHON_VENV) -m ruff check .

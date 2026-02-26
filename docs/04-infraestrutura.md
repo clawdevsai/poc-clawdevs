@@ -2,7 +2,7 @@
 
 Infraestrutura do **ClawDevs**: ambiente alvo **Pop!_OS** (System76), com drivers NVIDIA e *container toolkit* integrados. O cluster Minikube do ClawDevs usa cerca de **65%** do hardware para manter o host estável.
 
-**Máquina de referência:** Os valores abaixo referem-se à máquina de referência documentada em [00-objetivo-e-maquina-referencia.md](00-objetivo-e-maquina-referencia.md). Use os comandos listados naquele documento (ou o script [scripts/verify-machine.sh](scripts/verify-machine.sh)) para conferir se sua máquina é equivalente.
+**Máquina de referência:** Os valores abaixo referem-se à máquina de referência documentada em [00-objetivo-e-maquina-referencia.md](00-objetivo-e-maquina-referencia.md). Use os comandos listados naquele documento (ou o script [../scripts/verify-machine.sh](../scripts/verify-machine.sh)) para conferir se sua máquina é equivalente.
 
 **Aviso técnico (performance local):** A inferência local com Ollama exige **gerenciamento explícito de hardware**. Sem reservar parte da capacidade para o sistema operacional, a máquina pode travar. Recomenda-se limitar o uso de memória e CPU do cluster a aproximadamente **65%** da capacidade total, deixando o restante para o SO e aplicações do host.
 

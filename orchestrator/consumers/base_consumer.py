@@ -24,6 +24,7 @@ logger = logging.getLogger("clawdevs.consumer")
 
 def _get_redis():
     import redis as redis_lib
+
     return redis_lib.Redis(
         host=os.getenv("REDIS_HOST", "redis-service"),
         port=int(os.getenv("REDIS_PORT", "6379")),
@@ -50,16 +51,22 @@ class BaseConsumer(ABC):
         consumer_name: Optional[str] = None,
     ):
         self.r = _get_redis()
-        self.stream_name = stream_name or os.getenv("REDIS_STREAM_INPUT", "task:backlog")
-        self.consumer_group = consumer_group or os.getenv("REDIS_CONSUMER_GROUP", f"cg-{self.AGENT_NAME.lower()}")
-        self.consumer_name = consumer_name or os.getenv("POD_NAME", f"{self.AGENT_NAME.lower()}-0")
+        self.stream_name = stream_name or os.getenv(
+            "REDIS_STREAM_INPUT", "task:backlog"
+        )
+        self.consumer_group = consumer_group or os.getenv(
+            "REDIS_CONSUMER_GROUP", f"cg-{self.AGENT_NAME.lower()}"
+        )
+        self.consumer_name = consumer_name or os.getenv(
+            "POD_NAME", f"{self.AGENT_NAME.lower()}-0"
+        )
         self.output_stream = os.getenv("REDIS_STREAM_OUTPUT", "")
         self._running = True
         self._ensure_group()
         self._register_signal_handlers()
 
     AGENT_NAME = "BaseAgent"
-    BLOCK_MS = 5000   # Aguardar 5s por eventos
+    BLOCK_MS = 5000  # Aguardar 5s por eventos
 
     def _ensure_group(self):
         """Cria o consumer group se não existir."""
@@ -103,9 +110,17 @@ class BaseConsumer(ABC):
                 "0-0",
                 count=5,
             )
-            messages = result[1] if isinstance(result, (list, tuple)) and len(result) > 1 else []
+            messages = (
+                result[1]
+                if isinstance(result, (list, tuple)) and len(result) > 1
+                else []
+            )
             if messages:
-                logger.info("[%s] Reclamando %d mensagens pendentes.", self.AGENT_NAME, len(messages))
+                logger.info(
+                    "[%s] Reclamando %d mensagens pendentes.",
+                    self.AGENT_NAME,
+                    len(messages),
+                )
                 return messages
         except Exception as e:
             logger.debug("XAUTOCLAIM não disponível ou erro: %s", e)
@@ -136,7 +151,9 @@ class BaseConsumer(ABC):
                         block=self.BLOCK_MS,
                     )
                     if result:
-                        messages = result[0][1]  # [(stream_name, [(msg_id, data), ...])]
+                        messages = result[0][
+                            1
+                        ]  # [(stream_name, [(msg_id, data), ...])]
                 except Exception as e:
                     logger.error("[%s] Erro ao ler stream: %s", self.AGENT_NAME, e)
                     time.sleep(5)
@@ -153,7 +170,9 @@ class BaseConsumer(ABC):
                     # ACK apenas APÓS conclusão bem-sucedida em disco
                     # (Semântica idempotente: Issue 005)
                     self.r.xack(self.stream_name, self.consumer_group, msg_id)
-                    logger.info("[%s] Evento %s confirmado (ACK).", self.AGENT_NAME, msg_id)
+                    logger.info(
+                        "[%s] Evento %s confirmado (ACK).", self.AGENT_NAME, msg_id
+                    )
                 except Exception as exc:
                     logger.error(
                         "[%s] Erro no processamento do evento %s: %s. "
@@ -175,21 +194,27 @@ class BaseConsumer(ABC):
     def publish(self, stream: str, data: dict) -> str:
         """Publica evento em outro stream."""
         msg_id = self.r.xadd(stream, data)
-        logger.debug("[%s] Evento publicado em '%s': %s", self.AGENT_NAME, stream, msg_id)
+        logger.debug(
+            "[%s] Evento publicado em '%s': %s", self.AGENT_NAME, stream, msg_id
+        )
         return msg_id
 
     def get_state(self, key: str) -> Optional[str]:
         """Lê estado do 'blackboard' global (Redis chaves)."""
         return self.r.get(key)
 
-    def set_state(self, key: str, value: str, ttl_seconds: Optional[int] = None) -> None:
+    def set_state(
+        self, key: str, value: str, ttl_seconds: Optional[int] = None
+    ) -> None:
         """Grava estado no blackboard. TTL automático para working buffer."""
         if ttl_seconds:
             self.r.setex(key, ttl_seconds, value)
         else:
             self.r.set(key, value)
 
-    def set_state_json(self, key: str, data: dict, ttl_seconds: Optional[int] = 86400) -> None:
+    def set_state_json(
+        self, key: str, data: dict, ttl_seconds: Optional[int] = 86400
+    ) -> None:
         """Grava estado JSON com TTL padrão de 24h (working buffer)."""
         self.set_state(key, json.dumps(data), ttl_seconds=ttl_seconds)
 

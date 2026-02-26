@@ -100,7 +100,9 @@ def main():
         description="ClawDevs — Transcreve áudio M4A para Markdown (offline, PT-BR)"
     )
     parser.add_argument("arquivo", help="Arquivo M4A de entrada")
-    parser.add_argument("-o", "--output", help="Arquivo MD de saída (padrão: mesmo nome do áudio)")
+    parser.add_argument(
+        "-o", "--output", help="Arquivo MD de saída (padrão: mesmo nome do áudio)"
+    )
     parser.add_argument(
         "-m",
         "--model",

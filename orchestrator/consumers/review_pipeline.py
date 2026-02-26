@@ -19,7 +19,6 @@ import os
 import time
 import logging
 import json
-from typing import Optional
 
 logger = logging.getLogger("clawdevs.review_pipeline")
 
@@ -37,12 +36,13 @@ class PreGPUValidator:
     def validate(self, diff_content: str, language: str = "python") -> dict:
         """Aplica validação leve em CPU. Retorna dict com resultado."""
         import requests
+
         prompt = (
             f"Você é um analisador estático leve. Analise o diff abaixo APENAS para:\n"
             f"1. Erros de sintaxe óbvios em {language}\n"
             f"2. Violações graves de SOLID (ex.: God Object, acoplamento direto entre camadas)\n"
             f"3. Imports de bibliotecas suspeitas ou não padrão\n\n"
-            f"Responda APENAS com JSON: {{\"valid\": true/false, \"issues\": [\"issue1\", ...]}}\n\n"
+            f'Responda APENAS com JSON: {{"valid": true/false, "issues": ["issue1", ...]}}\n\n'
             f"DIFF:\n{diff_content[:3000]}"  # Limitar para CPU
         )
         try:
@@ -55,11 +55,14 @@ class PreGPUValidator:
             response_text = resp.json().get("response", "{}")
             # Extrair JSON da resposta
             import re
+
             json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
         except Exception as e:
-            logger.warning("Validação pré-GPU falhou (%s). Deixando passar para GPU.", e)
+            logger.warning(
+                "Validação pré-GPU falhou (%s). Deixando passar para GPU.", e
+            )
         return {"valid": True, "issues": []}  # Fail open para não travar esteira
 
 
@@ -73,18 +76,23 @@ class BatchingBuffer:
 
     def __init__(self, r, max_batch_size: int = 5, max_wait_seconds: int = 120):
         self.r = r
-        self.batch_key = f"{self.BATCH_KEY_PREFIX}:{os.getenv('AGENT_NAMESPACE', 'default')}"
+        self.batch_key = (
+            f"{self.BATCH_KEY_PREFIX}:{os.getenv('AGENT_NAMESPACE', 'default')}"
+        )
         self.max_size = int(os.getenv("BATCH_MAX_SIZE", str(max_batch_size)))
         self.max_wait = int(os.getenv("BATCH_MAX_WAIT_SECONDS", str(max_wait_seconds)))
 
     def add(self, pr_id: str, diff_content: str) -> int:
         """Adiciona PR ao batch. Retorna tamanho atual do batch."""
         import time
-        entry = json.dumps({
-            "pr_id": pr_id,
-            "diff": diff_content,
-            "added_at": int(time.time()),
-        })
+
+        entry = json.dumps(
+            {
+                "pr_id": pr_id,
+                "diff": diff_content,
+                "added_at": int(time.time()),
+            }
+        )
         self.r.rpush(self.batch_key, entry)
         self.r.expire(self.batch_key, self.max_wait * 2)
         return self.r.llen(self.batch_key)
@@ -142,6 +150,7 @@ class ReviewPipeline:
 
     def _call_ollama(self, prompt: str, timeout: int = 60) -> str:
         import requests
+
         try:
             resp = requests.post(
                 f"{self.ollama_url}/api/generate",
@@ -169,19 +178,32 @@ class ReviewPipeline:
         if not pre_result.get("valid", True):
             results["pre_gpu_failed"] = True
             results["pre_gpu_issues"] = pre_result.get("issues", [])
-            logger.warning("[ReviewPipeline] PR %s rejeitado na pré-GPU: %s", pr_id, pre_result["issues"])
+            logger.warning(
+                "[ReviewPipeline] PR %s rejeitado na pré-GPU: %s",
+                pr_id,
+                pre_result["issues"],
+            )
             self._publish_result(results, approved=False)
             return results
 
         # PASSO 2-4: Adquirir GPU Lock e executar revisores em sequência
         event_key = f"issue:{issue_id}"
-        logger.info("[ReviewPipeline] PR %s — adquirindo GPU Lock (event_key=%s)...", pr_id, event_key)
+        logger.info(
+            "[ReviewPipeline] PR %s — adquirindo GPU Lock (event_key=%s)...",
+            pr_id,
+            event_key,
+        )
 
         with self.GPULock(event_key=event_key):
-            logger.info("[ReviewPipeline] PR %s — GPU Lock adquirido. Iniciando revisores.", pr_id)
+            logger.info(
+                "[ReviewPipeline] PR %s — GPU Lock adquirido. Iniciando revisores.",
+                pr_id,
+            )
 
             # Architect
-            results["reviews"]["architect"] = self._run_architect(pr_id, diff_content, issue_id)
+            results["reviews"]["architect"] = self._run_architect(
+                pr_id, diff_content, issue_id
+            )
 
             # QA (apenas se Architect aprovado)
             if results["reviews"]["architect"].get("approved"):
@@ -210,7 +232,7 @@ class ReviewPipeline:
         prompt = (
             f"Você é o Agente Architect do ClawDevs. Revise APENAS o diff abaixo.\n"
             f"Critérios: arquitetura limpa, padrões SOLID, sem over-engineering.\n"
-            f"Responda em JSON: {{\"approved\": true/false, \"comments\": [\"...\"]}}\n\n"
+            f'Responda em JSON: {{"approved": true/false, "comments": ["..."]}}\n\n'
             f"DIFF DO PR {pr_id}:\n{diff[:5000]}"
         )
         response = self._call_ollama(prompt, timeout=90)
@@ -223,7 +245,7 @@ class ReviewPipeline:
             f"1. Testes unitários adequados\n"
             f"2. Edge cases cobertos\n"
             f"3. Sem regressões óbvias\n"
-            f"Responda em JSON: {{\"approved\": true/false, \"comments\": [\"...\"]}}\n\n"
+            f'Responda em JSON: {{"approved": true/false, "comments": ["..."]}}\n\n'
             f"DIFF:\n{diff[:5000]}"
         )
         response = self._call_ollama(prompt, timeout=60)
@@ -235,18 +257,21 @@ class ReviewPipeline:
             f"Você é o Agente CyberSec do ClawDevs (OWASP, Zero Trust).\n"
             f"Verifique: injeções, chaves expostas, dependências suspeitas, SSRF, path traversal.\n"
             f"IMPORTANTE: Se encontrar vulnerabilidade crítica, marcar approved=false com tag 'cybersec'.\n"
-            f"Responda em JSON: {{\"approved\": true/false, \"critical\": false, \"tag\": \"cybersec\", \"comments\": [\"...\"]}}\n\n"
+            f'Responda em JSON: {{"approved": true/false, "critical": false, "tag": "cybersec", "comments": ["..."]}}\n\n'
             f"DIFF:\n{diff[:5000]}"
         )
         response = self._call_ollama(prompt, timeout=60)
         return self._parse_review_response(response)
 
     def _run_dba(self, pr_id: str, diff: str) -> dict:
-        logger.info("[ReviewPipeline] DBA revisando PR %s (mudanças de banco detectadas)...", pr_id)
+        logger.info(
+            "[ReviewPipeline] DBA revisando PR %s (mudanças de banco detectadas)...",
+            pr_id,
+        )
         prompt = (
             f"Você é o Agente DBA do ClawDevs. Revise apenas as mudanças de banco de dados:\n"
             f"migrations, schema, queries, índices. Foco em performance e normalização.\n"
-            f"Responda em JSON: {{\"approved\": true/false, \"comments\": [\"...\"]}}\n\n"
+            f'Responda em JSON: {{"approved": true/false, "comments": ["..."]}}\n\n'
             f"DIFF:\n{diff[:3000]}"
         )
         response = self._call_ollama(prompt, timeout=60)
@@ -254,6 +279,7 @@ class ReviewPipeline:
 
     def _parse_review_response(self, response: str) -> dict:
         import re
+
         try:
             json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
@@ -263,10 +289,13 @@ class ReviewPipeline:
         return {"approved": False, "comments": ["Erro ao parsear resposta do agente."]}
 
     def _publish_result(self, results: dict, approved: bool):
-        self.r.xadd(self.RESULT_STREAM, {
-            "pr_id": results.get("pr_id", ""),
-            "issue_id": results.get("issue_id", ""),
-            "approved": "true" if approved else "false",
-            "results_json": json.dumps(results),
-            "timestamp": str(int(time.time())),
-        })
+        self.r.xadd(
+            self.RESULT_STREAM,
+            {
+                "pr_id": results.get("pr_id", ""),
+                "issue_id": results.get("issue_id", ""),
+                "approved": "true" if approved else "false",
+                "results_json": json.dumps(results),
+                "timestamp": str(int(time.time())),
+            },
+        )

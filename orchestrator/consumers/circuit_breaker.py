@@ -19,12 +19,12 @@ import logging
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
+import redis as r_lib
 
 logger = logging.getLogger("clawdevs.circuit_breaker")
 
 
 def _get_redis():
-    import redis as r_lib
     return r_lib.Redis(
         host=os.getenv("REDIS_HOST", "redis-service"),
         port=int(os.getenv("REDIS_PORT", "6379")),
@@ -65,11 +65,16 @@ class DraftRejectedCircuitBreaker:
 
         # Registrar histórico
         history_key = f"{key}:history"
-        self.r.rpush(history_key, json.dumps({
-            "rejection": rejection_reason,
-            "count": count,
-            "timestamp": datetime.now().isoformat(),
-        }))
+        self.r.rpush(
+            history_key,
+            json.dumps(
+                {
+                    "rejection": rejection_reason,
+                    "count": count,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
+        )
         self.r.expire(history_key, 86400 * 7)
 
         state = {
@@ -83,7 +88,9 @@ class DraftRejectedCircuitBreaker:
             logger.warning(
                 "CIRCUIT BREAKER aberto para épico '%s': %d rejeições consecutivas (limite: %d). "
                 "Congelando tarefa e acionando RAG health check.",
-                epic_id, count, self.CIRCUIT_BREAKER_LIMIT,
+                epic_id,
+                count,
+                self.CIRCUIT_BREAKER_LIMIT,
             )
             self._freeze_epic(epic_id)
             state["circuit_open"] = True
@@ -92,7 +99,8 @@ class DraftRejectedCircuitBreaker:
         if count >= self.ESCALATION_LIMIT:
             logger.critical(
                 "ESCALAÇÃO: Épico '%s' atingiu %d rejeições. Escalando ao CEO/Diretor.",
-                epic_id, count
+                epic_id,
+                count,
             )
             self._escalate_to_director(epic_id, rejection_reason)
             state["escalated"] = True
@@ -101,7 +109,10 @@ class DraftRejectedCircuitBreaker:
 
     def _escalate_to_director(self, epic_id: str, reason: str) -> None:
         """Gera relatório de degradação e escala ao Diretor/CEO."""
-        report_path = Path(f"/home/luke/Workspace/clawdevs-1/memory/cold/DEGRADATION-{epic_id}.md")
+        # Fallback para diretório local se não estiver no container
+        default_memory = Path(__file__).resolve().parent.parent.parent / "memory"
+        memory_base = Path(os.getenv("MEMORY_BASE_DIR", default_memory))
+        report_path = memory_base / "cold" / f"DEGRADATION-{epic_id}.md"
         report_content = f"""# Relatório de Degradação — Épico {epic_id}
 Data: {datetime.now().isoformat()}
 
@@ -121,22 +132,28 @@ A tarefa atingiu o limite de escalação ({self.ESCALATION_LIMIT} rejeições).
 """
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(report_content)
-        
-        self.r.xadd("ceo:emergency", {
-            "epic_id": epic_id,
-            "action": "director_escalation",
-            "report": str(report_path),
-            "timestamp": str(int(time.time())),
-        })
+
+        self.r.xadd(
+            "ceo:emergency",
+            {
+                "epic_id": epic_id,
+                "action": "director_escalation",
+                "report": str(report_path),
+                "timestamp": str(int(time.time())),
+            },
+        )
 
     def _freeze_epic(self, epic_id: str) -> None:
         self.r.set(self._frozen_key(epic_id), "1")
         # Publicar evento para RAG health check e notificação
-        self.r.xadd("circuit_breaker:frozen_epics", {
-            "epic_id": epic_id,
-            "timestamp": str(int(time.time())),
-            "action": "freeze",
-        })
+        self.r.xadd(
+            "circuit_breaker:frozen_epics",
+            {
+                "epic_id": epic_id,
+                "timestamp": str(int(time.time())),
+                "action": "freeze",
+            },
+        )
 
     def record_approval(self, epic_id: str) -> None:
         """Reseta o contador quando draft é aprovado."""
@@ -148,11 +165,14 @@ A tarefa atingiu o limite de escalação ({self.ESCALATION_LIMIT} rejeições).
         self.r.delete(self._frozen_key(epic_id))
         self.r.delete(self._rejection_key(epic_id))
         # Publicar contexto saneado para PO
-        self.r.xadd("po:sanitized_context", {
-            "epic_id": epic_id,
-            "context": sanitized_context,
-            "timestamp": str(int(time.time())),
-        })
+        self.r.xadd(
+            "po:sanitized_context",
+            {
+                "epic_id": epic_id,
+                "context": sanitized_context,
+                "timestamp": str(int(time.time())),
+            },
+        )
         logger.info("Épico '%s' descongelado com contexto saneado.", epic_id)
 
 
@@ -166,13 +186,17 @@ class RAGHealthCheck:
     Objetivo: sanear o contexto antes de descongelar o épico.
     """
 
-    def __init__(self, docs_dir: Optional[Path] = None, workspace_dir: Optional[Path] = None):
+    def __init__(
+        self, docs_dir: Optional[Path] = None, workspace_dir: Optional[Path] = None
+    ):
         self.docs_dir = docs_dir or Path(os.getenv("DOCS_DIR", "/app/docs"))
-        self.workspace_dir = workspace_dir or Path(os.getenv("WORKSPACE_DIR", "/workspace"))
+        self.workspace_dir = workspace_dir or Path(
+            os.getenv("WORKSPACE_DIR", "/workspace")
+        )
 
     def run(self, epic_id: str) -> dict:
         """Executa health check determinístico. Retorna contexto saneado."""
-        results = {
+        results: dict = {
             "epic_id": epic_id,
             "timestamp": datetime.now().isoformat(),
             "checks": {},
@@ -195,7 +219,8 @@ class RAGHealthCheck:
 
         logger.info(
             "RAG Health Check para épico '%s' concluído. Issues: %d",
-            epic_id, len(results["issues_found"]),
+            epic_id,
+            len(results["issues_found"]),
         )
         return results
 
@@ -203,9 +228,13 @@ class RAGHealthCheck:
         """Verifica se a documentação está indexada com base nos commits mais recentes."""
         try:
             import subprocess
+
             result = subprocess.run(
                 ["git", "log", "--oneline", "-5", "--format=%H %ai %s", "--", "docs/"],
-                capture_output=True, text=True, timeout=10, cwd=str(self.workspace_dir),
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=str(self.workspace_dir),
             )
             recent_commits = result.stdout.strip()
             return {
@@ -228,7 +257,9 @@ class RAGHealthCheck:
             "missing_dirs": missing,
         }
 
-    def _build_sanitized_context(self, epic_id: str, freshness: dict, structure: dict) -> str:
+    def _build_sanitized_context(
+        self, epic_id: str, freshness: dict, structure: dict
+    ) -> str:
         """Constrói contexto saneado para o PO retentar o rascunho."""
         context_lines = [
             f"# Contexto Saneado para Épico: {epic_id}",
@@ -239,13 +270,17 @@ class RAGHealthCheck:
             f"- Estrutura do workspace: {structure.get('status', 'desconhecido')}",
         ]
         if structure.get("missing_dirs"):
-            context_lines.append(f"- Pastas ausentes: {', '.join(structure['missing_dirs'])}")
-        context_lines.extend([
-            "",
-            "## Orientação para novo rascunho",
-            "- Verificar se a tarefa está alinhada ao estado atual da base de código",
-            "- Consultar microADRs relevantes antes de redigir o rascunho",
-            "- Evitar assumir funcionalidades que ainda não foram implementadas",
-            "- Referenciar Issues existentes e status no backlog",
-        ])
+            context_lines.append(
+                f"- Pastas ausentes: {', '.join(structure['missing_dirs'])}"
+            )
+        context_lines.extend(
+            [
+                "",
+                "## Orientação para novo rascunho",
+                "- Verificar se a tarefa está alinhada ao estado atual da base de código",
+                "- Consultar microADRs relevantes antes de redigir o rascunho",
+                "- Evitar assumir funcionalidades que ainda não foram implementadas",
+                "- Referenciar Issues existentes e status no backlog",
+            ]
+        )
         return "\n".join(context_lines)

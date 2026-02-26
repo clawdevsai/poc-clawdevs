@@ -43,7 +43,9 @@ def _compute_ttl(r, event_key: Optional[str]) -> int:
         logger.debug("GPU Lock TTL calculado: %ds (payload=%d linhas)", ttl, line_count)
         return ttl
     except Exception as exc:
-        logger.warning("Erro ao calcular TTL dinâmico: %s — usando padrão %ds", exc, default_ttl)
+        logger.warning(
+            "Erro ao calcular TTL dinâmico: %s — usando padrão %ds", exc, default_ttl
+        )
         return default_ttl
 
 

@@ -5,7 +5,7 @@ Sandbox efêmero para dependências e código de terceiros.
 Implementa:
   1. Sandbox isolado (container efêmero) para npm/pip com restrições seccomp/eBPF
   2. Matriz de confiança (assinaturas criptográficas vs registro oficial)
-  3. SAST leve (semgrep) 
+  3. SAST leve (semgrep)
   4. Analisador de entropia contextual (whitelist .map/.wasm/.min.js)
   5. Zonas de confiança de autores (Google, Vercel, Microsoft)
   6. Quarentena de disco + análise determinística de diff
@@ -17,12 +17,10 @@ Referências:
   docs/05-seguranca-e-etica.md
 """
 
-import os
 import math
 import json
 import logging
 import subprocess
-import hashlib
 from pathlib import Path
 from typing import Optional
 
@@ -63,11 +61,14 @@ def _compute_entropy(data: bytes) -> float:
     for byte in data:
         freq[byte] = freq.get(byte, 0) + 1
     length = len(data)
-    entropy = -sum((count / length) * math.log2(count / length) for count in freq.values())
+    entropy = -sum(
+        (count / length) * math.log2(count / length) for count in freq.values()
+    )
     return entropy
 
 
 # ─── Matriz de Confiança (Assinaturas) (Issue 128) ──────────────────────────
+
 
 class TrustMatrix:
     """Verifica assinaturas criptográficas de pacotes contra o registro oficial.
@@ -85,15 +86,24 @@ class TrustMatrix:
         try:
             result = subprocess.run(
                 ["npm", "view", f"{package}@{version}", "dist.integrity", "--json"],
-                capture_output=True, text=True, timeout=30
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             integrity = result.stdout.strip().strip('"')
             verified = bool(integrity and integrity.startswith("sha512-"))
             self.verified_cache[cache_key] = verified
-            logger.debug("npm %s@%s assinatura: %s", package, version, "OK" if verified else "FALHOU")
+            logger.debug(
+                "npm %s@%s assinatura: %s",
+                package,
+                version,
+                "OK" if verified else "FALHOU",
+            )
             return verified
         except Exception as e:
-            logger.warning("Não foi possível verificar assinatura npm %s: %s", package, e)
+            logger.warning(
+                "Não foi possível verificar assinatura npm %s: %s", package, e
+            )
             return False
 
     def verify_pypi_package(self, package: str, version: str) -> bool:
@@ -103,6 +113,7 @@ class TrustMatrix:
             return self.verified_cache[cache_key]
         try:
             import urllib.request
+
             url = f"https://pypi.org/pypi/{package}/{version}/json"
             with urllib.request.urlopen(url, timeout=10) as resp:
                 data = json.loads(resp.read())
@@ -111,16 +122,25 @@ class TrustMatrix:
             self.verified_cache[cache_key] = verified
             return verified
         except Exception as e:
-            logger.warning("Não foi possível verificar assinatura PyPI %s: %s", package, e)
+            logger.warning(
+                "Não foi possível verificar assinatura PyPI %s: %s", package, e
+            )
             return False
 
     def is_trusted_publisher(self, package_name: str) -> bool:
         """Verifica se o pacote pertence a um publicador confiável da matriz."""
         name_lower = package_name.lower()
-        return any(name_lower.startswith(pub) or f"/{pub}" in name_lower for pub in TRUSTED_PUBLISHERS)
+        return any(
+            name_lower.startswith(pub)
+            or name_lower.startswith(f"@{pub}/")
+            or f"/{pub}" in name_lower
+            or f"@{pub}" == name_lower
+            for pub in TRUSTED_PUBLISHERS
+        )
 
 
 # ─── Analisador de Entropia Contextual (Issue 128) ──────────────────────────
+
 
 class EntropyAnalyzer:
     """Analisa entropia de arquivos com consciência de contexto.
@@ -130,8 +150,15 @@ class EntropyAnalyzer:
 
     def analyze_file(self, file_path: Path) -> dict:
         """Analisa entropia de um arquivo. Retorna dict com resultado."""
-        ext = file_path.suffix.lower()
-        is_minified = ext in HIGH_ENTROPY_ALLOWED_EXTENSIONS
+        name_lower = file_path.name.lower()
+        # Encontrar a extensão mais longa que bate (ex: .min.js sobre .js)
+        matched_ext = ""
+        for ext in HIGH_ENTROPY_ALLOWED_EXTENSIONS:
+            if name_lower.endswith(ext.lower()):
+                if len(ext) > len(matched_ext):
+                    matched_ext = ext
+
+        is_minified = bool(matched_ext)
         threshold = ENTROPY_THRESHOLD_MINIFIED if is_minified else ENTROPY_THRESHOLD
 
         try:
@@ -154,11 +181,17 @@ class EntropyAnalyzer:
             logger.warning(
                 "Entropia %s em arquivo tolerado (%s): %.2f > %.2f. "
                 "Opção de análise dinâmica pelo CyberSec.",
-                file_path.name, ext, entropy, threshold,
+                file_path.name,
+                matched_ext,
+                entropy,
+                threshold,
             )
         elif suspicious:
             logger.warning(
-                "Entropia suspeita em %s: %.2f > %.2f.", file_path.name, entropy, threshold
+                "Entropia suspeita em %s: %.2f > %.2f.",
+                file_path.name,
+                entropy,
+                threshold,
             )
 
         return result
@@ -174,6 +207,7 @@ class EntropyAnalyzer:
 
 # ─── SAST Leve (semgrep) (Issue 128) ────────────────────────────────────────
 
+
 class SASTScanner:
     """Análise estática leve com semgrep/regras estritas.
     Foca em: injeção de rede, eval() oculto, shell indesejado.
@@ -186,6 +220,7 @@ class SASTScanner:
 
         # Salvar diff em arquivo temporário para análise
         import tempfile
+
         with tempfile.NamedTemporaryFile(
             suffix=".diff", mode="w", delete=False, encoding="utf-8"
         ) as f:
@@ -196,12 +231,16 @@ class SASTScanner:
             # Tentar com semgrep se disponível
             result = subprocess.run(
                 [
-                    "semgrep", "--config=auto",
-                    "--json", "--no-autofix",
+                    "semgrep",
+                    "--config=auto",
+                    "--json",
+                    "--no-autofix",
                     "--timeout=30",
                     tmp_path,
                 ],
-                capture_output=True, text=True, timeout=60
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode in (0, 1):
                 try:
@@ -215,7 +254,9 @@ class SASTScanner:
                 except json.JSONDecodeError:
                     pass
         except FileNotFoundError:
-            logger.debug("semgrep não encontrado. Usando verificação manual de padrões.")
+            logger.debug(
+                "semgrep não encontrado. Usando verificação manual de padrões."
+            )
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
@@ -225,6 +266,7 @@ class SASTScanner:
     def _manual_pattern_check(self, content: str) -> dict:
         """Verificação manual de padrões críticos sem dependência de semgrep."""
         import re
+
         DANGEROUS_PATTERNS = [
             (r"eval\s*\(", "eval() detectado"),
             (r"exec\s*\(", "exec() detectado"),
@@ -249,6 +291,7 @@ class SASTScanner:
 
 
 # ─── Pipeline de Quarentena Completo ────────────────────────────────────────
+
 
 class QuarantinePipeline:
     """Pipeline completo de quarentena para dependências e código de terceiros.
@@ -283,7 +326,11 @@ class QuarantinePipeline:
             result["trusted_publisher"] = True
             result["approved"] = True
             result["action"] = "install_auto"
-            logger.info("Pacote %s@%s de publicador confiável. Instalação automática.", package, version)
+            logger.info(
+                "Pacote %s@%s de publicador confiável. Instalação automática.",
+                package,
+                version,
+            )
             return result
 
         # Verificação de assinatura
@@ -294,7 +341,9 @@ class QuarantinePipeline:
         result["checks"]["signature"] = sig_ok
 
         if not sig_ok:
-            result["checks"]["signature_note"] = "Assinatura não verificada — aplicar entropia restritiva"
+            result["checks"]["signature_note"] = (
+                "Assinatura não verificada — aplicar entropia restritiva"
+            )
 
         # Resultado
         if sig_ok:
@@ -306,7 +355,9 @@ class QuarantinePipeline:
             result["requires_human_review"] = True
             result["action"] = "notify_director_async"
             logger.warning(
-                "Pacote %s@%s sem assinatura verificada. Notificação assíncrona ao Diretor.", package, version
+                "Pacote %s@%s sem assinatura verificada. Notificação assíncrona ao Diretor.",
+                package,
+                version,
             )
 
         return result
@@ -325,7 +376,9 @@ class QuarantinePipeline:
         sast_result = self.sast.scan_diff(diff_content)
         result["checks"]["sast"] = sast_result
         if not sast_result["clean"]:
-            result["checks"]["sast_note"] = f"SAST: {len(sast_result['issues'])} issues encontradas"
+            result["checks"]["sast_note"] = (
+                f"SAST: {len(sast_result['issues'])} issues encontradas"
+            )
             logger.warning("[Quarentena] PR %s: SAST encontrou issues.", pr_id)
             result["approved"] = False
             return result
