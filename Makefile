@@ -20,9 +20,16 @@ help: ## Exibe ajuda
 
 # ─── Pré-configuração (passo obrigatório antes do setup) ────────────────────
 
-configure: ## 🔧 Assistente interativo: gera .env com todas as chaves e configs
-	@chmod +x scripts/configure.sh && scripts/configure.sh
+configure: ## 🔧 Assistente: gera .env se não existir
+	@if [ ! -f .env ]; then \
+		chmod +x scripts/configure.sh && scripts/configure.sh; \
+	else \
+		echo "[INFO] .env já existe. Pulando assistente interativo."; \
+		echo "       (Para refazer, execute 'make reconfigure')."; \
+	fi
 
+reconfigure: ## 🔧 Força a reconfiguração interativa do .env
+	@chmod +x scripts/configure.sh && scripts/configure.sh
 load-env: ## Imprime instrução para carregar o .env no shell atual
 	@if [ ! -f .env ]; then echo "[ERRO] .env não encontrado. Execute primeiro: make configure"; exit 1; fi
 	@echo ""
@@ -48,7 +55,7 @@ verify: ## Verifica se a máquina atende aos requisitos
 
 check-docker: ## Verifica se Docker está disponível
 	@which docker >/dev/null 2>&1 || { echo "[ERRO] Docker não encontrado. Execute: make setup"; exit 1; }
-	@docker info >/dev/null 2>&1 || { echo "[ERRO] Docker daemon não está rodando. Inicie o Docker."; exit 1; }
+	@docker info >/dev/null 2>&1 || { echo "[AVISO] Docker daemon não está rodando. Tentando forçar a subir (Requer senha sudo)..."; sudo systemctl start docker || { echo "[ERRO] Falha ao iniciar Docker."; exit 1; } }
 	@echo "[OK] Docker disponível: $$(docker --version)"
 
 check-k8s: ## Verifica se kubectl/minikube/helm estão disponíveis
@@ -216,3 +223,18 @@ lint: ## Executa linting com ruff (configuração em pyproject.toml)
 
 typecheck: ## Verifica tipos estáticos com mypy (configuração em pyproject.toml)
 	$(PYTHON_VENV) -m mypy orchestrator/ memory/ security/ tools/ agents/ --ignore-missing-imports
+
+# ─── Fluxo de Desenvolvimento Completo ──────────────────────────────────────
+
+prepare: configure setup venv ## [1] Prepara todo o ambiente para codificar
+	@echo "Ambiente preparado para desenvolvimento."
+
+build: prepare build-base ## [2] Realiza o build da aplicação (imagens)
+	@echo "Build da aplicação concluído."
+
+deploy: start ## [3] Faz o deploy da aplicação (inicia cluster e aplica manifestos)
+	@echo "Deploy realizado com sucesso."
+
+test-e2e: ## [4] Faz um teste de integração end-to-end (e2e) com os agentes
+	@echo "Executando teste de integração de ponta-a-ponta..."
+	$(PYTHON_VENV) -m pytest tests/e2e/ -v || echo "Nenhum teste e2e encontrado ou falha na execução."

@@ -57,6 +57,16 @@ check_os
 # ─── Coleta de chaves ────────────────────────────────────────────────────────
 collect_keys() {
   info "Coletando chaves de API..."
+  
+  # Carrega variáveis do .env se existir para não perguntar novamente
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ -f "$SCRIPT_DIR/../.env" ]]; then
+    set -a; source "$SCRIPT_DIR/../.env" 2>/dev/null || true; set +a
+  elif [[ -f "./.env" ]]; then
+    set -a; source "./.env" 2>/dev/null || true; set +a
+  fi
+
   while [[ -z "${GOOGLE_API_KEY:-}" ]]; do
     read -rp "Google AI Key (Gemini) [obrigatório]: " GOOGLE_API_KEY
   done
@@ -177,11 +187,7 @@ install_helm() {
     return
   fi
   info "Instalando Helm..."
-  curl https://baltocdn.com/helm/signing.asc | sudo gpg --dearmor -o /usr/share/keyrings/helm.gpg
-  sudo apt-get install apt-transport-https --yes
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-  sudo apt-get update -qq
-  sudo apt-get install -y -qq helm
+  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
   ok "Helm instalado."
 }
 install_helm
