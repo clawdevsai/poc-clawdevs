@@ -41,6 +41,7 @@ class DraftRejectedCircuitBreaker:
     """
 
     CIRCUIT_BREAKER_LIMIT = int(os.getenv("DRAFT_REJECTED_CIRCUIT_BREAKER_LIMIT", "3"))
+    ESCALATION_LIMIT = int(os.getenv("DRAFT_REJECTED_ESCALATION_LIMIT", "5"))
     KEY_PREFIX = "circuit_breaker:draft_rejected"
     FROZEN_KEY_PREFIX = "circuit_breaker:frozen"
 
@@ -88,7 +89,45 @@ class DraftRejectedCircuitBreaker:
             state["circuit_open"] = True
             state["action"] = "freeze_and_rag_health_check"
 
+        if count >= self.ESCALATION_LIMIT:
+            logger.critical(
+                "ESCALAÇÃO: Épico '%s' atingiu %d rejeições. Escalando ao CEO/Diretor.",
+                epic_id, count
+            )
+            self._escalate_to_director(epic_id, rejection_reason)
+            state["escalated"] = True
+
         return state
+
+    def _escalate_to_director(self, epic_id: str, reason: str) -> None:
+        """Gera relatório de degradação e escala ao Diretor/CEO."""
+        report_path = Path(f"/home/luke/Workspace/clawdevs-1/memory/cold/DEGRADATION-{epic_id}.md")
+        report_content = f"""# Relatório de Degradação — Épico {epic_id}
+Data: {datetime.now().isoformat()}
+
+## Alerta: Excesso de Rejeições de Rascunho
+A tarefa atingiu o limite de escalação ({self.ESCALATION_LIMIT} rejeições).
+
+### Última Razão de Rejeição:
+> {reason}
+
+### Ações Recomendadas ao Diretor:
+1. Revisar o escopo da Épico em `docs/backlog/`.
+2. Verificar se a documentação em `docs/` está desatualizada (RAG stale).
+3. Ajustar os critérios de aceite se forem impossíveis de implementar.
+
+### Comando para Desbloquear após revisão:
+`./scripts/unblock-degradation.sh`
+"""
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(report_content)
+        
+        self.r.xadd("ceo:emergency", {
+            "epic_id": epic_id,
+            "action": "director_escalation",
+            "report": str(report_path),
+            "timestamp": str(int(time.time())),
+        })
 
     def _freeze_epic(self, epic_id: str) -> None:
         self.r.set(self._frozen_key(epic_id), "1")

@@ -22,6 +22,7 @@ import logging
 import threading
 from typing import Optional
 from dataclasses import dataclass, field
+from orchestrator.gateway.balancer import DynamicBalancer
 
 logger = logging.getLogger("clawdevs.gateway")
 
@@ -386,6 +387,7 @@ class Gateway:
         self.truncator = ContextTruncator()
         self.degradation_budget = DegradationBudget(self.r)
         self.watchdog = HeadblessClusterWatchdog(self.r)
+        self.balancer = DynamicBalancer(self.r)
 
     def start(self):
         self.watchdog.start()
@@ -430,8 +432,14 @@ class Gateway:
             if was_truncated:
                 event["context_truncated"] = True
 
-        # 5. Roteamento (nuvem vs local baseado em eficiência)
-        event["model"] = self.efficiency.get_model_for_ceo()
+        # 5. Roteamento Inteligente (Nuvem vs GPU vs CPU)
+        agent_role = event.get("agent_role", "CEO")
+        priority = event.get("priority", 1)
+        tier = self.balancer.decide_placement(agent_role, priority)
+        event["tier"] = tier
+        event["model"] = self.balancer.get_model_for_tier(tier, agent_role)
+        
+        logger.info("Evento %s roteado para TIER=%s MODEL=%s", event_id, tier, event["model"])
 
         return event
 
