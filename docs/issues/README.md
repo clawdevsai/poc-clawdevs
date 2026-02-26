@@ -104,4 +104,4 @@ As issues estão ordenadas **do zero ao avançado**, por fases. Cada arquivo `.m
 | 128 | 128-sast-entropia-quarentena.md | **SAST (semgrep)** e **entropia contextual** no pipeline de quarentena (assinaturas, whitelist extensões, CyberSec dinâmico) |
 | 129 | 129-ceo-vfm-fitness-no-raciocinio.md | **CEO:** fitness de custo-benefício no raciocínio (VFM_CEO_score, descarte interno se negativo antes do Gateway) |
 
-**Total:** 62 issues para o projeto **team-devs-ai**.
+**Total:** 59 issues para o projeto **team-devs-ai**.

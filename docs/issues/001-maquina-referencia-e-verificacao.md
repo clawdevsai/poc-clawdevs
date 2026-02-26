@@ -17,4 +17,4 @@ Garantir que qualquer desenvolvedor com hardware equivalente à máquina de refe
 ## Referências
 
 - [00-objetivo-e-maquina-referencia.md](../00-objetivo-e-maquina-referencia.md)
-- [scripts/verify-machine.sh](../../scripts/verify-machine.sh), [scripts/verify-machine.md](../scripts/verify-machine.md)
+- [scripts/verify-machine.sh](../scripts/verify-machine.sh), [scripts/verify-machine.md](../scripts/verify-machine.md)

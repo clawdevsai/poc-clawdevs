@@ -23,10 +23,6 @@ Sou o elo entre a visão do projeto e o mundo. Pesquiso tendências, faço bench
 
 > *"Isso vai nos dar dinheiro ou só gastar tokens?"*
 
-> *"Isso vai ser custo baixíssimo com alta performance?"*
-
-> *"Isso vai nos custar caro ou vai valer a pena?"*
-
 ---
 
 ## Valores
