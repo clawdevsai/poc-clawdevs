@@ -36,8 +36,8 @@ prepare:
 	@minikube addons enable nvidia-device-plugin 2>/dev/null || true
 	@echo "==> prepare concluído. Use 'make up' para aplicar os recursos no cluster."
 
-# 2. up: inicia Minikube (se necessário) e aplica todos os recursos
-up:
+# 2. up: build da imagem OpenClaw, inicia Minikube (se necessário) e aplica todos os recursos
+up: openclaw-image
 	@echo "==> Verificando Minikube..."
 	@if ! minikube status >/dev/null 2>&1; then \
 		echo "==> Iniciando Minikube: minikube start --driver=docker --addons=nvidia-device-plugin --cpus=$(MINIKUBE_CPUS) --memory=$(MINIKUBE_MEMORY)"; \
@@ -75,7 +75,6 @@ up:
 		echo "==> Secret Telegram não encontrado (opcional). Crie k8s/openclaw/secret.yaml ou: kubectl create secret generic openclaw-telegram -n ai-agents --from-literal=TELEGRAM_BOT_TOKEN=... --from-literal=TELEGRAM_CHAT_ID=..."; \
 	fi
 	@echo "==> up concluído."
-	@echo "  OpenClaw no K8s: o pod usa a imagem openclaw-gateway:local. Se ainda não buildou: make openclaw-image"
 	@echo "  Envie mensagem ao ClawDev bot no Telegram; a resposta vem do Ollama no cluster."
 	@echo "  Ollama: puxe o modelo do CEO se necessário: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest"
 
@@ -83,7 +82,7 @@ up:
 openclaw-image:
 	@echo "==> Build da imagem openclaw-gateway:local no Docker do Minikube..."
 	eval $$(minikube docker-env) && docker build -f $(K8S_DIR)/openclaw/Dockerfile -t openclaw-gateway:local $(K8S_DIR)/openclaw
-	@echo "==> openclaw-image concluído. Rode make up para aplicar."
+	@echo "==> openclaw-image concluído."
 
 # Verificação de hardware (máquina de referência + consumo GPU/CPU/RAM + Quest 65%) e cluster (Minikube + Ollama GPU)
 verify:
