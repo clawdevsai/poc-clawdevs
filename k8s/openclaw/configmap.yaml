@@ -1,0 +1,109 @@
+# Configuração OpenClaw (sem credenciais). Token e Chat ID vêm do Secret.
+# openclaw.json = config JSON5 usada pelo gateway no pod (Telegram + Ollama no cluster).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-config
+  namespace: ai-agents
+data:
+  openclaw.json: |
+    {
+      "gateway": { "mode": "local", "port": 18789, "bind": "lan", "controlUi": { "dangerouslyAllowHostHeaderOriginFallback": true } },
+      "channels": {
+        "telegram": {
+          "enabled": true,
+          "dmPolicy": "allowlist",
+          "allowFrom": ["__TELEGRAM_CHAT_ID__"],
+          "groups": {}
+        }
+      },
+      "models": {
+        "mode": "merge",
+        "providers": {
+          "ollama": {
+            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434/v1",
+            "apiKey": "ollama-local",
+            "api": "openai-completions",
+            "models": [
+              { "id": "phi3:mini", "name": "Phi3 Mini", "contextWindow": 16000, "maxTokens": 2048 },
+              { "id": "ministral-3:3b", "name": "Ministral 3 3B", "contextWindow": 32000, "maxTokens": 4096 }
+            ]
+          }
+        }
+      },
+      "agents": {
+        "defaults": { "model": "ollama/ministral-3:3b" },
+        "list": [
+          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b" }
+        ]
+      }
+    }
+  config.yaml: |
+    # Ollama no cluster. ministral-3:3b suporta tools (gratuito).
+    models:
+      providers:
+        ollama:
+          baseURL: "http://ollama-service.ai-agents.svc.cluster.local:11434"
+          models:
+            - id: "ollama/phi3:mini"
+              label: "Phi3 Mini (local)"
+            - id: "ollama/ministral-3:3b"
+              label: "Ministral 3 3B (local, com tools)"
+
+    agents:
+      defaults:
+        model: "ollama/ministral-3:3b"
+        subagents:
+          maxSpawnDepth: 2
+          maxChildrenPerAgent: 5
+          maxConcurrent: 4
+          runTimeoutSeconds: 600
+          model: "ollama/ministral-3:3b"
+
+      list:
+        - id: ceo
+          name: "CEO"
+          description: "Estratégia e interface com o Diretor. Único agente que recebe Telegram."
+          model: "ollama/ministral-3:3b"
+          # Canal Telegram roteia para este agente
+        - id: po
+          name: "Product Owner"
+          description: "Backlog e priorização. Sub-agent do CEO."
+          model: "ollama/ministral-3:3b"
+        - id: devops
+          name: "DevOps/SRE"
+          description: "IaC, CI/CD, FinOps. Sub-agent."
+          model: "ollama/ministral-3:3b"
+        - id: architect
+          name: "Architect"
+          description: "Governança técnica, code review. Sub-agent."
+          model: "ollama/ministral-3:3b"
+        - id: developer
+          name: "Developer"
+          description: "Implementação. Sub-agent."
+          model: "ollama/ministral-3:3b"
+        - id: qa
+          name: "QA"
+          description: "Testes e qualidade. Sub-agent."
+          model: "ollama/ministral-3:3b"
+        - id: cybersec
+          name: "CyberSec"
+          description: "Segurança. Sub-agent."
+          model: "ollama/ministral-3:3b"
+        - id: ux
+          name: "UX"
+          description: "Experiência do usuário. Sub-agent."
+          model: "ollama/ministral-3:3b"
+        - id: dba
+          name: "DBA"
+          description: "Dados e queries. Sub-agent."
+          model: "ollama/ministral-3:3b"
+
+    # Canal Telegram. Token via env TELEGRAM_BOT_TOKEN (Secret).
+    # dmPolicy: pairing = primeiro DM gera código; use "openclaw pairing approve telegram <CODE>"
+    # Para allowlist fixo: dmPolicy: allowlist e allowFrom: [ "SEU_ID_NUMERICO" ]
+    channels:
+      telegram:
+        enabled: true
+        dmPolicy: "pairing"
+        groups: {}

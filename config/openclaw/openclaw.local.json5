@@ -1,0 +1,40 @@
+{
+  // Config para rodar OpenClaw no host: Telegram (ClawDev bot) + Ollama no cluster via port-forward 11434.
+  // Uso: scripts/run-openclaw-telegram-ollama.sh (faz port-forward e inicia o gateway)
+  gateway: {
+    mode: "local",
+    port: 18789,
+    bind: "loopback",
+  },
+  channels: {
+    telegram: {
+      enabled: true,
+      // Token: TELEGRAM_BOT_TOKEN no ambiente ou .env
+      dmPolicy: "allowlist",
+      // allowFrom: IDs numéricos do Telegram que podem falar com o bot (ex.: Diretor). Preencher ou usar pairing.
+      allowFrom: [],
+      groups: {},
+    },
+  },
+  models: {
+    mode: "merge",
+    providers: {
+      ollama: {
+        baseUrl: "http://127.0.0.1:11434/v1",
+        api: "openai-completions",
+        models: [
+          { id: "phi3:mini", name: "Phi3 Mini (Ollama local)", contextWindow: 4096, maxTokens: 2048 },
+          { id: "qwen2.5:3b", name: "Qwen 2.5 3B (Ollama local)", contextWindow: 4096, maxTokens: 2048 },
+        ],
+      },
+    },
+  },
+  agents: {
+    defaults: {
+      model: "ollama/phi3:mini",
+    },
+    list: [
+      { id: "ceo", name: "CEO", description: "Interface com o Diretor. Responde no Telegram.", model: "ollama/phi3:mini" },
+    ],
+  },
+}
