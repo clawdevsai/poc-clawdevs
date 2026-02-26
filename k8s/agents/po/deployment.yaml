@@ -28,12 +28,11 @@ spec:
         project: clawdevs
         agent-type: cloud
     spec:
-      nodeSelector:
-        workload-type: cpu
       serviceAccountName: agent-readonly-sa
       containers:
         - name: agent-po
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:

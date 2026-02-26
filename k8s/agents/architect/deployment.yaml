@@ -39,6 +39,7 @@ spec:
       containers:
         - name: agent-architect
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:

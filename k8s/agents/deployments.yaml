@@ -41,6 +41,7 @@ spec:
       containers:
         - name: agent-ceo
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:
@@ -123,6 +124,7 @@ spec:
       containers:
         - name: agent-po
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:
@@ -279,6 +281,7 @@ spec:
       containers:
         - name: agent-architect
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:
@@ -438,6 +441,7 @@ spec:
       containers:
         - name: agent-qa
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:
@@ -588,6 +592,7 @@ spec:
       containers:
         - name: agent-ux
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:
@@ -654,6 +659,7 @@ spec:
       containers:
         - name: agent-dba
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:

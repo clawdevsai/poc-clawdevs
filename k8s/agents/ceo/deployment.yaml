@@ -27,12 +27,11 @@ spec:
         project: clawdevs
         agent-type: cloud
     spec:
-      nodeSelector:
-        workload-type: cpu    # CEO usa API em nuvem; não precisa de GPU local
       serviceAccountName: agent-readonly-sa  # Zero Trust: conta mínima necessária
       containers:
         - name: agent-ceo
           image: clawdevs/agent-base:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
               valueFrom:
