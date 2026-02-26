@@ -85,9 +85,9 @@ TOTAL_CPUS=$(nproc)
 TOTAL_RAM_GB=$(free -g | awk '$1 ~ /^Mem/ {print $2}')
 GPU_VRAM_MB=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' || echo "0")
 
-MK_CPUS=$(( TOTAL_CPUS * 65 / 100 ))
-MK_RAM_MB=$(( TOTAL_RAM_GB * 1024 * 65 / 100 )) # Convert GB to MB for Minikube
-MK_VRAM_MB=$(( GPU_VRAM_MB * 65 / 100 ))
+MK_CPUS=${MK_CPUS:-$(( TOTAL_CPUS * 65 / 100 ))}
+MK_RAM_MB=${MK_RAM_MB:-$(( TOTAL_RAM_GB * 1024 * 65 / 100 ))} # Convert GB to MB for Minikube
+MK_VRAM_MB=${MK_VRAM_MB:-$(( GPU_VRAM_MB * 65 / 100 ))}
 
 [[ "$MK_CPUS" -lt 2 ]] && MK_CPUS=2
 [[ "$MK_RAM_MB" -lt 4096 ]] && MK_RAM_MB=4096
@@ -315,53 +315,53 @@ channels:
 providers:
   google:
     api_key: "${GOOGLE_API_KEY}"
-    model: "gemini-1.5-pro"
+    model: "${GOOGLE_MODEL_CEO:-gemini-1.5-pro}"
   ollama:
     base_url: "http://localhost:11434"
-    default_model: "llama3:8b"
+    default_model: "${OLLAMA_MODEL_DEVELOPER:-llama3:8b}"
 
 storage:
   redis:
-    host: "redis-master.ai-agents.svc.cluster.local"
-    port: 6379
-    db: 0
+    host: "${REDIS_HOST:-redis-master.ai-agents.svc.cluster.local}"
+    port: ${REDIS_PORT:-6379}
+    db: ${REDIS_DB:-0}
 
 agents:
   ceo:
     provider: google
-    model: "gemini-1.5-pro"
-    max_tokens: 4096
+    model: "${GOOGLE_MODEL_CEO:-gemini-1.5-pro}"
+    max_tokens: ${GOOGLE_MAX_TOKENS_CEO:-4096}
   po:
     provider: google
-    model: "gemini-1.5-flash"
-    max_tokens: 4096
+    model: "${GOOGLE_MODEL_PO:-gemini-1.5-flash}"
+    max_tokens: ${GOOGLE_MAX_TOKENS_PO:-4096}
   developer:
     provider: ollama
-    model: "deepseek-coder:6.7b"
+    model: "${OLLAMA_MODEL_DEVELOPER:-deepseek-coder:6.7b}"
     max_tokens: 8192
   architect:
     provider: ollama
-    model: "llama3:8b"
+    model: "${OLLAMA_MODEL_ARCHITECT:-llama3:8b}"
     max_tokens: 4096
   qa:
     provider: ollama
-    model: "llama3:8b"
+    model: "${OLLAMA_MODEL_QA:-llama3:8b}"
     max_tokens: 4096
   cybersec:
     provider: ollama
-    model: "mistral:7b"
+    model: "${OLLAMA_MODEL_CYBERSEC:-mistral:7b}"
     max_tokens: 4096
   ux:
     provider: ollama
-    model: "phi3:mini"
+    model: "${OLLAMA_MODEL_UX:-phi3:mini}"
     max_tokens: 2048
   devops:
     provider: ollama
-    model: "phi3:mini"
+    model: "${OLLAMA_MODEL_DEVOPS:-phi3:mini}"
     max_tokens: 2048
   dba:
     provider: ollama
-    model: "llama3:8b"
+    model: "${OLLAMA_MODEL_DBA:-llama3:8b}"
     max_tokens: 4096
 YAML
   ok "config.yaml gerado."

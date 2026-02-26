@@ -51,7 +51,7 @@ spec:
               value: "2"
             # Limite de VRAM (patcheado via scripts/setup.sh para 65% do host)
             - name: OLLAMA_MAX_VRAM
-              value: "7168"
+              value: "5120"
           resources:
             requests:
               memory: "4Gi"
