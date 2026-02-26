@@ -35,7 +35,6 @@ spec:
           operator: "Exists"
           effect: "NoSchedule"
       # Aumentado para 600s para suportar inferências longas (PRs, logs extensos)
-      activeDeadlineSeconds: 600
       containers:
         - name: ollama
           image: ollama/ollama:latest

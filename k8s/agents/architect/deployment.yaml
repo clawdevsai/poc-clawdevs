@@ -35,7 +35,6 @@ spec:
           operator: "Exists"
           effect: "NoSchedule"
       # Hard timeout: Architect pode demorar em PRs grandes (TTL dinâmico 120s)
-      activeDeadlineSeconds: 150
       serviceAccountName: agent-readonly-sa
       containers:
         - name: agent-architect

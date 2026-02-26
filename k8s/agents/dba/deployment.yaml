@@ -34,7 +34,6 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
-      activeDeadlineSeconds: 120
       serviceAccountName: agent-readonly-sa
       containers:
         - name: agent-dba

@@ -35,7 +35,6 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
-      activeDeadlineSeconds: 180
       serviceAccountName: agent-developer-sa
       containers:
         - name: agent-developer

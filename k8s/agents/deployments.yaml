@@ -275,7 +275,6 @@ spec:
           operator: "Exists"
           effect: "NoSchedule"
       # Hard timeout: Architect pode demorar em PRs grandes (TTL dinâmico 120s)
-      activeDeadlineSeconds: 150
       serviceAccountName: agent-readonly-sa
       containers:
         - name: agent-architect
@@ -353,7 +352,6 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
-      activeDeadlineSeconds: 180
       serviceAccountName: agent-developer-sa
       containers:
         - name: agent-developer
@@ -436,7 +434,6 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
-      activeDeadlineSeconds: 120
       serviceAccountName: agent-readonly-sa
       containers:
         - name: agent-qa
@@ -514,7 +511,6 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
-      activeDeadlineSeconds: 120
       serviceAccountName: agent-readonly-sa
       containers:
         - name: agent-cybersec
@@ -654,7 +650,6 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
-      activeDeadlineSeconds: 120
       serviceAccountName: agent-readonly-sa
       containers:
         - name: agent-dba
