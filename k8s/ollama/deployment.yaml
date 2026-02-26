@@ -1,4 +1,4 @@
-# Ollama para inferência local (CPU por padrão; descomente nvidia.com/gpu se o cluster tiver GPU).
+# Ollama para inferência local com GPU (nvidia-device-plugin no Minikube).
 # Serviço: ollama-service:11434 — OpenClaw usa OLLAMA_HOST=http://ollama-service.ai-agents.svc.cluster.local:11434
 apiVersion: apps/v1
 kind: Deployment
@@ -25,16 +25,15 @@ spec:
           env:
             - name: OLLAMA_KEEP_ALIVE
               value: "5m"
-          # GPU: se o cluster tiver nvidia-device-plugin e GPU, descomente as linhas nvidia.com/gpu abaixo
           resources:
             requests:
               memory: "2Gi"
               cpu: "500m"
-              # nvidia.com/gpu: "1"
+              nvidia.com/gpu: "1"
             limits:
               memory: "6Gi"
               cpu: "2"
-              # nvidia.com/gpu: "1"
+              nvidia.com/gpu: "1"
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
