@@ -4,7 +4,7 @@ Entrega mínima: **Diretor fala com o CEO no Telegram**; CEO usa **um único mod
 
 ## Pré-requisitos
 
-- Minikube (ou cluster K8s) com **NVIDIA GPU** disponível para o pod Ollama.
+- **GPU:** Host com driver NVIDIA instalado; Docker com acesso à GPU; Minikube iniciado **com suporte a GPU** (ex.: `minikube start --driver=docker --addons=nvidia-device-plugin ...` — ver `make prepare` / `make up`). Se o Ollama rodar em CPU, verifique: (1) addon ativo: `minikube addons list | grep nvidia`; (2) pod com GPU alocada: `kubectl describe pod -n ai-agents -l app=ollama` e confira em Limits/Requests se `nvidia.com/gpu: 1` aparece e se não há eventos de falha de scheduling. O deployment define `CUDA_VISIBLE_DEVICES=0` para forçar uso da GPU no container.
 - `kubectl` configurado.
 - **Telegram Bot Token**: criar em [@BotFather](https://t.me/BotFather) com `/newbot`.  
   **Importante:** Nunca commitar o token. Se foi exposto em chat, **revogue no BotFather** (`/revoke`) e crie outro.
@@ -67,12 +67,20 @@ A imagem padrão no deployment é um placeholder (`node:22-bookworm-slim` com `s
 Altere `k8s/openclaw/deployment.yaml` e use a imagem que executa `openclaw gateway`, com entrypoint apontando para `/config/config.yaml`.
 
 **Opção B — Rodar OpenClaw no host (teste rápido):**  
-Use a config do ConfigMap localmente e aponte `OLLAMA_HOST` para o serviço no cluster (port-forward):
+Use o script `scripts/run-openclaw-telegram-ollama.sh`, que faz port-forward do Ollama e inicia o gateway com a config `config/openclaw/openclaw.local.json5`. **Para o bot responder no perfil CEO** (tom executivo, pt-BR, SOUL), essa config define `agents.defaults.workspace: "config/openclaw/workspace-ceo"`, onde está o `SOUL.md` do CEO; o script deve ser executado **na raiz do repositório** para que esse caminho exista. Sem o workspace configurado, o modelo recebe apenas o prompt genérico e responde como assistente, não como CEO.
 
 ```bash
-kubectl port-forward -n ai-agents svc/ollama-service 11434:11434
-export OLLAMA_HOST=http://127.0.0.1:11434
+# Na raiz do repo (obrigatório para workspace CEO)
+./scripts/run-openclaw-telegram-ollama.sh
+```
+
+Ou manualmente (port-forward + config com workspace):
+
+```bash
+kubectl port-forward -n ai-agents svc/ollama-service 11434:11434 &
 export TELEGRAM_BOT_TOKEN='...'
+export OPENCLAW_CONFIG_PATH="$(pwd)/config/openclaw/openclaw.local.json5"
+# CWD deve ser a raiz do repo (workspace CEO = config/openclaw/workspace-ceo)
 openclaw gateway
 ```
 
@@ -90,6 +98,8 @@ O OpenClaw precisa receber mensagens do Telegram. Em ambiente local (host), **lo
 
 - **Webhook:** Expor o serviço OpenClaw (Ingress ou LoadBalancer) e configurar no OpenClaw `channels.telegram.webhookUrl` + `webhookSecret`.
 - **Polling:** Se o gateway rodar em um pod com internet, o polling já é o padrão; garantir que o pod consiga acessar `api.telegram.org`.
+
+**Correlação mensagem–resposta:** O gateway deve enviar cada resposta apenas à mensagem que a provocou (1:1); não misturar respostas entre mensagens. Ver [07-configuracao-e-prompts.md](07-configuracao-e-prompts.md) (Canais) e [issues/130-telegram-correlacao-mensagem-resposta.md](issues/130-telegram-correlacao-mensagem-resposta.md).
 
 Ref: [Telegram — OpenClaw](https://docs.openclaw.ai/channels/telegram).
 

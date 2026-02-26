@@ -23,6 +23,9 @@ spec:
           ports:
             - containerPort: 11434
           env:
+            # GPU: se o cluster tiver nvidia-device-plugin e GPU disponível, descomente CUDA_VISIBLE_DEVICES e as linhas nvidia.com/gpu em resources abaixo.
+            # - name: CUDA_VISIBLE_DEVICES
+            #   value: "0"
             # Modelo permanece na VRAM 5 min; reduz latência no Telegram (CEO).
             - name: OLLAMA_KEEP_ALIVE
               value: "5m"
@@ -33,11 +36,11 @@ spec:
             requests:
               memory: "2Gi"
               cpu: "500m"
-              nvidia.com/gpu: "1"
+              # nvidia.com/gpu: "1"  # descomente quando o nó tiver GPU (Minikube com GPU configurado)
             limits:
               memory: "6Gi"
               cpu: "2"
-              nvidia.com/gpu: "1"
+              # nvidia.com/gpu: "1"  # descomente quando o nó tiver GPU
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama

@@ -25,16 +25,16 @@ data:
             "apiKey": "ollama-local",
             "api": "openai-completions",
             "models": [
-              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1 (CEO Telegram, respostas rápidas)", "contextWindow": 4096, "maxTokens": 1024 },
+              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1 (CEO Telegram, respostas rápidas)", "contextWindow": 16000, "maxTokens": 1024 },
               { "id": "ministral-3:3b", "name": "Ministral 3 3B", "contextWindow": 32000, "maxTokens": 4096 }
             ]
           }
         }
       },
       "agents": {
-        "defaults": { "model": "ollama/ministral-3:3b", "workspace": "/workspace" },
+        "defaults": { "model": "ollama/stewyphoenix19/phi3-mini_v1:latest", "workspace": "/workspace" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/stewyphoenix19/phi3-mini_v1:latest" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/stewyphoenix19/phi3-mini_v1:latest", "workspace": "/workspace" }
         ]
       }
     }
@@ -52,13 +52,13 @@ data:
 
     agents:
       defaults:
-        model: "ollama/ministral-3:3b"
+        model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         subagents:
           maxSpawnDepth: 2
           maxChildrenPerAgent: 5
           maxConcurrent: 4
           runTimeoutSeconds: 600
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
 
       list:
         - id: ceo
@@ -69,35 +69,35 @@ data:
         - id: po
           name: "Product Owner"
           description: "Backlog e priorização. Sub-agent do CEO."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         - id: devops
           name: "DevOps/SRE"
           description: "IaC, CI/CD, FinOps. Sub-agent."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         - id: architect
           name: "Architect"
           description: "Governança técnica, code review. Sub-agent."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         - id: developer
           name: "Developer"
           description: "Implementação. Sub-agent."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         - id: qa
           name: "QA"
           description: "Testes e qualidade. Sub-agent."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         - id: cybersec
           name: "CyberSec"
           description: "Segurança. Sub-agent."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         - id: ux
           name: "UX"
           description: "Experiência do usuário. Sub-agent."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
         - id: dba
           name: "DBA"
           description: "Dados e queries. Sub-agent."
-          model: "ollama/ministral-3:3b"
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
 
     # Canal Telegram. Token via env TELEGRAM_BOT_TOKEN (Secret).
     # dmPolicy: pairing = primeiro DM gera código; use "openclaw pairing approve telegram <CODE>"

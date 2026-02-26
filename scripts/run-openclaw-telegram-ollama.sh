@@ -58,5 +58,6 @@ fi
 
 echo "==> Iniciando OpenClaw gateway (Telegram + Ollama em 127.0.0.1:11434)..."
 echo "    Config: $OPENCLAW_CONFIG_PATH"
+echo "    Workspace CEO (SOUL.md): config/openclaw/workspace-ceo (CWD=$REPO_ROOT)"
 echo "    Envie uma mensagem ao seu bot no Telegram para testar."
 exec openclaw gateway

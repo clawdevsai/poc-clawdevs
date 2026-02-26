@@ -14,6 +14,8 @@ Todos os agentes locais apontam para o mesmo endpoint do Ollama e usam o GPU Loc
 
 A estratégia de redução de custos não pode tratar apenas o sintoma (ex.: parar operação se custo de API passar de $5/dia). A **causa raiz** é o **inchaço exponencial do contexto** nas configurações de memória do OpenClaw: o workspace memory anexa logs contínuos, históricos gigantes de conversas e blocos inteiros de código do OpenCode. Essa massa de dados **não filtrada** é enviada para os LLMs em nuvem (Gemini, OpenAI) e o consumo de tokens torna-se catastrófico; o custo explode. Cortar a operação aos $5/dia evita falência, mas **não resolve a ineficiência** — o projeto pode ser paralisado prematuramente por **desperdício de tokens**, não porque o sistema trabalhou muito. A redução de custo sustentável depende do pipeline de truncamento e sumarização abaixo; o threshold de $5/dia deve ser mantido como **freio de emergência**.
 
+**CEO Telegram (Ollama local):** Para reduzir truncamento (ex.: `limit=4096 prompt=12498`), configurar `contextWindow` no Gateway para o modelo do CEO (ex.: 8192 quando o modelo suportar); manter o SOUL do CEO **compacto** em `openclaw-workspace-ceo`; limitar histórico de conversa (últimas N mensagens) quando o OpenClaw permitir. Se o truncamento persistir, considerar modelo com janela maior (ex.: `ministral-3:3b` com 32k). Ver [issues/041-truncamento-contexto-finops.md](issues/041-truncamento-contexto-finops.md) para o pipeline completo (pre-flight Summarize, truncamento na borda).
+
 ---
 
 ## Perfis por agente (manifesto)
@@ -189,6 +191,8 @@ Para evitar **amnésia arquitetural** causada pelo truncamento e sumarização a
 ### 4. Canais de comunicação
 
 Telegram, WhatsApp, Discord, Slack, CLI. Webhooks para avisar serviço externo quando o CyberSec detectar problema.
+
+**Correlação mensagem–resposta (Telegram):** O gateway deve garantir que cada resposta no Telegram seja enviada **apenas** como resposta à mensagem do usuário que a gerou (correlação 1:1). Não misturar respostas: a resposta gerada para a mensagem A não pode ser enviada como resposta à mensagem B. Verificar na documentação do OpenClaw (ex.: [docs.openclaw.ai](https://docs.openclaw.ai)) se existe opção de processamento sequencial por chat ou uso de `reply_to_message_id`; configurar se disponível. Ver [issues/130-telegram-correlacao-mensagem-resposta.md](issues/130-telegram-correlacao-mensagem-resposta.md).
 
 ### 5. Autonomia (HIL – Human in the loop)
 

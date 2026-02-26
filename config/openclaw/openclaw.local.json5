@@ -23,15 +23,17 @@
         baseUrl: "http://127.0.0.1:11434/v1",
         api: "openai-completions",
         models: [
-          { id: "stewyphoenix19/phi3-mini_v1:latest", name: "Phi3 Mini v1 (CEO Telegram, respostas rápidas)", contextWindow: 4096, maxTokens: 1024 },
+          { id: "stewyphoenix19/phi3-mini_v1:latest", name: "Phi3 Mini v1 (CEO Telegram, respostas rápidas)", contextWindow: 16000, maxTokens: 1024 },
           { id: "qwen2.5:3b", name: "Qwen 2.5 3B (Ollama local)", contextWindow: 4096, maxTokens: 2048 },
         ],
       },
     },
   },
   agents: {
+    // workspace com SOUL.md para o CEO obedecer ao perfil (tom executivo, pt-BR). Caminho relativo ao CWD (rodar script da raiz do repo).
     defaults: {
       model: "ollama/stewyphoenix19/phi3-mini_v1:latest",
+      workspace: "config/openclaw/workspace-ceo",
     },
     list: [
       { id: "ceo", name: "CEO", description: "Interface com o Diretor. Responde no Telegram.", model: "ollama/stewyphoenix19/phi3-mini_v1:latest" },

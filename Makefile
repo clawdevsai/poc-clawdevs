@@ -74,9 +74,10 @@ openclaw-image:
 	eval $$(minikube docker-env) && docker build -f $(K8S_DIR)/openclaw/Dockerfile -t openclaw-gateway:local $(K8S_DIR)/openclaw
 	@echo "==> openclaw-image concluído. Rode make up para aplicar."
 
-# Verificação de hardware (máquina de referência + consumo GPU/CPU/RAM + Quest 65%)
+# Verificação de hardware (máquina de referência + consumo GPU/CPU/RAM + Quest 65%) e cluster (Minikube + Ollama GPU)
 verify:
 	@docs/scripts/verify-machine.sh
+	@docs/scripts/verify-gpu-cluster.sh
 
 # 3. down: remove todos os recursos do namespace ai-agents (e o namespace)
 down:
