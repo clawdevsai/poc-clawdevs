@@ -1,0 +1,115 @@
+# k8s/ollama/deployment.yaml
+# Deployment do Ollama com acesso à GPU (RTX 3060 Ti) no Minikube.
+# Arquitetura Hub & Spoke: único pod de inferência acessado por todos os agentes locais.
+# Referência: docs/issues/003-minikube-redis-ollama-65.md | docs/04-infraestrutura.md
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ai-agents
+  labels:
+    app: ollama
+    project: clawdevs
+    component: inference
+  annotations:
+    description: "Servidor de inferência local (Hub & Spoke). Único consumidor de GPU VRAM."
+spec:
+  replicas: 1          # ATENÇÃO: sempre 1! Múltiplas réplicas causam OOM na VRAM.
+  selector:
+    matchLabels:
+      app: ollama
+  strategy:
+    type: Recreate      # Sem RollingUpdate — evita 2 réplicas de Ollama simultâneas
+  template:
+    metadata:
+      labels:
+        app: ollama
+        project: clawdevs
+    spec:
+      # Node selector: Ollama DEVE rodar no nó com GPU
+      nodeSelector:
+        workload-type: gpu
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      # Hard timeout: Kubernetes mata o pod se ultrapassar 180s contínuos de uso de GPU
+      # Garante que o GPU Lock nunca fique órfão mesmo se o processo morrer por OOM.
+      activeDeadlineSeconds: 180
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          ports:
+            - containerPort: 11434
+              name: api
+          env:
+            # Manter modelo na VRAM por 5 minutos após última requisição
+            # Alinhar com estratégia de slot único de revisão (ver docs/estrategia-uso-hardware-gpu-cpu.md)
+            - name: OLLAMA_KEEP_ALIVE
+              value: "5m"
+            # Limitar uso de VRAM a ~7 GB (reservar ~1 GB para SO)
+            - name: OLLAMA_MAX_VRAM
+              value: "7168"
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "2"
+              nvidia.com/gpu: "1"
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+              nvidia.com/gpu: "1"   # Acesso exclusivo à GPU RTX 3060 Ti 8GB
+          volumeMounts:
+            - name: ollama-models
+              mountPath: /root/.ollama
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: ollama-models
+          # PVC no NVMe para persistir modelos entre reinicializações
+          persistentVolumeClaim:
+            claimName: ollama-models-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: ai-agents
+  labels:
+    app: ollama
+    project: clawdevs
+spec:
+  selector:
+    app: ollama
+  ports:
+    - port: 11434
+      targetPort: 11434
+      name: api
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-models-pvc
+  namespace: ai-agents
+  labels:
+    app: ollama
+    project: clawdevs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "40Gi"   # Espaço para múltiplos modelos quantizados 4-bit
