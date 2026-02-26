@@ -17,6 +17,16 @@ spec:
       labels:
         app: openclaw
     spec:
+      initContainers:
+        - name: workspace-init
+          image: busybox:1.36
+          command: ["sh", "-c", "cp -r /src/. /workspace/ && chmod -R u+rwX /workspace"]
+          volumeMounts:
+            - name: workspace-ceo-cm
+              mountPath: /src
+              readOnly: true
+            - name: workspace
+              mountPath: /workspace
       containers:
         - name: gateway
           image: openclaw-gateway:local
@@ -44,7 +54,7 @@ spec:
               readOnly: true
             - name: workspace
               mountPath: /workspace
-              readOnly: true
+              # Writable: OpenClaw precisa escrever AGENTS.md etc. ao processar Telegram
           resources:
             requests:
               memory: "1Gi"
@@ -58,9 +68,11 @@ spec:
         - name: config
           configMap:
             name: openclaw-config
-        - name: workspace
+        - name: workspace-ceo-cm
           configMap:
             name: openclaw-workspace-ceo
+        - name: workspace
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
