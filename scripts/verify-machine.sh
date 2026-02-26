@@ -62,13 +62,13 @@ echo ""
 # ─── RAM ─────────────────────────────────────────────────────────────────────
 echo "=== RAM ==="
 free -h | head -2
-RAM_GB=$(free -g | awk '/^Mem:/{print $2}')
-if [[ "$RAM_GB" -ge 31 ]] 2>/dev/null; then
-  ok "RAM: ${RAM_GB} GB (≥31 GB — equivalente à referência)"
-elif [[ "$RAM_GB" -ge 16 ]] 2>/dev/null; then
-  warn "RAM: ${RAM_GB} GB (16–31 GB; reduzir memória alocada ao Minikube proporcionalmente)"
+TOTAL_RAM_GB=$(free -g | awk '$1 ~ /^Mem/ {print $2}')
+if [[ "$TOTAL_RAM_GB" -ge 31 ]] 2>/dev/null; then
+  ok "RAM: ${TOTAL_RAM_GB} GB (≥31 GB — equivalente à referência)"
+elif [[ "$TOTAL_RAM_GB" -ge 16 ]] 2>/dev/null; then
+  warn "RAM: ${TOTAL_RAM_GB} GB (16–31 GB; reduzir memória alocada ao Minikube proporcionalmente)"
 else
-  fail "RAM: ${RAM_GB} GB (abaixo de 16 GB; pode causar OOM com o cluster em 65%)"
+  fail "RAM: ${TOTAL_RAM_GB} GB (abaixo de 16 GB; pode causar OOM com o cluster em 65%)"
 fi
 echo ""
 

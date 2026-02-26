@@ -71,7 +71,7 @@ class TestRAGHealthCheck(unittest.TestCase):
             # Mock successful git log
             mock_run.return_value.stdout = "abc 2026-01-01 Fix docs"
             mock_run.return_value.returncode = 0
-            
+
             # Create some expected directories
             (self.workspace / "orchestrator").mkdir()
             (self.workspace / "k8s").mkdir()
@@ -90,8 +90,13 @@ class TestRAGHealthCheck(unittest.TestCase):
             mock_run.return_value.stdout = ""
             # No dirs created except the ones in setUp (docs/ and workspace/docs)
             results = rag.run("epic-2")
-            self.assertEqual(results["checks"]["workspace_structure"]["status"], "incomplete")
-            self.assertIn("orchestrator/", results["checks"]["workspace_structure"]["missing_dirs"])
+            self.assertEqual(
+                results["checks"]["workspace_structure"]["status"], "incomplete"
+            )
+            self.assertIn(
+                "orchestrator/",
+                results["checks"]["workspace_structure"]["missing_dirs"],
+            )
             self.assertIn("Pastas ausentes", results["sanitized_context"])
 
     def test_rag_health_check_git_error(self):

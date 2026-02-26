@@ -3,7 +3,7 @@
 # Uso: make <alvo>
 # Referência: docs/README.md | docs/issues/README.md
 
-.PHONY: help setup verify apply-all start stop status logs-ceo logs-all \
+.PHONY: help configure load-env check-env setup verify apply-all start stop status logs-ceo logs-all \
         pull-models test-redis test-gpu build-base unblock-brake \
         apply-namespace apply-limits apply-redis apply-ollama apply-agents apply-network \
         venv test-local test-coverage format lint
@@ -16,9 +16,26 @@ help: ## Exibe ajuda
 	@echo "ClawDevs — Comandos disponíveis:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2}'
 
+# ─── Pré-configuração (passo obrigatório antes do setup) ────────────────────
+
+configure: ## 🔧 Assistente interativo: gera .env com todas as chaves e configs
+	@chmod +x scripts/configure.sh && scripts/configure.sh
+
+load-env: ## Imprime instrução para carregar o .env no shell atual
+	@if [ ! -f .env ]; then echo "[ERRO] .env não encontrado. Execute primeiro: make configure"; exit 1; fi
+	@echo ""
+	@echo "  Execute no seu terminal:"
+	@echo "    source scripts/load-env.sh"
+	@echo ""
+	@echo "  Para scripts e Makefile targets, as variáveis são carregadas automaticamente."
+
+check-env: ## Valida o .env sem exportar as variáveis (diagnóstico rápido)
+	@if [ ! -f .env ]; then echo "[ERRO] .env não encontrado. Execute: make configure"; exit 1; fi
+	@bash scripts/load-env.sh --check --quiet && echo "[OK] .env válido." || echo "[ERRO] .env com problemas."
+
 # ─── Setup inicial ────────────────────────────────────────────────────────────
 
-setup: ## Executa setup completo (um clique)
+setup: check-env ## Executa setup completo (um clique) — requer .env configurado
 	@echo "Executando setup ClawDevs..."
 	@chmod +x scripts/setup.sh && scripts/setup.sh
 

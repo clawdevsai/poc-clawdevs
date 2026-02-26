@@ -72,12 +72,18 @@ collect_keys
 
 # ─── Cálculo de 65% da máquina ───────────────────────────────────────────────
 TOTAL_CPUS=$(nproc)
-TOTAL_RAM_GB=$(free -g | awk '/^Mem:/{print $2}')
+TOTAL_RAM_GB=$(free -g | awk '$1 ~ /^Mem/ {print $2}')
+GPU_VRAM_MB=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' || echo "0")
+
 MK_CPUS=$(( TOTAL_CPUS * 65 / 100 ))
-MK_RAM_GB=$(( TOTAL_RAM_GB * 65 / 100 ))
+MK_RAM_MB=$(( TOTAL_RAM_GB * 1024 * 65 / 100 )) # Convert GB to MB for Minikube
+MK_VRAM_MB=$(( GPU_VRAM_MB * 65 / 100 ))
+
 [[ "$MK_CPUS" -lt 2 ]] && MK_CPUS=2
-[[ "$MK_RAM_GB" -lt 4 ]] && MK_RAM_GB=4
-info "Recursos para Minikube (65%): ${MK_CPUS} CPUs, ${MK_RAM_GB}g RAM (de ${TOTAL_CPUS} CPUs / ${TOTAL_RAM_GB}g totais)"
+[[ "$MK_RAM_MB" -lt 4096 ]] && MK_RAM_MB=4096
+
+info "Recursos detectados: ${TOTAL_CPUS} CPUs, ${TOTAL_RAM_GB}GB RAM, ${GPU_VRAM_MB}MB VRAM"
+info "Limites de 65% aplicados: ${MK_CPUS} CPUs, ${MK_RAM_MB}MB RAM, ${MK_VRAM_MB}MB VRAM"
 
 # ─── Atualização + dependências base ─────────────────────────────────────────
 install_deps() {
@@ -170,31 +176,54 @@ install_helm
 start_minikube() {
   if minikube status 2>/dev/null | grep -q "Running"; then
     ok "Minikube já em execução."
-    return
+  else
+    info "Iniciando Minikube (${MK_CPUS} CPUs, ${MK_RAM_MB}MB RAM, driver=docker)..."
+    ADDONS="ingress,dashboard"
+    GPU_ARGS=""
+    if [[ "$GPU_VRAM_MB" -gt 0 ]]; then
+      # Conforme https://minikube.sigs.k8s.io/docs/tutorials/nvidia/
+      GPU_ARGS="--container-runtime=docker --gpus all"
+      ADDONS="${ADDONS},nvidia-device-plugin"
+    fi
+    
+    minikube start \
+      --driver=docker \
+      --cpus="${MK_CPUS}" \
+      --memory="${MK_RAM_MB}mb" \
+      --addons="${ADDONS}" \
+      ${GPU_ARGS}
+    ok "Minikube iniciado."
   fi
-  info "Iniciando Minikube (${MK_CPUS} CPUs, ${MK_RAM_GB}g RAM, driver=docker)..."
-  ADDONS="ingress,dashboard"
-  GPU_ARGS=""
-  if command -v nvidia-smi &>/dev/null; then
-    GPU_ARGS="--gpu=nvidia"
-    ADDONS="${ADDONS},nvidia-device-plugin"
-  fi
-  minikube start \
-    --driver=docker \
-    --cpus="${MK_CPUS}" \
-    --memory="${MK_RAM_GB}g" \
-    --addons="${ADDONS}" \
-    ${GPU_ARGS}
-  ok "Minikube iniciado."
+
+  info "Configurando rótulos de nós e quotas..."
+  # Garantir que o nó tenha os labels esperados pelos deployments
+  kubectl label node minikube workload-type=gpu --overwrite 2>/dev/null || true
+  kubectl label node minikube workload-type=cpu --overwrite 2>/dev/null || true
+  kubectl label node minikube workload-type=cpu-only --overwrite 2>/dev/null || true
 }
 start_minikube
 
 # ─── Namespace ai-agents ────────────────────────────────────────────────────
 setup_namespace() {
-  info "Criando namespace ai-agents..."
+  info "Criando namespace ai-agents e Quotas dinâmicas..."
   kubectl create namespace ai-agents --dry-run=client -o yaml | kubectl apply -f -
-  kubectl apply -f "$(dirname "$0")/../k8s/limits/resource-quota.yaml" --namespace ai-agents 2>/dev/null || true
-  ok "Namespace ai-agents pronto."
+  
+  # Gerar ResourceQuota dinâmico baseado nos 65% detectados
+  cat <<EOF | kubectl apply -n ai-agents -f -
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: limite-65-por-cento
+spec:
+  hard:
+    requests.cpu: "$(( MK_CPUS * 80 / 100 ))"
+    limits.cpu: "$MK_CPUS"
+    requests.memory: "$(( MK_RAM_MB * 80 / 100 ))Mi"
+    limits.memory: "${MK_RAM_MB}Mi"
+    pods: "20"
+EOF
+
+  ok "Namespace ai-agents e quota de ${MK_CPUS} CPUs / ${MK_RAM_MB}MB RAM configurados."
 }
 setup_namespace
 
@@ -222,8 +251,13 @@ deploy_ollama() {
     ok "Ollama já em execução no cluster."
     return
   fi
-  info "Implantando Ollama no Kubernetes..."
-  kubectl apply -f "$(dirname "$0")/../k8s/ollama/" -n ai-agents
+  info "Implantando Ollama com limites dinâmicos (VRAM Max: ${MK_VRAM_MB}MB)..."
+  
+  OLLAMA_DIR="$(dirname "$0")/../k8s/ollama"
+  # Patch dinâmico no deployment do Ollama para respeitar os 65% de VRAM e RAM
+  sed -i "s/value: \"7168\"/value: \"$MK_VRAM_MB\"/" "$OLLAMA_DIR/deployment.yaml"
+  
+  kubectl apply -f "$OLLAMA_DIR/" -n ai-agents
   kubectl wait --for=condition=available deployment/ollama -n ai-agents --timeout=120s 2>/dev/null || \
     warn "Timeout aguardando Ollama. Verifique: kubectl get pods -n ai-agents"
   ok "Ollama implantado."

@@ -3,7 +3,12 @@
 
 # ─── Segredos e chaves (NUNCA commitar) ──────────────────────────────────────
 .env
-.env.*
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.development
+!.env.example          # <<< Este SIM deve ser commitado (sem segredos)
 *.key
 *.pem
 *.crt

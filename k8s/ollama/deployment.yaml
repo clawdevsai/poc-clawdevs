@@ -34,9 +34,8 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
-      # Hard timeout: Kubernetes mata o pod se ultrapassar 180s contínuos de uso de GPU
-      # Garante que o GPU Lock nunca fique órfão mesmo se o processo morrer por OOM.
-      activeDeadlineSeconds: 180
+      # Aumentado para 600s para suportar inferências longas (PRs, logs extensos)
+      activeDeadlineSeconds: 600
       containers:
         - name: ollama
           image: ollama/ollama:latest
@@ -45,10 +44,12 @@ spec:
               name: api
           env:
             # Manter modelo na VRAM por 5 minutos após última requisição
-            # Alinhar com estratégia de slot único de revisão (ver docs/estrategia-uso-hardware-gpu-cpu.md)
             - name: OLLAMA_KEEP_ALIVE
               value: "5m"
-            # Limitar uso de VRAM a ~7 GB (reservar ~1 GB para SO)
+            # Otimização de concorrência: permite processar até 2 requisições se VRAM permitir
+            - name: OLLAMA_NUM_PARALLEL
+              value: "2"
+            # Limite de VRAM (patcheado via scripts/setup.sh para 65% do host)
             - name: OLLAMA_MAX_VRAM
               value: "7168"
           resources:
@@ -57,9 +58,9 @@ spec:
               cpu: "2"
               nvidia.com/gpu: "1"
             limits:
-              memory: "8Gi"
-              cpu: "4"
-              nvidia.com/gpu: "1"   # Acesso exclusivo à GPU RTX 3060 Ti 8GB
+              memory: "16Gi"      # Aumentado para permitir modelos maiores se necessário
+              cpu: "6"            # Aumentado para processamento de camadas na CPU se VRAM estourar
+              nvidia.com/gpu: "1"   # Acesso exclusivo à GPU
           volumeMounts:
             - name: ollama-models
               mountPath: /root/.ollama
