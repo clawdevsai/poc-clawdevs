@@ -23,8 +23,9 @@ brew install steipete/tap/summarize
 ## Quick start
 
 ```bash
-summarize "https://example.com" --model google/gemini-3-flash-preview
-summarize "/path/to/file.pdf" --model google/gemini-3-flash-preview
+# Exemplo com modelo local (Ollama) ou provedor OpenClaw (ex.: OpenRouter)
+summarize "https://example.com" --model ollama/llama3:8b
+summarize "/path/to/file.pdf" --model openrouter/openai/gpt-4o-mini
 summarize "https://youtu.be/dQw4w9WgXcQ" --youtube auto
 ```
 
@@ -32,14 +33,14 @@ summarize "https://youtu.be/dQw4w9WgXcQ" --youtube auto
 
 ## Modelo e chaves de API
 
-Definir a variável de ambiente do provedor escolhido:
+No **ClawDevs** usamos apenas **provedores integrados OpenClaw** para inferência. Definir a variável de ambiente do provedor escolhido (conforme [07-configuracao-e-prompts.md](07-configuracao-e-prompts.md#provedores-apenas-integrados-openclaw)):
 
+- **Ollama (local):** sem chave; `host` no config.
+- **OpenRouter:** `OPENROUTER_API_KEY`
 - **OpenAI:** `OPENAI_API_KEY`
-- **Anthropic:** `ANTHROPIC_API_KEY`
-- **xAI:** `XAI_API_KEY`
-- **Google:** `GEMINI_API_KEY` (aliases: `GOOGLE_GENERATIVE_AI_API_KEY`, `GOOGLE_API_KEY`)
+- **Ollama cloud / Qwen / Moonshot AI / Hugging Face:** consultar [documentação OpenClaw](https://docs.openclaw.ai) para o nome exato da variável por provedor.
 
-Modelo padrão: `google/gemini-3-flash-preview` se nenhum for definido.
+Para uso do CLI summarize fora do gateway (ex.: pre-flight local), usar modelo compatível (ex.: `ollama/llama3:8b` para local ou o modelo do provedor nuvem configurado).
 
 ---
 

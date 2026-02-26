@@ -15,7 +15,7 @@ Este documento define **o que desenvolver** (para agentes) e a **máquina de ref
 - **Kubernetes** (Minikube local) — orquestração dos pods dos agentes.
 - **OpenClaw** — orquestrador e interface com o Diretor (voz/chat, ex.: Telegram).
 - **Ollama** — inferência local (modelos no cluster, baixo custo).
-- **OpenRouter** — modelos em nuvem quando aprovado (ex.: FreeRide para baixo custo).
+- **Provedores integrados OpenClaw em nuvem** quando aprovado (Ollama cloud, OpenRouter, Qwen, Moonshot AI, OpenAI, Hugging Face — ex.: OpenRouter FreeRide para baixo custo).
 - **OpenCode** — ferramenta de geração de código usada pelo Agente Developer.
 
 O **ambiente de execução é 100% dentro do Kubernetes**: pods dos agentes, Redis, Ollama e **volumes (PVC/workspace, etc.)** ficam no cluster. O **limite do cluster é 65% do hardware** (Minikube + ResourceQuota); ver [04-infraestrutura.md](04-infraestrutura.md).

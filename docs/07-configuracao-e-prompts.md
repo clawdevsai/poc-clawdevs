@@ -1,6 +1,6 @@
 # Configuração e prompts
 
-Manifesto de configuração por agente (modelo, temperatura, skills, restrições), configuração avançada do OpenClaw e provedores (Gemini + Ollama).
+Manifesto de configuração por agente (modelo, temperatura, skills, restrições), configuração avançada do OpenClaw e provedores (apenas integrados OpenClaw: Ollama local/cloud, OpenRouter, Qwen, Moonshot AI, OpenAI, Hugging Face).
 
 ---
 
@@ -12,7 +12,7 @@ Todos os agentes locais apontam para o mesmo endpoint do Ollama e usam o GPU Loc
 
 ## Causa raiz do custo: inchaço de contexto
 
-A estratégia de redução de custos não pode tratar apenas o sintoma (ex.: parar operação se custo de API passar de $5/dia). A **causa raiz** é o **inchaço exponencial do contexto** nas configurações de memória do OpenClaw: o workspace memory anexa logs contínuos, históricos gigantes de conversas e blocos inteiros de código do OpenCode. Essa massa de dados **não filtrada** é enviada para os LLMs em nuvem (Gemini, OpenAI) e o consumo de tokens torna-se catastrófico; o custo explode. Cortar a operação aos $5/dia evita falência, mas **não resolve a ineficiência** — o projeto pode ser paralisado prematuramente por **desperdício de tokens**, não porque o sistema trabalhou muito. A redução de custo sustentável depende do pipeline de truncamento e sumarização abaixo; o threshold de $5/dia deve ser mantido como **freio de emergência**.
+A estratégia de redução de custos não pode tratar apenas o sintoma (ex.: parar operação se custo de API passar de $5/dia). A **causa raiz** é o **inchaço exponencial do contexto** nas configurações de memória do OpenClaw: o workspace memory anexa logs contínuos, históricos gigantes de conversas e blocos inteiros de código do OpenCode. Essa massa de dados **não filtrada** é enviada para os LLMs em nuvem (provedores OpenClaw, ex. OpenRouter, OpenAI) e o consumo de tokens torna-se catastrófico; o custo explode. Cortar a operação aos $5/dia evita falência, mas **não resolve a ineficiência** — o projeto pode ser paralisado prematuramente por **desperdício de tokens**, não porque o sistema trabalhou muito. A redução de custo sustentável depende do pipeline de truncamento e sumarização abaixo; o threshold de $5/dia deve ser mantido como **freio de emergência**.
 
 **CEO Telegram (Ollama local):** Para reduzir truncamento (ex.: `limit=4096 prompt=12498`), configurar `contextWindow` no Gateway para o modelo do CEO (ex.: 8192 quando o modelo suportar); manter o SOUL do CEO **compacto** em `openclaw-workspace-ceo`; limitar histórico de conversa (últimas N mensagens) quando o OpenClaw permitir. Se o truncamento persistir, considerar modelo com janela maior (ex.: `ministral-3:3b` com 32k). Ver [issues/041-truncamento-contexto-finops.md](issues/041-truncamento-contexto-finops.md) para o pipeline completo (pre-flight Summarize, truncamento na borda).
 
@@ -23,7 +23,7 @@ A estratégia de redução de custos não pode tratar apenas o sintoma (ex.: par
 ### CEO (estratégia)
 
 - **Model (padrão):** Ollama local (ex.: `llama3:8b` ou `qwen2.5-coder:7b`) — tarefas pequenas e rotina.
-- **Model (nuvem, sob demanda):** `gemini-1.5-pro` ou `gpt-4o` — apenas para validações complexas, raciocínio estratégico, criatividade e investigação na internet (web_search). Ver critérios em "Roteamento CEO/PO: local vs nuvem" abaixo.
+- **Model (nuvem, sob demanda):** provedor integrado OpenClaw (ex.: OpenRouter, OpenAI, Ollama cloud) — apenas para validações complexas, raciocínio estratégico, criatividade e investigação na internet (web_search). Ver critérios em "Roteamento CEO/PO: local vs nuvem" abaixo e lista canônica em "Provedores (apenas integrados OpenClaw)".
 - **Temperature:** 0.7
 - **Skills:** `web_search`, `telegram_notify`, `financial_report`
 - **Memory:** `project_vision_vector_db`
@@ -32,7 +32,7 @@ A estratégia de redução de custos não pode tratar apenas o sintoma (ex.: par
 ### Product Owner (organizador)
 
 - **Model (padrão):** Ollama local (ex.: `llama3:8b` ou `qwen2.5-coder:7b`) — tarefas pequenas e rotina.
-- **Model (nuvem, sob demanda):** `gemini-1.5-flash` ou `gpt-4o` — apenas para validação complexa, raciocínio profundo ou pesquisa na internet. Ver critérios em "Roteamento CEO/PO: local vs nuvem" abaixo.
+- **Model (nuvem, sob demanda):** provedor integrado OpenClaw (ex.: OpenRouter, OpenAI, Ollama cloud) — apenas para validação complexa, raciocínio profundo ou pesquisa na internet. Ver critérios em "Roteamento CEO/PO: local vs nuvem" abaixo.
 - **Temperature:** 0.3
 - **Skills:** `github_api_manager`, `kanban_sync`
 - **Memory:** `backlog_history`
@@ -106,7 +106,7 @@ A estratégia de redução de custos não pode tratar apenas o sintoma (ex.: par
 
 ## Roteamento CEO/PO: local vs nuvem
 
-CEO e PO usam **Ollama local por padrão**; o provedor em nuvem (Gemini, OpenRouter) é usado **sob demanda** conforme o tipo de tarefa. O Gateway ou orquestrador (OpenClaw) pode rotear por metadado do evento (`task_type: small` vs `task_type: requires_cloud`) ou por classificação prévia (regras ou SLM em CPU). Ver [03-arquitetura.md](03-arquitetura.md) (estágio de borda).
+CEO e PO usam **Ollama local por padrão**; o provedor em nuvem (OpenRouter, OpenAI, Ollama cloud, etc. — lista canônica em "Provedores (apenas integrados OpenClaw)") é usado **sob demanda** conforme o tipo de tarefa. O Gateway ou orquestrador (OpenClaw) pode rotear por metadado do evento (`task_type: small` vs `task_type: requires_cloud`) ou por classificação prévia (regras ou SLM em CPU). Ver [03-arquitetura.md](03-arquitetura.md) (estágio de borda).
 
 **Usar Ollama local (tarefas pequenas):**
 
@@ -150,7 +150,7 @@ Scripts (em geral Python) que o agente pode invocar. Definir por agente: quem te
 
 ### 2.1. Controle de FinOps no Gateway (regras, não agentes)
 
-O **controle principal** de custo de contexto é feito por **regras no Gateway do OpenClaw** (configurações JSON/YAML), **antes** da requisição chegar ao provedor (Gemini, etc.). Não depender de ação reativa de agente (ex.: DevOps "limpar" contexto) nem apenas do freio de emergência ($5/dia): a gestão de contexto deve ser **determinística na infraestrutura**.
+O **controle principal** de custo de contexto é feito por **regras no Gateway do OpenClaw** (configurações JSON/YAML), **antes** da requisição chegar ao provedor (OpenRouter, OpenAI, etc.). Não depender de ação reativa de agente (ex.: DevOps "limpar" contexto) nem apenas do freio de emergência ($5/dia): a gestão de contexto deve ser **determinística na infraestrutura**.
 
 - **Max tokens por request no Gateway:** Configurar nas configs do Gateway um **limite rígido de max tokens por request** mapeado ao **perfil do agente** que usa nuvem (ex.: CEO, PO). O Gateway aplica o limite **antes** de enviar o payload ao provedor; assim o FinOps é garantido na borda, sem depender de o agente decidir o que enviar.
 - **Limite VFM (evolução):** Para propostas de evolução (nova função, refatoração), o Gateway pode exigir artefato `vfmscore.json` e **limite numérico de aceitação** (fórmula ex.: horas_salvas × frequência_mensal − custo_tokens); se a pontuação for **inferior** ao threshold configurado, a alteração é **bloqueada na borda** — decisão determinística, sem debate em texto. O **CEO** deve realizar **autoavaliação econômica obrigatória no prompt** (artefato estruturado + descarte interno se threshold negativo) **antes** de enviar eventos de estratégia; o Gateway continua aplicando limite e bloqueio na borda como **redundância**. Ver [13-habilidades-proativas.md](13-habilidades-proativas.md), [soul/CEO.md](soul/CEO.md) e [05-seguranca-e-etica.md](05-seguranca-e-etica.md).
@@ -167,7 +167,7 @@ Operar **antes** de qualquer transmissão para as APIs em nuvem, na camada de co
 - **Gancho de validação de contexto (pré-sumarização, local):** Antes de enviar o payload para sumarização na nuvem, executar uma etapa em que um **modelo local** (ex.: Llama 3, já usado no Architect) faz **varredura no buffer de trabalho** buscando **intenções do usuário** ou **regras informais** que não tenham tag. Se o modelo local identificar algo crítico para valor de negócio, **propor extração** para o arquivo principal de estado (SESSION-STATE.md). Objetivo: preservar valor de negócio sem gastar tokens de API e mitigar **amnésia funcional** (regras e preferências dizimadas pelo resumo). Ver [28-memoria-longo-prazo-elite.md](28-memoria-longo-prazo-elite.md).
 - **Segregação dos critérios de aceite (obrigatória):** Os critérios de aceite originais das tarefas **não** podem estar no mesmo buffer que é sumarizado. Se estiverem, o PO recebe só o resumo e **perde a referência imutável** para comparar — fica incapaz de rejeitar o truncamento quando um critério foi omitido. Duas formas de garantir o acesso do PO aos critérios intactos: **(A) Tag de proteção:** Os critérios de aceite de toda issue recebem **obrigatoriamente** uma **tag especial** no Markdown (ex.: bloco `<!-- CRITERIOS_ACEITE -->` ou tag equivalente documentada no pipeline). O **script de limpeza/compacted do DevOps** é configurado com **regex** para **ignorar completamente** qualquer bloco dentro dessa tag — o modelo resume a conversa paralela, mas os critérios **passam ilesos** e não entram no input do sumarizador. **(B) Payload duplo (alternativa mais segura):** O orquestrador armazena os critérios em **arquivo separado** (ex.: `SESSION-STATE.md`, ou `session.md` por issue/sessão) e envia à nuvem um **payload duplo**: (1) o **resumo** da discussão técnica (economizando API) e (2) os **critérios originais** intactos, sem passar pelo sumarizador. O PO recebe os dois e faz a validação reversa com precisão. Ver [28-memoria-longo-prazo-elite.md](28-memoria-longo-prazo-elite.md) (onde ficam os critérios) e [12-ferramenta-summarize.md](12-ferramenta-summarize.md) (exceções à sumarização).
 - **Validação reversa (PO):** Após a sumarização, o **PO** compara o **resumo gerado** com os **critérios de aceite originais** das tarefas — que **sempre** devem estar disponíveis intactos (via tag protegida ou payload duplo, acima). Se o resumo **omitir um critério fundamental**, o PO **rejeita o truncamento**; o sistema é forçado a **reestruturar o bloco** (ex.: manter trechos não sumarizados ou refazer o resumo). Garantia de qualidade na própria memória do enxame. Ver [02-agentes.md](02-agentes.md) (PO).
-- **Pre-flight Summarize (obrigatório):** O CLI **Summarize** (ou equivalente) deve ser configurado como **pre-flight obrigatório** no fluxo de eventos do OpenClaw. Para issues ou conversas com **mais de três interações**, o orquestrador intercepta o payload antes do envio à nuvem; um **modelo local** (Ollama) gera um resumo executivo denso; o histórico bruto é substituído por esse resumo no payload; **só então** o Gateway libera o tráfego para o provedor em nuvem (Gemini). A carga pesada sai da nuvem paga e vai para o hardware local de forma síncrona; evita corte no meio de JSON e reduz custo. Detalhes do CLI em [12-ferramenta-summarize.md](12-ferramenta-summarize.md).
+- **Pre-flight Summarize (obrigatório):** O CLI **Summarize** (ou equivalente) deve ser configurado como **pre-flight obrigatório** no fluxo de eventos do OpenClaw. Para issues ou conversas com **mais de três interações**, o orquestrador intercepta o payload antes do envio à nuvem; um **modelo local** (Ollama) gera um resumo executivo denso; o histórico bruto é substituído por esse resumo no payload; **só então** o Gateway libera o tráfego para o provedor em nuvem. A carga pesada sai da nuvem paga e vai para o hardware local de forma síncrona; evita corte no meio de JSON e reduz custo. Detalhes do CLI em [12-ferramenta-summarize.md](12-ferramenta-summarize.md).
 - **Truncamento na borda (obrigatório):** Script (ex.: Python) na **entrada** do fluxo (antes de enfileirar no Redis Stream): conta tokens do payload (ex.: limite 4000 tokens); se exceder, aplica **truncamento bruto** — mantém cabeçalho do erro e causa raiz no final, remove o miolo do log/stack trace. O agente DevOps (e qualquer outro) **só recebe** payload já limitado; a máquina nunca recebe carga que estoure a VRAM. O Ollama não é usado para "resumir" logs gigantes (isso exigiria carregar o payload inteiro e causaria OOM).
 - **Janela deslizante rigorosa:** Configurar (ex.: via `soul.md` ou equivalente no OpenClaw) uma janela de contexto rígida. Sumarização em modelo local (Ollama) ocorre como **pre-flight** (acima) para conversas com mais de N interações (ex.: 3); em outros casos, só **sobre payload já truncado na borda**.
 - **Memória em duas camadas (e seis camadas):** Manter **dados brutos** em armazenamento de **curto prazo** e transferir **conceitos e decisões consolidadas** para um **banco vetorial de longo prazo** (Warm Store). O modelo na nuvem faz **consultas pontuais via RAG** em vez de carregar o histórico completo a cada prompt. O desenho completo (Hot RAM, Warm Store, Cold Store, arquivo curado, cloud, autoextração) está em [28-memoria-longo-prazo-elite.md](28-memoria-longo-prazo-elite.md).
@@ -216,34 +216,38 @@ OpenClaw pode subir container temporário para o QA testar código. Definir reso
 | Temperature | 0.0 para CyberSec e Architect | Segurança e consistência |
 | Max concurrency | 1 (DevOps gerencia o lock) | Evita OOM na RTX 3060 Ti |
 
-**Riscos de configuração:** (1) Context overload: memória infinita em todos os agentes pode esgotar 32 GB de RAM em minutos. (2) Skill loop: agente em loop chamando Skill (ex.: Google); usar timeout ou Max_Calls por tarefa.
+**Riscos de configuração:** (1) Context overload: memória infinita em todos os agentes pode esgotar 32 GB de RAM em minutos. (2) Skill loop: agente em loop chamando Skill (ex.: web_search); usar timeout ou Max_Calls por tarefa.
 
 ---
 
-## Provedores: Gemini (nuvem) e Ollama (local)
+## Provedores (apenas integrados OpenClaw)
+
+O ClawDevs usa **somente** as tecnologias de inferência integradas ao OpenClaw. Nenhum provedor fora da lista abaixo (ex.: Google Gemini) deve ser documentado como opção canônica de LLM no stack ou no setup.
+
+**Lista canônica:**
+
+| # | Provedor / tecnologia |
+|---|------------------------|
+| 1 | Ollama (local) |
+| 2 | Ollama (cloud) |
+| 3 | OpenRouter |
+| 4 | Qwen (OAuth) |
+| 5 | Moonshot AI |
+| 6 | OpenAI |
+| 7 | Hugging Face (Inference) |
+
+Configuração via OpenClaw (config/gateway). APIs de produto (ex.: Google Sheets via Maton) continuam como estão; esta lista refere-se apenas a provedores de **inferência LLM**.
 
 ### Divisão de modelos
 
-- **Google Gemini / OpenRouter (nuvem):** Usado **sob demanda** para CEO e PO quando a tarefa exige validação complexa, raciocínio profundo, criatividade ou investigação na internet (ver "Roteamento CEO/PO: local vs nuvem" acima). Janela de contexto grande (até 2M tokens) quando necessário.
+- **Nuvem (sob demanda):** OpenRouter, OpenAI, Ollama cloud, Qwen, Moonshot AI ou Hugging Face — usado para CEO e PO quando a tarefa exige validação complexa, raciocínio profundo, criatividade ou investigação na internet (ver "Roteamento CEO/PO: local vs nuvem" acima).
 - **Ollama (local – RTX 3060 Ti):** CEO e PO em tarefas pequenas; Developer, Architect, DevOps, QA, CyberSec, UX. Resposta rápida e sem custo de token no tráfego local; a performance depende do hardware e do gerenciamento de recursos (limite ~65%, ver [04-infraestrutura.md](04-infraestrutura.md)).
 
 ### Gateway no OpenClaw (exemplo YAML)
 
 O **controle de FinOps** deve estar no Gateway: configurar **max_tokens_per_request** (ou equivalente) por perfil de agente (ex.: CEO, PO) nas configs JSON/YAML do Gateway, de forma que a requisição seja limitada **antes** de chegar ao provedor. O pipeline de truncamento e pre-flight Summarize (seção 2.1 e 2.2) reduz o volume na causa raiz; o limite no Gateway é a barreira determinística final.
 
-**Provedor Google:**
-
-```yaml
-# providers/google.yaml
-provider: google
-api_key: ${GOOGLE_API_KEY}
-default_model: gemini-1.5-flash
-strategic_model: gemini-1.5-pro
-# FinOps: limite por request no Gateway (ex.: por perfil CEO no openclaw.json)
-# max_tokens_per_request: 8000  # conforme perfil do agente
-```
-
-**Provedor Ollama:**
+**Provedor Ollama (local):**
 
 ```yaml
 # providers/ollama.yaml
@@ -253,9 +257,11 @@ default_model: deepseek-coder-v2:lite
 security_model: llama3:8b
 ```
 
-### Limite de gastos (Gemini / Google Cloud)
+**Provedor nuvem (ex.: OpenRouter ou OpenAI):** Consultar a [documentação OpenClaw](https://docs.openclaw.ai) para o formato exato por provedor. Exemplo genérico para OpenRouter (variável `OPENROUTER_API_KEY`) ou OpenAI (`OPENAI_API_KEY`); configurar no Gateway e nos secrets do cluster, nunca em repositório.
 
-Créditos de nuvem (ex.: Google Cloud / Gemini) têm **data de validade** e **limite de consumo**. Para evitar surpresas na fatura, configurar um **limite rígido de gastos** (freio de emergência) no painel de faturamento do Google Cloud. O pipeline de truncamento e sumarização de contexto (neste documento) reduz o consumo na causa raiz; o limite de gastos é a proteção final.
+### Limite de gastos (provedor em nuvem)
+
+Créditos de nuvem (ex.: OpenRouter, OpenAI, Ollama cloud) têm **data de validade** e **limite de consumo**. Para evitar surpresas na fatura, configurar um **limite rígido de gastos** (freio de emergência) no painel do provedor escolhido (OpenRouter, OpenAI, etc.). O pipeline de truncamento e sumarização de contexto (neste documento) reduz o consumo na causa raiz; o limite de gastos é a proteção final.
 
 ### Otimização de custos e hardware
 

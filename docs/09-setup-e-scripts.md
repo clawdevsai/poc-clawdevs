@@ -1,6 +1,6 @@
 # Setup e scripts
 
-Objetivo: configurar o ambiente com **um único script** (`setup.sh`) que instala dependências, coleta chaves (Google Gemini, Telegram), sobe Minikube (limites 65% da **máquina de referência** — ver [00-objetivo-e-maquina-referencia.md](00-objetivo-e-maquina-referencia.md)), Redis, Ollama, ambiente de transcrição de áudio e configuração do OpenClaw com canal Telegram e voz. **Configuração de rede e portas** (incluindo loopback e permissões necessárias para a interface) é resolvida automaticamente pelo script ou pela imagem de ambiente — o usuário **não precisa editar arquivos manualmente** dentro do container (evitando desvios para editores no terminal). Ao final, os agentes estão no Minikube local e o Agente CEO aguarda o primeiro projeto via Telegram (incluindo áudio convertido em texto).
+Objetivo: configurar o ambiente com **um único script** (`setup.sh`) que instala dependências, coleta chaves dos provedores OpenClaw escolhidos e Telegram, sobe Minikube (limites 65% da **máquina de referência** — ver [00-objetivo-e-maquina-referencia.md](00-objetivo-e-maquina-referencia.md)), Redis, Ollama, ambiente de transcrição de áudio e configuração do OpenClaw com canal Telegram e voz. **Configuração de rede e portas** (incluindo loopback e permissões necessárias para a interface) é resolvida automaticamente pelo script ou pela imagem de ambiente — o usuário **não precisa editar arquivos manualmente** dentro do container (evitando desvios para editores no terminal). Ao final, os agentes estão no Minikube local e o Agente CEO aguarda o primeiro projeto via Telegram (incluindo áudio convertido em texto).
 
 ## Versão canônica do setup
 
@@ -8,13 +8,13 @@ A versão completa e recomendada do `setup.sh`:
 
 - Valida que não está rodando como root.
 - Verifica se o sistema é Pop!_OS (ou avisa e pergunta se deseja continuar).
-- Coleta e valida **Google AI Key (Gemini)**, **Telegram Bot Token** e **Telegram Chat ID** (não aceita vazios).
+- Coleta e valida **chave(s) do(s) provedor(es) OpenClaw** (ex.: Ollama local sem chave; OpenRouter/OpenAI etc. conforme [lista canônica](07-configuracao-e-prompts.md#provedores-apenas-integrados-openclaw)), **Telegram Bot Token** e **Telegram Chat ID** (não aceita vazios).
 - Atualiza o sistema e instala dependências (curl, git, python3, ffmpeg, docker, nvidia-container-toolkit, conntrack, etc.).
 - Instala Docker, Minikube, kubectl e Helm (se ainda não existirem).
 - Inicia Minikube com **65%** dos recursos da máquina de referência (CPU e RAM calculados dinamicamente). Para verificar se sua máquina é equivalente, use os comandos em [00-objetivo-e-maquina-referencia.md](00-objetivo-e-maquina-referencia.md) ou execute [scripts/verify-machine.sh](scripts/verify-machine.sh).
 - Instala Redis via Helm e deploy do Ollama no Kubernetes.
 - Configura o ambiente de transcrição: diretório `~/enxame/transcription/`, script `m4a_to_md.py`, venv com `faster-whisper` e `tqdm`.
-- Gera `~/enxame/openclaw/config.yaml` com canais Telegram (token, chat_id, comando de voz para texto) e provedor Google (api_key).
+- Gera `~/enxame/openclaw/config.yaml` com canais Telegram (token, chat_id, comando de voz para texto) e provedor(es) OpenClaw (api_key ou OAuth conforme [documentação OpenClaw](https://docs.openclaw.ai)).
 - Cria aliases no `~/.bashrc` (ex.: `enxame-status`, `transcrever`, `ceo`) e script `~/enxame/start.sh`.
 - Executa testes de validação (Docker, Minikube, Redis, transcrição) e exibe mensagem final com próximos passos.
 
@@ -49,10 +49,13 @@ channels:
       command: "/home/<USER>/enxame/transcription/venv/bin/python /home/<USER>/enxame/transcription/m4a_to_md.py"
       output_dir: "/home/<USER>/enxame/audio/transcriptions"
 
+# Provedores: apenas integrados OpenClaw (Ollama local/cloud, OpenRouter, OpenAI, etc.)
+# Exemplo com Ollama local + OpenRouter (ou usar só Ollama). Ver docs.openclaw.ai e 07-configuracao-e-prompts.md.
 providers:
-  google:
-    api_key: "<GOOGLE_API_KEY>"
-    model: "gemini-1.5-pro"
+  ollama:
+    host: "http://ollama-service.ai-agents.svc.cluster.local:11434"
+    default_model: "llama3:8b"
+  # openrouter ou openai conforme doc OpenClaw (variáveis OPENROUTER_API_KEY, OPENAI_API_KEY em secrets)
 ```
 
 Documentação do canal Telegram: [OpenClaw – Telegram](https://docs.openclaw.ai/channels/telegram).
@@ -62,12 +65,12 @@ Documentação do canal Telegram: [OpenClaw – Telegram](https://docs.openclaw.
 1. Salvar o conteúdo de [scripts/setup.sh](scripts/setup.sh) como `setup.sh` (ex.: na raiz do projeto ou em `~/enxame/`).
 2. Dar permissão de execução: `chmod +x setup.sh`.
 3. Executar: `./setup.sh`.
-4. Informar quando solicitado: Google AI Key (Gemini), Telegram Bot Token e Telegram Chat ID.
+4. Informar quando solicitado: chaves do(s) provedor(es) OpenClaw e Telegram Bot Token e Telegram Chat ID.
 5. Após o término, recarregar o shell: `source ~/.bashrc` (ou abrir novo terminal).
 
 ## Teste imediato
 
-Após a execução, envie um áudio em M4A para o seu bot do Telegram. O sistema deve: (1) Receber o áudio; (2) Transcrever localmente (faster-whisper); (3) Enviar o texto para o Agente CEO (Gemini); (4) Responder com análise estratégica. A transcrição e o modelo local (Ollama) podem ser usados offline, sem custo de API; o CEO em nuvem consome a API do Google (configurar limite de gastos no painel do provedor).
+Após a execução, envie um áudio em M4A para o seu bot do Telegram. O sistema deve: (1) Receber o áudio; (2) Transcrever localmente (faster-whisper); (3) Enviar o texto para o Agente CEO (provedor configurado, ex. Ollama ou OpenRouter); (4) Responder com análise estratégica. A transcrição e o modelo local (Ollama) podem ser usados offline, sem custo de API; o CEO em nuvem consome a API do provedor em nuvem escolhido (configurar limite de gastos no painel do provedor).
 
 ## Riscos e avisos
 

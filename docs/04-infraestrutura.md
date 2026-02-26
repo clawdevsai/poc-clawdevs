@@ -144,6 +144,18 @@ Para não estourar o disco (na máquina de referência a partição raiz tem 402
 
 ## Configuração dos agentes (OpenClaw e OpenCode)
 
-- **Pods CEO e PO (nuvem):** containers leves com chaves de API (OpenAI/Anthropic/Google). O OpenClaw faz a ponte com sistema de arquivos e internet.
+- **Pods CEO e PO (nuvem):** containers leves com chaves de API (provedores integrados OpenClaw: OpenAI, OpenRouter, Ollama cloud, etc.). O OpenClaw faz a ponte com sistema de arquivos e internet.
 - **Pod Developer (local):** OpenCode instalado; volume PVC no NVMe para o código persistir. O resultado do sandbox de dependências (npm/pip) passa por **quarentena de disco** e **análise determinística de diff** antes de ser incorporado ao repositório no NVMe — detalhes em [05-seguranca-e-etica.md](05-seguranca-e-etica.md) e [14-seguranca-runtime-agentes.md](14-seguranca-runtime-agentes.md).
 - **Pods CyberSec/Architect:** podem atuar como sidecars ou Jobs disparados quando o Developer faz *commit* (event-driven).
+
+## Isolamento do time técnico: duas camadas (100% offline)
+
+O **time técnico** (Developer, Architect, QA, CyberSec, UX, DBA, DevOps) opera **100% offline da internet**. O isolamento é garantido por **duas camadas** complementares:
+
+1. **Kubernetes — NetworkPolicy:** Egress bloqueado para o(s) pod(s) do OpenClaw do time técnico; tráfego permitido apenas dentro do cluster (Redis, Ollama, comunicação entre pods). O OpenClaw CEO/PO mantém egress para Ollama e para internet. Aplicar manifestos em `k8s/` (ex.: `k8s/networkpolicy-time-tecnico-offline.yaml`).
+
+2. **OpenClaw — Multi-Agent Sandbox & Tools:** Configuração nativa do OpenClaw ([Multi-Agent Sandbox & Tools](https://docs.openclaw.ai/tools/multi-agent-sandbox-tools)) com `agents.list[]`:
+   - **CEO/PO:** `sandbox: { mode: "off" }` (ou `non-main`), tools conforme necessidade (messaging, sessões).
+   - **Time técnico:** `sandbox: { mode: "all", scope: "agent" }` (um container por agente) e `tools.deny` para `browser`, `gateway` e demais que impliquem rede ou acesso externo; `tools.allow` apenas o necessário (ex.: `read`, `write`, `apply_patch`, `exec`, sessões). Cada agente usa seu próprio `agentDir` e auth store (credenciais não compartilhadas entre CEO/PO e time técnico).
+
+Assim, mesmo com falha ou bypass de rede, o isolamento e o menor privilégio continuam no gateway. Ver também [14-seguranca-runtime-agentes.md](14-seguranca-runtime-agentes.md) (validações em runtime) e [05-seguranca-e-etica.md](05-seguranca-e-etica.md) (Zero Trust).
