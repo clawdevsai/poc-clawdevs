@@ -23,8 +23,12 @@ spec:
           ports:
             - containerPort: 11434
           env:
+            # Modelo permanece na VRAM 5 min; reduz latência no Telegram (CEO).
             - name: OLLAMA_KEEP_ALIVE
               value: "5m"
+            # Opcional: limita janela de contexto global (ex.: 8192); reduz VRAM e pode melhorar tempo de primeira resposta.
+            - name: OLLAMA_CONTEXT_LENGTH
+              value: "8192"
           resources:
             requests:
               memory: "2Gi"

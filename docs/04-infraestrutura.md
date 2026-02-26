@@ -106,7 +106,9 @@ Os manifests dos pods de **DevOps** e **UX** devem incluir `nodeSelector` (ou ta
 O Ollama precisa de acesso exclusivo à GPU no Minikube. Exemplo de deployment (namespace `ai-agents`):
 
 - `nvidia.com/gpu: 1` nos `resources.limits` do container.
-- Variável `OLLAMA_KEEP_ALIVE`: configurável (ex.: `5m` para manter modelo na VRAM por 5 minutos; recomenda-se alinhar à estratégia de slot único / agrupamento por modelo — ver [estrategia-uso-hardware-gpu-cpu.md](estrategia-uso-hardware-gpu-cpu.md); ou `0` para descarregar após cada resposta e liberar VRAM para outros agentes).
+- Variável `OLLAMA_KEEP_ALIVE`: configurável (ex.: `5m` para manter modelo na VRAM por 5 minutos; recomenda-se alinhar à estratégia de slot único / agrupamento por modelo — ver [estrategia-uso-hardware-gpu-cpu.md](estrategia-uso-hardware-gpu-cpu.md); ou `0` para descarregar após cada resposta e liberar VRAM para outros agentes). Para **menor latência no chat Telegram (CEO)**, manter `5m` evita reload do modelo entre mensagens.
+- Variável `OLLAMA_CONTEXT_LENGTH` (opcional): limita a janela de contexto global (ex.: `8192`); reduz alocação de VRAM e pode melhorar tempo de primeira resposta quando o agente usa contexto menor (ex.: CEO com SOUL compacto). Ver deployment em `k8s/ollama/deployment.yaml`.
+- Variável `OLLAMA_NUM_CTX` / `OLLAMA_NUM_THREADS`: documentadas na documentação oficial do Ollama; uso opcional para tuning em máquinas com muitos cores ou NUMA.
 - Volume persistente para modelos (ex.: `hostPath` ou PVC no NVMe).
 
 Ver [09-setup-e-scripts.md](09-setup-e-scripts.md) para o YAML completo e integração no setup.

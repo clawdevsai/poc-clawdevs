@@ -41,6 +41,7 @@ Quando o skill **ollama-local** estiver instalado, os agentes podem usar:
 
 **Por tipo de tarefa:**
 
+- **CEO Telegram (respostas curtas):** `stewyphoenix19/phi3-mini_v1:latest` (config atual), ou `phi3:mini`, `qwen2.5:3b`, `qwen3:4b` — modelo leve, contextWindow 4096, maxTokens 512–1024 no OpenClaw. Ver [37-deploy-fase0-telegram-ceo-ollama.md](37-deploy-fase0-telegram-ceo-ollama.md) (Otimização de latência).
 - **Respostas rápidas:** `qwen3:4b`
 - **Código:** `qwen2.5-coder:7b`
 - **Uso geral:** `llama3.1:8b`

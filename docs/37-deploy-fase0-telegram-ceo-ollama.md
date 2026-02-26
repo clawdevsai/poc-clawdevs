@@ -24,14 +24,14 @@ Garanta que o Minikube tenha o device plugin NVIDIA e que o modelo esteja dispon
 ```bash
 kubectl apply -f k8s/ollama/deployment.yaml
 # Aguardar pod Running; depois, puxar o modelo (em outro terminal, port-forward ou exec):
-# kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull phi3:mini
+# kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest
 ```
 
 Para puxar o modelo a partir do host (com port-forward):
 
 ```bash
 kubectl port-forward -n ai-agents svc/ollama-service 11434:11434 &
-ollama pull phi3:mini
+ollama pull stewyphoenix19/phi3-mini_v1:latest
 kill %1
 ```
 
@@ -107,11 +107,25 @@ Com `dmPolicy: pairing`:
 | Componente   | Função                                      |
 |-------------|----------------------------------------------|
 | **openclaw**| Gateway: canal Telegram → agente CEO → Ollama|
-| **ollama-gpu** | Modelo local (ex.: phi3:mini, ministral-3:3b) |
+| **ollama-gpu** | Modelo local (ex.: stewyphoenix19/phi3-mini_v1:latest, ministral-3:3b) |
 | **redis**   | Disponível para estado/streams (fase futura) |
 | **openclaw-workspace-ceo** | SOUL.md no workspace → CEO segue perfil [soul/CEO.md](soul/CEO.md) |
 
 Doc de arquitetura: [openclaw-sub-agents-architecture.md](openclaw-sub-agents-architecture.md).
+
+---
+
+## Otimização de latência (Telegram)
+
+Para **reduzir o tempo de resposta** no chat do Telegram sem aumentar hardware:
+
+- **Modelo do CEO:** O CEO está configurado para usar **stewyphoenix19/phi3-mini_v1:latest** (modelo mais leve) com `contextWindow: 4096` e `maxTokens: 1024` no OpenClaw — respostas curtas e objetivas saem mais rápido. Ver `k8s/openclaw/configmap.yaml` e `config/openclaw/openclaw.local.json5`.
+- **OLLAMA_KEEP_ALIVE:** O deployment do Ollama usa `5m` para manter o modelo na VRAM entre mensagens; evita latência de reload. Ver `k8s/ollama/deployment.yaml`.
+- **OLLAMA_CONTEXT_LENGTH:** Opcionalmente definido (ex.: 8192) no deployment para limitar contexto global e uso de VRAM; alinha com o SOUL compacto do CEO. Ver [04-infraestrutura.md](04-infraestrutura.md).
+- **SOUL do CEO:** Manter a versão compacta em `openclaw-workspace-ceo` (respostas curtas, uma linha para cumprimentos).
+- **Streaming:** Se o OpenClaw e o canal Telegram suportarem resposta em streaming, habilitar reduz a **latência percebida** (texto aparecendo aos poucos); consultar a documentação do OpenClaw.
+
+Garantir que o modelo do CEO esteja puxado no cluster: `kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest` (ou via port-forward).
 
 ---
 

@@ -66,7 +66,7 @@ up:
 	@echo "==> up concluído."
 	@echo "  OpenClaw no K8s: o pod usa a imagem openclaw-gateway:local. Se ainda não buildou: make openclaw-image"
 	@echo "  Envie mensagem ao ClawDev bot no Telegram; a resposta vem do Ollama no cluster."
-	@echo "  Ollama: puxe o modelo se necessário: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull phi3:mini"
+	@echo "  Ollama: puxe o modelo do CEO se necessário: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest"
 
 # Build da imagem OpenClaw para o Minikube (obrigatório antes do pod openclaw subir com o gateway real)
 openclaw-image:

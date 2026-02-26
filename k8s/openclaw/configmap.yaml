@@ -25,7 +25,7 @@ data:
             "apiKey": "ollama-local",
             "api": "openai-completions",
             "models": [
-              { "id": "phi3:mini", "name": "Phi3 Mini", "contextWindow": 16000, "maxTokens": 2048 },
+              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1 (CEO Telegram, respostas rápidas)", "contextWindow": 4096, "maxTokens": 1024 },
               { "id": "ministral-3:3b", "name": "Ministral 3 3B", "contextWindow": 32000, "maxTokens": 4096 }
             ]
           }
@@ -34,7 +34,7 @@ data:
       "agents": {
         "defaults": { "model": "ollama/ministral-3:3b", "workspace": "/workspace" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/stewyphoenix19/phi3-mini_v1:latest" }
         ]
       }
     }
@@ -45,8 +45,8 @@ data:
         ollama:
           baseURL: "http://ollama-service.ai-agents.svc.cluster.local:11434"
           models:
-            - id: "ollama/phi3:mini"
-              label: "Phi3 Mini (local)"
+            - id: "ollama/stewyphoenix19/phi3-mini_v1:latest"
+              label: "Phi3 Mini v1 (local, CEO Telegram)"
             - id: "ollama/ministral-3:3b"
               label: "Ministral 3 3B (local, com tools)"
 
@@ -64,8 +64,8 @@ data:
         - id: ceo
           name: "CEO"
           description: "Estratégia e interface com o Diretor. Único agente que recebe Telegram."
-          model: "ollama/ministral-3:3b"
-          # Canal Telegram roteia para este agente
+          model: "ollama/stewyphoenix19/phi3-mini_v1:latest"
+          # Canal Telegram roteia para este agente; phi3-mini_v1 para menor latência
         - id: po
           name: "Product Owner"
           description: "Backlog e priorização. Sub-agent do CEO."

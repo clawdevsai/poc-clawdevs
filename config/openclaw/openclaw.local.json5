@@ -23,7 +23,7 @@
         baseUrl: "http://127.0.0.1:11434/v1",
         api: "openai-completions",
         models: [
-          { id: "phi3:mini", name: "Phi3 Mini (Ollama local)", contextWindow: 4096, maxTokens: 2048 },
+          { id: "stewyphoenix19/phi3-mini_v1:latest", name: "Phi3 Mini v1 (CEO Telegram, respostas rápidas)", contextWindow: 4096, maxTokens: 1024 },
           { id: "qwen2.5:3b", name: "Qwen 2.5 3B (Ollama local)", contextWindow: 4096, maxTokens: 2048 },
         ],
       },
@@ -31,10 +31,10 @@
   },
   agents: {
     defaults: {
-      model: "ollama/phi3:mini",
+      model: "ollama/stewyphoenix19/phi3-mini_v1:latest",
     },
     list: [
-      { id: "ceo", name: "CEO", description: "Interface com o Diretor. Responde no Telegram.", model: "ollama/phi3:mini" },
+      { id: "ceo", name: "CEO", description: "Interface com o Diretor. Responde no Telegram.", model: "ollama/stewyphoenix19/phi3-mini_v1:latest" },
     ],
   },
 }
