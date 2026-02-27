@@ -17,6 +17,12 @@ Pipeline de CI/CD com Q-Suite (kill switch de segurança): capacidade de parar o
 - [ ] Alerta ao Diretor (ex.: Telegram) em eventos críticos (ex.: PR bloqueado por segurança, temperatura GPU alta, custo acima do threshold).
 - [ ] Documentação de como acionar o kill switch e quais eventos disparam alerta.
 
+## Implementação (início Fase 2)
+
+- **Convenções Redis e kill switch:** [27-kill-switch-redis.md](../27-kill-switch-redis.md) — chave **cluster:pause_consumption** (1 = pausar consumidores); gatilho **80°C** = checkpoint em branch efêmera; **82°C** = set pause (Q-Suite). Recuperação: checkout limpo + clear pause; Architect para conflitos.
+- **Scripts:** [acefalo_redis.py](../../scripts/acefalo_redis.py) (`set_pause_consumption`, `is_consumption_paused`), [acefalo_retomada.py](../../scripts/acefalo_retomada.py). Consumidores (slot, developer, etc.) já respeitam `is_consumption_paused(r)`.
+- **Comando manual:** `redis-cli SET cluster:pause_consumption 1` (pausar) ou `0` (retomar). NetworkPolicy do time técnico: [k8s/development-team/networkpolicy.yaml](../../k8s/development-team/networkpolicy.yaml).
+
 ## Referências
 
 - [02-agentes.md](../02-agentes.md) (DevOps: Q-Suite)

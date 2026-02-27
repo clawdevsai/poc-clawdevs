@@ -1,0 +1,60 @@
+# Job template: sandbox efêmero para instalação de dependências (npm/pip) — Fase 2 (028).
+# Usar seccomp para bloquear syscalls de rede (socket, connect, ...); sem rede = sem exfiltração.
+# O perfil seccomp deve estar no nó em /var/lib/kubelet/seccomp/ (ex.: seccomp-install-sandbox.json).
+# Ref: docs/05-seguranca-e-etica.md § 1.3, docs/14-seguranca-runtime-agentes.md, docs/issues/028-sandbox-seccomp-ebpf-kernel.md
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: install-sandbox
+  namespace: ai-agents
+  labels:
+    app: install-sandbox
+    phase: "2"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: install-sandbox
+    spec:
+      restartPolicy: Never
+      securityContext:
+        seccompProfile:
+          type: Localhost
+          localhostProfile: seccomp-install-sandbox.json
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: sandbox
+          image: node:20-slim
+          command: ["/bin/sh", "-c", "echo 'Sandbox de instalação; substituir por script real (npm/pip)'; exit 0"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+# Alternativa: usar runtime/default e NetworkPolicy para isolar (sem seccomp customizado no nó).
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   name: install-sandbox-default
+#   namespace: ai-agents
+# spec:
+#   template:
+#     spec:
+#       securityContext:
+#         seccompProfile:
+#           type: RuntimeDefault
+#       containers:
+#         - name: sandbox
+#           image: node:20-slim
+#           ...

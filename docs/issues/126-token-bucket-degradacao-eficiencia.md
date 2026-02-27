@@ -13,6 +13,11 @@ Implementar no Gateway (ou orquestrador) controles de taxa **determinísticos** 
 - [ ] **Degradação por eficiência:** orquestrador mede a **razão** entre ideias/diretrizes geradas pelo CEO e épicos ou tarefas **aprovadas pelo PO**. Se a taxa cair **abaixo de limiar configurável**, bloquear temporariamente requisições ao modelo em nuvem para o CEO e **forçar roteamento para modelo local em CPU** (ex.: Phi-3). Objetivo: refinar ideias na fila em vez de gerar volume novo; esteira segue sem consumir cota de API. Documentar em [07-configuracao-e-prompts.md](../07-configuracao-e-prompts.md) e [05-seguranca-e-etica.md](../05-seguranca-e-etica.md).
 - [ ] **$5/dia** permanece **freio de emergência** (última linha de defesa); token bucket e degradação por eficiência são o **controle primário** sustentável.
 
+## Implementação (início Fase 2)
+
+- **Script de referência** [scripts/gateway_token_bucket.py](../../scripts/gateway_token_bucket.py): token bucket (Redis, janela 1 h) e verificação de degradação por eficiência (razão PO aprovadas / CEO ideias). Uso: Gateway chama `check_bucket` antes de publicar em cmd:strategy; `record` após publicar; `check_degrade` para decidir rotear CEO para modelo local.
+- **Documentação:** [07-configuracao-e-prompts.md](../07-configuracao-e-prompts.md) § 2.1 (Token bucket e Degradação por eficiência). Variáveis: `TOKEN_BUCKET_MAX_PER_HOUR`, `EFFICIENCY_RATIO_MIN`, `REDIS_HOST`, `REDIS_PORT`.
+
 ## Referências
 
 - [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) (System Prompt CEO, alerta imediato)

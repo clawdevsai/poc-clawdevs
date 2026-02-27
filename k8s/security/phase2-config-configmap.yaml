@@ -1,0 +1,55 @@
+# Configuração central Fase 2 — Segurança. Tudo automatizável via env (orquestrador/Gateway/scripts).
+# Aplicar com: kubectl apply -f k8s/security/phase2-config-configmap.yaml
+# Ref: docs/42-fase2-seguranca.md
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phase2-config
+  namespace: ai-agents
+  labels:
+    app: security
+    phase: "2"
+data:
+  # --- Token bucket e degradação (126) ---
+  TOKEN_BUCKET_MAX_PER_HOUR: "5"
+  EFFICIENCY_RATIO_MIN: "0.2"
+  KEY_STRATEGY_COUNT: "gateway:strategy_events_count"
+  KEY_CEO_IDEAS: "gateway:ceo_ideas_count"
+  KEY_PO_APPROVED: "gateway:po_approved_count"
+  TOKEN_BUCKET_WINDOW_SEC: "3600"
+
+  # --- Quarentena / entropia (128) ---
+  QUARANTINE_MAX_ENTROPY_PLAINTEXT: "5.5"
+  QUARANTINE_MAX_ENTROPY_HIGH: "7.9"
+  QUARANTINE_HIGH_ENTROPY_EXT: ".map,.wasm,.min.js,.min.css,.bundle.js"
+
+  # --- Reputação domínio (024) ---
+  CHECK_DOMAIN_NO_API: "block"
+
+  # --- Kill switch / pausa (027) ---
+  KEY_PAUSE_CONSUMPTION: "cluster:pause_consumption"
+  THERMAL_THRESHOLD_CHECKPOINT_C: "80"
+  THERMAL_THRESHOLD_PAUSE_C: "82"
+  THERMAL_THRESHOLD_RECOVERY_C: "65"
+
+  # --- Orquestrador autonomia (017) ---
+  DEGRADATION_THRESHOLD_PCT: "12.0"
+  ORCHESTRATOR_INTERVAL_SEC: "60"
+  STREAM_DIGEST: "digest:daily"
+
+  # --- Redis (compartilhado) ---
+  REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
+  REDIS_PORT: "6379"
+
+  # --- Automação: habilitar/desabilitar checks (1=on, 0=off) ---
+  PHASE2_TOKEN_BUCKET_ENABLED: "1"
+  PHASE2_QUARANTINE_ENTROPY_ENABLED: "1"
+  PHASE2_DOMAIN_REPUTATION_ENABLED: "1"
+  PHASE2_PAUSE_RESPECT_ENABLED: "1"
+
+  _README: |
+    Contrato de automação: docs/42-fase2-seguranca.md.
+    Scripts: não interativos; leem config via env (injetado por este ConfigMap ou padrão).
+    Gateway: antes de publicar cmd:strategy → check_bucket; após publicar → record; check_degrade para rotear CEO.
+    Quarentena: pipeline diff → assinaturas → SAST → quarantine_entropy.py.
+    Kill switch: SET cluster:pause_consumption 1|0; consumidores respeitam is_consumption_paused().

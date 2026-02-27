@@ -20,16 +20,13 @@ spec:
       initContainers:
         - name: workspace-init
           image: busybox:1.36
-          command: ["sh", "-c", "cp -r /src/. /workspace/ && chmod -R u+rwX /workspace"]
+          command: ["sh", "-c", "mkdir -p /workspace && chmod -R u+rwX /workspace"]
           volumeMounts:
-            - name: workspace-ceo-cm
-              mountPath: /src
-              readOnly: true
             - name: workspace
               mountPath: /workspace
         - name: soul-merge
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace/soul && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; chmod -R u+rwX /workspace/soul"]
+          command: ["sh", "-c", "mkdir -p /workspace/soul && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; if [ -f /workspace/soul/ceo.md ]; then cp /workspace/soul/ceo.md /workspace/SOUL.md; fi; chmod -R u+rwX /workspace/soul"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace
@@ -80,9 +77,6 @@ spec:
         - name: config
           configMap:
             name: openclaw-config
-        - name: workspace-ceo-cm
-          configMap:
-            name: openclaw-workspace-ceo
         - name: soul-management-agents
           configMap:
             name: soul-management-agents

@@ -19,6 +19,12 @@ Aviso e mitigação para skills de terceiros (ex.: Claw Hub): checklist antes de
 - [ ] Egress filtering: NetworkPolicy ou Istio/Cilium; **whitelist global estática** no Gateway (não atualização dinâmica a partir do manifesto da skill); bloquear tráfego não autorizado e disparar alerta crítico para domínios fora da lista.
 - [ ] Referência a varredura externa (registro de confiança) quando disponível.
 
+## Implementação (início Fase 2)
+
+- **Whitelist global estática:** ConfigMap [k8s/security/egress-whitelist-configmap.yaml](../../k8s/security/egress-whitelist-configmap.yaml); Gateway deve usar essa lista e **não** a autodeclaração da skill.
+- **Validação de reputação de domínio:** Script [scripts/check_domain_reputation.py](../../scripts/check_domain_reputation.py). Sem API key (variável `VIRUSTOTAL_API_KEY`), comportamento configurável: `CHECK_DOMAIN_NO_API=block` (rejeitar) ou `allow`. Integração com VirusTotal (ou equivalente) quando a API key for configurada.
+- **Checklist de skill:** Documentado em [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) (Skills de terceiros) e [19-descoberta-instalacao-skills.md](../19-descoberta-instalacao-skills.md) — origem, revisão do SKILL.md, hash, zero binários, aprovação em dúvida.
+
 ## Referências
 
 - [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) (Skills de terceiros, Filtro de conteúdo)

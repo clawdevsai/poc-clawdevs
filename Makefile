@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap
+.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -74,6 +74,7 @@ up: openclaw-image
 	@echo "==> Aplicando SOUL por escopo (management + development) — necessário para soul-merge initContainer..."
 	kubectl apply -f $(K8S_DIR)/management-team/soul/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/development-team/soul/configmap.yaml
+	@if [ -d $(K8S_DIR)/security ]; then echo "==> Aplicando Fase 2 (security + phase2-config)..."; kubectl apply -f $(K8S_DIR)/security/; fi
 	@echo "==> Aplicando Deployment OpenClaw..."
 	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
 	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
@@ -161,6 +162,12 @@ acefalo-configmap:
 	  --from-file=acefalo_monitor.py=scripts/acefalo_monitor.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> acefalo-configmap concluído. Ver docs/40-contingencia-cluster-acefalo.md"
+
+# Fase 2 — Segurança: config central (phase2-config + egress-whitelist). Tudo automatizável; ref docs/44-fase2-seguranca-automacao.md
+phase2-apply:
+	@echo "==> Aplicando Fase 2 (security: phase2-config + egress-whitelist)..."
+	@kubectl apply -f $(K8S_DIR)/security/
+	@echo "==> Fase 2 configurada. Contrato de automação: docs/44-fase2-seguranca-automacao.md"
 
 # 3. down: derruba tudo — deployments, PVCs, secrets, configmaps e namespace. Ambiente em estaca zero.
 down:

@@ -22,6 +22,12 @@ Implementar a postura Zero Trust (nunca confiar, sempre verificar). Fluxo PARAR 
 - [ ] **Zonas de confiança de autores:** permitir que o agente DevOps instale dependências **sem aprovação direta** se o pacote for **assinado criptograficamente por publicadores da matriz** (ex.: Google, Vercel, Microsoft — coisas oficiais). **Reservar a atenção do Diretor humano só para bibliotecas comunitárias desconhecidas**, onde o risco real de ataque existe. Diretor volta a ser **estrategista em vez de apertador de botão de aprovação de pacote**. Ver [05-seguranca-e-etica.md](../05-seguranca-e-etica.md).
 - [ ] **Egress/domínios:** alinhar à **whitelist global estática** no Gateway e **verificação de reputação de domínio** (não depender da autodeclaração da skill no manifesto). Ver [024-skills-terceiros-checklist-egress.md](024-skills-terceiros-checklist-egress.md) e [05-seguranca-e-etica.md](../05-seguranca-e-etica.md).
 
+## Implementação (início Fase 2)
+
+- **Fluxo 6 passos e classificação:** Documentado em [20-zero-trust-fluxo.md](../20-zero-trust-fluxo.md) (referência para SOUL/TOOLS).
+- **Egress whitelist:** ConfigMap de referência [k8s/security/egress-whitelist-configmap.yaml](../../k8s/security/egress-whitelist-configmap.yaml); Gateway deve usar lista estática e validação de reputação de domínio.
+- Demais itens (score de confiança, proxy de dependências, sandbox URL, pipeline de quarentena, zonas de confiança) seguem em [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) e [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md); implementação operacional conforme evolução do orquestrador.
+
 ## Referências
 
 - [05-seguranca-e-etica.md](../05-seguranca-e-etica.md)

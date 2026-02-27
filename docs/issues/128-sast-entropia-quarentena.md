@@ -15,6 +15,12 @@ Integrar ao pipeline de quarentena de dependências (npm/pip) as etapas necessá
 - [ ] **Análise dinâmica opcional:** Se **pico de entropia** for detectado em arquivo de tipo tolerado (whitelist), orquestrador pode acionar **CyberSec em modo dinâmico isolado** para **auditar semanticamente** o arquivo (minificação padrão vs eval/injeção de shell); decisão final com base nessa auditoria em vez de rejeição imediata.
 - [ ] Ordem do pipeline de quarentena: (1) diff de caminhos; (2) verificação de assinaturas (matriz de confiança); (3) SAST leve; (4) checagem de entropia contextual; só então aprovar transferência (ou rejeitar e alertar).
 
+## Implementação (início Fase 2)
+
+- **Pipeline em 4 etapas e entropia contextual:** Doc [21-quarentena-disco-pipeline.md](../21-quarentena-disco-pipeline.md) — ordem (1) diff de caminhos, (2) assinaturas, (3) SAST leve (semgrep), (4) entropia contextual.
+- **Script de entropia:** [scripts/quarantine_entropy.py](../../scripts/quarantine_entropy.py) — whitelist de extensões (`.map`, `.wasm`, `.min.js`, etc.) com tolerância alta; variáveis `QUARANTINE_HIGH_ENTROPY_EXT`, `QUARANTINE_MAX_ENTROPY_PLAINTEXT`, `QUARANTINE_MAX_ENTROPY_HIGH`. Uso: `quarantine_entropy.py <dir>`; exit 0 = passou, 1 = algum arquivo falhou.
+- **SAST:** Executar semgrep no sandbox sobre os arquivos extraídos (ex.: `semgrep scan --config auto --strict`); regras estritas para injeção, eval, shell. Matriz de confiança (assinaturas) dispensa entropia restritiva para pacotes oficiais.
+
 ## Referências
 
 - [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) (seção 1.3 — Quarentena de disco, Pipeline de quarentena)

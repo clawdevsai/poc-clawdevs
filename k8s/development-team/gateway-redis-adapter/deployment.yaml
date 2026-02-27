@@ -1,4 +1,5 @@
 # Adapter HTTP para publicação em Redis (Fase 1 — 018). OpenClaw chama POST /publish.
+# Fase 2: envFrom phase2-config para token bucket e Redis; adapter pode integrar check_bucket/record.
 # Replicas: 0 ou 1 conforme uso. Requer flask: pip install flask redis.
 apiVersion: apps/v1
 kind: Deployment
@@ -24,6 +25,10 @@ spec:
             - /bin/sh
             - -c
             - "pip install -q flask redis && exec python /config/gateway_redis_adapter.py"
+          envFrom:
+            - configMapRef:
+                name: phase2-config
+                optional: true
           env:
             - name: REDIS_HOST
               value: "redis-service.ai-agents.svc.cluster.local"
