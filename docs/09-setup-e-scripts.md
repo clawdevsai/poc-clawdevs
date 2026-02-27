@@ -11,14 +11,16 @@ A versão completa e recomendada do `setup.sh`:
 - Coleta e valida **chave(s) do(s) provedor(es) OpenClaw** (ex.: Ollama local sem chave; OpenRouter/OpenAI etc. conforme [lista canônica](07-configuracao-e-prompts.md#provedores-apenas-integrados-openclaw)), **Telegram Bot Token** e **Telegram Chat ID** (não aceita vazios).
 - Atualiza o sistema e instala dependências (curl, git, python3, ffmpeg, docker, nvidia-container-toolkit, conntrack, etc.).
 - Instala Docker, Minikube, kubectl e Helm (se ainda não existirem).
-- Inicia Minikube com **65%** dos recursos da máquina de referência (CPU e RAM calculados dinamicamente). Para verificar se sua máquina é equivalente, use os comandos em [00-objetivo-e-maquina-referencia.md](00-objetivo-e-maquina-referencia.md) ou execute [scripts/verify-machine.sh](scripts/verify-machine.sh).
+- Inicia Minikube com **65%** dos recursos da máquina de referência (CPU e RAM calculados dinamicamente). Para verificar se sua máquina é equivalente, use os comandos em [00-objetivo-e-maquina-referencia.md](00-objetivo-e-maquina-referencia.md) ou execute [docs/scripts/verify-machine.sh](scripts/verify-machine.sh) (a partir da raiz: `./docs/scripts/verify-machine.sh`).
+
+**Validação 009 (transcrição):** A integração m4a→md está implementada: [scripts/setup.sh](../scripts/setup.sh) configura o diretório de transcrição, copia [scripts/m4a_to_md.py](../scripts/m4a_to_md.py), cria o venv com faster-whisper e gera `config.yaml` com `voice_to_text.command` e `output_dir`; o alias `transcrever` e o teste ao final do setup validam o fluxo.
 - Instala Redis via Helm e deploy do Ollama no Kubernetes.
 - Configura o ambiente de transcrição: diretório `~/enxame/transcription/`, script `m4a_to_md.py`, venv com `faster-whisper` e `tqdm`.
 - Gera `~/enxame/openclaw/config.yaml` com canais Telegram (token, chat_id, comando de voz para texto) e provedor(es) OpenClaw (api_key ou OAuth conforme [documentação OpenClaw](https://docs.openclaw.ai)).
 - Cria aliases no `~/.bashrc` (ex.: `enxame-status`, `transcrever`, `ceo`) e script `~/enxame/start.sh`.
 - Executa testes de validação (Docker, Minikube, Redis, transcrição) e exibe mensagem final com próximos passos.
 
-O script completo está em [scripts/setup.sh](scripts/setup.sh). Para usar: salve como `setup.sh`, dê permissão de execução (`chmod +x setup.sh`) e execute (`./setup.sh`). Recarregue o shell após o fim (`source ~/.bashrc`).
+O script completo está em **[scripts/setup.sh](../scripts/setup.sh)** na raiz do repositório. Para usar: a partir da raiz do repositório ClawDevs, execute `./scripts/setup.sh` (ou `chmod +x scripts/setup.sh` se necessário). Recarregue o shell após o fim (`source ~/.bashrc`).
 
 ## Script de transcrição (m4a para texto)
 
@@ -28,7 +30,7 @@ O script **m4a_to_md.py** converte áudio M4A em texto (transcrição) e salva e
 - **Saída:** arquivo `.md` com o texto transcrito.
 - **Backends:** `faster-whisper` (recomendado) ou `openai-whisper`; requer `ffmpeg` no sistema.
 
-A versão canônica está em [scripts/m4a_to_md.py](scripts/m4a_to_md.py). O `setup.sh` instala as dependências no venv em `~/enxame/transcription/venv` e configura no OpenClaw o comando:
+A versão canônica está em [scripts/m4a_to_md.py](../scripts/m4a_to_md.py) na raiz do repositório. O `setup.sh` instala as dependências no venv em `~/enxame/transcription/venv` e configura no OpenClaw o comando:
 
 `~/enxame/transcription/venv/bin/python ~/enxame/transcription/m4a_to_md.py`
 

@@ -1,0 +1,15 @@
+# Variáveis de ambiente para o slot Revisão pós-Dev (007/125).
+# Stream, consumer group e timeout; Redis vem do default em gpu_lock.py.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: revisao-pos-dev-env
+  namespace: ai-agents
+  labels:
+    app: revisao-pos-dev
+data:
+  STREAM_CODE_READY: "code:ready"
+  CONSUMER_GROUP_REVISAO: "revisao-pos-dev"
+  SLOT_REVISAO_TIMEOUT_SEC: "300"
+  REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
+  REDIS_PORT: "6379"

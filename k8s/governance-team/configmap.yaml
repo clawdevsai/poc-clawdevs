@@ -1,0 +1,28 @@
+# Governance Proposer — config e workspace (SOUL/AGENTS).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-governance-config
+  namespace: ai-agents
+  labels:
+    app: openclaw
+    team: governance
+data:
+  openclaw-governance.json: |
+    {
+      "gateway": { "mode": "local", "port": 18790, "bind": "127.0.0.1" },
+      "models": {
+        "providers": {
+          "ollama": {
+            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434/v1",
+            "apiKey": "ollama-local",
+            "api": "openai-completions"
+          }
+        }
+      },
+      "agents": {
+        "list": [
+          { "id": "governance_proposer", "name": "Governance Proposer", "model": "ollama/qwen2.5:7b", "workspace": "/workspace" }
+        ]
+      }
+    }

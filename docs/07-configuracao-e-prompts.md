@@ -224,19 +224,19 @@ OpenClaw pode subir container temporário para o QA testar código. Definir reso
 
 O ClawDevs usa **somente** as tecnologias de inferência integradas ao OpenClaw. Nenhum provedor fora da lista abaixo (ex.: Google Gemini) deve ser documentado como opção canônica de LLM no stack ou no setup.
 
-**Lista canônica:**
+**Lista canônica (valor no ConfigMap `clawdevs-llm-providers` por agente):**
 
-| # | Provedor / tecnologia |
-|---|------------------------|
-| 1 | Ollama (local) |
-| 2 | Ollama (cloud) |
-| 3 | OpenRouter |
-| 4 | Qwen (OAuth) |
-| 5 | Moonshot AI |
-| 6 | OpenAI |
-| 7 | Hugging Face (Inference) |
+| # | Provedor / tecnologia   | Valor no K8s           |
+|---|-------------------------|------------------------|
+| 1 | Ollama (local / GPU)    | `ollama_local`         |
+| 2 | Ollama (cloud)         | `ollama_cloud`         |
+| 3 | OpenRouter             | `openrouter`           |
+| 4 | Qwen (OAuth)           | `qwen_oauth`          |
+| 5 | Moonshot AI            | `moonshot_ai`         |
+| 6 | OpenAI                 | `openai`               |
+| 7 | Hugging Face (Inference) | `huggingface_inference` |
 
-Configuração via OpenClaw (config/gateway). APIs de produto (ex.: Google Sheets via Maton) continuam como estão; esta lista refere-se apenas a provedores de **inferência LLM**.
+Configuração: em **Kubernetes**, o ConfigMap `clawdevs-llm-providers` (`k8s/llm-providers-configmap.yaml`) define por agente (`agent_ceo`, `agent_po`, `agent_devops`, etc.). Padrão: **ollama_local** (Ollama GPU no cluster). CEO e PO também têm servidor (gateway OpenClaw) e podem usar nuvem sob demanda. Configuração via OpenClaw (config/gateway). APIs de produto (ex.: Google Sheets via Maton) continuam como estão; esta lista refere-se apenas a provedores de **inferência LLM**.
 
 ### Divisão de modelos
 

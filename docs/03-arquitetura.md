@@ -10,7 +10,7 @@ A orquestração do **ClawDevs** usa **arquitetura orientada a eventos com estad
 
 ## Estado da verdade (The Global State)
 
-Em vez de passar JSONs grandes entre pods, transmite-se apenas um **ID de transação**.
+Em vez de passar JSONs grandes entre pods, transmite-se apenas um **ID de transação**. Convenção de streams e chaves: [38-redis-streams-estado-global.md](38-redis-streams-estado-global.md).
 
 - O Agente PO grava a especificação técnica completa em uma chave no Redis (ex.: `project:v1:issue:42`).
 - O Agente Developer recebe a instrução: *"Leia a chave `issue:42` e trabalhe"*. O tráfego de rede interna do Minikube permanece mínimo.

@@ -55,6 +55,6 @@ source ~/.bashrc   # após o término
 
 ## Script completo
 
-O script executável está no arquivo **setup.sh** nesta mesma pasta. O conteúdo é um único script Bash (sem markdown); para uso, copie o conteúdo de `setup.sh` para um ficheiro local, remova eventuais linhas de cabeçalho em markdown no início do ficheiro (por exemplo `---`, títulos `##` e blocos `\`\`\`bash`/`\`\`\``), mantenha apenas o Bash puro a partir de `#!/bin/bash`, e execute como indicado acima.
+O script executável está em **scripts/setup.sh** na raiz do repositório ClawDevs. Execute a partir da raiz: `./scripts/setup.sh`. Não é necessário copiar; o script detecta o repositório e usa o Makefile e k8s/ para subir o cluster.
 
 Referência: [09-setup-e-scripts.md](../09-setup-e-scripts.md) na documentação do enxame.

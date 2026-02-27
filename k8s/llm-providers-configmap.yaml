@@ -1,0 +1,40 @@
+# Configuração de provedor de LLM por agente (ClawDevs).
+# Valores possíveis: ollama_local | ollama_cloud | openrouter | qwen_oauth | moonshot_ai | openai | huggingface_inference
+# Padrão: ollama_local (Ollama GPU no cluster — http://ollama-service.ai-agents.svc.cluster.local:11434)
+#
+# Uso: o gateway OpenClaw pode ler estas chaves para definir o modelo por agente.
+# Para override: edite o valor da chave do agente e reinicie o deployment.
+# Provedores nuvem exigem secrets (OPENROUTER_API_KEY, OPENAI_API_KEY, etc.) no namespace.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clawdevs-llm-providers
+  namespace: ai-agents
+  labels:
+    app.kubernetes.io/component: config
+data:
+  # Management team (CEO, PO) — servem Telegram e podem usar nuvem sob demanda
+  agent_ceo: "ollama_local"
+  agent_po: "ollama_local"
+
+  # Development team (100% offline por padrão — Ollama GPU no cluster)
+  agent_devops: "ollama_local"
+  agent_architect: "ollama_local"
+  agent_developer: "ollama_local"
+  agent_qa: "ollama_local"
+  agent_cybersec: "ollama_local"
+  agent_ux: "ollama_local"
+  agent_dba: "ollama_local"
+
+  # Governance team (CPU, sessão isolada)
+  agent_governance_proposer: "ollama_local"
+
+  # Referência dos provedores (documentação)
+  _providers: |
+    ollama_local   = Ollama no cluster (GPU)
+    ollama_cloud   = Ollama Cloud (registry.ollama.ai)
+    openrouter     = OpenRouter
+    qwen_oauth     = Qwen (OAuth)
+    moonshot_ai    = Moonshot AI
+    openai         = OpenAI
+    huggingface_inference = Hugging Face Inference

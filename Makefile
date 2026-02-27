@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image verify
+.PHONY: prepare up down openclaw-image verify revisao-slot-configmap acefalo-configmap
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -48,9 +48,12 @@ up: openclaw-image
 	fi
 	@echo "==> Aplicando namespace..."
 	kubectl apply -f $(K8S_DIR)/namespace.yaml
+	@echo "==> Aplicando ResourceQuota e LimitRange (65% hardware)..."
+	kubectl apply -f $(K8S_DIR)/limits.yaml
 	@echo "==> Aplicando Redis..."
 	kubectl apply -f $(K8S_DIR)/redis/deployment.yaml
-	@echo "==> Aplicando Ollama..."
+	kubectl apply -f $(K8S_DIR)/redis/streams-configmap.yaml
+	@echo "==> Aplicando Ollama (GPU)..."
 	kubectl apply -f $(K8S_DIR)/ollama/deployment.yaml
 	@if [ -f $(K8S_DIR)/ollama/secret.yaml ]; then \
 		echo "==> Aplicando secret Ollama Cloud (k8s/ollama/secret.yaml)..."; \
@@ -63,6 +66,8 @@ up: openclaw-image
 	else \
 		echo "==> Secret Ollama Cloud não encontrado (opcional). Para glm-5:cloud: cp k8s/ollama/secret.yaml.example k8s/ollama/secret.yaml e preencha OLLAMA_API_KEY"; \
 	fi
+	@echo "==> Aplicando provedores de LLM por agente (ollama_local = Ollama GPU padrão)..."
+	kubectl apply -f $(K8S_DIR)/llm-providers-configmap.yaml
 	@echo "==> Aplicando OpenClaw (ConfigMap + Workspace CEO + Deployment)..."
 	kubectl apply -f $(K8S_DIR)/openclaw/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/openclaw/workspace-ceo-configmap.yaml
@@ -88,6 +93,28 @@ openclaw-image:
 verify:
 	@docs/scripts/verify-machine.sh
 	@docs/scripts/verify-gpu-cluster.sh
+
+# ConfigMap dos scripts do slot Revisão pós-Dev (007/125). Necessário para o deployment revisao-pos-dev.
+revisao-slot-configmap:
+	@echo "==> Criando ConfigMap revisao-slot-scripts (slot_revisao_pos_dev.py + gpu_lock.py)..."
+	@kubectl create configmap revisao-slot-scripts -n ai-agents \
+	  --from-file=slot_revisao_pos_dev.py=scripts/slot_revisao_pos_dev.py \
+	  --from-file=gpu_lock.py=scripts/gpu_lock.py \
+	  --from-file=acefalo_redis.py=scripts/acefalo_redis.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> revisao-slot-configmap concluído."
+
+# ConfigMap dos scripts de contingência cluster acéfalo (124). Para rodar monitor/heartbeat em pods.
+acefalo-configmap:
+	@echo "==> Criando ConfigMap acefalo-scripts..."
+	@kubectl create configmap acefalo-scripts -n ai-agents \
+	  --from-file=acefalo_redis.py=scripts/acefalo_redis.py \
+	  --from-file=acefalo_contingency.py=scripts/acefalo_contingency.py \
+	  --from-file=acefalo_retomada.py=scripts/acefalo_retomada.py \
+	  --from-file=acefalo_heartbeat_writer.py=scripts/acefalo_heartbeat_writer.py \
+	  --from-file=acefalo_monitor.py=scripts/acefalo_monitor.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> acefalo-configmap concluído. Ver docs/40-contingencia-cluster-acefalo.md"
 
 # 3. down: derruba tudo — deployments, PVCs, secrets, configmaps e namespace. Ambiente em estaca zero.
 down:

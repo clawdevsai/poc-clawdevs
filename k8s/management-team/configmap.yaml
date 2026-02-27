@@ -1,0 +1,46 @@
+# OpenClaw — Management Team (CEO, PO). Token e Chat ID vêm do Secret.
+# Provedor de LLM por agente: ver k8s/llm-providers-configmap.yaml (padrão ollama_local = Ollama GPU).
+# Opções: ollama_local, ollama_cloud, openrouter, qwen_oauth, moonshot_ai, openai, huggingface_inference.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-management-config
+  namespace: ai-agents
+  labels:
+    app: openclaw
+    team: management
+data:
+  openclaw.json: |
+    {
+      "gateway": { "mode": "local", "port": 18789, "bind": "lan", "controlUi": { "dangerouslyAllowHostHeaderOriginFallback": true } },
+      "channels": {
+        "telegram": {
+          "enabled": true,
+          "dmPolicy": "allowlist",
+          "allowFrom": ["__TELEGRAM_CHAT_ID__"],
+          "groups": {}
+        }
+      },
+      "models": {
+        "mode": "merge",
+        "providers": {
+          "ollama": {
+            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434/v1",
+            "apiKey": "ollama-local",
+            "api": "openai-completions",
+            "models": [
+              { "id": "glm-5:cloud", "name": "GLM-5 Cloud (padrão Ollama)", "contextWindow": 32000, "maxTokens": 4096 },
+              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1", "contextWindow": 16000, "maxTokens": 1024 },
+              { "id": "ministral-3:3b", "name": "Ministral 3 3B", "contextWindow": 32000, "maxTokens": 4096 }
+            ]
+          }
+        }
+      },
+      "agents": {
+        "defaults": { "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+        "list": [
+          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "po", "name": "Product Owner", "model": "ollama/glm-5:cloud", "workspace": "/workspace" }
+        ]
+      }
+    }

@@ -1,37 +1,37 @@
 ---
 name: Plano ClawDevs Fases
-overview: "Plano de fases para desenvolvimento do ClawDevs com base na análise da documentação em docs/ e docs/issues/: 11 fases (0 a 11), 59 issues, alinhado à visão \"qualquer um pode ter seu ClawDevs\" na máquina de referência, com prioridade em Fase 0 (fundação) como ponto de partida. Time técnico 100% offline da internet."
+overview: ""
 todos:
   - id: offline-time-tecnico
-    content: Time técnico 100% offline — OpenClaw sub-agents + Multi-Agent Sandbox & Tools (sandbox all/agent, tools deny browser/gateway); NetworkPolicy egress; documentar em docs/04 e docs/14 e k8s.
-    status: pending
+    content: "Time técnico 100% offline — OpenClaw sub-agents + Multi-Agent Sandbox & Tools (sandbox all/agent, tools deny browser/gateway); NetworkPolicy egress; documentar em docs/04 e docs/14 e k8s. Integração padrão Ollama-GPU; provedor por agente em k8s/llm-providers-configmap.yaml (ollama_local | ollama_cloud | openrouter | qwen_oauth | moonshot_ai | openai | huggingface_inference). Estrutura k8s: ollama/, management-team (CEO, PO), development-team, governance-team."
+    status: completed
   - id: fase0-004
-    content: "Fase 0 — 004: Adicionar ResourceQuota e LimitRange em k8s/ (ex. limits.yaml), aplicar no make up."
-    status: pending
+    content: "Fase 0 — 004: ResourceQuota e LimitRange em k8s/limits.yaml; aplicar no make up."
+    status: completed
   - id: fase0-002
-    content: "Fase 0 — 002: Criar scripts/setup.sh (não root, Pop!_OS, chaves provedores OpenClaw e Telegram, deps, Minikube 65%, Redis, Ollama, transcrição, config OpenClaw, aliases, testes)."
-    status: pending
+    content: "Fase 0 — 002: Setup um clique — scripts/setup.sh (não root, Pop!_OS, chaves Telegram/Ollama, deps, Minikube 65%, transcrição m4a_to_md.py, config OpenClaw, aliases, make up)."
+    status: completed
   - id: fase0-005
-    content: "Fase 0 — 005: Redis Streams e estado global — documentar/configurar streams e chaves (cmd:strategy, task:backlog); stub orquestrador se necessário."
-    status: pending
+    content: "Fase 0 — 005: Redis Streams e estado global — streams (cmd:strategy, task:backlog, draft.2.issue, draft_rejected, code:ready), chaves (project:v1:issue:id), doc 38, ConfigMap k8s/redis/streams-configmap.yaml, script/job init consumer groups."
+    status: completed
   - id: fase0-006
-    content: "Fase 0 — 006: GPU Lock — script Redis SETNX + TTL dinâmico, hard timeout nos deployments; referência docs/scripts/gpu_lock.md."
-    status: pending
+    content: "Fase 0 — 006: GPU Lock — script scripts/gpu_lock.py (Redis SETNX + TTL dinâmico por payload), hard timeout (activeDeadlineSeconds) documentado em 04/06 e exemplo k8s/gpu-lock-hard-timeout-example.yaml."
+    status: completed
   - id: fase0-007
-    content: "Fase 0 — 007: Consumer groups e fila de prioridade no Redis Streams; alinhar com slot único (125)."
-    status: pending
+    content: "Fase 0 — 007: Consumer groups e fila de prioridade — group revisao-pos-dev em code:ready, doc 39, init script e job-init-streams atualizados."
+    status: completed
   - id: fase0-125
-    content: "Fase 0 — 125: Pipeline explícito e slot único de revisão — um job 'Revisão pós-Dev' por code:ready, GPU Lock uma vez, Architect→QA→CyberSec→DBA em sequência, hard timeout."
-    status: pending
+    content: "Fase 0 — 125: Pipeline slot único de revisão — um consumidor code:ready, scripts/slot_revisao_pos_dev.py, k8s/revisao-pos-dev (deployment + configmap-env), make revisao-slot-configmap."
+    status: completed
   - id: fase0-009
-    content: "Fase 0 — 009: Transcrição m4a→md — garantir scripts/m4a_to_md.py e integração no setup/OpenClaw (doc 09)."
-    status: pending
+    content: "Fase 0 — 009: Transcrição m4a→md validada — setup.sh + m4a_to_md.py integrados, doc 09 atualizado."
+    status: completed
   - id: fase0-124
-    content: "Fase 0 — 124: Contingência cluster acéfalo — heartbeat Redis, branch efêmera, LanceDB, pausa GPU, health check 5 min, retomada automática (3 ciclos), notificação Diretor."
-    status: pending
+    content: "Fase 0 — 124: Contingência cluster acéfalo — scripts acefalo_*.py (heartbeat, monitor, contingency, retomada), doc 40, make acefalo-configmap; slot revisão respeita pausa."
+    status: completed
   - id: fase0-validar-001-003-008
-    content: Fase 0 — Validar 001 (verify-machine), 003 (tabela 65% e modelos no repo), 008 (Dockerfile enxuto) e documentar gaps restantes.
-    status: pending
+    content: "Fase 0 — Validar 001 (verify-machine), 003 (tabela 65% e modelos no repo), 008 (Dockerfile enxuto) e documentar gaps restantes."
+    status: completed
   - id: fase1-soul-pods
     content: Fase 1 — SOUL e pods para todos os agentes (010–019); pods CEO/PO nuvem; pods técnicos 100% offline.
     status: pending
@@ -61,10 +61,10 @@ isProject: false
 
 ### Estado atual do repositório
 
-- **Makefile:** `make prepare` (Docker, kubectl, Minikube GPU), `make up` (namespace, Redis, Ollama, OpenClaw com workspace CEO, secrets opcionais), `make down` (estaca zero), `make verify` (scripts em docs/scripts), `make openclaw-image` (build da imagem gateway).
-- **k8s:** namespace, [k8s/redis/deployment.yaml](k8s/redis/deployment.yaml), [k8s/ollama/deployment.yaml](k8s/ollama/deployment.yaml), [k8s/openclaw/](k8s/openclaw/) (configmap, workspace-ceo-configmap, deployment, Dockerfile, entrypoint, secret.example). **Ausente:** ResourceQuota/LimitRange, Redis Streams como uso efetivo, GPU Lock script, consumer groups, job “Revisão pós-Dev”.
-- **Scripts:** `docs/scripts/verify-machine.sh`, `verify-gpu-cluster.sh`; `scripts/ollama-ensure-cloud-auth.sh`, `run-openclaw-telegram-ollama.sh`. **Não existe** `setup.sh` monolítico conforme [docs/issues/002-setup-um-clique.md](docs/issues/002-setup-um-clique.md) (doc 09 referencia scripts/setup.sh).
-- **Conclusão:** A “Fase 0 mínima” (CEO via Telegram + Ollama no K8s) está **parcialmente implementada** (doc 37 + Makefile). Para “iniciar desenvolvimento ClawDevs” no sentido do backlog, o foco é **completar e consolidar a Fase 0** (issues 001–009, 124, 125) e em seguida Fase 1.
+- **Makefile:** `make prepare` (Docker, kubectl, Minikube GPU), `make up` (namespace, Redis, Ollama, llm-providers, OpenClaw com workspace CEO e todos os agentes em Ollama-GPU, secrets opcionais), `make down` (estaca zero), `make verify` (scripts em docs/scripts), `make openclaw-image` (build da imagem gateway).
+- **k8s:** namespace, [k8s/redis/](k8s/redis/), [k8s/ollama/](k8s/ollama/) (Ollama GPU), [k8s/llm-providers-configmap.yaml](k8s/llm-providers-configmap.yaml) (provedor LLM por agente), [k8s/management-team/](k8s/management-team/) (CEO, PO), [k8s/development-team/](k8s/development-team/) (time técnico), [k8s/governance-team/](k8s/governance-team/) (Governance Proposer), [k8s/openclaw/](k8s/openclaw/) (gateway Fase 0, todos os agentes Ollama-GPU). **Presente:** ResourceQuota/LimitRange (004), Redis Streams e estado global (005): [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md), [k8s/redis/streams-configmap.yaml](k8s/redis/streams-configmap.yaml), [scripts/redis-streams-init.sh](scripts/redis-streams-init.sh), [k8s/redis/job-init-streams.yaml](k8s/redis/job-init-streams.yaml). **Presente:** GPU Lock em [scripts/gpu_lock.py](scripts/gpu_lock.py) (006), hard timeout em 04/06 e [k8s/gpu-lock-hard-timeout-example.yaml](k8s/gpu-lock-hard-timeout-example.yaml). **Presente:** Consumer groups (007) e slot único Revisão pós-Dev (125): [docs/39-consumer-groups-pipeline-revisao.md](docs/39-consumer-groups-pipeline-revisao.md), [k8s/revisao-pos-dev/](k8s/revisao-pos-dev/), [scripts/slot_revisao_pos_dev.py](scripts/slot_revisao_pos_dev.py). **Presente:** 009 transcrição validada (setup + doc 09); 001/003/008 validados ([docs/issues/validacao-fase0-001-003-008.md](docs/issues/validacao-fase0-001-003-008.md)); 124 contingência cluster acéfalo ([docs/40-contingencia-cluster-acefalo.md](docs/40-contingencia-cluster-acefalo.md), scripts acefalo_*.py, make acefalo-configmap). **Ausente:** consumidores agentes completos (Fase 1).
+- **Scripts:** `docs/scripts/verify-machine.sh`, `verify-gpu-cluster.sh`; `scripts/ollama-ensure-cloud-auth.sh`, `run-openclaw-telegram-ollama.sh`; **scripts/setup.sh** (setup um clique — 002) e **scripts/m4a_to_md.py** (transcrição). Conforme [docs/issues/002-setup-um-clique.md](docs/issues/002-setup-um-clique.md) e [09-setup-e-scripts.md](docs/09-setup-e-scripts.md).
+- **Conclusão:** A **Fase 0 está concluída**: 001–009 (validados), 124 (contingência acéfalo), 125 (slot único). CEO via Telegram + Ollama no K8s operacional (doc 37 + Makefile). Próximo passo: **Fase 1** (SOUL, pods agentes, fluxo E2E).
 
 ---
 
@@ -110,8 +110,8 @@ flowchart TB
 
 
 
-- **OpenClaw usa Ollama (GPU):** O gateway OpenClaw (CEO e PO) consome o **Ollama GPU** no cluster para inferência local — em Fase 0 o CEO responde via Ollama; nuvem (OpenRouter, OpenAI, Ollama cloud, Qwen, Moonshot AI, Hugging Face) é opcional conforme config OpenClaw.
-- **Time técnico = OpenClaw com sub-agents (100% offline):** O time técnico (Developer, Architect, QA, CyberSec, UX, DBA, DevOps) roda em um **OpenClaw com sub-agents** ([Sub-Agents](https://docs.openclaw.ai/tools/subagents)): agentes são acionados via `sessions_spawn`, executam em sessões isoladas e anunciam o resultado de volta ao requester (CEO/PO ou orquestrador). Esse OpenClaw do time técnico fica **100% offline** — sem egress para internet; apenas Redis, Ollama (GPU) e rede interna do cluster. Isolamento em **duas camadas**: NetworkPolicy (K8s) + **Multi-Agent Sandbox & Tools** ([Multi-Agent Sandbox & Tools](https://docs.openclaw.ai/tools/multi-agent-sandbox-tools)) — sandbox `mode: "all"`, `scope: "agent"` e restrição de tools por agente (deny `browser`, `gateway`; allow apenas read, write, apply_patch, exec, sessions).
+- **OpenClaw usa Ollama-GPU por padrão:** O gateway OpenClaw (CEO e PO) e todos os sub-agents integram com **Ollama GPU** no cluster. Configuração em Kubernetes: ConfigMap **clawdevs-llm-providers** define onde cada agente integra com LLM (valores: ollama_local | ollama_cloud | openrouter | qwen_oauth | moonshot_ai | openai | huggingface_inference). Servidor para CEO e PO: mesmo gateway (Telegram + Redis + Ollama). Estrutura k8s: **ollama/**, **management-team/** (CEO, PO), **development-team/** (time técnico), **governance-team/** (Governance Proposer).
+- **Time técnico = OpenClaw com sub-agents (100% offline):** O time técnico (Developer, Architect, QA, CyberSec, UX, DBA, DevOps) roda em **OpenClaw com sub-agents** ([Sub-Agents](https://docs.openclaw.ai/tools/subagents)): agentes são acionados via `sessions_spawn`, executam em sessões isoladas e anunciam o resultado de volta ao requester (CEO/PO ou orquestrador). Esse OpenClaw do time técnico fica **100% offline** — sem egress para internet; apenas Redis, Ollama (GPU) e rede interna do cluster. Isolamento em **duas camadas**: NetworkPolicy (K8s) + **Multi-Agent Sandbox & Tools** ([Multi-Agent Sandbox & Tools](https://docs.openclaw.ai/tools/multi-agent-sandbox-tools)) — sandbox `mode: "all"`, `scope: "agent"` e restrição de tools por agente (deny `browser`, `gateway`; allow apenas read, write, apply_patch, exec, sessions).
 - **Event-driven:** Redis Streams como barramento; estado em chaves (ex.: `project:v1:issue:42`); GPU Lock + slot único de revisão (issue 125).
 - **Resiliência:** Contingência cluster acéfalo (124): heartbeat Redis, branch efêmera de recuperação, LanceDB, retomada automática sem comando humano.
 
