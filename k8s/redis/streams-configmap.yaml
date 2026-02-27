@@ -14,6 +14,11 @@ data:
   STREAM_DRAFT_ISSUE: "draft.2.issue"
   STREAM_DRAFT_REJECTED: "draft_rejected"
   STREAM_CODE_READY: "code:ready"
+  # Pipeline pods separados (014): code:ready → architect → qa → cybersec → dba
+  STREAM_REVIEW_ARCHITECT_DONE: "review_architect_done"
+  STREAM_REVIEW_QA_DONE: "review_qa_done"
+  STREAM_REVIEW_CYBERSEC_DONE: "review_cybersec_done"
+  STREAM_REVIEW_DONE: "review_done"
 
   # Prefixo de chaves de estado (ex.: project:v1:issue:42)
   KEY_PREFIX_PROJECT: "project:v1"

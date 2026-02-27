@@ -1,5 +1,5 @@
 # OpenClaw Gateway no Kubernetes: Telegram + Ollama (ollama-service no cluster).
-# Imagem: build local com make openclaw-image (ou eval $(minikube docker-env) && docker build -f k8s/openclaw/Dockerfile -t openclaw-gateway:local k8s/openclaw).
+# Imagem: build local com make openclaw-image (k8s/management-team/openclaw/Dockerfile).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,6 +27,18 @@ spec:
               readOnly: true
             - name: workspace
               mountPath: /workspace
+        - name: soul-merge
+          image: busybox:1.36
+          command: ["sh", "-c", "mkdir -p /workspace/soul && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; chmod -R u+rwX /workspace/soul"]
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: soul-management-agents
+              mountPath: /soul-mgmt
+              readOnly: true
+            - name: soul-development-agents
+              mountPath: /soul-dev
+              readOnly: true
       containers:
         - name: gateway
           image: openclaw-gateway:local
@@ -54,10 +66,7 @@ spec:
               readOnly: true
             - name: workspace
               mountPath: /workspace
-              # Writable: OpenClaw precisa escrever AGENTS.md etc. ao processar Telegram
-            - name: soul-agents
-              mountPath: /workspace/soul
-              readOnly: true
+              # Writable: OpenClaw escreve AGENTS.md etc. /workspace/soul é preenchido pelo initContainer soul-merge.
           resources:
             requests:
               memory: "1Gi"
@@ -74,9 +83,13 @@ spec:
         - name: workspace-ceo-cm
           configMap:
             name: openclaw-workspace-ceo
-        - name: soul-agents
+        - name: soul-management-agents
           configMap:
-            name: soul-agents
+            name: soul-management-agents
+            optional: true
+        - name: soul-development-agents
+          configMap:
+            name: soul-development-agents
             optional: true
         - name: workspace
           emptyDir: {}

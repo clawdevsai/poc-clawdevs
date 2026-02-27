@@ -1,0 +1,67 @@
+# Adapter HTTP para publicação em Redis (Fase 1 — 018). OpenClaw chama POST /publish.
+# Replicas: 0 ou 1 conforme uso. Requer flask: pip install flask redis.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-redis-adapter
+  namespace: ai-agents
+  labels:
+    app: gateway-redis-adapter
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: gateway-redis-adapter
+  template:
+    metadata:
+      labels:
+        app: gateway-redis-adapter
+    spec:
+      containers:
+        - name: adapter
+          image: python:3.12-slim
+          command:
+            - /bin/sh
+            - -c
+            - "pip install -q flask redis && exec python /config/gateway_redis_adapter.py"
+          env:
+            - name: REDIS_HOST
+              value: "redis-service.ai-agents.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: PORT
+              value: "5000"
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: scripts
+              mountPath: /config
+              readOnly: true
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: scripts
+          configMap:
+            name: gateway-redis-adapter-scripts
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-redis-adapter-service
+  namespace: ai-agents
+  labels:
+    app: gateway-redis-adapter
+spec:
+  selector:
+    app: gateway-redis-adapter
+  ports:
+    - port: 5000
+      targetPort: 5000
+      name: http
+  type: ClusterIP

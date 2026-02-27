@@ -36,6 +36,16 @@ Em impasses **puramente técnicos** (Developer vs Architect), o **CEO** pode ava
 - **Métrica:** Contagem acumulativa de 5º strike e aprovação por omissão cosmética. Ao atingir **10–15%** das tarefas do sprint na rota de fuga, acionar **loop de consenso automatizado (pré-freio de mão)** — QA + Architect propõem ajuste e testam em uma tarefa crítica.
 - **Freio de mão:** Só se o loop falhar; então DevOps dispara alerta e **pausa a esteira**. **Workflow de recuperação:** relatório de degradação, Diretor revisa MEMORY.md e config, **comando explícito de desbloqueio** (ex.: `./scripts/unblock-degradation.sh`) para retomar. Ver [06-operacoes.md](06-operacoes.md) (Orçamento de degradação, Loop de consenso, Workflow de recuperação pós-degradação).
 
+## Implementação de referência (orquestrador 017)
+
+O script [scripts/orchestrator_autonomy.py](../scripts/orchestrator_autonomy.py) implementa a lógica de **orçamento de degradação** e **digest** em modo referência:
+
+- Lê do Redis as chaves `project:v1:orchestrator:five_strikes_count`, `omission_cosmetic_count` e `sprint_task_count`.
+- Ao atingir o percentual configurável (ex.: 10–15%, variável `DEGRADATION_THRESHOLD_PCT`), define `orchestration:pause_degradation` e publica em `digest:daily` para notificação.
+- Outros componentes (DevOps, gateway) devem respeitar `orchestration:pause_degradation` e acionar o workflow de recuperação; o script de referência não executa o loop de consenso nem o freio de mão — apenas sinaliza.
+
+Variáveis de ambiente: `REDIS_HOST`, `REDIS_PORT`, `KEY_PREFIX_PROJECT`, `DEGRADATION_THRESHOLD_PCT`, `ORCHESTRATOR_INTERVAL_SEC`, `STREAM_DIGEST`.
+
 ## Referências
 
 - [01-visao-e-proposta.md](01-visao-e-proposta.md) — Autonomia nível 4, aprovação por omissão.

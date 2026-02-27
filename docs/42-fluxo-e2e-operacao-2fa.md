@@ -15,7 +15,7 @@ O Diretor pede: *"Quero implementar um sistema de login com autenticação de do
 - **CEO:** Recebe a ordem (Telegram), pesquisa melhores práticas de 2FA, define diretriz (ex.: tokens temporários TOTP, segurança máxima, baixo custo). Publica no Redis em **cmd:strategy** (tag de estratégia).
 - **PO:** Lê a diretriz, cria Issues no GitHub (ex.: #1 Schema do banco, #2 Lógica de envio de e-mail, #3 Interface de verificação). Publica prioridade no Redis (**task:backlog**). Não altera requisitos em desenvolvimento exceto **technical_blocker**.
 
-**Redis:** `cmd:strategy`, `task:backlog`; chaves de estado (ex.: `project:v1:issue:id`).
+**Redis:** `cmd:strategy`, `task:backlog`; chaves de estado (ex.: `project:v1:issue:id`). Contrato de publicação e campos mínimos: [38-redis-streams-estado-global.md](38-redis-streams-estado-global.md) (§2). Para testes: [scripts/publish_event_redis.py](../scripts/publish_event_redis.py) (issue 018).
 
 ### 2. Validação de rascunho (PO → Architect)
 

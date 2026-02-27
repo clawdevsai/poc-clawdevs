@@ -25,4 +25,6 @@ Ou adicione alvo `make developer-configmap` no Makefile.
 
 Por padrão o deployment pode estar com `replicas: 0` para não disputar o gateway único; aumentar para 1 quando quiser o Developer como consumidor dedicado de `task:backlog`.
 
-Ref: [docs/issues/013-pods-tecnicos-developer-opencode.md](../../docs/issues/013-pods-tecnicos-developer-opencode.md), [docs/02-agentes.md](../../docs/02-agentes.md).
+Pasta: `k8s/development-team/developer/`. Apply: `kubectl apply -f k8s/development-team/developer/` (após `make developer-configmap`).
+
+Ref: [docs/issues/013-pods-tecnicos-developer-opencode.md](../../../docs/issues/013-pods-tecnicos-developer-opencode.md), [docs/02-agentes.md](../../../docs/02-agentes.md).

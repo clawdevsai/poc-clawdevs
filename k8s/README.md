@@ -1,46 +1,43 @@
 # Kubernetes — ClawDevs
 
-Estrutura por times e integração com **Ollama GPU** por padrão. Provedor de LLM por agente configurável em `llm-providers-configmap.yaml` (opções: ollama_local, ollama_cloud, openrouter, qwen_oauth, moonshot_ai, openai, huggingface_inference).
+Estrutura **centralizada por times**. Na raiz de `k8s/` ficam apenas pastas principais e arquivos cluster-wide.
 
-## Estrutura de pastas
+Provedor de LLM por agente: `llm-providers-configmap.yaml` (ollama_local, ollama_cloud, openrouter, etc.). Ver [07-configuracao-e-prompts.md](docs/07-configuracao-e-prompts.md).
+
+## Estrutura (pastas principais)
 
 | Pasta | Conteúdo |
 |-------|----------|
 | **ollama/** | Deployment Ollama GPU, Service, PVC. Inferência local no cluster. |
-| **management-team/** | CEO e PO — gateway OpenClaw com Telegram, Redis, Ollama (e nuvem opcional). |
-| **development-team/** | DevOps, Architect, Developer, QA, CyberSec, UX, DBA — config e NetworkPolicy (100% offline). |
-| **governance-team/** | Governance Proposer — config e deployment (CPU, sessão isolada). |
-| **redis/** | Redis (deployment, service), **streams-configmap.yaml** (nomes dos streams e chaves), **job-init-streams.yaml** (opcional, cria consumer groups). Ref: [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md). |
-| **openclaw/** | Gateway único (Fase 0): Dockerfile, entrypoint, configmap com todos os agentes, deployment. |
-| **developer/** | Pod Developer (Fase 1 — 013): PVC workspace, consumer task:backlog, GPU Lock. `make developer-configmap` + `kubectl apply -f developer/`. |
-| **limits.yaml** | ResourceQuota (65% hardware) e LimitRange por container (Fase 0 — 004). |
+| **redis/** | Redis (deployment, service), streams-configmap.yaml, job-init-streams.yaml. Ref: [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md). |
+| **management-team/** | CEO e PO. **openclaw/** — gateway (Dockerfile, configmap, deployment, workspace-ceo, secret.example). **soul/** — ConfigMap soul-management-agents (PO; CEO em workspace-ceo). configmap.yaml, deployment.yaml (openclaw-management). |
+| **development-team/** | Time técnico (100% offline). **soul/** — ConfigMap soul-development-agents (devops, architect, developer, qa, cybersec, ux, dba). **developer/**, **revisao-pos-dev/**, configmap, networkpolicy, gpu-lock-hard-timeout-example.yaml. |
+| **governance-team/** | Governance Proposer. **soul/** — SOUL do agente. configmap.yaml, deployment.yaml. |
 
-## Ordem de apply (Fase 0)
+Arquivos na raiz: `namespace.yaml`, `limits.yaml` (ResourceQuota 65%), `llm-providers-configmap.yaml`.
+
+## Ordem de apply (make up)
 
 ```bash
 kubectl apply -f namespace.yaml
 kubectl apply -f limits.yaml
-kubectl apply -f redis/deployment.yaml
-kubectl apply -f redis/streams-configmap.yaml
-# Opcional: criar streams e consumer group (uma vez) — kubectl apply -f redis/job-init-streams.yaml
+kubectl apply -f redis/
 kubectl apply -f ollama/deployment.yaml
 kubectl apply -f llm-providers-configmap.yaml
-# Secret Telegram: kubectl create secret generic openclaw-telegram -n ai-agents --from-literal=TELEGRAM_BOT_TOKEN='...' --from-literal=TELEGRAM_CHAT_ID='...'
-kubectl apply -f openclaw/configmap.yaml
-kubectl apply -f openclaw/workspace-ceo-configmap.yaml
-kubectl apply -f openclaw/deployment.yaml
+# Gateway e SOUL
+kubectl apply -f management-team/openclaw/configmap.yaml
+kubectl apply -f management-team/openclaw/workspace-ceo-configmap.yaml
+kubectl apply -f management-team/openclaw/deployment.yaml
+kubectl apply -f management-team/soul/configmap.yaml
+# Secret Telegram: management-team/openclaw/secret.yaml (opcional)
 ```
 
-Ou use `make up` (aplica o fluxo acima e usa a imagem buildada com `make openclaw-image`).
-
-## Provedor de LLM por agente
-
-ConfigMap `clawdevs-llm-providers`: chaves `agent_ceo`, `agent_po`, `agent_devops`, etc. Valores: `ollama_local` (padrão, Ollama GPU no cluster) | `ollama_cloud` | `openrouter` | `qwen_oauth` | `moonshot_ai` | `openai` | `huggingface_inference`. Para usar nuvem, criar secrets correspondentes no namespace (OPENROUTER_API_KEY, OPENAI_API_KEY, etc.) e ajustar o modelo no config do OpenClaw (ex.: `openrouter/model-id`).
+Ou use **`make up`** (build da imagem com `make openclaw-image`).
 
 ## Layout por time
 
-- **Management (CEO, PO):** servem Telegram; podem usar Ollama GPU ou nuvem. Gateway único (openclaw) já inclui CEO e PO; alternativa **apenas CEO/PO**: `make up-management` aplica `management-team/` (scale openclaw a 0 para evitar dois gateways Telegram). Ref: Fase 1 — 012.
-- **Development (time técnico):** 100% offline por padrão; Ollama GPU. Config fragmento em `development-team/`; NetworkPolicy para pod dedicado.
-- **Governance:** Governance Proposer em `governance-team/` (replicas: 0 por padrão; ativar sob demanda).
+- **Management:** Gateway em `management-team/openclaw/`; SOUL em `management-team/soul/`. Alternativa só CEO/PO: `make up-management` (scale openclaw a 0 para um único gateway Telegram). Ref: Fase 1 — 012.
+- **Development:** Developer pod em `development-team/developer/` (`make developer-configmap` + `kubectl apply -f development-team/developer/`). Slot revisão em `development-team/revisao-pos-dev/` (`make revisao-slot-configmap` + apply). SOUL dev em `development-team/soul/`.
+- **Governance:** `governance-team/` (soul/, configmap, deployment).
 
-Ref: [docs/openclaw-sub-agents-architecture.md](docs/openclaw-sub-agents-architecture.md), [docs/04-infraestrutura.md](docs/04-infraestrutura.md), [docs/07-configuracao-e-prompts.md](docs/07-configuracao-e-prompts.md).
+Ref: [docs/openclaw-sub-agents-architecture.md](docs/openclaw-sub-agents-architecture.md), [docs/04-infraestrutura.md](docs/04-infraestrutura.md), [docs/41-fase1-agentes-soul-pods.md](docs/41-fase1-agentes-soul-pods.md).

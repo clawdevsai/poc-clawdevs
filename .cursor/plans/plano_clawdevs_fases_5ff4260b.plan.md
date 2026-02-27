@@ -15,13 +15,13 @@ todos:
     content: "Fase 0 — 005: Redis Streams e estado global — streams (cmd:strategy, task:backlog, draft.2.issue, draft_rejected, code:ready), chaves (project:v1:issue:id), doc 38, ConfigMap k8s/redis/streams-configmap.yaml, script/job init consumer groups."
     status: completed
   - id: fase0-006
-    content: "Fase 0 — 006: GPU Lock — script scripts/gpu_lock.py (Redis SETNX + TTL dinâmico por payload), hard timeout (activeDeadlineSeconds) documentado em 04/06 e exemplo k8s/gpu-lock-hard-timeout-example.yaml."
+    content: "Fase 0 — 006: GPU Lock — script scripts/gpu_lock.py (Redis SETNX + TTL dinâmico por payload), hard timeout (activeDeadlineSeconds) documentado em 04/06 e exemplo k8s/development-team/gpu-lock-hard-timeout-example.yaml."
     status: completed
   - id: fase0-007
     content: "Fase 0 — 007: Consumer groups e fila de prioridade — group revisao-pos-dev em code:ready, doc 39, init script e job-init-streams atualizados."
     status: completed
   - id: fase0-125
-    content: "Fase 0 — 125: Pipeline slot único de revisão — um consumidor code:ready, scripts/slot_revisao_pos_dev.py, k8s/revisao-pos-dev (deployment + configmap-env), make revisao-slot-configmap."
+    content: "Fase 0 — 125: Pipeline slot único de revisão — um consumidor code:ready, scripts/slot_revisao_pos_dev.py, k8s/development-team/revisao-pos-dev (deployment + configmap-env), make revisao-slot-configmap."
     status: completed
   - id: fase0-009
     content: "Fase 0 — 009: Transcrição m4a→md validada — setup.sh + m4a_to_md.py integrados, doc 09 atualizado."
@@ -48,7 +48,7 @@ todos:
     content: "Fase 1 — 012: make up-management (CEO/PO)."
     status: completed
   - id: fase1-013
-    content: "Fase 1 — 013: Pod Developer (k8s/developer/, PVC, GPU Lock, make developer-configmap)."
+    content: "Fase 1 — 013: Pod Developer (k8s/development-team/developer/, PVC, GPU Lock, make developer-configmap)."
     status: completed
   - id: fase1-014
     content: "Fase 1 — 014: Slot revisão documentado (Architect/QA/CyberSec/DBA)."
@@ -61,6 +61,12 @@ todos:
     status: completed
   - id: fase1-017
     content: "Fase 1 — 017: Doc 43 autonomia nível 4 e matriz de escalonamento."
+    status: completed
+  - id: fase1-018
+    content: "Fase 1 — 018: Fluxo evento-driven mínimo — contrato de publicação Redis, script publish_event_redis.py, doc 38 §2."
+    status: completed
+  - id: fase1-019
+    content: "Fase 1 — 019: Validação management nuvem + line-up (doc 37, 41, validacao-fase1-019.md)."
     status: completed
 isProject: false
 ---
@@ -86,9 +92,9 @@ isProject: false
 ### Estado atual do repositório
 
 - **Makefile:** `make prepare` (Docker, kubectl, Minikube GPU), `make up` (namespace, Redis, Ollama, llm-providers, OpenClaw com workspace CEO e todos os agentes em Ollama-GPU, secrets opcionais), `make down` (estaca zero), `make verify` (scripts em docs/scripts), `make openclaw-image` (build da imagem gateway).
-- **k8s:** namespace, [k8s/redis/](k8s/redis/), [k8s/ollama/](k8s/ollama/) (Ollama GPU), [k8s/llm-providers-configmap.yaml](k8s/llm-providers-configmap.yaml) (provedor LLM por agente), [k8s/management-team/](k8s/management-team/) (CEO, PO), [k8s/development-team/](k8s/development-team/) (time técnico), [k8s/governance-team/](k8s/governance-team/) (Governance Proposer), [k8s/openclaw/](k8s/openclaw/) (gateway Fase 0, todos os agentes Ollama-GPU). **Presente:** ResourceQuota/LimitRange (004), Redis Streams e estado global (005): [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md), [k8s/redis/streams-configmap.yaml](k8s/redis/streams-configmap.yaml), [scripts/redis-streams-init.sh](scripts/redis-streams-init.sh), [k8s/redis/job-init-streams.yaml](k8s/redis/job-init-streams.yaml). **Presente:** GPU Lock em [scripts/gpu_lock.py](scripts/gpu_lock.py) (006), hard timeout em 04/06 e [k8s/gpu-lock-hard-timeout-example.yaml](k8s/gpu-lock-hard-timeout-example.yaml). **Presente:** Consumer groups (007) e slot único Revisão pós-Dev (125): [docs/39-consumer-groups-pipeline-revisao.md](docs/39-consumer-groups-pipeline-revisao.md), [k8s/revisao-pos-dev/](k8s/revisao-pos-dev/), [scripts/slot_revisao_pos_dev.py](scripts/slot_revisao_pos_dev.py). **Presente:** 009 transcrição validada (setup + doc 09); 001/003/008 validados ([docs/issues/validacao-fase0-001-003-008.md](docs/issues/validacao-fase0-001-003-008.md)); 124 contingência cluster acéfalo ([docs/40-contingencia-cluster-acefalo.md](docs/40-contingencia-cluster-acefalo.md), scripts acefalo_*.py, make acefalo-configmap). **Ausente:** consumidores agentes completos (Fase 1).
+- **k8s:** namespace, [k8s/redis/](k8s/redis/), [k8s/ollama/](k8s/ollama/) (Ollama GPU), [k8s/llm-providers-configmap.yaml](k8s/llm-providers-configmap.yaml) (provedor LLM por agente), [k8s/management-team/](k8s/management-team/) (CEO, PO), [k8s/development-team/](k8s/development-team/) (time técnico), [k8s/governance-team/](k8s/governance-team/) (Governance Proposer), [k8s/management-team/openclaw/](k8s/management-team/openclaw/) (gateway Fase 0, todos os agentes Ollama-GPU). **Presente:** ResourceQuota/LimitRange (004), Redis Streams e estado global (005): [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md), [k8s/redis/streams-configmap.yaml](k8s/redis/streams-configmap.yaml), [scripts/redis-streams-init.sh](scripts/redis-streams-init.sh), [k8s/redis/job-init-streams.yaml](k8s/redis/job-init-streams.yaml). **Presente:** GPU Lock em [scripts/gpu_lock.py](scripts/gpu_lock.py) (006), hard timeout em 04/06 e [k8s/development-team/gpu-lock-hard-timeout-example.yaml](k8s/development-team/gpu-lock-hard-timeout-example.yaml). **Presente:** Consumer groups (007) e slot único Revisão pós-Dev (125): [docs/39-consumer-groups-pipeline-revisao.md](docs/39-consumer-groups-pipeline-revisao.md), [k8s/revisao-pos-dev/](k8s/revisao-pos-dev/), [scripts/slot_revisao_pos_dev.py](scripts/slot_revisao_pos_dev.py). **Presente:** 009 transcrição validada (setup + doc 09); 001/003/008 validados ([docs/issues/validacao-fase0-001-003-008.md](docs/issues/validacao-fase0-001-003-008.md)); 124 contingência cluster acéfalo ([docs/40-contingencia-cluster-acefalo.md](docs/40-contingencia-cluster-acefalo.md), scripts acefalo_*.py, make acefalo-configmap). **Ausente:** consumidores agentes completos (Fase 1).
 - **Scripts:** `docs/scripts/verify-machine.sh`, `verify-gpu-cluster.sh`; `scripts/ollama-ensure-cloud-auth.sh`, `run-openclaw-telegram-ollama.sh`; **scripts/setup.sh** (setup um clique — 002) e **scripts/m4a_to_md.py** (transcrição). Conforme [docs/issues/002-setup-um-clique.md](docs/issues/002-setup-um-clique.md) e [09-setup-e-scripts.md](docs/09-setup-e-scripts.md).
-- **Conclusão:** Fase 0 concluída. **Fase 1 implementada (ordem 010→017):** 010 definição + tabela conflitos (02-agentes); 011 SOUL montado em openclaw (/workspace/soul), ConfigMap soul-agents; 012 make up-management (CEO/PO); 013 pod Developer (k8s/developer/, PVC, GPU Lock, make developer-configmap); 014 slot revisão documentado como Architect/QA/CyberSec/DBA; 015 CODE_OF_CONDUCT.md; 016 doc 42 E2E 2FA; 017 doc 43 autonomia nível 4 e matriz. Ref: [docs/41-fase1-agentes-soul-pods.md](docs/41-fase1-agentes-soul-pods.md).
+- **Conclusão:** Fase 0 concluída. **Fase 1 (010→017) implementada.** **k8s centralizado:** apenas pastas principais na raiz — **ollama/**, **redis/**, **management-team/** (openclaw/, soul/), **development-team/** (soul/, developer/, revisao-pos-dev/, gpu-lock example), **governance-team/** (soul/); namespace, limits e llm-providers na raiz. 018/019 implementados (contrato Redis + script; management nuvem + line-up). Próxima fase = **Fase 2 — Segurança** (020–029, 126, 128). Ref: [docs/41-fase1-agentes-soul-pods.md](docs/41-fase1-agentes-soul-pods.md), [k8s/README.md](k8s/README.md).
 
 ---
 
@@ -171,7 +177,7 @@ A **primeira fase de desenvolvimento** deve ser a **Fase 0 — Fundação**, par
 
 - **001** — Máquina de referência: doc [00-objetivo-e-maquina-referencia.md](docs/00-objetivo-e-maquina-referencia.md) e scripts `docs/scripts/verify-machine.sh` / `verify-machine.md`.
 - **003** — Minikube + Redis + Ollama: Makefile (`prepare` + `up`), [k8s/ollama/deployment.yaml](k8s/ollama/deployment.yaml), [k8s/redis/deployment.yaml](k8s/redis/deployment.yaml). Falta: documentar tabela 65% e modelos recomendados no repo (já em 04-infra).
-- **008** — Docker multi-stage: [k8s/openclaw/Dockerfile](k8s/openclaw/Dockerfile) existe; validar se atende “imagens enxutas”.
+- **008** — Docker multi-stage: [k8s/management-team/openclaw/Dockerfile](k8s/management-team/openclaw/Dockerfile) existe; validar se atende “imagens enxutas”.
 - **Deploy Fase 0 (doc 37):** CEO Telegram + Ollama no cluster aplicado via `make up`; secret Telegram e workspace CEO (SOUL) aplicados.
 
 ### 4.2 Itens a implementar na Fase 0 (prioridade sugerida)
