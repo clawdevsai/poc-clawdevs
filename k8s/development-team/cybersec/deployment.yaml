@@ -1,0 +1,62 @@
+# Pod CyberSec (Fase 1 — 014). Consome review_qa_done, publica review_cybersec_done.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cybersec-slot
+  namespace: ai-agents
+  labels:
+    app: cybersec-slot
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: cybersec-slot
+  template:
+    metadata:
+      labels:
+        app: cybersec-slot
+    spec:
+      containers:
+        - name: slot
+          image: python:3.12-slim
+          command:
+            - /bin/sh
+            - -c
+            - "pip install -q redis && cd /config && exec python slot_agent_single.py"
+          envFrom:
+            - configMapRef:
+                name: cybersec-slot-env
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: scripts
+              mountPath: /config
+              readOnly: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: scripts
+          configMap:
+            name: agent-slot-scripts
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cybersec-slot-service
+  namespace: ai-agents
+  labels:
+    app: cybersec-slot
+spec:
+  selector:
+    app: cybersec-slot
+  ports: []
+  type: ClusterIP

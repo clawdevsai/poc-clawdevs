@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image verify revisao-slot-configmap acefalo-configmap up-management developer-configmap
+.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -69,17 +69,18 @@ up: openclaw-image
 	@echo "==> Aplicando provedores de LLM por agente (ollama_local = Ollama GPU padrão)..."
 	kubectl apply -f $(K8S_DIR)/llm-providers-configmap.yaml
 	@echo "==> Aplicando OpenClaw (ConfigMap + Workspace CEO + Deployment)..."
-	kubectl apply -f $(K8S_DIR)/openclaw/configmap.yaml
-	kubectl apply -f $(K8S_DIR)/openclaw/workspace-ceo-configmap.yaml
-	kubectl apply -f $(K8S_DIR)/openclaw/deployment.yaml
-	@echo "==> Aplicando SOUL por agente (Fase 1 — 011)..."
-	kubectl apply -f $(K8S_DIR)/soul/configmap.yaml
-	@if [ -f $(K8S_DIR)/openclaw/secret.yaml ]; then \
-		echo "==> Aplicando secret Telegram (k8s/openclaw/secret.yaml)..."; \
-		kubectl apply -f $(K8S_DIR)/openclaw/secret.yaml; \
+	kubectl apply -f $(K8S_DIR)/management-team/openclaw/configmap.yaml
+	kubectl apply -f $(K8S_DIR)/management-team/openclaw/workspace-ceo-configmap.yaml
+	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
+	@echo "==> Aplicando SOUL por escopo (management + development)..."
+	kubectl apply -f $(K8S_DIR)/management-team/soul/configmap.yaml
+	kubectl apply -f $(K8S_DIR)/development-team/soul/configmap.yaml
+	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
+		echo "==> Aplicando secret Telegram (k8s/management-team/openclaw/secret.yaml)..."; \
+		kubectl apply -f $(K8S_DIR)/management-team/openclaw/secret.yaml; \
 		kubectl rollout restart deployment/openclaw -n ai-agents --timeout=60s 2>/dev/null || true; \
 	else \
-		echo "==> Secret Telegram não encontrado (opcional). Crie k8s/openclaw/secret.yaml ou: kubectl create secret generic openclaw-telegram -n ai-agents --from-literal=TELEGRAM_BOT_TOKEN=... --from-literal=TELEGRAM_CHAT_ID=..."; \
+		echo "==> Secret Telegram não encontrado (opcional). Crie k8s/management-team/openclaw/secret.yaml ou: kubectl create secret generic openclaw-telegram -n ai-agents --from-literal=TELEGRAM_BOT_TOKEN=... --from-literal=TELEGRAM_CHAT_ID=..."; \
 	fi
 	@echo "==> up concluído."
 	@echo "  Envie mensagem ao ClawDev bot no Telegram; a resposta vem do Ollama no cluster."
@@ -90,10 +91,10 @@ up: openclaw-image
 # Se usar este target, scale o gateway único a 0 para não ter dois listeners Telegram: kubectl scale deployment openclaw -n ai-agents --replicas=0
 up-management:
 	@echo "==> Aplicando Management Team (CEO, PO)..."
-	kubectl apply -f $(K8S_DIR)/openclaw/workspace-ceo-configmap.yaml
+	kubectl apply -f $(K8S_DIR)/management-team/openclaw/workspace-ceo-configmap.yaml
 	kubectl apply -f $(K8S_DIR)/management-team/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/management-team/deployment.yaml
-	@if [ -f $(K8S_DIR)/openclaw/secret.yaml ]; then \
+	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
 		echo "==> Secret Telegram já existe (openclaw)."; \
 	else \
 		echo "==> Crie o secret: kubectl create secret generic openclaw-telegram -n ai-agents --from-literal=TELEGRAM_BOT_TOKEN=... --from-literal=TELEGRAM_CHAT_ID=..."; \
@@ -107,12 +108,12 @@ developer-configmap:
 	  --from-file=developer_worker.py=scripts/developer_worker.py \
 	  --from-file=gpu_lock.py=scripts/gpu_lock.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
-	@echo "==> developer-configmap concluído. Aplique k8s/developer/ (PVC + deployment)."
+	@echo "==> developer-configmap concluído. Aplique k8s/development-team/developer/ (PVC + deployment)."
 
 # Build da imagem OpenClaw para o Minikube (obrigatório antes do pod openclaw subir com o gateway real)
 openclaw-image:
 	@echo "==> Build da imagem openclaw-gateway:local no Docker do Minikube..."
-	eval $$(minikube docker-env) && docker build -f $(K8S_DIR)/openclaw/Dockerfile -t openclaw-gateway:local $(K8S_DIR)/openclaw
+	eval $$(minikube docker-env) && docker build -f $(K8S_DIR)/management-team/openclaw/Dockerfile -t openclaw-gateway:local $(K8S_DIR)/management-team/openclaw
 	@echo "==> openclaw-image concluído."
 
 # Verificação de hardware (máquina de referência + consumo GPU/CPU/RAM + Quest 65%) e cluster (Minikube + Ollama GPU)
@@ -129,6 +130,24 @@ revisao-slot-configmap:
 	  --from-file=acefalo_redis.py=scripts/acefalo_redis.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> revisao-slot-configmap concluído."
+
+# ConfigMap dos scripts para pods separados por agente (Architect, QA, CyberSec, DBA — 014).
+agent-slots-configmap:
+	@echo "==> Criando ConfigMap agent-slot-scripts (slot_agent_single.py + gpu_lock.py)..."
+	@kubectl create configmap agent-slot-scripts -n ai-agents \
+	  --from-file=slot_agent_single.py=scripts/slot_agent_single.py \
+	  --from-file=gpu_lock.py=scripts/gpu_lock.py \
+	  --from-file=acefalo_redis.py=scripts/acefalo_redis.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> agent-slots-configmap concluído. Aplique k8s/development-team/architect/ etc. (replicas: 0)."
+
+# ConfigMap do adapter HTTP para publicação Redis (gateway OpenClaw → POST /publish).
+gateway-redis-adapter-configmap:
+	@echo "==> Criando ConfigMap gateway-redis-adapter-scripts..."
+	@kubectl create configmap gateway-redis-adapter-scripts -n ai-agents \
+	  --from-file=gateway_redis_adapter.py=scripts/gateway_redis_adapter.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> gateway-redis-adapter-configmap concluído. Aplique k8s/development-team/gateway-redis-adapter/."
 
 # ConfigMap dos scripts de contingência cluster acéfalo (124). Para rodar monitor/heartbeat em pods.
 acefalo-configmap:

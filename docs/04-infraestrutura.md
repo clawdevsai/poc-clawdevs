@@ -106,11 +106,10 @@ Os manifests dos pods de **DevOps** e **UX** devem incluir `nodeSelector` (ou ta
 Pastas por time e componente:
 
 - **ollama/** — Deployment Ollama GPU, Service, PVC. Inferência local no cluster; todos os agentes integram com Ollama-GPU por padrão.
-- **management-team/** — CEO e PO: gateway OpenClaw com Telegram, Redis, Ollama (e nuvem opcional). Servidor para CEO e PO.
-- **development-team/** — DevOps, Architect, Developer, QA, CyberSec, UX, DBA: config e NetworkPolicy para operação 100% offline (Ollama GPU).
-- **governance-team/** — Governance Proposer: config e deployment (CPU, sessão isolada).
 - **redis/** — Redis Streams (estado global e eventos).
-- **openclaw/** — Gateway único Fase 0: Dockerfile, configmap com todos os agentes, deployment.
+- **management-team/** — CEO e PO: **openclaw/** (gateway: Dockerfile, configmap, deployment, workspace-ceo), **soul/** (ConfigMap soul-agents). Servidor para CEO e PO.
+- **development-team/** — DevOps, Architect, Developer, QA, CyberSec, UX, DBA: **soul/**, **developer/** (pod 013), **revisao-pos-dev/** (slot 125), config e NetworkPolicy (100% offline).
+- **governance-team/** — Governance Proposer: **soul/**, config e deployment (CPU, sessão isolada).
 
 Provedor de LLM por agente: ConfigMap `clawdevs-llm-providers` em `k8s/llm-providers-configmap.yaml`. Valores: `ollama_local` (padrão) | `ollama_cloud` | `openrouter` | `qwen_oauth` | `moonshot_ai` | `openai` | `huggingface_inference`. Ver [07-configuracao-e-prompts.md](07-configuracao-e-prompts.md).
 

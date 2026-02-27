@@ -18,7 +18,7 @@ Resumo da validação dos itens **001** (máquina de referência), **003** (Mini
 
 ## 008 — Docker multi-stage e imagens enxutas
 
-- **Gateway OpenClaw (Fase 0):** [k8s/openclaw/Dockerfile](../../k8s/openclaw/Dockerfile) usa base `node:22-bookworm-slim`, instala apenas `curl`, `git` e `openclaw@latest`, limpa apt lists — imagem enxuta.
+- **Gateway OpenClaw (Fase 0):** [k8s/management-team/openclaw/Dockerfile](../../k8s/management-team/openclaw/Dockerfile) usa base `node:22-bookworm-slim`, instala apenas `curl`, `git` e `openclaw@latest`, limpa apt lists — imagem enxuta.
 - **Multi-stage por agente:** A issue 008 pede multi-stage com estágio builder e runtime ~300 MB **por agente**. Na Fase 0 há um único gateway (OpenClaw); pods por agente (Fase 1) usarão Dockerfiles multi-stage quando cada agente tiver sua própria imagem.
 - **Status:** Validado para Fase 0 (imagem gateway enxuta). Multi-stage por agente fica para Fase 1 (010–019).
 

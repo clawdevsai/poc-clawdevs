@@ -29,7 +29,7 @@ Ref: [estrategia-uso-hardware-gpu-cpu.md](estrategia-uso-hardware-gpu-cpu.md), [
   2. **Adquire o GPU Lock** uma vez ([scripts/gpu_lock.py](../scripts/gpu_lock.py)).
   3. Carrega **um** modelo (ex.: Llama 3 8B) e executa **em sequência interna** (sem liberar o lock): Architect → QA → CyberSec → DBA (e opcionalmente UX).
   4. Libera o lock e envia **XACK** só após **100% concluído em disco** (semântica idempotente).
-- **Hard timeout:** O Job tem `activeDeadlineSeconds: 300` (5 min) para cobrir a duração total do slot; evita lock órfão. Ver [04-infraestrutura.md](04-infraestrutura.md) e [k8s/gpu-lock-hard-timeout-example.yaml](../k8s/gpu-lock-hard-timeout-example.yaml).
+- **Hard timeout:** O Job tem `activeDeadlineSeconds: 300` (5 min) para cobrir a duração total do slot; evita lock órfão. Ver [04-infraestrutura.md](04-infraestrutura.md) e [k8s/development-team/gpu-lock-hard-timeout-example.yaml](../k8s/development-team/gpu-lock-hard-timeout-example.yaml).
 
 ---
 
@@ -51,6 +51,6 @@ Ref: [estrategia-uso-hardware-gpu-cpu.md](estrategia-uso-hardware-gpu-cpu.md), [
 
 ## 5. Deployment "Revisão pós-Dev"
 
-- Manifesto: [k8s/revisao-pos-dev/deployment.yaml](../k8s/revisao-pos-dev/deployment.yaml) (1 replica, consumidor long-running). ConfigMap de env: [k8s/revisao-pos-dev/configmap-env.yaml](../k8s/revisao-pos-dev/configmap-env.yaml). Para tempo máximo por execução do slot (ex.: 300 s), ver [04-infraestrutura.md](04-infraestrutura.md) e [k8s/gpu-lock-hard-timeout-example.yaml](../k8s/gpu-lock-hard-timeout-example.yaml).
-- Script do slot: [scripts/slot_revisao_pos_dev.py](../scripts/slot_revisao_pos_dev.py) (lê `code:ready`, adquire lock, executa as quatro etapas em sequência, libera, ACK). ConfigMap dos scripts: `make revisao-slot-configmap` ou ver [k8s/revisao-pos-dev/README.md](../k8s/revisao-pos-dev/README.md).
+- Manifesto: [k8s/development-team/revisao-pos-dev/deployment.yaml](../k8s/development-team/revisao-pos-dev/deployment.yaml) (1 replica, consumidor long-running). ConfigMap de env: [k8s/development-team/revisao-pos-dev/configmap-env.yaml](../k8s/development-team/revisao-pos-dev/configmap-env.yaml). Para tempo máximo por execução do slot (ex.: 300 s), ver [04-infraestrutura.md](04-infraestrutura.md) e [k8s/development-team/gpu-lock-hard-timeout-example.yaml](../k8s/development-team/gpu-lock-hard-timeout-example.yaml).
+- Script do slot: [scripts/slot_revisao_pos_dev.py](../scripts/slot_revisao_pos_dev.py) (lê `code:ready`, adquire lock, executa as quatro etapas em sequência, libera, ACK). ConfigMap dos scripts: `make revisao-slot-configmap` ou ver [k8s/development-team/revisao-pos-dev/README.md](../k8s/development-team/revisao-pos-dev/README.md).
 - Integração com [scripts/gpu_lock.py](../scripts/gpu_lock.py) (006) e Redis Streams (005).

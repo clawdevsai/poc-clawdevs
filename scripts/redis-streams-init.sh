@@ -38,5 +38,17 @@ else
   echo "    $CODE_READY: group $REVISAO_GROUP já existe"
 fi
 
+# Pipeline pods separados (014): um group por stream
+PIPELINE_GROUPS="architect-slot:code:ready qa-slot:review_architect_done cybersec-slot:review_qa_done dba-slot:review_cybersec_done"
+for entry in $PIPELINE_GROUPS; do
+  g="${entry%%:*}"
+  s="${entry##*:}"
+  if $REDIS_CLI -h "$REDIS_HOST" -p "$REDIS_PORT" XGROUP CREATE "$s" "$g" "$" MKSTREAM 2>/dev/null; then
+    echo "    $s: group $g (pipeline 014) criado"
+  else
+    echo "    $s: group $g já existe"
+  fi
+done
+
 echo "==> Concluído. Slot Revisão pós-Dev: XREADGROUP GROUP $REVISAO_GROUP ... no stream $CODE_READY."
-echo "    Ref: docs/38-redis-streams-estado-global.md"
+echo "    Pipeline 014: architect-slot → qa-slot → cybersec-slot → dba-slot. Ref: docs/38-redis-streams-estado-global.md"

@@ -18,8 +18,8 @@ Ou use `make revisao-slot-configmap` (se definido no Makefile).
 ## Apply
 
 ```bash
-kubectl apply -f k8s/revisao-pos-dev/configmap-env.yaml   # env vars (stream, group, timeout)
-kubectl apply -f k8s/revisao-pos-dev/deployment.yaml     # 1 replica, long-running consumer
+kubectl apply -f k8s/development-team/revisao-pos-dev/configmap-env.yaml
+kubectl apply -f k8s/development-team/revisao-pos-dev/deployment.yaml
 ```
 
 O deployment monta o ConfigMap `revisao-slot-scripts` (crie antes). Hard timeout por execução do slot: documentado em docs/39 e docs/04 (até 300 s para o bloco de revisão).

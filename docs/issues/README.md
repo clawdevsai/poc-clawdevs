@@ -58,6 +58,8 @@ As issues estão ordenadas **do zero ao avançado**, por fases. Cada arquivo `.m
 | 015 | 015-codigo-conduta-e-restricoes.md | Código de conduta e restrições |
 | 016 | 016-exemplo-fluxo-operacao-2fa.md | Exemplo de fluxo E2E: Operação 2FA |
 | 017 | 017-autonomia-nivel-4-matriz-escalonamento.md | Autonomia nível 4, CEO desempate, digest diário, **five strikes** (fallback + arbitragem nuvem), **orçamento de degradação** (freio de mão, recalibragem prompts/critérios PO), **QA auditor da dívida técnica**, aprovação por omissão **cosmética** 6 h (MEMORY.md) |
+| 018 | 018-fluxo-evento-driven-minimo-redis.md | Fluxo evento-driven mínimo — publicação em Redis (CEO→cmd:strategy, PO→draft.2.issue/task:backlog); contrato e stub para testes |
+| 019 | 019-validacao-management-nuvem-line-up.md | Validação management-team com provedor nuvem; line-up (modelo por agente) documentado |
 | 020 | 020-zero-trust-fluxo-classificacao.md | Zero Trust: fluxo, classificação, score de confiança e quarentena, **pipeline de quarentena automatizada** (sandbox instantâneo, notificação assíncrona), **zonas de confiança de autores** (Google, Vercel, Microsoft), sandbox URL/API, acelerador preditivo, **whitelist global egress** |
 | 021 | 021-seguranca-runtime-validacao.md | Segurança em runtime (validação), **quarentena de disco**, **Architect só diffs do PR** |
 | 022 | 022-owasp-auditoria-codificacao-segura.md | OWASP e codificação segura |

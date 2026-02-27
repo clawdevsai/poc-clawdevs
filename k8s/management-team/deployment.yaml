@@ -1,6 +1,6 @@
 # OpenClaw Gateway — Management Team (CEO, PO): Telegram + Ollama GPU no cluster.
 # Provedor LLM por agente: ConfigMap clawdevs-llm-providers (agent_ceo, agent_po).
-# Imagem: make openclaw-image (build a partir de k8s/openclaw/Dockerfile).
+# Imagem: make openclaw-image (build a partir de k8s/management-team/openclaw/Dockerfile).
 apiVersion: apps/v1
 kind: Deployment
 metadata:

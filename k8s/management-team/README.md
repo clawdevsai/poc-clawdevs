@@ -14,10 +14,11 @@ Cada agente pode usar um provedor diferente. Configuração em `k8s/llm-provider
 Ordem (após namespace, Redis, Ollama e `clawdevs-llm-providers`):
 
 ```bash
+kubectl apply -f k8s/management-team/openclaw/workspace-ceo-configmap.yaml
 kubectl apply -f k8s/management-team/configmap.yaml
-kubectl apply -f k8s/management-team/workspace-ceo-configmap.yaml
 kubectl apply -f k8s/management-team/deployment.yaml
-# Secret Telegram: kubectl apply -f k8s/management-team/secret.yaml
+# Secret Telegram: kubectl apply -f k8s/management-team/openclaw/secret.yaml
 ```
+Gateway completo (make up): `management-team/openclaw/` (configmap, deployment) + `management-team/soul/` (soul-agents).
 
 Ref: [docs/openclaw-sub-agents-architecture.md](../docs/openclaw-sub-agents-architecture.md), [docs/37-deploy-fase0-telegram-ceo-ollama.md](../docs/37-deploy-fase0-telegram-ceo-ollama.md).

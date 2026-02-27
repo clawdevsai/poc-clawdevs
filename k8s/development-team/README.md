@@ -6,6 +6,8 @@ Provedor de LLM por agente: ConfigMap `clawdevs-llm-providers` (chaves `agent_de
 
 Na Fase 0 atual, o time técnico roda como **sub-agents** do gateway Management (CEO/PO); um deployment dedicado 100% offline pode ser adicionado em fases posteriores usando este ConfigMap e a NetworkPolicy.
 
+**Revisão pós-Dev (slot único):** [revisao-pos-dev/](revisao-pos-dev/) consome `code:ready`, executa Architect→QA→CyberSec→DBA em sequência. **Pods separados (evolução 014):** [architect/](architect/), [qa/](qa/), [cybersec/](cybersec/), [dba/](dba/) formam um pipeline (replicas: 0 por padrão); `make agent-slots-configmap` e aplicar os manifestos; inicializar consumer groups com [scripts/redis-streams-init.sh](../scripts/redis-streams-init.sh).
+
 ## Apply
 
 ```bash

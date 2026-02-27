@@ -55,12 +55,12 @@ kubectl create secret generic openclaw-telegram -n ai-agents \
   --from-literal=TELEGRAM_CHAT_ID='SEU_CHAT_ID_NUMERICO'
 ```
 
-Ou copie `k8s/openclaw/secret.yaml.example` para `secret.yaml`, preencha e aplique (e adicione `secret.yaml` ao `.gitignore`):
+Ou copie `k8s/management-team/openclaw/secret.yaml.example` para `secret.yaml`, preencha e aplique (e adicione `secret.yaml` ao `.gitignore`):
 
 ```bash
-cp k8s/openclaw/secret.yaml.example k8s/openclaw/secret.yaml
+cp k8s/management-team/openclaw/secret.yaml.example k8s/management-team/openclaw/secret.yaml
 # Editar e colar token e chat id
-kubectl apply -f k8s/openclaw/secret.yaml
+kubectl apply -f k8s/management-team/openclaw/secret.yaml
 ```
 
 ## 4. OpenClaw (ConfigMap + Workspace CEO + Deployment)
@@ -68,13 +68,13 @@ kubectl apply -f k8s/openclaw/secret.yaml
 O agente CEO obedece ao **perfil SOUL** ([docs/soul/CEO.md](soul/CEO.md)): o ConfigMap `openclaw-workspace-ceo` fornece `SOUL.md` no workspace; o OpenClaw injeta esse conteúdo no system prompt. Assim o CEO responde em tom executivo e direto, na **mesma língua** que o Diretor usar, e segue as restrições (nunca escrever código, nunca aprovar PRs, etc.). Aplicar também o workspace do CEO:
 
 ```bash
-kubectl apply -f k8s/openclaw/workspace-ceo-configmap.yaml
+kubectl apply -f k8s/management-team/openclaw/workspace-ceo-configmap.yaml
 ```
 
 A imagem padrão no deployment é um placeholder (`node:22-bookworm-slim` com `sleep infinity`). Para o CEO responder de fato no Telegram você precisa:
 
 **Opção A — Imagem OpenClaw oficial (quando disponível):**  
-Altere `k8s/openclaw/deployment.yaml` e use a imagem que executa `openclaw gateway`, com entrypoint apontando para `/config/config.yaml`.
+Altere `k8s/management-team/openclaw/deployment.yaml` e use a imagem que executa `openclaw gateway`, com entrypoint apontando para `/config/config.yaml`.
 
 **Opção B — Rodar OpenClaw no host (teste rápido):**  
 Use o script `scripts/run-openclaw-telegram-ollama.sh`, que faz port-forward do Ollama e inicia o gateway com a config `config/openclaw/openclaw.local.json5`. **Para o bot responder no perfil CEO** (tom executivo, pt-BR, SOUL), essa config define `agents.defaults.workspace: "config/openclaw/workspace-ceo"`, onde está o `SOUL.md` do CEO; o script deve ser executado **na raiz do repositório** para que esse caminho exista. Sem o workspace configurado, o modelo recebe apenas o prompt genérico e responde como assistente, não como CEO.
@@ -97,9 +97,9 @@ openclaw gateway
 Aplicar ConfigMap, workspace CEO e Deployment no cluster (mesmo com imagem placeholder, para deixar o fluxo pronto):
 
 ```bash
-kubectl apply -f k8s/openclaw/configmap.yaml
-kubectl apply -f k8s/openclaw/workspace-ceo-configmap.yaml
-kubectl apply -f k8s/openclaw/deployment.yaml
+kubectl apply -f k8s/management-team/openclaw/configmap.yaml
+kubectl apply -f k8s/management-team/openclaw/workspace-ceo-configmap.yaml
+kubectl apply -f k8s/management-team/openclaw/deployment.yaml
 ```
 
 ## 5. Expor o OpenClaw para o Telegram (webhook ou polling)
@@ -135,11 +135,25 @@ Doc de arquitetura: [openclaw-sub-agents-architecture.md](openclaw-sub-agents-ar
 
 ---
 
+## Management-team com provedor nuvem (Fase 1 — 019)
+
+Para usar **CEO e PO com LLM em nuvem** (Ollama Cloud, OpenRouter, OpenAI, etc.):
+
+1. **ConfigMap de provedores:** [k8s/llm-providers-configmap.yaml](../k8s/llm-providers-configmap.yaml) define uma chave por agente (`agent_ceo`, `agent_po`, etc.). Valores: `ollama_local` (padrão) | `ollama_cloud` | `openrouter` | `openai` | `qwen_oauth` | `moonshot_ai` | `huggingface_inference`.
+2. **Alterar para nuvem:** Edite o ConfigMap e defina, por exemplo, `agent_ceo: "ollama_cloud"` e `agent_po: "openrouter"`. Aplique: `kubectl apply -f k8s/llm-providers-configmap.yaml`.
+3. **Secrets:** Crie no namespace `ai-agents` os secrets exigidos pelo provedor (ex.: `OPENROUTER_API_KEY`, `OPENAI_API_KEY`). Para Ollama Cloud use `k8s/ollama/secret.yaml` com `OLLAMA_API_KEY` (o `make up` já aplica se o arquivo existir).
+4. **Config do OpenClaw:** O gateway lê o ConfigMap `clawdevs-llm-providers` e deve rotear cada agente ao provedor correspondente; os modelos (IDs) por agente ficam no config do OpenClaw (ex.: `k8s/management-team/openclaw/configmap.yaml`). Ajuste os IDs de modelo (ex.: `ollama/glm-5:cloud`, `openrouter/model-id`) conforme a documentação do OpenClaw.
+5. **Reiniciar o deployment:** `kubectl rollout restart deployment/openclaw -n ai-agents` (ou `deployment/openclaw-management` se usar `make up-management`).
+
+Validação e line-up sugerido por agente: [issues/validacao-fase1-019.md](issues/validacao-fase1-019.md) e [41-fase1-agentes-soul-pods.md](41-fase1-agentes-soul-pods.md) (§ Line-up).
+
+---
+
 ## Otimização de latência (Telegram)
 
 Para **reduzir o tempo de resposta** no chat do Telegram sem aumentar hardware:
 
-- **Modelo do CEO:** O CEO está configurado para usar **stewyphoenix19/phi3-mini_v1:latest** (modelo mais leve) com `contextWindow: 4096` e `maxTokens: 1024` no OpenClaw — respostas curtas e objetivas saem mais rápido. Ver `k8s/openclaw/configmap.yaml` e `config/openclaw/openclaw.local.json5`.
+- **Modelo do CEO:** O CEO está configurado para usar **stewyphoenix19/phi3-mini_v1:latest** (modelo mais leve) com `contextWindow: 4096` e `maxTokens: 1024` no OpenClaw — respostas curtas e objetivas saem mais rápido. Ver `k8s/management-team/openclaw/configmap.yaml` (gateway) e `config/openclaw/openclaw.local.json5`.
 - **OLLAMA_KEEP_ALIVE:** O deployment do Ollama usa `5m` para manter o modelo na VRAM entre mensagens; evita latência de reload. Ver `k8s/ollama/deployment.yaml`.
 - **OLLAMA_CONTEXT_LENGTH:** Opcionalmente definido (ex.: 8192) no deployment para limitar contexto global e uso de VRAM; alinha com o SOUL compacto do CEO. Ver [04-infraestrutura.md](04-infraestrutura.md).
 - **SOUL do CEO:** Manter a versão compacta em `openclaw-workspace-ceo` (respostas curtas, uma linha para cumprimentos).

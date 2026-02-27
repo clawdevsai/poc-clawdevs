@@ -1,0 +1,63 @@
+# Pod Architect (Fase 1 — 014, evolução). Consome code:ready, publica review_architect_done.
+# Requer: make agent-slots-configmap. Replicas: 0 (ativar para pipeline por agente).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: architect-slot
+  namespace: ai-agents
+  labels:
+    app: architect-slot
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: architect-slot
+  template:
+    metadata:
+      labels:
+        app: architect-slot
+    spec:
+      containers:
+        - name: slot
+          image: python:3.12-slim
+          command:
+            - /bin/sh
+            - -c
+            - "pip install -q redis && cd /config && exec python slot_agent_single.py"
+          envFrom:
+            - configMapRef:
+                name: architect-slot-env
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: scripts
+              mountPath: /config
+              readOnly: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: scripts
+          configMap:
+            name: agent-slot-scripts
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: architect-slot-service
+  namespace: ai-agents
+  labels:
+    app: architect-slot
+spec:
+  selector:
+    app: architect-slot
+  ports: []
+  type: ClusterIP

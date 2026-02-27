@@ -1,0 +1,62 @@
+# Pod DBA (Fase 1 — 014). Consome review_cybersec_done, publica review_done.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dba-slot
+  namespace: ai-agents
+  labels:
+    app: dba-slot
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: dba-slot
+  template:
+    metadata:
+      labels:
+        app: dba-slot
+    spec:
+      containers:
+        - name: slot
+          image: python:3.12-slim
+          command:
+            - /bin/sh
+            - -c
+            - "pip install -q redis && cd /config && exec python slot_agent_single.py"
+          envFrom:
+            - configMapRef:
+                name: dba-slot-env
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: scripts
+              mountPath: /config
+              readOnly: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: scripts
+          configMap:
+            name: agent-slot-scripts
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dba-slot-service
+  namespace: ai-agents
+  labels:
+    app: dba-slot
+spec:
+  selector:
+    app: dba-slot
+  ports: []
+  type: ClusterIP

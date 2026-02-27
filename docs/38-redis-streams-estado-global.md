@@ -23,7 +23,23 @@ Criar streams e consumer groups (uma vez após o Redis estar no ar):
 
 ---
 
-## 2. Convenção de chaves (estado global)
+## 2. Contrato de publicação (produtores — Fase 1, issue 018)
+
+**Quem publica:** O gateway OpenClaw (após resposta do CEO ou do PO) ou um orquestrador deve publicar nos streams conforme o fluxo. Para testes manuais ou E2E, use o script [scripts/publish_event_redis.py](../scripts/publish_event_redis.py).
+
+| Stream | Publicado por | Campos mínimos da mensagem (exemplo) | Observação |
+|--------|----------------|--------------------------------------|------------|
+| **cmd:strategy** | CEO (via gateway) | `directive` (texto da diretriz), `source=ceo`, `ts` (opcional) | PO consome e gera backlog / draft.2.issue. |
+| **draft.2.issue** | PO (via gateway) | `issue_id`, `title`, `summary` (resumo para Architect), `ts` (opcional) | PO deve gravar antes em `project:v1:issue:{id}`; Architect valida viabilidade. |
+| **task:backlog** | PO (via gateway) | `issue_id` (obrigatório), `priority` (opcional), `ts` (opcional) | Publicar só após ciclo de rascunho aprovado (ou dispensa). PO grava especificação em `project:v1:issue:{id}`. |
+| **draft_rejected** | Architect | `issue_id`, `reason`, `ts` (opcional) | PO consome e reescreve; 3 consecutivos por épico → disjuntor (RAG health check). |
+| **code:ready** | Developer | `issue_id`, `branch` (opcional), `ts` (opcional) | Slot Revisão pós-Dev consome (Architect→QA→CyberSec→DBA). |
+
+Formato Redis: cada campo é um par `key value` no XADD; valores em UTF-8. O orquestrador pode usar `*` para auto-gerar ID da mensagem.
+
+---
+
+## 3. Convenção de chaves (estado global)
 
 O **estado da verdade** fica em chaves Redis; o stream carrega apenas **ID de transação** (ex.: `issue_id`), não o payload completo.
 
@@ -37,7 +53,7 @@ O PO grava a especificação em `project:v1:issue:42`; o Developer recebe no str
 
 ---
 
-## 3. Fluxo de dados (resumo)
+## 4. Fluxo de dados (resumo)
 
 ```
 CEO → cmd:strategy → PO
@@ -53,7 +69,7 @@ Developer → code:ready → [Revisão pós-Dev: Architect → QA → CyberSec �
 
 ---
 
-## 4. Semântica idempotente e ACK
+## 5. Semântica idempotente e ACK
 
 - Consumidores tratam mensagens como **transações idempotentes**.
 - **Não** enviar ACK até o trabalho estar **100% concluído em disco**.
@@ -61,19 +77,19 @@ Developer → code:ready → [Revisão pós-Dev: Architect → QA → CyberSec �
 
 ---
 
-## 5. Checkpoint aos 80°C (pausa térmica)
+## 6. Checkpoint aos 80°C (pausa térmica)
 
 DevOps **injeta evento de prioridade máxima** no Redis ordenando **commit do estado atual em branch efêmera de recuperação** (ex.: `recovery-failsafe-<timestamp>`) no repositório de trabalho, **antes** do Q-Suite térmico (82°C). Retomada: checkout limpo; Architect resolve conflitos na branch de recuperação quando aplicável. Ver [06-operacoes.md](06-operacoes.md) e [04-infraestrutura.md](04-infraestrutura.md).
 
 ---
 
-## 6. Blackboard e resiliência
+## 7. Blackboard e resiliência
 
 Se um pod cair, a tarefa permanece na fila; ao reiniciar, o agente retoma. Toda tarefa interrompida é **devolvida ao backlog do PO**; a issue não é descartada.
 
 ---
 
-## 7. Referência no Kubernetes
+## 8. Referência no Kubernetes
 
 - **ConfigMap:** [k8s/redis/streams-configmap.yaml](../k8s/redis/streams-configmap.yaml) — nomes dos streams e prefixos de chave (variáveis de ambiente para os deployments).
 - **Job opcional:** [k8s/redis/job-init-streams.yaml](../k8s/redis/job-init-streams.yaml) — cria os streams e o consumer group `clawdevs` uma vez; aplicar após o Redis estar no ar.
