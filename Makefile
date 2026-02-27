@@ -68,13 +68,14 @@ up: openclaw-image
 	fi
 	@echo "==> Aplicando provedores de LLM por agente (ollama_local = Ollama GPU padrão)..."
 	kubectl apply -f $(K8S_DIR)/llm-providers-configmap.yaml
-	@echo "==> Aplicando OpenClaw (ConfigMap + Workspace CEO + Deployment)..."
+	@echo "==> Aplicando OpenClaw (ConfigMap + Workspace CEO + SOUL antes do Deployment)..."
 	kubectl apply -f $(K8S_DIR)/management-team/openclaw/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/management-team/openclaw/workspace-ceo-configmap.yaml
-	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
-	@echo "==> Aplicando SOUL por escopo (management + development)..."
+	@echo "==> Aplicando SOUL por escopo (management + development) — necessário para soul-merge initContainer..."
 	kubectl apply -f $(K8S_DIR)/management-team/soul/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/development-team/soul/configmap.yaml
+	@echo "==> Aplicando Deployment OpenClaw..."
+	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
 	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
 		echo "==> Aplicando secret Telegram (k8s/management-team/openclaw/secret.yaml)..."; \
 		kubectl apply -f $(K8S_DIR)/management-team/openclaw/secret.yaml; \

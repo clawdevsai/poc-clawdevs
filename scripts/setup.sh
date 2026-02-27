@@ -122,8 +122,8 @@ providers:
 EOF
 
 # --- 10. Secret Kubernetes (para make up) ---
-mkdir -p "$REPO_ROOT/k8s/openclaw"
-SECRET_FILE="$REPO_ROOT/k8s/openclaw/secret.yaml"
+mkdir -p "$REPO_ROOT/k8s/management-team/openclaw"
+SECRET_FILE="$REPO_ROOT/k8s/management-team/openclaw/secret.yaml"
 {
   echo '# Gerado por setup.sh — NUNCA commitar com valores reais em repositório público'
   echo 'apiVersion: v1'
@@ -137,7 +137,7 @@ SECRET_FILE="$REPO_ROOT/k8s/openclaw/secret.yaml"
   printf '  TELEGRAM_CHAT_ID: "%s"\n' "$TELEGRAM_CHAT_ID"
   [[ -n "$OLLAMA_API_KEY_OPTIONAL" ]] && printf '  OLLAMA_API_KEY: "%s"\n' "$OLLAMA_API_KEY_OPTIONAL"
 } > "$SECRET_FILE"
-echo "    Secret gravado em k8s/openclaw/secret.yaml (não commitar)."
+echo "    Secret gravado em k8s/management-team/openclaw/secret.yaml (não commitar)."
 
 # --- 11. Aliases e start.sh ---
 START_SH="$ENXAME_DIR/start.sh"

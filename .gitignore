@@ -4,5 +4,5 @@ __pycache__/
 *.pyc
 *.env
 !*.env.example
-k8s/openclaw/secret.yaml
+k8s/management-team/openclaw/secret.yaml
 k8s/ollama/secret.yaml
