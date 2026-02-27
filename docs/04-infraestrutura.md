@@ -101,6 +101,19 @@ spec:
 
 Os manifests dos pods de **DevOps** e **UX** devem incluir `nodeSelector` (ou taints/tolerations equivalentes) para que rodem **exclusivamente** em CPU com modelo Phi-3 Mini, reservando a VRAM da RTX para Developer, Architect e QA.
 
+## Estrutura Kubernetes (k8s/)
+
+Pastas por time e componente:
+
+- **ollama/** — Deployment Ollama GPU, Service, PVC. Inferência local no cluster; todos os agentes integram com Ollama-GPU por padrão.
+- **management-team/** — CEO e PO: gateway OpenClaw com Telegram, Redis, Ollama (e nuvem opcional). Servidor para CEO e PO.
+- **development-team/** — DevOps, Architect, Developer, QA, CyberSec, UX, DBA: config e NetworkPolicy para operação 100% offline (Ollama GPU).
+- **governance-team/** — Governance Proposer: config e deployment (CPU, sessão isolada).
+- **redis/** — Redis Streams (estado global e eventos).
+- **openclaw/** — Gateway único Fase 0: Dockerfile, configmap com todos os agentes, deployment.
+
+Provedor de LLM por agente: ConfigMap `clawdevs-llm-providers` em `k8s/llm-providers-configmap.yaml`. Valores: `ollama_local` (padrão) | `ollama_cloud` | `openrouter` | `qwen_oauth` | `moonshot_ai` | `openai` | `huggingface_inference`. Ver [07-configuracao-e-prompts.md](07-configuracao-e-prompts.md).
+
 ## Deployment do Ollama (com GPU)
 
 O Ollama precisa de acesso exclusivo à GPU no Minikube. Exemplo de deployment (namespace `ai-agents`):
@@ -115,7 +128,21 @@ Ver [09-setup-e-scripts.md](09-setup-e-scripts.md) para o YAML completo e integr
 
 ## GPU Lock (conceito e referência)
 
-Antes de disputar o lock, o fluxo pode passar pelo **estágio pré-GPU** (validação em CPU com SLM — sintaxe, lint, SOLID) e pela opção de **batching de PRs** (revisão em lote pelo Architect), reduzindo contenção e uso de VRAM; ver [03-arquitetura.md](03-arquitetura.md). Para evitar OOM, apenas um pod deve usar o Ollama (e portanto a GPU) por vez. O **script de GPU Lock** usa Redis (`SETNX` com **TTL dinâmico**): o agente que for usar a GPU adquire o lock; os outros aguardam em loop até obter o lock ou até o timeout. O TTL é calculado em função do payload do evento (ex.: contagem de linhas do diff/PR no Redis): payload com mais de 500 linhas → TTL 120 s; caso contrário → TTL 60 s. Ao terminar, o agente libera o lock. **Garantia de não travar o cluster:** o orquestrador deve aplicar **hard timeout no Kubernetes** (ex.: 120 segundos de uso contínuo de GPU): se o pod exceder, o Kubernetes **mata o pod** independentemente do release no Redis; a tarefa volta para a fila (com penalidade, se configurado). Assim, mesmo em caso de OOM ou travamento do processo, o lock não fica órfão. Implementação em Python: ver [scripts/gpu_lock.md](scripts/gpu_lock.md), [09-setup-e-scripts.md](09-setup-e-scripts.md). Recuperação manual em [06-operacoes.md](06-operacoes.md) como último recurso.
+Antes de disputar o lock, o fluxo pode passar pelo **estágio pré-GPU** (validação em CPU com SLM — sintaxe, lint, SOLID) e pela opção de **batching de PRs** (revisão em lote pelo Architect), reduzindo contenção e uso de VRAM; ver [03-arquitetura.md](03-arquitetura.md). Para evitar OOM, apenas um pod deve usar o Ollama (e portanto a GPU) por vez. O **script de GPU Lock** usa Redis (`SETNX` com **TTL dinâmico**): o agente que for usar a GPU adquire o lock; os outros aguardam em loop até obter o lock ou até o timeout. O TTL é calculado em função do payload do evento (ex.: contagem de linhas do diff/PR no Redis): payload com mais de 500 linhas → TTL 120 s; caso contrário → TTL 60 s. Ao terminar, o agente libera o lock. **Garantia de não travar o cluster:** o orquestrador deve aplicar **hard timeout no Kubernetes** (ex.: 120 segundos de uso contínuo de GPU): se o pod exceder, o Kubernetes **mata o pod** independentemente do release no Redis; a tarefa volta para a fila (com penalidade, se configurado). Assim, mesmo em caso de OOM ou travamento do processo, o lock não fica órfão. Implementação em Python: ver [scripts/gpu_lock.py](../scripts/gpu_lock.py) e [scripts/gpu_lock.md](scripts/gpu_lock.md), [09-setup-e-scripts.md](09-setup-e-scripts.md). Recuperação manual em [06-operacoes.md](06-operacoes.md) como último recurso.
+
+**Hard timeout no Kubernetes (obrigatório):** Todo Job ou Pod que disputa o GPU Lock (ex.: job "Revisão pós-Dev", pods que chamam Ollama após adquirir o lock) deve definir **activeDeadlineSeconds** para que o Kubernetes encerre o pod ao exceder o tempo máximo de uso contínuo da GPU (ex.: 120 s). Exemplo:
+
+```yaml
+spec:
+  template:
+    spec:
+      activeDeadlineSeconds: 120   # Pod morto após 120 s; tarefa volta à fila
+      containers:
+        - name: worker
+          # ...
+```
+
+Sem isso, um processo que trave ou morra por OOM pode deixar o lock órfão até o TTL expirar; o hard timeout garante que o pod seja removido e a tarefa reentregue.
 
 ## Docker: imagem base enxuta
 

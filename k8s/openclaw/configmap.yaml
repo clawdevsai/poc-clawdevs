@@ -1,5 +1,6 @@
 # Configuração OpenClaw (sem credenciais). Token e Chat ID vêm do Secret.
-# openclaw.json = config JSON5 usada pelo gateway no pod (Telegram + Ollama no cluster).
+# Integração padrão: Ollama GPU no cluster (ollama_local). Provedor por agente: k8s/llm-providers-configmap.yaml.
+# Opções: ollama_local | ollama_cloud | openrouter | qwen_oauth | moonshot_ai | openai | huggingface_inference.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -35,12 +36,21 @@ data:
       "agents": {
         "defaults": { "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "po", "name": "Product Owner", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+          { "id": "architect", "name": "Architect", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+          { "id": "developer", "name": "Developer", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+          { "id": "qa", "name": "QA", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+          { "id": "cybersec", "name": "CyberSec", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+          { "id": "ux", "name": "UX", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+          { "id": "dba", "name": "DBA", "model": "ollama/glm-5:cloud", "workspace": "/workspace" }
         ]
       }
     }
   config.yaml: |
-    # Ollama no cluster. Padrão: glm-5:cloud.
+    # Ollama GPU no cluster (padrão). Provedor por agente: k8s/llm-providers-configmap.yaml.
+    # Opções: ollama_local | ollama_cloud | openrouter | qwen_oauth | moonshot_ai | openai | huggingface_inference.
     models:
       providers:
         ollama:
@@ -68,38 +78,37 @@ data:
           name: "CEO"
           description: "Estratégia e interface com o Diretor. Único agente que recebe Telegram."
           model: "ollama/ministral-3:3b-cloud"
-          # Canal Telegram roteia para este agente
         - id: po
           name: "Product Owner"
           description: "Backlog e priorização. Sub-agent do CEO."
           model: "ollama/glm-5:cloud"
         - id: devops
           name: "DevOps/SRE"
-          description: "IaC, CI/CD, FinOps. Sub-agent."
+          description: "IaC, CI/CD, FinOps. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
         - id: architect
           name: "Architect"
-          description: "Governança técnica, code review. Sub-agent."
+          description: "Governança técnica, code review. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
         - id: developer
           name: "Developer"
-          description: "Implementação. Sub-agent."
+          description: "Implementação. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
         - id: qa
           name: "QA"
-          description: "Testes e qualidade. Sub-agent."
+          description: "Testes e qualidade. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
         - id: cybersec
           name: "CyberSec"
-          description: "Segurança. Sub-agent."
+          description: "Segurança. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
         - id: ux
           name: "UX"
-          description: "Experiência do usuário. Sub-agent."
+          description: "Experiência do usuário. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
         - id: dba
           name: "DBA"
-          description: "Dados e queries. Sub-agent."
+          description: "Dados e queries. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
 
     # Canal Telegram. Token via env TELEGRAM_BOT_TOKEN (Secret).

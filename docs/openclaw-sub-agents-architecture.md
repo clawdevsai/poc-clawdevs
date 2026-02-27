@@ -39,12 +39,12 @@ Este documento descreve a **arquitetura de referência** para colocar o ecossist
 - O CEO é o **único agente com canal Telegram**; os demais são **sub-agents** acionados via `sessions_spawn` quando o CEO delega (pesquisa, backlog, revisão, etc.).
 - Alinhado à doc: [02-agentes.md](02-agentes.md) (CEO como interface com o Diretor), [Sub-Agents](https://docs.openclaw.ai/tools/subagents) (sessions_spawn, announce de volta ao requester).
 
-### 2. Um único modelo local para teste inicial
+### 2. Integração com Ollama-GPU por padrão e provedores configuráveis
 
-- **Todos os agentes** (CEO e sub-agents) usam o **mesmo LLM local** no início: menor consumo de VRAM e validação rápida do fluxo.
-- Modelo sugerido: **phi3:mini** ou **qwen2.5:3b** (ou o menor que rodar estável no Ollama-GPU).
+- **Todos os agentes** (CEO, PO e sub-agents técnicos) integram com **Ollama GPU** no cluster por padrão (menor custo, validação rápida).
+- Configuração por agente: em **Kubernetes**, o ConfigMap `clawdevs-llm-providers` (`k8s/llm-providers-configmap.yaml`) define onde cada agente integra com LLM. Valores: `ollama_local` (Ollama GPU no cluster) | `ollama_cloud` | `openrouter` | `qwen_oauth` | `moonshot_ai` | `openai` | `huggingface_inference`. Servidor para CEO e PO: mesmo gateway (Telegram + Redis + Ollama).
 - Configuração: provedor `ollama` no OpenClaw apontando para o **Service** do pod Ollama no K8s (ex.: `http://ollama-service.ai-agents.svc.cluster.local:11434`).
-- Formato do modelo no OpenClaw: `ollama/phi3:mini` (conforme [31-ollama-local.md](31-ollama-local.md)).
+- Formato do modelo no OpenClaw: `ollama/<modelo>` (conforme [31-ollama-local.md](31-ollama-local.md)). Estrutura de pastas k8s: **ollama/**, **management-team/** (CEO, PO), **development-team/** (time técnico), **governance-team/** (Governance Proposer).
 
 ### 3. Redis para estado e eventos (fase posterior)
 

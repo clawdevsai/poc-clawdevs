@@ -1,0 +1,37 @@
+# OpenClaw — Development Team (DevOps, Architect, Developer, QA, CyberSec, UX, DBA).
+# Uso: sub-agents do gateway Management ou deployment dedicado 100% offline.
+# Provedor LLM por agente: k8s/llm-providers-configmap.yaml (padrão ollama_local = Ollama GPU).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-development-config
+  namespace: ai-agents
+  labels:
+    app: openclaw
+    team: development
+data:
+  # Fragmento de agents.list para o time técnico (Ollama GPU padrão)
+  agents-development.yaml: |
+    agents:
+      list:
+        - id: devops
+          name: "DevOps/SRE"
+          model: "ollama/glm-5:cloud"
+        - id: architect
+          name: "Architect"
+          model: "ollama/glm-5:cloud"
+        - id: developer
+          name: "Developer"
+          model: "ollama/glm-5:cloud"
+        - id: qa
+          name: "QA"
+          model: "ollama/glm-5:cloud"
+        - id: cybersec
+          name: "CyberSec"
+          model: "ollama/glm-5:cloud"
+        - id: ux
+          name: "UX"
+          model: "ollama/glm-5:cloud"
+        - id: dba
+          name: "DBA"
+          model: "ollama/glm-5:cloud"
