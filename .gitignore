@@ -1,5 +1,7 @@
 # ClawDevs — não commitar credenciais
 .env
+__pycache__/
+*.pyc
 *.env
 !*.env.example
 k8s/openclaw/secret.yaml
