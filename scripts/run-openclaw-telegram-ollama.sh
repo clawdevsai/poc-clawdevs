@@ -73,8 +73,24 @@ fi
 # Habilitar Slack quando SLACK_APP_TOKEN e SLACK_BOT_TOKEN estiverem definidos (e SLACK_ENABLED != false)
 if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" && "${SLACK_ENABLED:-true}" != "false" ]]; then
   sed 's/enabled: false, \/\/ SLACK_TOGGLE/enabled: true, \/\/ SLACK_TOGGLE/' "$CONFIG_TO_USE" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_TO_USE"
-  if [[ -n "${SLACK_DIRECTOR_USER_ID:-}" ]]; then
-    sed "s/allowFrom: \[\], \/\/ SLACK_ALLOW_FROM/allowFrom: [\"$SLACK_DIRECTOR_USER_ID\"], \/\/ SLACK_ALLOW_FROM/" "$CONFIG_TO_USE" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_TO_USE"
+  # allowFrom: SLACK_DIRECTOR_USER_ID + SLACK_ALLOWED_USER_IDS (vírgula no .env, ex. U123,U456) para permitir DM de vários usuários (ex. Diretor + Diego). Se vazio, usa pairing.
+  SLACK_ALLOW_FROM_IDS=()
+  [[ -n "${SLACK_DIRECTOR_USER_ID:-}" ]] && SLACK_ALLOW_FROM_IDS+=("$SLACK_DIRECTOR_USER_ID")
+  if [[ -n "${SLACK_ALLOWED_USER_IDS:-}" ]]; then
+    while IFS=',' read -ra IDS; do
+      for id in "${IDS[@]}"; do
+        id="${id// /}"
+        [[ -n "$id" ]] && SLACK_ALLOW_FROM_IDS+=("$id")
+      done
+    done <<< "$SLACK_ALLOWED_USER_IDS"
+  fi
+  if [[ ${#SLACK_ALLOW_FROM_IDS[@]} -gt 0 ]]; then
+    # Formato JSON: ["U1","U2"]
+    ALLOW_JSON="[$(printf '"%s",' "${SLACK_ALLOW_FROM_IDS[@]}" | sed 's/,$//')]"
+    sed "s/allowFrom: \[\], \/\/ SLACK_ALLOW_FROM/allowFrom: $ALLOW_JSON, \/\/ SLACK_ALLOW_FROM/" "$CONFIG_TO_USE" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_TO_USE"
+  else
+    # Ninguém na allowlist: usar pairing no Slack para qualquer um poder iniciar DM (openclaw pairing approve slack <CODE>)
+    sed '/mode: "socket",/,/SLACK_ALLOW_FROM/ s/dmPolicy: "allowlist"/dmPolicy: "pairing"/' "$CONFIG_TO_USE" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_TO_USE"
   fi
   export SLACK_APP_TOKEN SLACK_BOT_TOKEN
 fi
@@ -98,6 +114,7 @@ echo "    Telegram: só CEO. Slack: todos (discussões = Ollama local GPU)."
 if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" ]]; then
   echo "    Slack habilitado. Envie mensagem no Slack ou no Telegram para testar."
   echo "    Ex.: no Slack (DM ou canal): \"Pergunta ao Diretor: Qual a prioridade desta semana?\""
+  echo "    Se alguém mandar DM e nada acontecer: adicione o Slack User ID em SLACK_ALLOWED_USER_IDS no .env (ou use pairing: openclaw pairing approve slack <CODE>). Log: OPENCLAW_LOG=1 ./scripts/run-openclaw-telegram-ollama.sh"
 else
   echo "    Envie uma mensagem ao seu bot no Telegram para testar."
 fi
@@ -112,6 +129,18 @@ fi
 if ! command -v npx >/dev/null 2>&1; then
   echo "Erro: npx não encontrado. Instale Node.js (https://nodejs.org) ou rode com nvm ativo: source ~/.nvm/nvm.sh && $0"
   exit 1
+fi
+
+# Log em arquivo para depuração (ex.: nada acontece no Slack). Use OPENCLAW_LOG=1 ou OPENCLAW_LOG=/caminho/log.txt
+LOG_FILE=""
+if [[ -n "${OPENCLAW_LOG:-}" ]]; then
+  if [[ "$OPENCLAW_LOG" == "1" ]]; then
+    LOG_FILE="$REPO_ROOT/openclaw-gateway.log"
+  else
+    LOG_FILE="$OPENCLAW_LOG"
+  fi
+  echo "    Log gateway: $LOG_FILE (tail -f para acompanhar)"
+  exec npx --yes openclaw@latest gateway 2>&1 | tee -a "$LOG_FILE"
 fi
 
 exec npx --yes openclaw@latest gateway

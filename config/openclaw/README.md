@@ -56,4 +56,25 @@ No **DM com o ClawdevsAI** (ou em canal onde o app está), você conversa com o 
 
 O app **ClawdevsAI** no Slack é o mesmo para todos; a escolha do agente é pelo conteúdo da mensagem (e, quando houver, por menção ou comando específico do OpenClaw — ver [docs OpenClaw Slack](https://docs.openclaw.ai/channels/slack)).
 
+## App vs usuário: com quem falar? Preciso criar um usuário por agente?
+
+**Fale com o app (ClawdevsAI), não com usuários separados.**  
+Você **não** precisa criar um usuário no Slack para cada agente (CEO, PO, DevOps, etc.). Existe **um único app** no Slack — o **ClawdevsAI** — que representa o gateway OpenClaw. Todos os agentes (CEO, PO, DevOps, Architect, Developer, QA, CyberSec, UX, DBA) “falam” por esse mesmo app. Você conversa em **DM com o app** ou **em um canal** onde o app foi adicionado; o gateway decide qual agente responde ou participa da discussão.
+
+**Resumo:** um app, uma identidade no Slack; vários agentes na config do OpenClaw, todos por trás desse app.
+
+## O que falta para a conversa funcionar no Slack
+
+1. **Gateway rodando** — `./scripts/run-openclaw-telegram-ollama.sh` (com `SLACK_APP_TOKEN` e `SLACK_BOT_TOKEN` no `.env`).
+2. **Quem pode mandar DM** — Se usar allowlist: coloque o seu Slack User ID (ex.: do Diego) em `SLACK_ALLOWED_USER_IDS` no `.env`, ou deixe allowlist vazia e use **pairing**: no primeiro DM, no terminal rode `openclaw pairing approve slack <CODE>`.
+3. **App no canal** — Para os agentes participarem de discussões em canal (#all-clawdevsai, #new-channel, etc.), **convide o app ClawdevsAI para o canal** (no canal: Integrações → Adicionar apps → ClawdevsAI). Assim o app recebe mensagens do canal e pode responder ou fazer os agentes discutirem entre si.
+
+## Agentes discutindo entre si no Slack
+
+Para os **agentes comunicarem e discutirem via Slack**:
+
+1. **Convide o app ClawdevsAI para o canal** onde a discussão deve acontecer (ex.: #all-clawdevsai). Sem o app no canal, ele não vê nem responde mensagens de lá.
+2. No canal, **mencione o app ou escreva a pergunta** (ex.: *“@ClawdevsAI PO e DevOps: alinhem a entrega da próxima sprint”* ou *“Quero que CEO, PO e Architect discutam a arquitetura do módulo X”*). O gateway pode acionar vários agentes (sub-agents) e as respostas ou a discussão aparecem no canal.
+3. Em **DM com o app**, você já pode pedir que um agente fale com outro (ex.: *“Pergunte ao PO e traga a resposta”*); a “discussão” entre agentes ocorre no backend e a resposta consolidada vem pelo mesmo app.
+
 Ref: [openclaw-sub-agents-architecture.md](../../docs/openclaw-sub-agents-architecture.md)
