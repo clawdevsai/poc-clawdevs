@@ -37,7 +37,7 @@ spec:
             # Lista de modelos para preload ao subir o pod. Se vazio, extrai automaticamente do OpenClaw (openclaw.json: agents).
             # Ex.: "glm-5:cloud" ou "glm-5:cloud ministral-3:3b" (separados por espaço). Deixe vazio para usar só a lista dos agentes.
             - name: OLLAMA_PRELOAD_MODELS
-              value: "ministral-3:3b-cloud gpt-oss:20b-cloud qwen3-coder-next:cloud"
+              value: "ministral-3:3b-cloud gpt-oss:20b-cloud qwen3-coder-next:cloud qwen2.5:3b"
             # GPU: se o cluster tiver nvidia-device-plugin e GPU disponível, descomente CUDA_VISIBLE_DEVICES e as linhas nvidia.com/gpu em resources abaixo.
             # - name: CUDA_VISIBLE_DEVICES
             #   value: "0"

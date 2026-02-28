@@ -2,6 +2,8 @@
 
 Referência rápida para configurar o canal Slack do OpenClaw (Socket Mode). Usado no ClawDevs para que todos os agentes conversem no workspace [clawdevsai](https://clawdevsai.slack.com). Ver também: [37-deploy-fase0-telegram-ceo-ollama.md](37-deploy-fase0-telegram-ceo-ollama.md) (seção 3.1) e [config/openclaw/README.md](../config/openclaw/README.md).
 
+**Modelo para conversa no Slack:** discussões entre agentes no Slack usam **Ollama (LLM local)**. Para apenas conversa (menor uso de VRAM): use um modelo pequeno — padrão na config local é **`ollama/qwen2.5:3b`**; alternativas: Phi-3 mini, Ministral-3:3b. Detalhes em [config/openclaw/README.md](../config/openclaw/README.md#modelo-menor-para-conversa-apenas-no-slack).
+
 ## Onde achar cada um
 
 Tudo é configurado no **Slack API** do seu app:

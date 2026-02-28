@@ -9,6 +9,16 @@ Configuração para rodar o OpenClaw **no host**: Telegram (só CEO) + Slack opc
 - **Política rigorosa:** agentes diferentes do CEO não podem acessar outra plataforma além do Slack; apenas o CEO usa Telegram (e Slack).
 - **Workspace único:** todos os agentes compartilham o mesmo workspace (ex.: `config/openclaw/workspace-ceo`).
 
+## Modelo menor para conversa apenas no Slack
+
+Para **só conversa no Slack** (menos VRAM, resposta mais rápida), a config local usa o **menor LLM local** disponível no Ollama. Padrão: **`ollama/qwen2.5:3b`** (Qwen 2.5 3B). Alternativas igualmente leves:
+
+- **`ollama/qwen2.5:3b`** — 3B parâmetros, ~2 GB, bom para chat.
+- **`ollama/stewyphoenix19/phi3-mini_v1:latest`** (Phi-3 Mini) — ~3.8B, ~2 GB.
+- **`ollama/ministral-3:3b`** — 3B, se já estiver no cluster.
+
+Trocar: em `openclaw.local.json5`, altere `agents.defaults.model` e os `model` em cada item de `agents.list` para o ID do modelo desejado (ex.: `ollama/stewyphoenix19/phi3-mini_v1:latest`). No K8s, o ConfigMap `openclaw-config` define os modelos por agente; para Slack-only pode padronizar todos em um único modelo pequeno.
+
 ## Telegram + Ollama (script pronto)
 
 - **Config:** `openclaw.local.json5` — gateway local, canal Telegram, canal Slack (opcional), provedor Ollama em `http://127.0.0.1:11434/v1`.

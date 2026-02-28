@@ -35,19 +35,28 @@
         models: [
           { id: "glm-5:cloud", name: "GLM-5 Cloud (padrão Ollama)", contextWindow: 32000, maxTokens: 4096 },
           { id: "stewyphoenix19/phi3-mini_v1:latest", name: "Phi3 Mini v1", contextWindow: 16000, maxTokens: 1024 },
-          { id: "qwen2.5:3b", name: "Qwen 2.5 3B (Ollama local)", contextWindow: 4096, maxTokens: 2048 },
+          { id: "qwen2.5:3b", name: "Qwen 2.5 3B (menor, conversa Slack)", contextWindow: 4096, maxTokens: 2048 },
         ],
       },
     },
   },
   agents: {
     // Todos os agentes compartilham o mesmo workspace. Slack: discussões entre agentes usam obrigatoriamente Ollama (local GPU).
+    // Modelo menor para conversa apenas no Slack: ollama/qwen2.5:3b (troque para phi3-mini se preferir; ver README).
     defaults: {
-      model: "ollama/glm-5:cloud",
+      model: "ollama/qwen2.5:3b",
       workspace: "config/openclaw/workspace-ceo",
     },
     list: [
-      { id: "ceo", name: "CEO", description: "Interface com o Diretor. Único que recebe Telegram; no Slack participa com os demais.", model: "ollama/glm-5:cloud" },
+      { id: "ceo", name: "CEO", description: "Interface com o Diretor. Único que recebe Telegram; no Slack participa com os demais.", model: "ollama/qwen2.5:3b" },
+      { id: "po", name: "Product Owner", description: "Backlog e priorização. Só Slack.", model: "ollama/qwen2.5:3b" },
+      { id: "devops", name: "DevOps/SRE", description: "IaC, CI/CD, FinOps. Só Slack.", model: "ollama/qwen2.5:3b" },
+      { id: "architect", name: "Architect", description: "Governança técnica, code review. Só Slack.", model: "ollama/qwen2.5:3b" },
+      { id: "developer", name: "Developer", description: "Implementação. Só Slack.", model: "ollama/qwen2.5:3b" },
+      { id: "qa", name: "QA", description: "Testes e qualidade. Só Slack.", model: "ollama/qwen2.5:3b" },
+      { id: "cybersec", name: "CyberSec", description: "Segurança. Só Slack.", model: "ollama/qwen2.5:3b" },
+      { id: "ux", name: "UX", description: "Experiência do usuário. Só Slack.", model: "ollama/qwen2.5:3b" },
+      { id: "dba", name: "DBA", description: "Dados e queries. Só Slack.", model: "ollama/qwen2.5:3b" },
     ],
   },
 }

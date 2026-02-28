@@ -201,3 +201,15 @@ flowchart LR
 
 - **Telegram:** apenas o CEO conversa com o Diretor. **Slack:** todos os agentes podem conversar; mesmo workspace compartilhado. **Política rigorosa:** agentes não-CEO não podem acessar outra plataforma além do Slack. **Discussões no Slack:** quando agentes discutirem soluções entre si no Slack, usar **obrigatoriamente** Ollama (LLM local com GPU).
 
+---
+
+## O que ainda falta para todos os agentes conversarem no Slack
+
+| Item | Status | Ação |
+|------|--------|------|
+| **Config local (`openclaw.local.json5`) — lista de agentes** | Pendente | Hoje só tem `ceo` em `agents.list`. Para todos conversarem no Slack no run local, incluir a lista completa: CEO, PO, DevOps, Architect, Developer, QA, CyberSec, UX, DBA — todos com o **mesmo workspace** (ex.: `config/openclaw/workspace-ceo`). |
+| **Menor LLM local só para conversa no Slack** | Pendente | Escolher um modelo pequeno (menos VRAM, mais rápido) para uso **apenas** em conversas no Slack. Opções: **Phi-3 mini** (~3.8B), **Qwen2.5:3b**, **Ministral-3:3b** ou **SmolLM** (3B). Definir em `agents.defaults.model` e em cada `agents.list[].model` na config local quando o objetivo for só Slack; documentar em `config/openclaw/README.md` e em `docs/42-slack-tokens-setup.md`. |
+| **K8s** | Feito | ConfigMap já tem lista completa e `channels.slack`; entrypoint e deployment com env Slack. |
+| **Script run local** | Feito | `run-openclaw-telegram-ollama.sh` habilita Slack quando tokens no .env. |
+| **Docs tokens e criação do app** | Feito | `docs/42-slack-tokens-setup.md` com tokens, manifest, Manage members (DIRECTOR_USER_ID). |
+

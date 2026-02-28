@@ -137,6 +137,56 @@ Com `dmPolicy: pairing`:
 3. Aprovar: `openclaw pairing approve telegram <CODE>`
 4. A partir daí o Diretor pode conversar com o CEO.
 
+## 7. Testar no Minikube com Slack (conversa e pergunta ao Diretor)
+
+Para **subir os agentes no Minikube** e **testar a conexão com o Slack** (incluindo dar a ordem de conversar no Slack e perguntar algo ao Diretor):
+
+### 7.1. Subir o cluster e o Ollama
+
+```bash
+# Na raiz do repositório
+make up
+```
+
+Aguarde o namespace `ai-agents`, Redis, Ollama e OpenClaw (ConfigMaps/Deployment). O Ollama faz preload dos modelos (incluindo `qwen2.5:3b` para conversa no Slack). Se o Ollama usar Cloud e pedir login, conclua no navegador e pressione ENTER no terminal.
+
+### 7.2. Gateway no host com Slack (recomendado para teste)
+
+Para testar o Slack com os tokens do `.env` (Socket Mode), rode o **gateway no host** com port-forward para o Ollama do cluster. Opcionalmente desligue o gateway no cluster para evitar dois listeners:
+
+```bash
+kubectl scale deployment openclaw -n ai-agents --replicas=0
+```
+
+Garanta no **`.env`** na raiz do repo:
+
+- `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` (Telegram, CEO)
+- `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN` e, se quiser allowlist em DM, `SLACK_DIRECTOR_USER_ID`
+
+Depois:
+
+```bash
+./scripts/run-openclaw-telegram-ollama.sh
+```
+
+O script faz port-forward do `svc/ollama-service` para `127.0.0.1:11434` e inicia o gateway com a config local (todos os agentes, modelo `qwen2.5:3b` para Slack). Quando aparecer "Slack habilitado. Envie mensagem no Slack ou no Telegram para testar.", o gateway está pronto.
+
+### 7.3. Testar no Slack: conversar e perguntar ao Diretor
+
+No workspace **ClawDevsAi** (Slack):
+
+1. Abra um **DM com o app** (ex.: ClawdevsAI) ou um canal onde o bot foi adicionado.
+2. Envie uma mensagem que peça para **conversar no Slack e perguntar algo ao Diretor**, por exemplo:
+   - *"Pergunta ao Diretor: Qual a prioridade desta semana?"*
+   - *"Converse no Slack e pergunte ao Diretor: podemos adiar a entrega do módulo X?"*
+   - Ou mencione o bot e faça a pergunta: *"@ClawdevsAI Pergunte ao Diretor: [sua pergunta]"*
+
+O gateway roteia a mensagem para o agente (CEO ou o agente que atender no Slack); a resposta usa o Ollama do cluster (port-forward) com o modelo configurado para Slack (`qwen2.5:3b`). Se você configurou `SLACK_DIRECTOR_USER_ID`, apenas o Diretor pode iniciar DM; em canal, todos podem mencionar o bot.
+
+**Primeiro acesso no Slack (pairing):** Se não tiver `SLACK_DIRECTOR_USER_ID` no `.env`, no primeiro DM o gateway pode pedir aprovação. No terminal onde o script está rodando: `openclaw pairing list slack` e depois `openclaw pairing approve slack <CODE>`.
+
+Ref: [42-slack-tokens-setup.md](42-slack-tokens-setup.md), [config/openclaw/README.md](../config/openclaw/README.md).
+
 ## Resumo da arquitetura (Fase 0)
 
 | Componente   | Função                                      |

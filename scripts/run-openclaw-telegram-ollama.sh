@@ -70,6 +70,7 @@ echo "    Workspace único: config/openclaw/workspace-ceo (CWD=$REPO_ROOT)"
 echo "    Telegram: só CEO. Slack: todos (discussões = Ollama local GPU)."
 if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" ]]; then
   echo "    Slack habilitado. Envie mensagem no Slack ou no Telegram para testar."
+  echo "    Ex.: no Slack (DM ou canal): \"Pergunta ao Diretor: Qual a prioridade desta semana?\""
 else
   echo "    Envie uma mensagem ao seu bot no Telegram para testar."
 fi
