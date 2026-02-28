@@ -50,5 +50,13 @@ for entry in $PIPELINE_GROUPS; do
   fi
 done
 
+# Disjuntor draft_rejected (127): consumer group para scripts/disjuntor_draft_rejected.py
+DISJUNTOR_GROUP="${DISJUNTOR_GROUP:-disjuntor}"
+if $REDIS_CLI -h "$REDIS_HOST" -p "$REDIS_PORT" XGROUP CREATE "draft_rejected" "$DISJUNTOR_GROUP" "$" MKSTREAM 2>/dev/null; then
+  echo "    draft_rejected: group $DISJUNTOR_GROUP (disjuntor 127) criado"
+else
+  echo "    draft_rejected: group $DISJUNTOR_GROUP já existe"
+fi
+
 echo "==> Concluído. Slot Revisão pós-Dev: XREADGROUP GROUP $REVISAO_GROUP ... no stream $CODE_READY."
 echo "    Pipeline 014: architect-slot → qa-slot → cybersec-slot → dba-slot. Ref: docs/38-redis-streams-estado-global.md"
