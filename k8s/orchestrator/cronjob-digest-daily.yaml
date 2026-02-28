@@ -1,14 +1,12 @@
 # CronJob: digest diário (Fase 3 — 036). Gera docs/agents-devs/digest-YYYY-MM-DD.md.
-# Requer ConfigMap phase3-scripts (scripts em /scripts) e phase3-env. Para persistência, use PVC em /data.
-# Criar phase3-scripts: kubectl create configmap phase3-scripts -n ai-agents --from-file=scripts/ -o yaml | kubectl apply -f -
-# Ou: make phase3-configmap
+# Requer orchestrator-scripts e orchestrator-env.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: digest-daily
   namespace: ai-agents
   labels:
-    app: phase3
+    app: orchestrator
 spec:
   schedule: "0 18 * * *"  # 18:00 UTC diário
   concurrencyPolicy: Forbid
@@ -29,7 +27,7 @@ spec:
                 - "pip install -q redis && cd /scripts && exec python digest_daily.py"
               envFrom:
                 - configMapRef:
-                    name: phase3-env
+                    name: orchestrator-env
               volumeMounts:
                 - name: scripts
                   mountPath: /scripts
@@ -39,6 +37,6 @@ spec:
           volumes:
             - name: scripts
               configMap:
-                name: phase3-scripts
+                name: orchestrator-scripts
             - name: data
               emptyDir: {}

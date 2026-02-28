@@ -27,12 +27,17 @@ except ImportError:
     def is_consumption_paused(r=None):
         return False
 
-# Fase 3 — strikes por issue (032)
+# Fase 3 — strikes por issue (032) e fallback Architect no 2º strike
 try:
     from orchestration_phase3 import record_architect_rejection
 except ImportError:
     def record_architect_rejection(r, issue_id: str) -> int:
         return 0
+try:
+    from architect_fallback import run_fallback as run_architect_fallback
+except ImportError:
+    def run_architect_fallback(r, issue_id: str, reason: str = "", branch: str = "", title: str = ""):
+        return None
 
 STREAM_CODE_READY = os.getenv("STREAM_CODE_READY", "code:ready")
 GROUP_REVISAO = os.getenv("CONSUMER_GROUP_REVISAO", "revisao-pos-dev")
@@ -84,10 +89,10 @@ def _get_issue_context(r, issue_id: str, max_chars: int = 4000) -> str:
         return ""
 
 
-def _architect_review_via_ollama(r, issue_id: str, payload: dict) -> bool:
+def _architect_review_via_ollama(r, issue_id: str, payload: dict) -> tuple[bool, str]:
     """
-    Chama Ollama com prompt de code review (perfil Architect). Retorna True se aprovado, False se rejeitado.
-    Resposta esperada: linha começando por APPROVED ou REJECTED: (ou REJEITADO:).
+    Chama Ollama com prompt de code review (perfil Architect).
+    Retorna (aprovado, motivo). Motivo é a linha de rejeição se rejeitado, senão "".
     """
     issue_ctx = _get_issue_context(r, issue_id)
     branch = payload.get("branch", "")
@@ -120,24 +125,23 @@ Responda em exatamente uma linha começando por APPROVED ou REJECTED: (ou REJEIT
             data = json.loads(resp.read().decode("utf-8"))
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError) as e:
         print(f"  [Architect] Erro Ollama: {e}", file=sys.stderr)
-        return ARCHITECT_ON_ERROR_APPROVE  # True = aprovar na falha, False = rejeitar
+        return (ARCHITECT_ON_ERROR_APPROVE, str(e))
 
-    content = ""
+    raw_content = ""
     try:
-        content = (data.get("message") or {}).get("content") or ""
+        raw_content = (data.get("message") or {}).get("content") or ""
     except Exception:
         pass
-    if isinstance(content, bytes):
-        content = content.decode("utf-8", errors="replace")
-    content = content.strip().upper()
-    # Primeira linha ou qualquer ocorrência de REJECTED/REJEITADO
-    first_line = content.split("\n")[0] if content else ""
-    rejected = "REJECTED" in first_line or "REJEITADO" in first_line or "REJECTED" in content or "REJEITADO" in content
+    if isinstance(raw_content, bytes):
+        raw_content = raw_content.decode("utf-8", errors="replace")
+    content_upper = raw_content.strip().upper()
+    first_line = (raw_content.strip().split("\n")[0] or "")[:200]
+    rejected = "REJECTED" in content_upper or "REJEITADO" in content_upper
     if rejected:
         print(f"  [Architect] Ollama respondeu: rejeitado — {first_line[:120]}")
-        return False
+        return (False, first_line)
     print(f"  [Architect] Ollama respondeu: aprovado — {first_line[:80]}")
-    return True
+    return (True, "")
 
 
 def run_etapa(nome: str) -> None:
@@ -146,16 +150,16 @@ def run_etapa(nome: str) -> None:
     time.sleep(0.5)
 
 
-def run_architect_etapa(r, payload: dict) -> bool:
+def run_architect_etapa(r, payload: dict) -> tuple[bool, str]:
     """
-    Executa etapa Architect. Retorna True se aprovado, False se rejeitado.
+    Executa etapa Architect. Retorna (aprovado, motivo_rejeicao).
     Se SIMULATE_ARCHITECT_REJECT ou payload simulate_reject=1: rejeita (teste).
     Se OLLAMA_BASE_URL estiver definido: chama Ollama com prompt de review (Architect).
     Caso contrário: stub aprova (compatibilidade).
     """
     if SIMULATE_REJECT or str(payload.get("simulate_reject", "")).strip() in ("1", "true"):
         print("  [Architect] Simulação de rejeição (SIMULATE_REJECT ou simulate_reject=1).")
-        return False
+        return (False, "simulate_reject")
 
     if OLLAMA_BASE_URL:
         issue_id = (payload.get("issue_id") or payload.get("issue") or payload.get("task_id") or "").strip()
@@ -163,7 +167,7 @@ def run_architect_etapa(r, payload: dict) -> bool:
 
     print("  [Architect] Etapa executada (stub, OLLAMA_BASE_URL não definido).")
     time.sleep(0.5)
-    return True  # stub: aprova
+    return (True, "")
 
 
 def processar_mensagem(r, stream: str, msg_id: str, data: dict) -> None:
@@ -173,11 +177,22 @@ def processar_mensagem(r, stream: str, msg_id: str, data: dict) -> None:
     print(f"[Slot] Processando mensagem {msg_id} do stream {stream} issue_id={issue_id!r}")
 
     with GPULock():
-        approved = run_architect_etapa(r, payload)
+        approved, reject_reason = run_architect_etapa(r, payload)
         if not approved:
             if issue_id:
                 n = record_architect_rejection(r, issue_id)
                 print(f"[Slot] Architect rejeitou — issue {issue_id} com {n} strike(s).")
+                if n == 2:
+                    try:
+                        run_architect_fallback(
+                            r, issue_id,
+                            rejection_reason=reject_reason,
+                            branch=payload.get("branch", ""),
+                            title=payload.get("title", ""),
+                        )
+                        print(f"[Slot] Fallback Architect (2º strike) acionado para issue {issue_id}.")
+                    except Exception as e:
+                        print(f"[Slot] Falha ao acionar fallback Architect: {e}", file=sys.stderr)
             else:
                 print("[Slot] Architect rejeitou (sem issue_id no payload; strike não registrado).")
             r.xack(stream, GROUP_REVISAO, msg_id)

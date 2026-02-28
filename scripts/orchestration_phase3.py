@@ -13,6 +13,10 @@ KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
 # --- Strikes (032) ---
 def strike_key(issue_id: str) -> str:
     return f"{KEY_PREFIX}:issue:{issue_id}:strikes"
+def architect_fallback_patch_key(issue_id: str) -> str:
+    return f"{KEY_PREFIX}:issue:{issue_id}:architect_fallback_patch"
+def cloud_arbitrage_solution_key(issue_id: str) -> str:
+    return f"{KEY_PREFIX}:issue:{issue_id}:cloud_arbitrage_solution"
 
 # --- Degradação (orquestrador) ---
 KEY_FIVE_STRIKES = f"{KEY_PREFIX}:orchestrator:five_strikes_count"
@@ -23,6 +27,7 @@ KEY_PAUSE_DEGRADATION = "orchestration:pause_degradation"
 # --- Loop de consenso (034) ---
 KEY_CONSENSUS_IN_PROGRESS = f"{KEY_PREFIX}:orchestrator:consensus_loop_in_progress"
 KEY_CONSENSUS_PILOT_RESULT = f"{KEY_PREFIX}:orchestrator:consensus_pilot_result"  # success | fail
+KEY_CONSENSUS_PROPOSAL = f"{KEY_PREFIX}:orchestrator:consensus_proposal"  # texto da proposta QA+Architect
 
 # --- Cosmético (033): timer 6h ---
 COSMETIC_TIMER_HOURS = float(os.environ.get("COSMETIC_TIMER_HOURS", "6"))

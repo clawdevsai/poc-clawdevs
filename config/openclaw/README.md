@@ -1,12 +1,12 @@
 # Config OpenClaw (uso fora do K8s)
 
-Configuração para rodar o OpenClaw **no host**: Telegram (só CEO) + Slack opcional (todos os agentes) + Ollama no cluster via port-forward.
+Configuração para rodar o OpenClaw **no host**: **Slack = todos os agentes** (padrão); **Telegram = apenas CEO** (Diretor ↔ CEO). Ollama no cluster via port-forward.
 
 ## Regras de canal
 
-- **Telegram:** somente o **agente CEO** conversa com o Diretor. Canal exclusivo CEO ↔ Diretor.
-- **Slack:** **todos os agentes** podem conversar (CEO, PO, DevOps, Architect, etc.). Quando os agentes discutirem soluções entre si no Slack, é **obrigatório** usar **Ollama (LLM local com GPU)**.
-- **Política rigorosa:** agentes diferentes do CEO não podem acessar outra plataforma além do Slack; apenas o CEO usa Telegram (e Slack).
+- **Slack (padrão):** **todos os agentes** conversam no Slack (CEO, PO, DevOps, Architect, etc.) — DM e canais (ex. #all-clawdevsai). Discussões entre agentes no Slack usam **Ollama (LLM local com GPU)**.
+- **Telegram (apenas CEO):** somente o **agente CEO** conversa com o Diretor pelo Telegram. Canal exclusivo CEO ↔ Diretor.
+- **Política:** agentes que não são o CEO **só** usam Slack; o CEO usa Telegram e Slack.
 - **Workspace único:** todos os agentes compartilham o mesmo workspace (ex.: `config/openclaw/workspace-ceo`).
 
 ## Modelo para discussões no Slack
@@ -61,9 +61,19 @@ Você **não** precisa criar um usuário no Slack para cada agente (CEO, PO, Dev
 
 ## O que falta para a conversa funcionar no Slack
 
-1. **Gateway rodando** — `./scripts/run-openclaw-telegram-ollama.sh` (com `SLACK_APP_TOKEN` e `SLACK_BOT_TOKEN` no `.env`).
+1. **Gateway rodando** — Local: `./scripts/run-openclaw-telegram-ollama.sh` (com `SLACK_APP_TOKEN` e `SLACK_BOT_TOKEN` no `.env`). **No K8s:** os tokens precisam estar no **Secret** do cluster, não só no `.env`: rode `./scripts/k8s-openclaw-secret-from-env.sh` e depois `kubectl rollout restart deployment/openclaw -n ai-agents`. Sem isso, nada acontece no Slack.
 2. **Quem pode mandar DM** — Se usar allowlist: coloque o seu Slack User ID (ex.: do Diego) em `SLACK_ALLOWED_USER_IDS` no `.env`, ou deixe allowlist vazia e use **pairing**: no primeiro DM, no terminal rode `openclaw pairing approve slack <CODE>`.
 3. **App no canal** — Para os agentes participarem de discussões em canal (#all-clawdevsai, #new-channel, etc.), **convide o app ClawdevsAI para o canal** (no canal: Integrações → Adicionar apps → ClawdevsAI). Assim o app recebe mensagens do canal e pode responder ou fazer os agentes discutirem entre si.
+4. **Mencione o app em canal** — Em canais, o Slack costuma exigir **@menção** do app. Escreva por exemplo: *"@ClawdevsAI Oi"* ou *"@ClawdevsAI Tema: analisar migração para K8s"*.
+
+### Slack não responde? (checklist)
+
+Rode o diagnóstico: **`./scripts/slack-openclaw-check.sh`**. Em resumo:
+
+- **K8s:** o pod **não** lê o `.env` do seu PC. É preciso enviar os tokens para o cluster: `./scripts/k8s-openclaw-secret-from-env.sh` e `kubectl rollout restart deployment/openclaw -n ai-agents`.
+- **Canal:** o app está no canal? (Integrações → Adicionar apps → ClawdevsAI.)
+- **Menção:** em canal, use **@ClawdevsAI** no início da mensagem.
+- **Logs:** `kubectl logs -n ai-agents -l app=openclaw -f --tail=100` para ver se o gateway conectou ao Slack (Socket Mode) e se está recebendo eventos.
 
 ## Agentes discutindo entre si no Slack
 

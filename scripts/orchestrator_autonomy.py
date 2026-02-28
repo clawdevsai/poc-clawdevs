@@ -118,7 +118,7 @@ def run_once(r) -> None:
                 f"Esteira pausada. Revisar relatório e executar unblock-degradation.sh para retomar."
             )
             subprocess.run(
-                [sys.executable, os.path.join(os.path.dirname(__file__), "slack_notify.py",), msg],
+                [sys.executable, os.path.join(os.path.dirname(__file__), "slack_notify.py"), msg],
                 env=os.environ,
                 timeout=10,
                 capture_output=True,

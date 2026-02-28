@@ -1,12 +1,12 @@
-# Variáveis de ambiente para CronJobs e consumer Slack (Fase 3).
-# SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN + SLACK_ALERTS_CHANNEL_ID devem ser fornecidos via Secret em produção.
+# Variáveis de ambiente para orquestrador: CronJobs (digest, cosmetic, consensus) e consumer Slack.
+# SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN + SLACK_ALERTS_CHANNEL_ID via Secret orchestrator-slack.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: phase3-env
+  name: orchestrator-env
   namespace: ai-agents
   labels:
-    app: phase3
+    app: orchestrator
 data:
   REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
   REDIS_PORT: "6379"
@@ -17,4 +17,3 @@ data:
   STREAM_ORCHESTRATOR_EVENTS: "orchestrator:events"
   ORCHESTRATOR_EVENTS_SLACK_GROUP: "slack"
   ORCHESTRATOR_EVENTS_SLACK_CONSUMER: "slack-consumer"
-  # Opcional: CONSENSUS_PILOT_AUTO_SUCCESS=1 para pilot marcar success automaticamente

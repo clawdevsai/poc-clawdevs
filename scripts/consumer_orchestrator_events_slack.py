@@ -12,6 +12,11 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from orchestration_phase3 import get_redis, STREAM_ORCHESTRATOR_EVENTS
 from slack_notify import send_slack
+try:
+    from arbitrage_cloud import run as run_arbitrage_cloud
+except ImportError:
+    def run_arbitrage_cloud(r, issue_id: str) -> bool:
+        return False
 
 CONSUMER_GROUP = os.environ.get("ORCHESTRATOR_EVENTS_SLACK_GROUP", "slack")
 CONSUMER_NAME = os.environ.get("ORCHESTRATOR_EVENTS_SLACK_CONSUMER", "slack-consumer")
@@ -57,9 +62,16 @@ def run_loop():
                     text = _format_message(msg)
                     if send_slack(text):
                         r.xack(STREAM_ORCHESTRATOR_EVENTS, CONSUMER_GROUP, msg_id)
-                    else:
-                        # não avança last_id para reprocessar depois
-                        pass
+                    # 5º strike (032): tentar arbitragem na nuvem
+                    if msg.get("type") == "issue_back_to_po" and msg.get("reason") == "fifth_strike":
+                        iid = msg.get("issue_id", "").strip()
+                        if iid:
+                            try:
+                                if run_arbitrage_cloud(r, iid):
+                                    send_slack(f"*ClawDevs — Arbitragem nuvem*\nIssue `{iid}`: solução gravada em Redis (`cloud_arbitrage_solution`).")
+                            except Exception:
+                                pass
+                    # Se send_slack falhou, não faz XACK (reprocessar depois)
         except KeyboardInterrupt:
             break
         except Exception as e:
@@ -68,9 +80,9 @@ def run_loop():
 
 
 def main():
-    if not (os.environ.get("SLACK_WEBHOOK_URL") or os.environ.get("SLACK_BOT_TOKEN")):
-        print("[consumer_orchestrator_events_slack] SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN necessário.", file=sys.stderr)
-        sys.exit(1)
+    while not (os.environ.get("SLACK_WEBHOOK_URL") or os.environ.get("SLACK_BOT_TOKEN")):
+        print("[consumer_orchestrator_events_slack] Aguardando SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN (Secret phase3-slack).", file=sys.stderr)
+        time.sleep(30)
     print(f"[consumer_orchestrator_events_slack] Iniciando (stream={STREAM_ORCHESTRATOR_EVENTS} group={CONSUMER_GROUP}).")
     run_loop()
 

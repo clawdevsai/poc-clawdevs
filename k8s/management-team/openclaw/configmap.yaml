@@ -1,5 +1,5 @@
 # Configuração OpenClaw (sem credenciais). Token e Chat ID vêm do Secret.
-# Telegram: só CEO. Slack: todos os agentes. Todos compartilham o mesmo workspace /workspace.
+# Padrão: Slack = todos os agentes (DM e canais). Telegram = apenas CEO (Diretor ↔ CEO). Workspace único: /workspace.
 # Discussões entre agentes no Slack: Ollama local GPU obrigatório.
 # Integração padrão: Ollama GPU no cluster (ollama_local). Provedor por agente: k8s/llm-providers-configmap.yaml.
 apiVersion: v1

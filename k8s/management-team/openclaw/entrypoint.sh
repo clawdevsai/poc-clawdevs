@@ -15,7 +15,8 @@ fi
 
 # 2) Slack: habilitar e injetar allowFrom (Director + SLACK_ALLOWED_USER_IDS) quando tokens presentes
 if [ -n "$SLACK_APP_TOKEN" ] && [ -n "$SLACK_BOT_TOKEN" ]; then
-  sed 's/"slack": { "enabled": false/"slack": { "enabled": true/' "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
+  # ConfigMap tem quebra de linha entre "slack": { e "enabled": false; substituir na região do bloco slack
+  sed '/"slack": {/,/}/ s/"enabled": false/"enabled": true/' "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
   # build allowFrom JSON: SLACK_DIRECTOR_USER_ID + SLACK_ALLOWED_USER_IDS (comma-separated)
   ALLOW_FROM_JSON=""
   [ -n "$SLACK_DIRECTOR_USER_ID" ] && ALLOW_FROM_JSON="\"$SLACK_DIRECTOR_USER_ID\""

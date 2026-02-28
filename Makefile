@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap phase3-configmap phase3-apply
+.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -80,20 +80,32 @@ up: prepare openclaw-image
 		echo "==> Aplicando Fase 2 (security + phase2-config + evoluções)..."; \
 		kubectl apply -f $(K8S_DIR)/security/; \
 	fi
+	@if [ -d $(K8S_DIR)/orchestrator ]; then \
+		echo "==> Orquestrador (Slack consumer, digest, cosmetic, consensus)..."; \
+		$(MAKE) orchestrator-configmap; \
+		kubectl apply -f $(K8S_DIR)/orchestrator/; \
+	fi
 	@if [ -f $(K8S_DIR)/management-team/openclaw/serviceaccount.yaml ]; then echo "==> Aplicando ServiceAccount openclaw-router (Fase 2 — 025)..."; kubectl apply -f $(K8S_DIR)/management-team/openclaw/serviceaccount.yaml; fi
 	@echo "==> Aplicando Deployment OpenClaw..."
 	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
 	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
-		echo "==> Aplicando secret Telegram (k8s/management-team/openclaw/secret.yaml)..."; \
+		echo "==> Aplicando secret openclaw-telegram (Telegram + Slack)..."; \
 		kubectl apply -f $(K8S_DIR)/management-team/openclaw/secret.yaml; \
 		kubectl rollout restart deployment/openclaw -n ai-agents --timeout=60s 2>/dev/null || true; \
 	else \
-		echo "==> Secret Telegram não encontrado (opcional). Crie k8s/management-team/openclaw/secret.yaml ou: kubectl create secret generic openclaw-telegram -n ai-agents --from-literal=TELEGRAM_BOT_TOKEN=... --from-literal=TELEGRAM_CHAT_ID=..."; \
+		echo "==> Secret não encontrado. Padrão: Slack (todos os agentes) + Telegram (só CEO). Use: ./scripts/k8s-openclaw-secret-from-env.sh (SLACK_* e TELEGRAM_* no .env)"; \
 	fi
 	@echo "==> up concluído."
-	@echo "  Envie mensagem ao ClawDev bot no Telegram; a resposta vem do Ollama no cluster."
-	@echo "  Ollama: puxe o modelo do CEO se necessário: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest"
-	@echo "  Opcional (Fase 1 — 012): para topologia CEO/PO apenas: make up-management (e scale deployment openclaw a 0 para evitar dois gateways Telegram)."
+	@echo "  Padrão: Slack = todos os agentes (DM e canais, ex. #all-clawdevsai). Telegram = apenas CEO (Diretor ↔ CEO)."
+	@echo "  Slack: defina SLACK_APP_TOKEN e SLACK_BOT_TOKEN no .env e rode ./scripts/k8s-openclaw-secret-from-env.sh; depois kubectl rollout restart deployment/openclaw -n ai-agents."
+	@echo "  Telegram (só CEO): TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID no .env e no Secret."
+	@echo "  Ollama: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest"
+	@echo "  Orquestrador: CronJobs e consumer Slack. Alertas: kubectl create secret generic orchestrator-slack -n ai-agents --from-literal=SLACK_WEBHOOK_URL='...'"
+	@echo "  Opcional: make up-management (CEO/PO apenas; scale openclaw a 0 para evitar dois gateways)."
+
+# Sobe tudo em um script: up + slot revisão + Redis streams init + rollout restart.
+up-all:
+	@$(CURDIR)/scripts/up-all.sh
 
 # Pods CEO e PO apenas (Fase 1 — 012). Usa mesma imagem openclaw-gateway:local e secret Telegram.
 # Se usar este target, scale o gateway único a 0 para não ter dois listeners Telegram: kubectl scale deployment openclaw -n ai-agents --replicas=0
@@ -136,6 +148,7 @@ revisao-slot-configmap:
 	  --from-file=slot_revisao_pos_dev.py=scripts/slot_revisao_pos_dev.py \
 	  --from-file=gpu_lock.py=scripts/gpu_lock.py \
 	  --from-file=orchestration_phase3.py=scripts/orchestration_phase3.py \
+	  --from-file=architect_fallback.py=scripts/architect_fallback.py \
 	  --from-file=acefalo_redis.py=scripts/acefalo_redis.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> revisao-slot-configmap concluído."
@@ -205,23 +218,24 @@ quarantine-pipeline-configmap:
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 # Fase 3 — Slack, digest, cosmetic timers, consensus loop (034–036)
-phase3-configmap:
-	@echo "==> Criando ConfigMap phase3-scripts (orchestration, slack, digest, cosmetic, consensus)..."
-	@kubectl create configmap phase3-scripts -n ai-agents \
+orchestrator-configmap:
+	@echo "==> Criando ConfigMap orchestrator-scripts (orchestration, slack, digest, cosmetic, consensus)..."
+	@kubectl create configmap orchestrator-scripts -n ai-agents \
 	  --from-file=orchestration_phase3.py=scripts/orchestration_phase3.py \
 	  --from-file=slack_notify.py=scripts/slack_notify.py \
 	  --from-file=consumer_orchestrator_events_slack.py=scripts/consumer_orchestrator_events_slack.py \
+	  --from-file=arbitrage_cloud.py=scripts/arbitrage_cloud.py \
 	  --from-file=digest_daily.py=scripts/digest_daily.py \
 	  --from-file=cosmetic_omission.py=scripts/cosmetic_omission.py \
 	  --from-file=set_consensus_pilot_result.py=scripts/set_consensus_pilot_result.py \
 	  --from-file=consensus_loop_runner.py=scripts/consensus_loop_runner.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
-	@echo "==> phase3-configmap concluído. Crie Secret phase3-slack (SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN+SLACK_ALERTS_CHANNEL_ID) e use make phase3-apply."
+	@echo "==> orchestrator-configmap concluído. Crie Secret orchestrator-slack e use make orchestrator-apply."
 
-phase3-apply: phase3-configmap
-	@echo "==> Aplicando Fase 3 (configmap-env, CronJobs, consumer Slack)..."
-	@kubectl apply -f $(K8S_DIR)/phase3/
-	@echo "==> Fase 3 aplicada. Ref: docs/06-operacoes.md"
+orchestrator-apply: orchestrator-configmap
+	@echo "==> Aplicando orquestrador (configmap-env, CronJobs, consumer Slack)..."
+	@kubectl apply -f $(K8S_DIR)/orchestrator/
+	@echo "==> Orquestrador aplicado. Ref: docs/06-operacoes.md"
 
 # 3. down: derruba tudo — deployments, PVCs, secrets, configmaps e namespace. Ambiente em estaca zero.
 down:

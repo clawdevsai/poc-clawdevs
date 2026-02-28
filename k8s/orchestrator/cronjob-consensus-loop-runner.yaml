@@ -1,14 +1,14 @@
-# CronJob: check-timers de aprovação por omissão cosmética (Fase 3 — 033). Expira timers e grava MEMORY + QA.
-# Requer phase3-scripts e phase3-env. Saída em emptyDir; para persistência use PVC.
+# CronJob: subfluxo do loop de consenso (Fase 3 — 034).
+# Requer orchestrator-scripts e orchestrator-env. Opcional: Secret orchestrator-slack.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: cosmetic-timers
+  name: consensus-loop-runner
   namespace: ai-agents
   labels:
-    app: phase3
+    app: orchestrator
 spec:
-  schedule: "*/10 * * * *"  # a cada 10 min
+  schedule: "*/2 * * * *"  # a cada 2 min
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
@@ -19,24 +19,28 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-            - name: cosmetic
+            - name: runner
               image: python:3.12-slim
               command:
                 - /bin/sh
                 - -c
-                - "pip install -q redis && cd /scripts && python cosmetic_omission.py check-timers && python cosmetic_omission.py write-qa-file"
+                - "pip install -q redis && cd /scripts && exec python consensus_loop_runner.py --once"
               envFrom:
                 - configMapRef:
-                    name: phase3-env
+                    name: orchestrator-env
+                - secretRef:
+                    name: orchestrator-slack
+                    optional: true
               volumeMounts:
                 - name: scripts
                   mountPath: /scripts
                   readOnly: true
                 - name: data
                   mountPath: /data/agents-devs
+                  readOnly: true
           volumes:
             - name: scripts
               configMap:
-                name: phase3-scripts
+                name: orchestrator-scripts
             - name: data
               emptyDir: {}
