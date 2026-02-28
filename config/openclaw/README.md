@@ -37,4 +37,23 @@ Uso:
 Sem `TELEGRAM_CHAT_ID`: o script usa `dmPolicy: pairing`; aprove o primeiro DM com `openclaw pairing approve telegram <CODE>`.  
 Sem `SLACK_DIRECTOR_USER_ID`: use `openclaw pairing approve slack <CODE>` no primeiro DM no Slack.
 
+## Como conversar com o PO (ou outro agente) no Slack
+
+No **DM com o ClawdevsAI** (ou em canal onde o app está), você conversa com o bot; o gateway pode rotear para o **CEO** primeiro. Para envolver o **Product Owner (PO)** ou outro agente:
+
+1. **Pedir ao CEO para falar com o PO** — Exemplos:
+   - *"Quero falar com o PO"*
+   - *"Pergunte ao Product Owner: qual o status do backlog?"*
+   - *"Fale com o PO sobre prioridades desta semana"*
+   O CEO pode delegar ao PO via sub-agents e trazer a resposta de volta.
+
+2. **Pedir direto ao PO por texto** — Exemplos:
+   - *"PO: quais as próximas entregas?"*
+   - *"Product Owner, qual a prioridade do épico X?"*
+   Assim o modelo (e o gateway) podem interpretar e rotear ao agente PO.
+
+3. **Outros agentes** — O mesmo vale para DevOps, Architect, Developer, QA, CyberSec, UX, DBA. Ex.: *"DevOps: o cluster está estável?"*, *"QA: quais testes cobrem o módulo Y?"*.
+
+O app **ClawdevsAI** no Slack é o mesmo para todos; a escolha do agente é pelo conteúdo da mensagem (e, quando houver, por menção ou comando específico do OpenClaw — ver [docs OpenClaw Slack](https://docs.openclaw.ai/channels/slack)).
+
 Ref: [openclaw-sub-agents-architecture.md](../../docs/openclaw-sub-agents-architecture.md)

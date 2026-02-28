@@ -33,6 +33,33 @@ if [[ -z "$TELEGRAM_CHAT_ID" ]]; then
   echo "Aviso: TELEGRAM_CHAT_ID não definido. Use dmPolicy pairing e 'openclaw pairing approve telegram <CODE>' no primeiro DM."
 fi
 
+# Validar contexto e Minikube: namespace ai-agents e svc/ollama-service
+CTX="$(kubectl config current-context 2>/dev/null || true)"
+if [[ -z "$CTX" ]]; then
+  echo "Erro: kubectl sem contexto. Configure o cluster (ex.: minikube)."
+  exit 1
+fi
+echo "==> Contexto kubectl: $CTX"
+if ! kubectl get namespace ai-agents >/dev/null 2>&1; then
+  echo "Erro: namespace ai-agents não existe. Rode 'make up' no repositório."
+  exit 1
+fi
+if ! kubectl get svc ollama-service -n ai-agents >/dev/null 2>&1; then
+  echo "Erro: svc/ollama-service não existe em ai-agents. Rode 'make up'."
+  exit 1
+fi
+# Porta 11434 no host: usada pelo port-forward para o Ollama no cluster
+if command -v ss >/dev/null 2>&1; then
+  if ss -tlnp 2>/dev/null | grep -q ':11434 '; then
+    echo "Aviso: porta 11434 já está em uso no host. Libere ou use outro processo (ex.: mate o port-forward anterior)."
+  fi
+elif command -v lsof >/dev/null 2>&1; then
+  if lsof -i :11434 >/dev/null 2>&1; then
+    echo "Aviso: porta 11434 já está em uso no host. Libere ou use outro processo."
+  fi
+fi
+echo "==> Ambiente validado: contexto=$CTX, namespace ai-agents, svc/ollama-service; porta 11434 (port-forward) livre no host."
+
 # Gerar config com allowFrom se TELEGRAM_CHAT_ID estiver definido (para dmPolicy allowlist)
 if [[ -n "$TELEGRAM_CHAT_ID" ]]; then
   sed "s/\"allowFrom\": \[\]/\"allowFrom\": [\"$TELEGRAM_CHAT_ID\"]/" "$CONFIG_SRC" > "$CONFIG_RUN"
@@ -74,4 +101,17 @@ if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" ]]; then
 else
   echo "    Envie uma mensagem ao seu bot no Telegram para testar."
 fi
+
+# Garantir npx no PATH (ex.: nvm não carregado em script)
+if ! command -v npx >/dev/null 2>&1; then
+  if [[ -f "$HOME/.nvm/nvm.sh" ]]; then
+    echo "==> Carregando nvm para usar npx..."
+    source "$HOME/.nvm/nvm.sh"
+  fi
+fi
+if ! command -v npx >/dev/null 2>&1; then
+  echo "Erro: npx não encontrado. Instale Node.js (https://nodejs.org) ou rode com nvm ativo: source ~/.nvm/nvm.sh && $0"
+  exit 1
+fi
+
 exec npx --yes openclaw@latest gateway
