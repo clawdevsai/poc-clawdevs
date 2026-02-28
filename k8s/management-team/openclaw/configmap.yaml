@@ -22,7 +22,7 @@ data:
           "enabled": false,
           "mode": "socket",
           "dmPolicy": "allowlist",
-          "allowFrom": ["__SLACK_DIRECTOR_USER_ID__"],
+          "allowFrom": [__SLACK_ALLOW_FROM_JSON__],
           "dm": { "enabled": true, "groupEnabled": false }
         }
       },

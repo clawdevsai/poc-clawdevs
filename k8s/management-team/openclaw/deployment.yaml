@@ -76,6 +76,12 @@ spec:
                   name: openclaw-telegram
                   key: SLACK_DIRECTOR_USER_ID
                   optional: true
+            - name: SLACK_ALLOWED_USER_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: SLACK_ALLOWED_USER_IDS
+                  optional: true
           volumeMounts:
             - name: config
               mountPath: /config

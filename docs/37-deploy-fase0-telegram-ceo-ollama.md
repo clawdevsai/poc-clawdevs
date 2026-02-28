@@ -63,9 +63,19 @@ cp k8s/management-team/openclaw/secret.yaml.example k8s/management-team/openclaw
 kubectl apply -f k8s/management-team/openclaw/secret.yaml
 ```
 
-### 3.1. Slack (opcional)
+### 3.1. Secret a partir do .env (Telegram + Slack)
 
-Para habilitar o canal **Slack** (todos os agentes podem conversar; discussões = Ollama local GPU), adicione ao mesmo secret `openclaw-telegram` (ou crie um secret com as chaves Slack):
+Para criar ou atualizar o secret **a partir do seu `.env`** (evitando copiar tokens à mão):
+
+```bash
+./scripts/k8s-openclaw-secret-from-env.sh
+```
+
+O script lê `.env` na raiz do repo e aplica `openclaw-telegram` no namespace `ai-agents` com as chaves definidas (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, SLACK_APP_TOKEN, SLACK_BOT_TOKEN, SLACK_DIRECTOR_USER_ID, SLACK_ALLOWED_USER_IDS). Depois: `kubectl rollout restart deployment/openclaw -n ai-agents`.
+
+### 3.2. Slack (opcional)
+
+Para habilitar o canal **Slack** (todos os agentes podem conversar; discussões = Ollama local GPU), adicione ao mesmo secret `openclaw-telegram` (ou use o script acima com .env já preenchido):
 
 - **SLACK_APP_TOKEN** (xapp-...) — App Token com Socket Mode. Criar app em [Slack API](https://api.slack.com/apps) para o workspace (ex.: clawdevsai), habilitar Socket Mode, criar App Token com `connections:write`.
 - **SLACK_BOT_TOKEN** (xoxb-...) — Bot Token (após instalar o app no workspace).
