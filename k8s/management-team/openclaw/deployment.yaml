@@ -82,6 +82,12 @@ spec:
                   name: openclaw-telegram
                   key: SLACK_ALLOWED_USER_IDS
                   optional: true
+            - name: SLACK_ALL_CLAWDEVSAI_CHANNEL_ID
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: SLACK_ALL_CLAWDEVSAI_CHANNEL_ID
+                  optional: true
           volumeMounts:
             - name: config
               mountPath: /config

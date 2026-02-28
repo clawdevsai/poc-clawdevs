@@ -50,6 +50,15 @@ for entry in $PIPELINE_GROUPS; do
   fi
 done
 
+# Fase 3 (034): orchestrator:events — consumer Slack para alertas
+ORCHESTRATOR_EVENTS="${ORCHESTRATOR_EVENTS:-orchestrator:events}"
+SLACK_GROUP="${ORCHESTRATOR_EVENTS_SLACK_GROUP:-slack}"
+if $REDIS_CLI -h "$REDIS_HOST" -p "$REDIS_PORT" XGROUP CREATE "$ORCHESTRATOR_EVENTS" "$SLACK_GROUP" "$" MKSTREAM 2>/dev/null; then
+  echo "    $ORCHESTRATOR_EVENTS: stream e group $SLACK_GROUP (consumer Slack) criados"
+else
+  echo "    $ORCHESTRATOR_EVENTS: group $SLACK_GROUP já existe"
+fi
+
 # Disjuntor draft_rejected (127): consumer group para scripts/disjuntor_draft_rejected.py
 DISJUNTOR_GROUP="${DISJUNTOR_GROUP:-disjuntor}"
 if $REDIS_CLI -h "$REDIS_HOST" -p "$REDIS_PORT" XGROUP CREATE "draft_rejected" "$DISJUNTOR_GROUP" "$" MKSTREAM 2>/dev/null; then

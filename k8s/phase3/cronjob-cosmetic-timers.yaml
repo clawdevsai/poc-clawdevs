@@ -1,0 +1,42 @@
+# CronJob: check-timers de aprovação por omissão cosmética (Fase 3 — 033). Expira timers e grava MEMORY + QA.
+# Requer phase3-scripts e phase3-env. Saída em emptyDir; para persistência use PVC.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cosmetic-timers
+  namespace: ai-agents
+  labels:
+    app: phase3
+spec:
+  schedule: "*/10 * * * *"  # a cada 10 min
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cosmetic
+              image: python:3.12-slim
+              command:
+                - /bin/sh
+                - -c
+                - "pip install -q redis && cd /scripts && python cosmetic_omission.py check-timers && python cosmetic_omission.py write-qa-file"
+              envFrom:
+                - configMapRef:
+                    name: phase3-env
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: data
+                  mountPath: /data/agents-devs
+          volumes:
+            - name: scripts
+              configMap:
+                name: phase3-scripts
+            - name: data
+              emptyDir: {}

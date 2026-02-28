@@ -25,6 +25,7 @@ from orchestration_phase3 import (
     KEY_CONSENSUS_PILOT_RESULT,
     STREAM_DIGEST,
     emit_digest,
+    emit_event,
 )
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
@@ -107,6 +108,23 @@ def run_once(r) -> None:
             write_degradation_report(five, omission, sprint_total, pct)
         except Exception as e:
             print(f"[orchestrator] Falha ao escrever relatório de degradação: {e}", file=sys.stderr)
+        # Alerta imediato via Slack (Fase 3)
+        try:
+            import subprocess
+            msg = (
+                f"*ClawDevs — Freio de mão acionado*\n"
+                f"Orçamento de degradação atingido: {pct:.1f}% "
+                f"(5º strike: {five}, omissão cosmética: {omission}, sprint: {sprint_total}). "
+                f"Esteira pausada. Revisar relatório e executar unblock-degradation.sh para retomar."
+            )
+            subprocess.run(
+                [sys.executable, os.path.join(os.path.dirname(__file__), "slack_notify.py",), msg],
+                env=os.environ,
+                timeout=10,
+                capture_output=True,
+            )
+        except Exception as e:
+            print(f"[orchestrator] Falha ao enviar alerta Slack: {e}", file=sys.stderr)
         print(f"[orchestrator] Orçamento degradação: loop falhou ou timeout — freio de mão acionado ({pct:.1f}%).")
         return
 
@@ -115,6 +133,14 @@ def run_once(r) -> None:
         r.set(KEY_CONSENSUS_IN_PROGRESS, "1", ex=CONSENSUS_LOOP_TIMEOUT_SEC)
         r.set(f"{KEY_CONSENSUS_IN_PROGRESS}:started_at", str(time.time()), ex=CONSENSUS_LOOP_TIMEOUT_SEC)
         emit_digest(
+            r,
+            "consensus_loop_requested",
+            pct=str(round(pct, 1)),
+            five_strikes=str(five),
+            omission_cosmetic=str(omission),
+            sprint_tasks=str(sprint_total),
+        )
+        emit_event(
             r,
             "consensus_loop_requested",
             pct=str(round(pct, 1)),

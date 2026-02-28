@@ -23,6 +23,7 @@ ARGS=()
 [[ -n "$SLACK_BOT_TOKEN" ]]       && ARGS+=(--from-literal=SLACK_BOT_TOKEN="$SLACK_BOT_TOKEN")
 [[ -n "$SLACK_DIRECTOR_USER_ID" ]] && ARGS+=(--from-literal=SLACK_DIRECTOR_USER_ID="$SLACK_DIRECTOR_USER_ID")
 [[ -n "$SLACK_ALLOWED_USER_IDS" ]] && ARGS+=(--from-literal=SLACK_ALLOWED_USER_IDS="$SLACK_ALLOWED_USER_IDS")
+[[ -n "$SLACK_ALL_CLAWDEVSAI_CHANNEL_ID" ]] && ARGS+=(--from-literal=SLACK_ALL_CLAWDEVSAI_CHANNEL_ID="$SLACK_ALL_CLAWDEVSAI_CHANNEL_ID")
 
 if [[ ${#ARGS[@]} -eq 0 ]]; then
   echo "Erro: nenhuma variável relevante definida no .env (TELEGRAM_*, SLACK_*)."

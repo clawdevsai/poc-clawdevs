@@ -1,0 +1,64 @@
+# Deployment: consumidor do stream orchestrator:events → Slack (Fase 3).
+# Requer phase3-scripts, phase3-env e Secret phase3-slack (SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN + SLACK_ALERTS_CHANNEL_ID).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slack-events-consumer
+  namespace: ai-agents
+  labels:
+    app: phase3
+    component: slack-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phase3
+      component: slack-consumer
+  template:
+    metadata:
+      labels:
+        app: phase3
+        component: slack-consumer
+    spec:
+      containers:
+        - name: consumer
+          image: python:3.12-slim
+          command:
+            - /bin/sh
+            - -c
+            - "pip install -q redis && cd /scripts && exec python consumer_orchestrator_events_slack.py"
+          envFrom:
+            - configMapRef:
+                name: phase3-env
+            - secretRef:
+                name: phase3-slack
+                optional: true
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: scripts
+          configMap:
+            name: phase3-scripts
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slack-events-consumer
+  namespace: ai-agents
+  labels:
+    app: phase3
+spec:
+  selector:
+    app: phase3
+    component: slack-consumer
+  ports: []
+  type: ClusterIP

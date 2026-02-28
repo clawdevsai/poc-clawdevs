@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap
+.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap phase3-configmap phase3-apply
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -203,6 +203,25 @@ quarantine-pipeline-configmap:
 	  --from-file=quarantine_entropy.py=scripts/quarantine_entropy.py \
 	  --from-file=trusted_package_verify.py=scripts/trusted_package_verify.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
+
+# Fase 3 — Slack, digest, cosmetic timers, consensus loop (034–036)
+phase3-configmap:
+	@echo "==> Criando ConfigMap phase3-scripts (orchestration, slack, digest, cosmetic, consensus)..."
+	@kubectl create configmap phase3-scripts -n ai-agents \
+	  --from-file=orchestration_phase3.py=scripts/orchestration_phase3.py \
+	  --from-file=slack_notify.py=scripts/slack_notify.py \
+	  --from-file=consumer_orchestrator_events_slack.py=scripts/consumer_orchestrator_events_slack.py \
+	  --from-file=digest_daily.py=scripts/digest_daily.py \
+	  --from-file=cosmetic_omission.py=scripts/cosmetic_omission.py \
+	  --from-file=set_consensus_pilot_result.py=scripts/set_consensus_pilot_result.py \
+	  --from-file=consensus_loop_runner.py=scripts/consensus_loop_runner.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> phase3-configmap concluído. Crie Secret phase3-slack (SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN+SLACK_ALERTS_CHANNEL_ID) e use make phase3-apply."
+
+phase3-apply: phase3-configmap
+	@echo "==> Aplicando Fase 3 (configmap-env, CronJobs, consumer Slack)..."
+	@kubectl apply -f $(K8S_DIR)/phase3/
+	@echo "==> Fase 3 aplicada. Ref: docs/06-operacoes.md"
 
 # 3. down: derruba tudo — deployments, PVCs, secrets, configmaps e namespace. Ambiente em estaca zero.
 down:

@@ -36,5 +36,9 @@ else
   sed 's/\[__SLACK_ALLOW_FROM_JSON__\]/[]/' "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
 fi
 
+# 3) Canal #all-clawdevsai (ou outro): ID configurável por SLACK_ALL_CLAWDEVSAI_CHANNEL_ID (default CDAHISCLSQKC)
+CHAN_ID="${SLACK_ALL_CLAWDEVSAI_CHANNEL_ID:-CDAHISCLSQKC}"
+sed "s/__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__/$CHAN_ID/g" "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
+
 export OPENCLAW_CONFIG_PATH="$CONFIG_RUN"
 exec openclaw gateway --allow-unconfigured --port 18789 --bind lan

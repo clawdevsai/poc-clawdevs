@@ -23,7 +23,11 @@ data:
           "mode": "socket",
           "dmPolicy": "allowlist",
           "allowFrom": [__SLACK_ALLOW_FROM_JSON__],
-          "dm": { "enabled": true, "groupEnabled": false }
+          "dm": { "enabled": true, "groupEnabled": false },
+          "groupPolicy": "allowlist",
+          "channels": {
+            "__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__": {}
+          }
         }
       },
       "models": {
@@ -36,7 +40,8 @@ data:
             "models": [
               { "id": "glm-5:cloud", "name": "GLM-5 Cloud (padrão Ollama)", "contextWindow": 32000, "maxTokens": 4096 },
               { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1", "contextWindow": 16000, "maxTokens": 1024 },
-              { "id": "ministral-3:3b", "name": "Ministral 3 3B", "contextWindow": 32000, "maxTokens": 4096 }
+              { "id": "ministral-3:3b", "name": "Ministral 3 3B", "contextWindow": 32000, "maxTokens": 4096 },
+              { "id": "ministral-3:3b-cloud", "name": "Ministral 3 3B Cloud (discussões Slack)", "contextWindow": 32000, "maxTokens": 4096 }
             ]
           }
         }
@@ -45,14 +50,14 @@ data:
         "defaults": { "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
         "list": [
           { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
-          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
-          { "id": "architect", "name": "Architect", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
-          { "id": "developer", "name": "Developer", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
-          { "id": "qa", "name": "QA", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
-          { "id": "cybersec", "name": "CyberSec", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
-          { "id": "ux", "name": "UX", "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
-          { "id": "dba", "name": "DBA", "model": "ollama/glm-5:cloud", "workspace": "/workspace" }
+          { "id": "po", "name": "Product Owner", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "architect", "name": "Architect", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "developer", "name": "Developer", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "qa", "name": "QA", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "cybersec", "name": "CyberSec", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "ux", "name": "UX", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+          { "id": "dba", "name": "DBA", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" }
         ]
       }
     }
@@ -70,16 +75,18 @@ data:
               label: "Phi3 Mini v1 (local)"
             - id: "ollama/ministral-3:3b"
               label: "Ministral 3 3B (local, com tools)"
+            - id: "ollama/ministral-3:3b-cloud"
+              label: "Ministral 3 3B Cloud (discussões Slack)"
 
     agents:
       defaults:
-        model: "ollama/glm-5:cloud"
+        model: "ollama/ministral-3:3b-cloud"
         subagents:
           maxSpawnDepth: 2
           maxChildrenPerAgent: 5
           maxConcurrent: 4
           runTimeoutSeconds: 600
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
 
       list:
         - id: ceo
@@ -89,35 +96,35 @@ data:
         - id: po
           name: "Product Owner"
           description: "Backlog e priorização. Sub-agent do CEO."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
         - id: devops
           name: "DevOps/SRE"
           description: "IaC, CI/CD, FinOps. Sub-agent. Padrão Ollama GPU."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
         - id: architect
           name: "Architect"
           description: "Governança técnica, code review. Sub-agent. Padrão Ollama GPU."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
         - id: developer
           name: "Developer"
           description: "Implementação. Sub-agent. Padrão Ollama GPU."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
         - id: qa
           name: "QA"
           description: "Testes e qualidade. Sub-agent. Padrão Ollama GPU."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
         - id: cybersec
           name: "CyberSec"
           description: "Segurança. Sub-agent. Padrão Ollama GPU."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
         - id: ux
           name: "UX"
           description: "Experiência do usuário. Sub-agent. Padrão Ollama GPU."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
         - id: dba
           name: "DBA"
           description: "Dados e queries. Sub-agent. Padrão Ollama GPU."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
 
     # Telegram: só CEO. Slack: todos os agentes (token via env SLACK_APP_TOKEN, SLACK_BOT_TOKEN). Discussões no Slack: Ollama local GPU.
     channels:
@@ -133,3 +140,6 @@ data:
         dm:
           enabled: true
           groupEnabled: false
+        groupPolicy: allowlist
+        channels:
+          __SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__: {}

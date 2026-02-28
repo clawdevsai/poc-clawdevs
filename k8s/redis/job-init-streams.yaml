@@ -27,7 +27,8 @@ spec:
                 redis-cli -h "$H" XGROUP CREATE "$s" "$G" '$' MKSTREAM 2>/dev/null || true
               done
               redis-cli -h "$H" XGROUP CREATE "code:ready" "revisao-pos-dev" '$' MKSTREAM 2>/dev/null || true
-              echo "Streams init done (clawdevs + revisao-pos-dev em code:ready)"
+              redis-cli -h "$H" XGROUP CREATE "orchestrator:events" "slack" '$' MKSTREAM 2>/dev/null || true
+              echo "Streams init done (clawdevs + revisao-pos-dev + orchestrator:events/slack)"
           resources:
             requests:
               memory: "64Mi"

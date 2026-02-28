@@ -9,15 +9,11 @@ Configuração para rodar o OpenClaw **no host**: Telegram (só CEO) + Slack opc
 - **Política rigorosa:** agentes diferentes do CEO não podem acessar outra plataforma além do Slack; apenas o CEO usa Telegram (e Slack).
 - **Workspace único:** todos os agentes compartilham o mesmo workspace (ex.: `config/openclaw/workspace-ceo`).
 
-## Modelo menor para conversa apenas no Slack
+## Modelo para discussões no Slack
 
-Para **só conversa no Slack** (menos VRAM, resposta mais rápida), a config local usa o **menor LLM local** disponível no Ollama. Padrão: **`ollama/qwen2.5:3b`** (Qwen 2.5 3B). Alternativas igualmente leves:
+Para **discussões no Slack** (conversas e tema para análise no #all-clawdevsai), todos os agentes usam **`ollama/ministral-3:3b-cloud`** (Ministral 3 3B Cloud). Configurado em `agents.defaults.model` e em cada `agents.list[].model` (local e K8s).
 
-- **`ollama/qwen2.5:3b`** — 3B parâmetros, ~2 GB, bom para chat.
-- **`ollama/stewyphoenix19/phi3-mini_v1:latest`** (Phi-3 Mini) — ~3.8B, ~2 GB.
-- **`ollama/ministral-3:3b`** — 3B, se já estiver no cluster.
-
-Trocar: em `openclaw.local.json5`, altere `agents.defaults.model` e os `model` em cada item de `agents.list` para o ID do modelo desejado (ex.: `ollama/stewyphoenix19/phi3-mini_v1:latest`). No K8s, o ConfigMap `openclaw-config` define os modelos por agente; para Slack-only pode padronizar todos em um único modelo pequeno.
+Para trocar: em `openclaw.local.json5` altere `agents.defaults.model` e os `model` em cada item de `agents.list`. No K8s, o ConfigMap `openclaw-config` define os modelos por agente. Alternativas no Ollama: `ollama/qwen2.5:3b`, `ollama/ministral-3:3b`, `ollama/glm-5:cloud`.
 
 ## Telegram + Ollama (script pronto)
 
@@ -78,3 +74,15 @@ Para os **agentes comunicarem e discutirem via Slack**:
 3. Em **DM com o app**, você já pode pedir que um agente fale com outro (ex.: *“Pergunte ao PO e traga a resposta”*); a “discussão” entre agentes ocorre no backend e a resposta consolidada vem pelo mesmo app.
 
 Ref: [openclaw-sub-agents-architecture.md](../../docs/openclaw-sub-agents-architecture.md)
+
+## Fluxo #all-clawdevsai: tema para análise (Diretor → rodada → aprovação)
+
+No canal **#all-clawdevsai** o Diretor pode **colocar um tema para analisar**. O fluxo é:
+
+1. **Diretor** posta no #all-clawdevsai o tema (ex.: *"Tema: migrar o módulo X para K8s"*). Pode mencionar @ClawdevsAI.
+2. **Agentes** discutem **um por vez** no canal, cada um na sua especialidade (DevOps → Architect → Developer → QA → CyberSec → UX → DBA → PO → CEO).
+3. **PO e CEO** decidem a recomendação; o **CEO** pergunta ao Diretor no canal: *"Aprovamos [resumo]. Quer que eu inicie essa tarefa?"*
+4. **Diretor** responde no Slack (ex.: *"Sim, pode iniciar"*).
+5. O **fluxo normal** segue (backlog, issues, desenvolvimento conforme já documentado).
+
+Config: o canal #all-clawdevsai está na allowlist do Slack (`groupPolicy: allowlist`, `channels.CDAHISCLSQKC`). Detalhes: [43-fluxo-slack-all-clawdevsai-tema-analise.md](../../docs/43-fluxo-slack-all-clawdevsai-tema-analise.md).

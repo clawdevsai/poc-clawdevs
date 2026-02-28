@@ -101,7 +101,16 @@ A imagem padrão no deployment é um placeholder (`node:22-bookworm-slim` com `s
 **Opção A — Imagem OpenClaw oficial (quando disponível):**  
 Altere `k8s/management-team/openclaw/deployment.yaml` e use a imagem que executa `openclaw gateway`, com entrypoint apontando para `/config/config.yaml`.
 
-**Opção B — Rodar OpenClaw no host (teste rápido):**  
+**Opção B — Gateway dentro do Kubernetes (recomendado para produção/teste no cluster):**  
+O deployment `openclaw` já sobe o gateway **dentro do cluster** (conecta em `ollama-service` e redis sem port-forward). Passos:
+
+1. `make up` (sobe Minikube, Ollama, Redis, ConfigMap, deployment openclaw).
+2. Criar o secret a partir do `.env`: `./scripts/k8s-openclaw-secret-from-env.sh`.
+3. Reiniciar o deployment para carregar o secret: `kubectl rollout restart deployment/openclaw -n ai-agents`.
+
+O pod do openclaw passa a rodar o gateway com Telegram e Slack (quando as chaves estiverem no secret). Não é necessário rodar `run-openclaw-telegram-ollama.sh` no host.
+
+**Opção C — Rodar OpenClaw no host (teste rápido com port-forward):**  
 Use o script `scripts/run-openclaw-telegram-ollama.sh`, que faz port-forward do Ollama e inicia o gateway com a config `config/openclaw/openclaw.local.json5`. **Para o bot responder no perfil CEO** (tom executivo, pt-BR, SOUL), essa config define `agents.defaults.workspace: "config/openclaw/workspace-ceo"`, onde está o `SOUL.md` do CEO; o script deve ser executado **na raiz do repositório** para que esse caminho exista. Sem o workspace configurado, o modelo recebe apenas o prompt genérico e responde como assistente, não como CEO.
 
 ```bash
