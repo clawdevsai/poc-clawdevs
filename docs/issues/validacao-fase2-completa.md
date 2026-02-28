@@ -120,6 +120,9 @@ Ref: [44-fase2-seguranca-automacao.md](../44-fase2-seguranca-automacao.md), [REA
    `kubectl exec -n ai-agents deploy/redis -- redis-cli SET cluster:pause_consumption 1`  
    Consumidores (slot revisão, etc.) devem parar de consumir; retomar com `SET cluster:pause_consumption 0`.
 
+6. **Rotação de tokens:**  
+   `./scripts/validate-phase2-token-rotation.sh` — verifica ConfigMap rotation-scripts, RBAC (SA/Role/RoleBinding), CronJob e Secrets. Para testar um run: `kubectl create job -n ai-agents token-rotation-manual --from=cronjob/token-rotation`.
+
 ---
 
 ## Evoluções opcionais (implementadas)

@@ -1,0 +1,10 @@
+# Workspace CEO: arquivos opcionais para /workspace do gateway (ex.: SOUL.md inicial).
+# O initContainer soul-merge já monta soul-management-agents e soul-development-agents em /workspace/soul.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workspace-ceo-configmap
+  namespace: ai-agents
+  labels:
+    app: openclaw
+data: {}

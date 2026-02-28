@@ -36,8 +36,8 @@ prepare:
 	@minikube addons enable nvidia-device-plugin 2>/dev/null || true
 	@echo "==> prepare concluído. Use 'make up' para aplicar os recursos no cluster."
 
-# 2. up: build da imagem OpenClaw, inicia Minikube (se necessário) e aplica todos os recursos
-up: openclaw-image
+# 2. up: inicia Minikube (prepare), build da imagem OpenClaw, aplica todos os recursos
+up: prepare openclaw-image
 	@echo "==> Verificando Minikube..."
 	@if ! minikube status >/dev/null 2>&1; then \
 		echo "==> Iniciando Minikube: minikube start --driver=docker --addons=nvidia-device-plugin --cpus=$(MINIKUBE_CPUS) --memory=$(MINIKUBE_MEMORY)"; \
