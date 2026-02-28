@@ -265,20 +265,24 @@ A **primeira fase de desenvolvimento** deve ser a **Fase 0 — Fundação**, par
 
 ---
 
-## 4.4 O que falta na Fase 3 (para desenvolver)
+## 4.4 Fase 3 — Estado atual (concluída)
 
-Conforme [docs/issues/](docs/issues/) (032, 034, 035, 036) e [validacao-fase3-completa.md](docs/issues/validacao-fase3-completa.md):
+A Fase 3 está **concluída**. Todos os itens do escopo (030–036, 127) foram implementados:
 
-| Item | Descrição | Prioridade |
-|------|-----------|------------|
-| **032 — 2º strike Fallback Architect** | Architect receber "prompt de compromisso" e gerar código/patch que tornaria o PR aprovável; hoje só se emite `trigger_architect_fallback`. | Alta |
-| **032 — 5º strike Arbitragem nuvem** | Empacotar contexto (diff, critérios, histórico) e enviar para modelo superior (OpenRouter/Gemini); aplicar solução ou devolver ao PO. Hoje só `issue_back_to_po`. | Alta |
-| **034 — Loop consenso real** | QA + Architect usarem o Degradation Report para propor ajuste (critérios PO, fitness Architect). Hoje `consensus_loop_runner` é stub (só `set_consensus_pilot_result` por env). | Média |
-| **034 — Pilot real** | Rodar uma tarefa real da fila (ex.: primeira de `code:ready`), passar pelo slot/Architect, e usar o resultado como success/fail do loop. Hoje `_run_pilot()` é stub. | Média |
-| **035 — QA auditor** | Prompt/instrução para o QA priorizar áreas de `areas-for-qa-audit.md`; registrar resultado da auditoria em artefato ou no digest. | Opcional |
-| **036 — Alertas segurança e $5/dia** | Alertas imediatos (Slack/Telegram) para violações de segurança e estouro $5/dia; freio de mão já está via Slack. | Opcional |
+| Item | Entregue |
+|------|----------|
+| **030** | Manual primeiros socorros GPU + first-aid-gpu.sh |
+| **031** | Prevenção e riscos infra (docs/31) |
+| **127** | Disjuntor draft_rejected + RAG health check |
+| **017 operacional** | Relatório de degradação, unblock-degradation.sh |
+| **032 — 2º strike** | architect_fallback.py (prompt compromisso, patch em Redis); slot chama ao rejeitar com n==2 |
+| **032 — 5º strike** | arbitrage_cloud.py (OpenRouter/Gemini); consumer chama ao ver issue_back_to_po |
+| **033** | cosmetic_omission.py (timer 6 h, MEMORY.md, areas-for-qa-audit) |
+| **034** | consensus_loop_runner: proposta QA+Architect com relatório, pilot real (XRANGE code:ready + Architect modo pilot) |
+| **035** | QA-AUDITOR-INSTRUCOES.md; Redis SET/HASH + areas-for-qa-audit.md |
+| **036** | digest_daily.py, alertas Slack (freio de mão); alertas segurança/$5 no gateway (Fase 2) |
 
-**Nota:** Não existem issues 037, 038, 039 no backlog; o escopo da Fase 3 no README é 030–036 + 127.
+**Nada obrigatório pendente.** Melhorias futuras opcionais: integrar resultado da auditoria QA no digest; aplicar patch da arbitragem nuvem automaticamente no repositório. Não existem issues 037, 038, 039 no backlog.
 
 ---
 
