@@ -6,8 +6,12 @@ Recursos Kubernetes para a **Fase 2 — Segurança**: configuração central e w
 
 | Arquivo | Uso |
 |---------|-----|
-| **phase2-config-configmap.yaml** | Config central: token bucket, entropia, reputação domínio, kill switch, orquestrador 017, flags PHASE2_* |
+| **phase2-config-configmap.yaml** | Config central: token bucket, entropia, reputação domínio, kill switch, orquestrador 017, preditivo, flags PHASE2_* |
 | **egress-whitelist-configmap.yaml** | Whitelist global estática de domínios (ALLOWED_DOMAINS, TRUSTED_PUBLISHERS) |
+| **rotation-rbac.yaml** | ServiceAccount + Role + RoleBinding para CronJob de rotação de tokens |
+| **cronjob-token-rotation.yaml** | CronJob (a cada 3 min): sincroniza openclaw-telegram-rotation-source → openclaw-telegram |
+| **job-url-sandbox.yaml** | Job template: fetch de URL em sandbox (URL_SANDBOX_TARGET); resultado em digest:daily |
+| **trusted-packages-configmap.yaml** | Opcional: lista TRUSTED_PACKAGES (matriz de confiança) |
 
 ## Aplicar
 

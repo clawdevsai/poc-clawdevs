@@ -30,7 +30,7 @@ todos:
     content: "Fase 0 — 124: Contingência cluster acéfalo — scripts acefalo_*.py (heartbeat, monitor, contingency, retomada), doc 40, make acefalo-configmap; slot revisão respeita pausa."
     status: completed
   - id: fase0-validar-001-003-008
-    content: "Fase 0 — Validar 001 (verify-machine), 003 (tabela 65% e modelos no repo), 008 (Dockerfile enxuto) e documentar gaps restantes."
+    content: Fase 0 — Validar 001 (verify-machine), 003 (tabela 65% e modelos no repo), 008 (Dockerfile enxuto) e documentar gaps restantes.
     status: completed
   - id: fase1-soul-pods
     content: Fase 1 — SOUL e pods para todos os agentes (010–019); pods CEO/PO nuvem; pods técnicos 100% offline.
@@ -68,6 +68,24 @@ todos:
   - id: fase1-019
     content: "Fase 1 — 019: Validação management nuvem + line-up (doc 37, 41, validacao-fase1-019.md)."
     status: completed
+  - id: fase2-seguranca
+    content: "Fase 2 — Segurança (020–029, 126, 128): phase2-config + egress-whitelist, token bucket e check_egress no gateway-redis-adapter, kill switch, quarentena/entropia, validacao-fase2-completa.md."
+    status: completed
+  - id: fase2-022-owasp
+    content: "Fase 2 — 022: OWASP — owasp-pre-commit.sh (git hooks segredos), doc 15 bloqueio merge Critical/High."
+    status: completed
+  - id: fase2-023-ciso
+    content: "Fase 2 — 023: CISO — doc 16 completo, ciso_local_scan.sh (varredura local somente leitura)."
+    status: completed
+  - id: fase2-025-rotacao
+    content: "Fase 2 — 025: ServiceAccount openclaw-router zerada, doc 25 rotação tokens/sandbox roteador, make up aplica serviceaccount."
+    status: completed
+  - id: fase2-026-injecao
+    content: "Fase 2 — 026: prompt_injection_detector.py (padrões + detect), ref em doc 14."
+    status: completed
+  - id: fase2-evolucoes
+    content: "Fase 2 — Evoluções opcionais: rotação tokens (CronJob + rotate_gateway_token.py), pipeline quarentena (quarantine_pipeline + Job), sandbox URLs (url_sandbox_fetch + Job), matriz confiança (trusted_package_verify), acelerador preditivo (gateway:predictive_diff_lines + check_degrade)."
+    status: completed
 isProject: false
 ---
 
@@ -94,7 +112,7 @@ isProject: false
 - **Makefile:** `make prepare` (Docker, kubectl, Minikube GPU), `make up` (namespace, Redis, Ollama, llm-providers, OpenClaw com workspace CEO e todos os agentes em Ollama-GPU, secrets opcionais), `make down` (estaca zero), `make verify` (scripts em docs/scripts), `make openclaw-image` (build da imagem gateway).
 - **k8s:** namespace, [k8s/redis/](k8s/redis/), [k8s/ollama/](k8s/ollama/) (Ollama GPU), [k8s/llm-providers-configmap.yaml](k8s/llm-providers-configmap.yaml) (provedor LLM por agente), [k8s/management-team/](k8s/management-team/) (CEO, PO), [k8s/development-team/](k8s/development-team/) (time técnico), [k8s/governance-team/](k8s/governance-team/) (Governance Proposer), [k8s/management-team/openclaw/](k8s/management-team/openclaw/) (gateway Fase 0, todos os agentes Ollama-GPU). **Presente:** ResourceQuota/LimitRange (004), Redis Streams e estado global (005): [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md), [k8s/redis/streams-configmap.yaml](k8s/redis/streams-configmap.yaml), [scripts/redis-streams-init.sh](scripts/redis-streams-init.sh), [k8s/redis/job-init-streams.yaml](k8s/redis/job-init-streams.yaml). **Presente:** GPU Lock em [scripts/gpu_lock.py](scripts/gpu_lock.py) (006), hard timeout em 04/06 e [k8s/development-team/gpu-lock-hard-timeout-example.yaml](k8s/development-team/gpu-lock-hard-timeout-example.yaml). **Presente:** Consumer groups (007) e slot único Revisão pós-Dev (125): [docs/39-consumer-groups-pipeline-revisao.md](docs/39-consumer-groups-pipeline-revisao.md), [k8s/revisao-pos-dev/](k8s/revisao-pos-dev/), [scripts/slot_revisao_pos_dev.py](scripts/slot_revisao_pos_dev.py). **Presente:** 009 transcrição validada (setup + doc 09); 001/003/008 validados ([docs/issues/validacao-fase0-001-003-008.md](docs/issues/validacao-fase0-001-003-008.md)); 124 contingência cluster acéfalo ([docs/40-contingencia-cluster-acefalo.md](docs/40-contingencia-cluster-acefalo.md), scripts acefalo_*.py, make acefalo-configmap). **Ausente:** consumidores agentes completos (Fase 1).
 - **Scripts:** `docs/scripts/verify-machine.sh`, `verify-gpu-cluster.sh`; `scripts/ollama-ensure-cloud-auth.sh`, `run-openclaw-telegram-ollama.sh`; **scripts/setup.sh** (setup um clique — 002) e **scripts/m4a_to_md.py** (transcrição). Conforme [docs/issues/002-setup-um-clique.md](docs/issues/002-setup-um-clique.md) e [09-setup-e-scripts.md](docs/09-setup-e-scripts.md).
-- **Conclusão:** Fase 0 concluída. **Fase 1 (010→017) implementada.** **k8s centralizado:** apenas pastas principais na raiz — **ollama/**, **redis/**, **management-team/** (openclaw/, soul/), **development-team/** (soul/, developer/, revisao-pos-dev/, gpu-lock example), **governance-team/** (soul/); namespace, limits e llm-providers na raiz. 018/019 implementados (contrato Redis + script; management nuvem + line-up). Próxima fase = **Fase 2 — Segurança** (020–029, 126, 128). Ref: [docs/41-fase1-agentes-soul-pods.md](docs/41-fase1-agentes-soul-pods.md), [k8s/README.md](k8s/README.md).
+- **Conclusão:** Fase 0 e Fase 1 concluídas. **Fase 2 — Segurança (020–029, 126, 128)** implementada por completo: núcleo (phase2-config, egress-whitelist, token bucket e check_egress no adapter, kill switch, quarentena/entropia); **022** owasp-pre-commit.sh e doc 15 (bloqueio merge); **023** doc 16 e ciso_local_scan.sh; **025** ServiceAccount openclaw-router e doc 25; **026** prompt_injection_detector.py e ref doc 14. Validação em [docs/issues/validacao-fase2-completa.md](docs/issues/validacao-fase2-completa.md). Próxima fase = **Fase 3 — Operações** (030–039, 127). Ref: [docs/44-fase2-seguranca-automacao.md](docs/44-fase2-seguranca-automacao.md), [k8s/README.md](k8s/README.md).
 
 ---
 

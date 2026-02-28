@@ -1,0 +1,38 @@
+# RBAC para o CronJob de rotação de tokens (025): ler Secret fonte, patchar Secret e deployment.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: token-rotation
+  namespace: ai-agents
+  labels:
+    app: security
+    phase: "2"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: token-rotation
+  namespace: ai-agents
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["openclaw-telegram", "openclaw-telegram-rotation-source"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["openclaw"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: token-rotation
+  namespace: ai-agents
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: token-rotation
+subjects:
+  - kind: ServiceAccount
+    name: token-rotation
+    namespace: ai-agents

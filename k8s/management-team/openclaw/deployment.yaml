@@ -17,6 +17,7 @@ spec:
       labels:
         app: openclaw
     spec:
+      serviceAccountName: openclaw-router
       initContainers:
         - name: workspace-init
           image: busybox:1.36

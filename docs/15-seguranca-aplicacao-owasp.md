@@ -182,6 +182,10 @@ Antes de modificar, o time deve revisar com cuidado:
 
 **Análise estática na borda:** Acoplar uma ferramenta de análise estática (ex.: **SonarQube**) aos **git hooks**. Regras de segurança (ex.: segredos no código, padrões conhecidos de vulnerabilidade) são verificadas **antes** do commit; se falhar, o **git hook rejeita o commit** na hora. Não usar LLM/GPU para detecção de sintaxe ou segredos — a análise estática faz isso em milissegundos. O CyberSec (LLM) complementa com **auditoria de fluxo lógico** (lógica de negócio, ordem de etapas, riscos que exigem interpretação), não substituindo a análise estática. Ver [05-seguranca-e-etica.md](05-seguranca-e-etica.md) (seção 1.4).
 
+**Script de referência (Fase 2 — 022):** [scripts/owasp-pre-commit.sh](../scripts/owasp-pre-commit.sh) — verifica staged files em busca de padrões de segredo (redis URL, AWS key, api_key/secret/password); opcionalmente executa **gitleaks** se instalado. Uso: `ln -sf ../../scripts/owasp-pre-commit.sh .git/hooks/pre-commit` ou via framework [pre-commit](https://pre-commit.com/).
+
+**Bloqueio de merge:** Em pipeline de CI, **bloquear merge** (ou falhar o stage) quando o relatório de auditoria ou a análise estática indicar achados **Critical** ou **High** em aberto. Regra: nenhum PR com vulnerabilidade Critical/High não remediada pode ser merged; o CyberSec e o Architect aplicam os checklists antes do approve.
+
 ---
 
 ## Relação com outros documentos

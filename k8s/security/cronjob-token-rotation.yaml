@@ -1,0 +1,51 @@
+# CronJob: sincroniza openclaw-telegram-rotation-source → openclaw-telegram e opcionalmente restart (025).
+# Aplicar: kubectl apply -f k8s/security/rotation-rbac.yaml -f k8s/security/cronjob-token-rotation.yaml
+# Fonte: criar Secret openclaw-telegram-rotation-source com TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID (atualizados por Vault/BotFather).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: token-rotation
+  namespace: ai-agents
+  labels:
+    app: security
+    phase: "2"
+spec:
+  schedule: "*/3 * * * *"  # a cada 3 min
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: token-rotation
+          restartPolicy: OnFailure
+          containers:
+            - name: rotate
+              image: python:3.12-slim
+              command:
+                - /bin/sh
+                - -c
+                - "pip install -q kubernetes && exec python /scripts/rotate_gateway_token.py"
+              envFrom:
+                - configMapRef:
+                    name: phase2-config
+                    optional: true
+              env:
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: scripts
+              configMap:
+                name: rotation-scripts
+                optional: true
+---
+# ConfigMap com o script (aplicar com: kubectl create configmap rotation-scripts -n ai-agents --from-file=rotate_gateway_token.py=scripts/rotate_gateway_token.py --dry-run=client -o yaml | kubectl apply -f -)
+# Ou make rotation-configmap

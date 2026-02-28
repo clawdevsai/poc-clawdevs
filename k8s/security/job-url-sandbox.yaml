@@ -1,0 +1,49 @@
+# Job template: sandbox para fetch de URL desconhecida (020). Passar URL_SANDBOX_TARGET via Job overlay ou env.
+# Resultado em volume; evento em digest:daily. Rede: usar NetworkPolicy para restringir egress se necessário.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: url-sandbox
+  namespace: ai-agents
+  labels:
+    app: url-sandbox
+    phase: "2"
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: url-sandbox
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: fetch
+          image: python:3.12-slim
+          command: ["python", "/scripts/url_sandbox_fetch.py"]
+          envFrom:
+            - configMapRef:
+                name: phase2-config
+                optional: true
+          env:
+            - name: URL_SANDBOX_TARGET
+              value: ""  # definir no Job (kubectl create job --from=...) ou overlay
+            - name: REDIS_HOST
+              value: "redis-service.ai-agents.svc.cluster.local"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: output
+              mountPath: /tmp
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+      volumes:
+        - name: scripts
+          configMap:
+            name: url-sandbox-scripts
+            optional: true
+        - name: output
+          emptyDir: {}

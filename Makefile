@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply
+.PHONY: prepare up down openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -74,7 +74,13 @@ up: openclaw-image
 	@echo "==> Aplicando SOUL por escopo (management + development) — necessário para soul-merge initContainer..."
 	kubectl apply -f $(K8S_DIR)/management-team/soul/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/development-team/soul/configmap.yaml
-	@if [ -d $(K8S_DIR)/security ]; then echo "==> Aplicando Fase 2 (security + phase2-config)..."; kubectl apply -f $(K8S_DIR)/security/; fi
+	@if [ -d $(K8S_DIR)/security ]; then \
+		echo "==> ConfigMaps Fase 2 (rotação, URL sandbox, quarentena, gateway adapter)..."; \
+		$(MAKE) phase2-configmaps; \
+		echo "==> Aplicando Fase 2 (security + phase2-config + evoluções)..."; \
+		kubectl apply -f $(K8S_DIR)/security/; \
+	fi
+	@if [ -f $(K8S_DIR)/management-team/openclaw/serviceaccount.yaml ]; then echo "==> Aplicando ServiceAccount openclaw-router (Fase 2 — 025)..."; kubectl apply -f $(K8S_DIR)/management-team/openclaw/serviceaccount.yaml; fi
 	@echo "==> Aplicando Deployment OpenClaw..."
 	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
 	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
@@ -143,11 +149,13 @@ agent-slots-configmap:
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> agent-slots-configmap concluído. Aplique k8s/development-team/architect/ etc. (replicas: 0)."
 
-# ConfigMap do adapter HTTP para publicação Redis (gateway OpenClaw → POST /publish).
+# ConfigMap do adapter HTTP para publicação Redis (Fase 1 — 018) + scripts Fase 2 (token bucket, reputação).
 gateway-redis-adapter-configmap:
 	@echo "==> Criando ConfigMap gateway-redis-adapter-scripts..."
 	@kubectl create configmap gateway-redis-adapter-scripts -n ai-agents \
 	  --from-file=gateway_redis_adapter.py=scripts/gateway_redis_adapter.py \
+	  --from-file=gateway_token_bucket.py=scripts/gateway_token_bucket.py \
+	  --from-file=check_domain_reputation.py=scripts/check_domain_reputation.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> gateway-redis-adapter-configmap concluído. Aplique k8s/development-team/gateway-redis-adapter/."
 
@@ -163,11 +171,37 @@ acefalo-configmap:
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> acefalo-configmap concluído. Ver docs/40-contingencia-cluster-acefalo.md"
 
-# Fase 2 — Segurança: config central (phase2-config + egress-whitelist). Tudo automatizável; ref docs/44-fase2-seguranca-automacao.md
-phase2-apply:
-	@echo "==> Aplicando Fase 2 (security: phase2-config + egress-whitelist)..."
+# Fase 2 — Segurança: config central + ConfigMaps (rotação, URL sandbox, quarentena, adapter) + manifestos security/
+phase2-apply: phase2-configmaps
+	@echo "==> Aplicando Fase 2 (security: phase2-config, egress-whitelist, RBAC, CronJob, Jobs)..."
 	@kubectl apply -f $(K8S_DIR)/security/
-	@echo "==> Fase 2 configurada. Contrato de automação: docs/44-fase2-seguranca-automacao.md"
+	@echo "==> Fase 2 configurada. Contrato: docs/44-fase2-seguranca-automacao.md"
+
+# ConfigMaps Fase 2 (rotação, URL sandbox, quarantine pipeline, gateway adapter). Chamado por make up.
+phase2-configmaps: rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap gateway-redis-adapter-configmap
+	@echo "==> ConfigMaps Fase 2 aplicados."
+
+# Fase 2 evoluções: ConfigMaps para CronJob rotação, Job URL sandbox, Job quarantine pipeline
+rotation-configmap:
+	@echo "==> Criando ConfigMap rotation-scripts (rotate_gateway_token.py)..."
+	@kubectl create configmap rotation-scripts -n ai-agents \
+	  --from-file=rotate_gateway_token.py=scripts/rotate_gateway_token.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> Aplique k8s/security/rotation-rbac.yaml e cronjob-token-rotation.yaml; crie Secret openclaw-telegram-rotation-source para fonte."
+
+url-sandbox-configmap:
+	@echo "==> Criando ConfigMap url-sandbox-scripts..."
+	@kubectl create configmap url-sandbox-scripts -n ai-agents \
+	  --from-file=url_sandbox_fetch.py=scripts/url_sandbox_fetch.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+
+quarantine-pipeline-configmap:
+	@echo "==> Criando ConfigMap quarantine-pipeline-scripts..."
+	@kubectl create configmap quarantine-pipeline-scripts -n ai-agents \
+	  --from-file=quarantine_pipeline.py=scripts/quarantine_pipeline.py \
+	  --from-file=quarantine_entropy.py=scripts/quarantine_entropy.py \
+	  --from-file=trusted_package_verify.py=scripts/trusted_package_verify.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
 
 # 3. down: derruba tudo — deployments, PVCs, secrets, configmaps e namespace. Ambiente em estaca zero.
 down:

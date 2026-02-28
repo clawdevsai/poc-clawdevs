@@ -20,6 +20,9 @@ KEY_STRATEGY_COUNT = os.environ.get("KEY_STRATEGY_COUNT", "gateway:strategy_even
 KEY_CEO_IDEAS = os.environ.get("KEY_CEO_IDEAS", "gateway:ceo_ideas_count")
 KEY_PO_APPROVED = os.environ.get("KEY_PO_APPROVED", "gateway:po_approved_count")
 WINDOW_SEC = int(os.environ.get("TOKEN_BUCKET_WINDOW_SEC", "3600"))  # janela em segundos (1 h)
+# Acelerador preditivo (Fase 2 evolução): rotear CEO para local se diff/tarefa atual for grande
+KEY_PREDICTIVE_DIFF_LINES = os.environ.get("KEY_PREDICTIVE_DIFF_LINES", "gateway:predictive_diff_lines")
+PREDICTIVE_LOCAL_THRESHOLD = int(os.environ.get("PREDICTIVE_LOCAL_THRESHOLD_DIFF_LINES", "0"))  # 0 = desligado
 
 
 def get_redis():
@@ -54,13 +57,21 @@ def record_strategy_event(r) -> None:
 
 
 def should_degrade_ceo_to_local(r) -> bool:
-    """True se a razão PO aprovadas / CEO ideias estiver abaixo do limiar (forçar CEO em local)."""
+    """True se a razão PO aprovadas / CEO ideias estiver abaixo do limiar ou se preditivo (diff grande) ativar."""
     ceo = int(r.get(KEY_CEO_IDEAS) or 0)
     po = int(r.get(KEY_PO_APPROVED) or 0)
-    if ceo <= 0:
-        return False
-    ratio = po / ceo
-    return ratio < EFFICIENCY_RATIO_MIN
+    if ceo > 0:
+        ratio = po / ceo
+        if ratio < EFFICIENCY_RATIO_MIN:
+            return True
+    if PREDICTIVE_LOCAL_THRESHOLD > 0:
+        try:
+            diff_lines = int(r.get(KEY_PREDICTIVE_DIFF_LINES) or 0)
+            if diff_lines >= PREDICTIVE_LOCAL_THRESHOLD:
+                return True
+        except (TypeError, ValueError):
+            pass
+    return False
 
 
 def main() -> int:

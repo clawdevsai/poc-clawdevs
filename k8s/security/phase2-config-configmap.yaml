@@ -17,11 +17,25 @@ data:
   KEY_CEO_IDEAS: "gateway:ceo_ideas_count"
   KEY_PO_APPROVED: "gateway:po_approved_count"
   TOKEN_BUCKET_WINDOW_SEC: "3600"
+  # Acelerador preditivo: rotear CEO para local se gateway:predictive_diff_lines >= threshold (0 = off)
+  KEY_PREDICTIVE_DIFF_LINES: "gateway:predictive_diff_lines"
+  PREDICTIVE_LOCAL_THRESHOLD_DIFF_LINES: "500"
 
   # --- Quarentena / entropia (128) ---
+  QUARANTINE_RUN_SAST: "1"
+  QUARANTINE_RUN_ENTROPY: "1"
   QUARANTINE_MAX_ENTROPY_PLAINTEXT: "5.5"
   QUARANTINE_MAX_ENTROPY_HIGH: "7.9"
   QUARANTINE_HIGH_ENTROPY_EXT: ".map,.wasm,.min.js,.min.css,.bundle.js"
+  # Matriz de confiança: TRUSTED_PACKAGES / TRUSTED_PACKAGES_FILE (opcional)
+
+  # --- URL sandbox (020) ---
+  URL_SANDBOX_TIMEOUT: "30"
+  URL_SANDBOX_MAX_BYTES: "1048576"
+
+  # --- Rotação tokens (025) ---
+  TELEGRAM_ROTATION_SOURCE_SECRET: "openclaw-telegram-rotation-source"
+  ROTATION_RESTART_DEPLOYMENT: "1"
 
   # --- Reputação domínio (024) ---
   CHECK_DOMAIN_NO_API: "block"

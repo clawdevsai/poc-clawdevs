@@ -210,6 +210,8 @@ Os agentes (em especial **CyberSec** e **DevOps**) devem poder **executar ou rec
 
 **Saída:** níveis CRÍTICO (ação imediata), WARNING (corrigir), PASS (ok), INFO (contexto); pontuação final 0–100. Com flag de correção, o scanner pode sugerir ou aplicar correções seguras (ex.: restringir permissões de arquivo, adicionar entradas ao .gitignore), sempre com confirmação antes de cada mudança.
 
+**Script de varredura local (Fase 2 — 023):** [scripts/ciso_local_scan.sh](../scripts/ciso_local_scan.sh) — executa checagens somente leitura (`.env` versionado, `.gitignore`, permissões de arquivos sensíveis) e emite relatório no formato acima. Uso: `./scripts/ciso_local_scan.sh` (sem alterar nada); opcional `--fix` para aplicar correções com confirmação.
+
 ### 1.6 Modelo de relatório de auditoria
 
 ```

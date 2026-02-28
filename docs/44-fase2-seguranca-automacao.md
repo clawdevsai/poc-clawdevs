@@ -150,4 +150,17 @@ Isso aplica: **egress-whitelist**, **phase2-config**. O Job do sandbox (seccomp)
 - **Configuração:** ConfigMap **phase2-config** + **egress-whitelist**; pods que precisam de config Fase 2 usam `envFrom: configMapRef: phase2-config`.
 - **Automação:** Contrato acima; scripts com exit codes e env; nenhum passo exige OK manual em tempo de execução.
 - **Kill switch:** Uma chave Redis (cluster:pause_consumption); consumidores já integrados.
+- **Gateway adapter:** O [gateway-redis-adapter](../../scripts/gateway_redis_adapter.py) aplica token bucket em POST /publish para **cmd:strategy** (429 se limite excedido; resposta com `degrade_ceo`) e expõe GET **/check_egress?domain=** (whitelist + reputação). Ver [validacao-fase2-completa.md](issues/validacao-fase2-completa.md).
 - **Referências:** [20-zero-trust-fluxo.md](20-zero-trust-fluxo.md), [21-quarentena-disco-pipeline.md](21-quarentena-disco-pipeline.md), [27-kill-switch-redis.md](27-kill-switch-redis.md), [07-configuracao-e-prompts.md](07-configuracao-e-prompts.md) § 2.1.
+
+---
+
+## 7. Evoluções opcionais (Fase 2)
+
+| Evolução | Script / recurso | Uso |
+|----------|------------------|-----|
+| **Rotação automática de tokens (025)** | [rotate_gateway_token.py](../../scripts/rotate_gateway_token.py), [rotation-rbac.yaml](../../k8s/security/rotation-rbac.yaml), [cronjob-token-rotation.yaml](../../k8s/security/cronjob-token-rotation.yaml) | Criar Secret **openclaw-telegram-rotation-source** com token/chat_id atualizados; `make rotation-configmap`; aplicar RBAC + CronJob. A cada 3 min o Job sincroniza fonte → openclaw-telegram e opcionalmente reinicia o deployment. |
+| **Pipeline quarentena (128)** | [quarantine_pipeline.py](../../scripts/quarantine_pipeline.py), [job-quarantine-pipeline.yaml](../../k8s/sandbox/job-quarantine-pipeline.yaml) | Ordem: SAST (semgrep) + entropia. Montar volume com saída do install-sandbox em `/workspace/sandbox-output`. `make quarantine-pipeline-configmap`; criar Job (ou usar template) com o volume. Exit 0 = aprovado. |
+| **Sandbox URLs desconhecidas (020)** | [url_sandbox_fetch.py](../../scripts/url_sandbox_fetch.py), [job-url-sandbox.yaml](../../k8s/security/job-url-sandbox.yaml) | Job com env **URL_SANDBOX_TARGET**; fetch com timeout; grava em arquivo e publica evento em **digest:daily**. `make url-sandbox-configmap`. |
+| **Matriz de confiança (128)** | [trusted_package_verify.py](../../scripts/trusted_package_verify.py), ConfigMap **trusted-packages** | Lista TRUSTED_PACKAGES (name@version=hash). Uso: antes de dispensar entropia restritiva para um pacote, chamar script; 0 = confiável. |
+| **Acelerador preditivo** | [gateway_token_bucket.py](../../scripts/gateway_token_bucket.py), chave Redis **gateway:predictive_diff_lines**, phase2-config **PREDICTIVE_LOCAL_THRESHOLD_DIFF_LINES** | Se a tarefa atual tiver diff ≥ threshold (ex.: 500 linhas), `check_degrade` retorna True (CEO roteado para local). O pipeline (developer/slot) deve setar a chave quando tiver o tamanho do diff. |
