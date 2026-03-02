@@ -34,6 +34,10 @@ def send_slack(
     webhook_url = webhook_url or os.environ.get(webhook_key, "").strip()
     bot_token = bot_token or os.environ.get(bot_key, "").strip()
     channel = channel or os.environ.get(channel_key, "").strip() or os.environ.get(channel_fallback_key, "").strip()
+    # Quando só o app CEO está configurado, CEO_* pode herdar de OPENCLAW_SLACK_* (mesmo app)
+    if p == "CEO_" and (not bot_token or not channel):
+        bot_token = bot_token or os.environ.get("OPENCLAW_SLACK_BOT_TOKEN", "").strip()
+        channel = channel or os.environ.get("OPENCLAW_SLACK_ALL_CLAWDEVSAI_CHANNEL_ID", "").strip()
 
     if webhook_url:
         return _send_webhook(webhook_url, text)

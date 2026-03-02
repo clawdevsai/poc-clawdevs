@@ -41,5 +41,15 @@ fi
 CHAN_ID="${SLACK_ALL_CLAWDEVSAI_CHANNEL_ID:-CDAHISCLSQKC}"
 sed "s/__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__/$CHAN_ID/g" "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
 
+# 4) Conta Slack PO (multi-account): quando PO_SLACK_APP_TOKEN e PO_SLACK_BOT_TOKEN estão definidos, injeta accounts.po para @PO responder
+if [ -n "$PO_SLACK_APP_TOKEN" ] && [ -n "$PO_SLACK_BOT_TOKEN" ]; then
+  escape_json() { printf '%s' "$1" | tr -d '\n' | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+  PO_APP_ESC=$(escape_json "$PO_SLACK_APP_TOKEN")
+  PO_BOT_ESC=$(escape_json "$PO_SLACK_BOT_TOKEN")
+  PO_JSON="\"po\": { \"mode\": \"socket\", \"appToken\": \"$PO_APP_ESC\", \"botToken\": \"$PO_BOT_ESC\" }"
+  PO_JSON_SED=$(printf '%s' "$PO_JSON" | sed 's/\\/\\\\/g; s/&/\\&/g')
+  sed "s/\"accounts\": {}/\"accounts\": { $PO_JSON_SED }/" "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
+fi
+
 export OPENCLAW_CONFIG_PATH="$CONFIG_RUN"
 exec openclaw gateway --allow-unconfigured --port 18789 --bind lan

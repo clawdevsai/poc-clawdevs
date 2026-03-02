@@ -27,7 +27,8 @@ data:
           "groupPolicy": "allowlist",
           "channels": {
             "__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__": {}
-          }
+          },
+          "accounts": {}
         }
       },
       "models": {
@@ -59,7 +60,10 @@ data:
           { "id": "ux", "name": "UX", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
           { "id": "dba", "name": "DBA", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" }
         ]
-      }
+      },
+      "bindings": [
+        { "match": { "channel": "slack", "accountId": "po" }, "agentId": "po" }
+      ]
     }
   config.yaml: |
     # Ollama GPU no cluster (padrão). Provedor por agente: k8s/llm-providers-configmap.yaml.

@@ -136,3 +136,14 @@ Esse valor **não** fica em api.slack.com/apps (Basic Information, App Credentia
 3. Escolha **Copy member ID** (ou "Copiar ID do membro").
 
 Alternativa: no link do perfil do usuário (ex.: `.../user/U01234ABCD`), o trecho que começa com `U` é o user ID.
+
+---
+
+## Logs: `channel resolve failed` / `user resolve failed` (missing_scope)
+
+Se nos logs do gateway aparecer `[slack] channel resolve failed; using config entries. Error: An API error occurred: missing_scope` (ou `user resolve failed`), o app **ClawdevsAI** (CEO) está sem scopes necessários. No **[api.slack.com/apps](https://api.slack.com/apps)** → app ClawdevsAI → **OAuth & Permissions** → **Scopes** (Bot Token Scopes), adicione:
+
+- **`channels:read`** — para resolver nomes/IDs de canais
+- **`users:read`** — para resolver nomes/IDs de usuários
+
+Depois clique em **Reinstall to Workspace** para aplicar. O Socket Mode continua funcionando; esses scopes evitam os erros de resolução nos logs.

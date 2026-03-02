@@ -35,22 +35,21 @@ Sem `SLACK_DIRECTOR_USER_ID`: use `openclaw pairing approve slack <CODE>` no pri
 
 ## Como conversar com o PO (ou outro agente) no Slack
 
-No **DM com o ClawdevsAI** (ou em canal onde o app está), você conversa com o bot; o gateway pode rotear para o **CEO** primeiro. Para envolver o **Product Owner (PO)** ou outro agente:
+O gateway OpenClaw está conectado a **um único app Slack** (o app **ClawdevsAI** / CEO). Para o PO ou outro agente responder no canal **#all-clawdevsai**, você precisa **mencionar esse app** e pedir o agente no texto. Se você criar um app separado para o PO em api.slack.com e mencionar @PO, esse app **não** recebe eventos no gateway (só um app conectado por vez).
 
-1. **Pedir ao CEO para falar com o PO** — Exemplos:
-   - *"Quero falar com o PO"*
-   - *"Pergunte ao Product Owner: qual o status do backlog?"*
-   - *"Fale com o PO sobre prioridades desta semana"*
+**No canal #all-clawdevsai (ou DM com o ClawdevsAI):**
+
+1. **Mencione o app conectado** — Ex.: *"@ClawdevsAI PO: Ola PO esta me ouvindo?"* ou *"@ClawdevsAI PO: quais as próximas entregas?"*
+   O gateway (conectado ao app ClawdevsAI) recebe a mensagem e pode rotear ao agente PO pelo conteúdo.
+
+2. **Pedir ao CEO para falar com o PO** — Ex.: *"@ClawdevsAI Quero falar com o PO"*, *"Pergunte ao Product Owner: qual o status do backlog?"*
    O CEO pode delegar ao PO via sub-agents e trazer a resposta de volta.
 
-2. **Pedir direto ao PO por texto** — Exemplos:
-   - *"PO: quais as próximas entregas?"*
-   - *"Product Owner, qual a prioridade do épico X?"*
-   Assim o modelo (e o gateway) podem interpretar e rotear ao agente PO.
+3. **Pedir direto por texto (já no contexto do app)** — Em DM com o ClawdevsAI: *"PO: quais as próximas entregas?"*, *"Product Owner, qual a prioridade do épico X?"*
 
-3. **Outros agentes** — O mesmo vale para DevOps, Architect, Developer, QA, CyberSec, UX, DBA. Ex.: *"DevOps: o cluster está estável?"*, *"QA: quais testes cobrem o módulo Y?"*.
+4. **Outros agentes** — Mesmo padrão: *"@ClawdevsAI DevOps: o cluster está estável?"*, *"@ClawdevsAI QA: quais testes cobrem o módulo Y?"*.
 
-O app **ClawdevsAI** no Slack é o mesmo para todos; a escolha do agente é pelo conteúdo da mensagem (e, quando houver, por menção ou comando específico do OpenClaw — ver [docs OpenClaw Slack](https://docs.openclaw.ai/channels/slack)).
+**Resumo:** Use **@ClawdevsAI** (o app que está conectado ao gateway) e no texto indique o agente (PO:, DevOps:, etc.). O app **ClawdevsAI** no Slack é o mesmo para todos; a escolha do agente é pelo conteúdo da mensagem (ver [docs OpenClaw Slack](https://docs.openclaw.ai/channels/slack)).
 
 ## App vs usuário: com quem falar? Preciso criar um usuário por agente?
 
@@ -72,8 +71,16 @@ Rode o diagnóstico: **`./scripts/slack-openclaw-check.sh`**. Em resumo:
 
 - **K8s:** o pod **não** lê o `.env` do seu PC. É preciso enviar os tokens para o cluster: `./scripts/k8s-openclaw-secret-from-env.sh` e `kubectl rollout restart deployment/openclaw -n ai-agents`.
 - **Canal:** o app está no canal? (Integrações → Adicionar apps → ClawdevsAI.)
-- **Menção:** em canal, use **@ClawdevsAI** no início da mensagem.
+- **Menção:** em canal, use **@ClawdevsAI** no início da mensagem (é o app conectado ao gateway). Se você mencionar **@PO** (app separado do PO), o gateway não recebe — só o app ClawdevsAI/CEO está conectado. Para falar com o PO: *"@ClawdevsAI PO: sua mensagem"*.
 - **Logs:** `kubectl logs -n ai-agents -l app=openclaw -f --tail=100` para ver se o gateway conectou ao Slack (Socket Mode) e se está recebendo eventos.
+
+### PO não responde? (causa e solução)
+
+**Causa:** Quando você escreve **"@PO esta me ouvindo"**, a menção **@PO** é do **app do PO** (outro app no Slack). O gateway OpenClaw está conectado apenas ao app **ClawdevsAI** (CEO). Eventos do app PO não chegam a nenhum processo — por isso o PO “não ouve”.
+
+**Solução (multi-account — @PO direto):** O gateway pode conectar o app PO. Faça: (1) No .env preencha `PO_SLACK_APP_TOKEN` e `PO_SLACK_BOT_TOKEN`; (2) Rode `./scripts/k8s-openclaw-secret-from-env.sh` e `kubectl rollout restart deployment/openclaw -n ai-agents`; (3) No Slack convide o app **PO** para #all-clawdevsai. O binding roteia @PO para o agente PO.
+
+**Alternativa (um app):** Use **@ClawdevsAI PO: esta me ouvindo?** — o CEO delega ao PO. Se aparecer `missing_scope` nos logs, adicione no app ClawdevsAI os scopes `channels:read` e `users:read`.
 
 ## Agentes discutindo entre si no Slack
 

@@ -88,6 +88,18 @@ spec:
                   name: openclaw-telegram
                   key: SLACK_ALL_CLAWDEVSAI_CHANNEL_ID
                   optional: true
+            - name: PO_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: PO_SLACK_APP_TOKEN
+                  optional: true
+            - name: PO_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: PO_SLACK_BOT_TOKEN
+                  optional: true
           volumeMounts:
             - name: config
               mountPath: /config
