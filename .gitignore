@@ -7,3 +7,4 @@ __pycache__/
 k8s/management-team/openclaw/secret.yaml
 k8s/ollama/secret.yaml
 .venv
+*.txt
