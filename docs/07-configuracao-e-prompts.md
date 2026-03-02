@@ -272,6 +272,8 @@ Configuração: em **Kubernetes**, o ConfigMap `clawdevs-llm-providers` (`k8s/ll
 
 O **controle de FinOps** deve estar no Gateway: configurar **max_tokens_per_request** (ou equivalente) por perfil de agente (ex.: CEO, PO) nas configs JSON/YAML do Gateway, de forma que a requisição seja limitada **antes** de chegar ao provedor. O pipeline de truncamento e pre-flight Summarize (seção 2.1 e 2.2) reduz o volume na causa raiz; o limite no Gateway é a barreira determinística final.
 
+**config-perfis / truncamento-finops:** Os valores recomendados estão no ConfigMap **finops-config** no cluster: `MAX_TOKENS_PER_REQUEST_CEO`, `MAX_TOKENS_PER_REQUEST_PO` (ex.: 8192). O script [scripts/truncate_payload_border.py](../scripts/truncate_payload_border.py) aplica truncamento na borda antes de enfileirar no Redis; variáveis `TRUNCATE_BORDER_MAX_TOKENS`, `WORKING_BUFFER_TTL_SEC`. Perfis canônicos por agente no ConfigMap **agent-profiles** e em [issues/040-perfis-agente-manifesto-config.md](issues/040-perfis-agente-manifesto-config.md). Validação: [issues/validacao-040-041-completa.md](issues/validacao-040-041-completa.md).
+
 **Provedor Ollama (local):**
 
 ```yaml
@@ -286,7 +288,7 @@ security_model: llama3:8b
 
 ### Limite de gastos (provedor em nuvem)
 
-Créditos de nuvem (ex.: OpenRouter, OpenAI, Ollama cloud) têm **data de validade** e **limite de consumo**. Para evitar surpresas na fatura, configurar um **limite rígido de gastos** (freio de emergência) no painel do provedor escolhido (OpenRouter, OpenAI, etc.). O pipeline de truncamento e sumarização de contexto (neste documento) reduz o consumo na causa raiz; o limite de gastos é a proteção final.
+Créditos de nuvem (ex.: OpenRouter, OpenAI, Ollama cloud) têm **data de validade** e **limite de consumo**. Para evitar surpresas na fatura, configurar um **limite rígido de gastos** (freio de emergência) no painel do provedor escolhido (OpenRouter, OpenAI, etc.). O pipeline de truncamento e sumarização de contexto (neste documento) reduz o consumo na causa raiz; o limite de gastos é a proteção final. **Passo a passo por provedor:** [operacoes-limite-gastos-provedor.md](operacoes-limite-gastos-provedor.md).
 
 ### Otimização de custos e hardware
 

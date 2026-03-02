@@ -39,6 +39,13 @@ except ImportError:
     def run_architect_fallback(r, issue_id: str, reason: str = "", branch: str = "", title: str = ""):
         return None
 
+# truncamento-finops — microADR ao aprovar (Architect)
+try:
+    from microadr_generate import generate_and_store_microadr
+except ImportError:
+    def generate_and_store_microadr(issue_id, branch, title, decision, related_pr=None):
+        return None, None
+
 STREAM_CODE_READY = os.getenv("STREAM_CODE_READY", "code:ready")
 GROUP_REVISAO = os.getenv("CONSUMER_GROUP_REVISAO", "revisao-pos-dev")
 CONSUMER_NAME = os.getenv("POD_NAME", os.getenv("HOSTNAME", "slot-1"))
@@ -198,6 +205,20 @@ def processar_mensagem(r, stream: str, msg_id: str, data: dict) -> None:
             r.xack(stream, GROUP_REVISAO, msg_id)
             print(f"[Slot] XACK {stream} {GROUP_REVISAO} {msg_id}")
             return
+        # truncamento-finops — gerar e armazenar microADR ao aprovar
+        if issue_id:
+            try:
+                _, key = generate_and_store_microadr(
+                    issue_id,
+                    payload.get("branch", ""),
+                    payload.get("title", "Code review aprovado"),
+                    "Aprovado no code review (Architect).",
+                    payload.get("pr"),
+                )
+                if key:
+                    print(f"[Slot] MicroADR registrado para issue {issue_id} em {key}.")
+            except Exception as e:
+                print(f"[Slot] Falha ao gerar microADR: {e}", file=sys.stderr)
         run_etapa("QA")
         run_etapa("CyberSec")
         run_etapa("DBA")

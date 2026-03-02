@@ -63,4 +63,4 @@ Ref: [06-operacoes.md](../06-operacoes.md), [README.md](README.md) (Fase 3).
 
 ---
 
-Próxima fase: **Fase 4** (Configuração / FinOps, etc.) conforme [README.md](README.md).
+Próximo passo: **config-perfis / truncamento-finops** (Configuração / FinOps, etc.) conforme [README.md](README.md).

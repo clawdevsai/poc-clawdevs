@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply
+.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap devops-compact-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -143,12 +143,13 @@ verify:
 
 # ConfigMap dos scripts do slot Revisão pós-Dev (007/125). Necessário para o deployment revisao-pos-dev.
 revisao-slot-configmap:
-	@echo "==> Criando ConfigMap revisao-slot-scripts (slot + gpu_lock + orchestration_phase3)..."
+	@echo "==> Criando ConfigMap revisao-slot-scripts (slot + gpu_lock + orchestration_phase3 + microadr)..."
 	@kubectl create configmap revisao-slot-scripts -n ai-agents \
 	  --from-file=slot_revisao_pos_dev.py=scripts/slot_revisao_pos_dev.py \
 	  --from-file=gpu_lock.py=scripts/gpu_lock.py \
 	  --from-file=orchestration_phase3.py=scripts/orchestration_phase3.py \
 	  --from-file=architect_fallback.py=scripts/architect_fallback.py \
+	  --from-file=microadr_generate.py=scripts/microadr_generate.py \
 	  --from-file=acefalo_redis.py=scripts/acefalo_redis.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> revisao-slot-configmap concluído."
@@ -170,8 +171,18 @@ gateway-redis-adapter-configmap:
 	  --from-file=gateway_redis_adapter.py=scripts/gateway_redis_adapter.py \
 	  --from-file=gateway_token_bucket.py=scripts/gateway_token_bucket.py \
 	  --from-file=check_domain_reputation.py=scripts/check_domain_reputation.py \
+	  --from-file=truncate_payload_border.py=scripts/truncate_payload_border.py \
+	  --from-file=preflight_summarize.py=scripts/preflight_summarize.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> gateway-redis-adapter-configmap concluído. Aplique k8s/development-team/gateway-redis-adapter/."
+
+# ConfigMap do script de compactação segura de buffers (truncamento-finops). Para CronJob devops-compact.
+devops-compact-configmap:
+	@echo "==> Criando ConfigMap devops-compact-script..."
+	@kubectl create configmap devops-compact-script -n ai-agents \
+	  --from-file=compact_preserve_protected.py=scripts/compact_preserve_protected.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> devops-compact-configmap concluído. Ver k8s/development-team/devops-compact-cronjob-example.yaml e docs/issues/devops-compactacao-buffer.md."
 
 # ConfigMap dos scripts de contingência cluster acéfalo (124). Para rodar monitor/heartbeat em pods.
 acefalo-configmap:

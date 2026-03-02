@@ -1,0 +1,44 @@
+# Exemplo de CronJob para compactação segura de buffers (truncamento-finops).
+# Preserva blocos CRITERIOS_ACEITE e INVARIANTE_NEGOCIO.
+# Pré-requisitos:
+#   1. Criar ConfigMap com o script: make devops-compact-configmap
+#   2. Criar PVC "buffer-storage" (ou ajustar volumeClaimName) com os buffers .md
+# Aplicar: kubectl apply -f k8s/development-team/devops-compact-cronjob-example.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: devops-compact-buffers
+  namespace: ai-agents
+  labels:
+    app: devops-compact
+spec:
+  schedule: "0 3 * * *"   # 03:00 diário (ajustar conforme timezone)
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: compact
+              image: python:3.12-slim
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  for f in /data/buffers/*.md; do
+                    [ -f "$f" ] && python3 /config/compact_preserve_protected.py < "$f" > "$f.compact" && mv "$f.compact" "$f" || true
+                  done
+              volumeMounts:
+                - name: script
+                  mountPath: /config
+                  readOnly: true
+                - name: buffers
+                  mountPath: /data/buffers
+          volumes:
+            - name: script
+              configMap:
+                name: devops-compact-script
+            - name: buffers
+              persistentVolumeClaim:
+                claimName: buffer-storage

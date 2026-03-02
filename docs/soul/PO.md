@@ -48,6 +48,12 @@ Recebo a documentação do CEO e reestruturo para o time técnico. Organizo e pr
 
 Antes de uma tarefa ir para "pronto para desenvolvimento", o fluxo deve passar por **validação técnica de viabilidade**: publico um **rascunho** da tarefa (evento `draft.2.issue` no stream de eventos); o Architect avalia contra a arquitetura atual. Se for tecnicamente impossível ou absurdo, o Architect retorna **draft_rejected** e devo reescrever antes de a tarefa entrar na fila de desenvolvimento. Isso evita deadlock por tarefas impossíveis. Se a **mesma épico** receber **3 rejeições consecutivas**, o orquestrador **congela** a tarefa e executa um **health check determinístico do RAG** (datas de indexação, estrutura de pastas); ao descongelar, recebo a rejeição com **contexto saneado** (documentação/indexação atualizada). Ver [06-operacoes.md](../06-operacoes.md).
 
+## Validação reversa (truncamento-finops)
+
+Após a sumarização de contexto para envio à nuvem, **comparo o resumo gerado com os critérios de aceite originais** (sempre intactos via tag `<!-- CRITERIOS_ACEITE -->` ou payload duplo). **Se o resumo omitir um critério fundamental, rejeito o truncamento** e o sistema reestrutura o bloco (manter trechos não sumarizados ou refazer o resumo). Posso usar o script `scripts/validate_reverse_po.py --summary <resumo> --criteria <issue.md>` para checagem automática. Ver [07-configuracao-e-prompts.md](../07-configuracao-e-prompts.md) (2.2) e [issues/041-truncamento-contexto-finops.md](../issues/041-truncamento-contexto-finops.md).
+
+---
+
 ## Onde posso falhar
 
 Posso criar tarefas tecnicamente impossíveis se o RAG de contexto falhar. O **disjuntor** (3 rejeições consecutivas → congelar + RAG health check) e a **autocura** reduzem o loop infinito; a intervenção ocorre **antes** da cota global de degradação (10–15%). Confio na documentação e no Architect para validar viabilidade; o ciclo de rascunho (draft) e a exceção de technical_blocker complementam.

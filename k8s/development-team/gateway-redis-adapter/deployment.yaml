@@ -17,6 +17,9 @@ spec:
       labels:
         app: gateway-redis-adapter
     spec:
+      # CPU-only: evita disputar GPU. Se o nó não tiver workload-type=cpu-only, remova o nodeSelector ou: kubectl label node minikube workload-type=cpu-only
+      nodeSelector:
+        workload-type: cpu-only
       containers:
         - name: adapter
           image: python:3.12-slim
@@ -27,6 +30,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: phase2-config
+                optional: true
+            - configMapRef:
+                name: finops-config
+                optional: true
+            - configMapRef:
+                name: agent-profiles
                 optional: true
             - configMapRef:
                 name: egress-whitelist

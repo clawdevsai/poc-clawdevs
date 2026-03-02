@@ -12,6 +12,8 @@ Recursos Kubernetes para a **Fase 2 — Segurança**: configuração central e w
 | **cronjob-token-rotation.yaml** | CronJob (a cada 3 min): sincroniza openclaw-telegram-rotation-source → openclaw-telegram |
 | **job-url-sandbox.yaml** | Job template: fetch de URL em sandbox (URL_SANDBOX_TARGET); resultado em digest:daily |
 | **trusted-packages-configmap.yaml** | Opcional: lista TRUSTED_PACKAGES (matriz de confiança) |
+| **finops-config-configmap.yaml** | truncamento-finops — FinOps e truncamento: MAX_TOKENS_PER_REQUEST_*, PREFLIGHT_SUMMARIZE_MIN_INTERACTIONS, TRUNCATE_BORDER_*, WORKING_BUFFER_TTL_SEC, tags CRITERIOS_ACEITE e INVARIANTE |
+| **agent-profiles-configmap.yaml** | config-perfis — Perfis por agente (modelo, temperature, skills, constraint) para Gateway/orquestrador |
 
 ## Aplicar
 

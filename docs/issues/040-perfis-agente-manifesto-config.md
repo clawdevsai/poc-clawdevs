@@ -3,6 +3,8 @@
 **Fase:** 4 — Configuração  
 **Labels:** config, openclaw, prompts
 
+**Implementação:** ConfigMap [k8s/security/agent-profiles-configmap.yaml](../../k8s/security/agent-profiles-configmap.yaml); doc canônico em [07-configuracao-e-prompts.md](../07-configuracao-e-prompts.md). Validação: [validacao-040-041-completa.md](validacao-040-041-completa.md).
+
 ## Descrição
 
 Implementar o manifesto de configuração por agente: modelo, temperatura, skills, memory, constraints. CEO e PO (nuvem); Developer, Architect, DevOps, QA, CyberSec, UX (Ollama + limites de recurso).

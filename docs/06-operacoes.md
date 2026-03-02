@@ -50,7 +50,7 @@ Se o sistema ainda responde, isolar e derrubar apenas o que está causando o pro
 
 1. **Derrubar o serviço de inferência (Ollama):**
    ```bash
-   kubectl delete pod -l app=ollama --force
+   kubectl delete pod -l app=ollama -n ai-agents --force
    ```
 
 2. **Limpar o lock do Redis** (caso o script de GPU Lock tenha ficado travado):

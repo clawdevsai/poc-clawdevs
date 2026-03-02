@@ -1,14 +1,33 @@
 #!/usr/bin/env python3
 # Publica um evento em um Redis Stream (Fase 1 — 018). Uso: testes manuais ou E2E.
+# truncamento-finops: truncamento na borda — payloads grandes são truncados antes de enfileirar.
 # Ex.: python publish_event_redis.py cmd:strategy directive="Priorizar 2FA" source=ceo
 #      python publish_event_redis.py task:backlog issue_id=42 priority=1
-# Variáveis de ambiente: REDIS_HOST (default 127.0.0.1), REDIS_PORT (default 6379), REDIS_PASSWORD (opcional).
+# Variáveis: REDIS_HOST, REDIS_PORT, REDIS_PASSWORD; TRUNCATE_BORDER_ENABLED=1 e TRUNCATE_BORDER_MAX_TOKENS (truncamento-finops).
 import os
 import sys
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD") or None
+TRUNCATE_BORDER_ENABLED = os.environ.get("TRUNCATE_BORDER_ENABLED", "1") == "1"
+TRUNCATE_BORDER_MAX_TOKENS = int(os.environ.get("TRUNCATE_BORDER_MAX_TOKENS", "4000"))
+
+# truncamento-finops — truncamento na borda (import opcional)
+def _truncate_if_needed(value: str) -> str:
+    if not value or not TRUNCATE_BORDER_ENABLED:
+        return value
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        if script_dir not in sys.path:
+            sys.path.insert(0, script_dir)
+        from truncate_payload_border import truncate_payload, estimate_tokens
+        if estimate_tokens(value) <= TRUNCATE_BORDER_MAX_TOKENS:
+            return value
+        out, _ = truncate_payload(value, max_tokens=TRUNCATE_BORDER_MAX_TOKENS)
+        return out
+    except Exception:
+        return value
 
 
 def main():
@@ -31,6 +50,11 @@ def main():
     if not pairs:
         print("Forneça ao menos um par key=value.", file=sys.stderr)
         sys.exit(1)
+    # truncamento-finops: truncar valores grandes antes de enfileirar
+    for k in list(pairs.keys()):
+        v = pairs[k]
+        if isinstance(v, str) and len(v) > 500:
+            pairs[k] = _truncate_if_needed(v)
     try:
         import redis
     except ImportError:

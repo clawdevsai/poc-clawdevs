@@ -3,6 +3,8 @@
 **Fase:** 4 — Configuração  
 **Labels:** config, cost, memory
 
+**Implementação:** ConfigMap [k8s/security/finops-config-configmap.yaml](../../k8s/security/finops-config-configmap.yaml); scripts [truncate_payload_border.py](../../scripts/truncate_payload_border.py), [working_buffer_ttl.py](../../scripts/working_buffer_ttl.py), [context_validation_hook.py](../../scripts/context_validation_hook.py), [compact_preserve_protected.py](../../scripts/compact_preserve_protected.py); exemplos em [docs/agents-devs/](../agents-devs/) (SESSION-STATE.example.md, microADR-template.json, CRITERIOS_ACEITE-example.md). Validação: [validacao-040-041-completa.md](validacao-040-041-completa.md).
+
 ## Descrição
 
 Causa raiz do custo é inchaço de contexto. Implementar pipeline de truncamento e sumarização com **controle determinístico na infraestrutura** (Gateway e Redis), não delegar ao LLM nem depender de agente para "limpar" contexto: **max tokens por request no Gateway** (perfil CEO e demais que usam nuvem); **pre-flight Summarize** obrigatório para issues/conversas com &gt;3 interações (modelo local, antes do envio à nuvem); **truncamento na borda** (script na entrada do stream); **TTL no Redis** para expirar mensagens antigas do working buffer (sem depender do DevOps); janela deslizante e memória duas camadas + RAG; freio de emergência (ex.: $5/dia). Configurar limite rígido de gastos no painel do provedor.

@@ -41,6 +41,10 @@ spec:
         - name: gateway
           image: openclaw-gateway:local
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: finops-config
+                optional: true
           env:
             - name: NODE_OPTIONS
               value: "--max-old-space-size=1024"

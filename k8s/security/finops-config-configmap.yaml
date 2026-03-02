@@ -1,0 +1,45 @@
+# config-perfis / truncamento-finops — Configuração: perfis por agente e FinOps/truncamento.
+# Aplicar: kubectl apply -f k8s/security/finops-config-configmap.yaml
+# Ref: docs/issues/040-perfis-agente-manifesto-config.md, docs/issues/041-truncamento-contexto-finops.md, docs/07-configuracao-e-prompts.md
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: finops-config
+  namespace: ai-agents
+  labels:
+    app: security
+    phase: "4"
+data:
+  # --- Perfis por agente (040): max tokens por request no Gateway (FinOps na borda) ---
+  MAX_TOKENS_PER_REQUEST_CEO: "8192"
+  MAX_TOKENS_PER_REQUEST_PO: "8192"
+  MAX_TOKENS_PER_REQUEST_CLOUD_DEFAULT: "4096"
+
+  # --- Pre-flight Summarize (041): mínimo de interações para exigir sumarização local antes da nuvem ---
+  PREFLIGHT_SUMMARIZE_MIN_INTERACTIONS: "3"
+
+  # --- Truncamento na borda (041): limite de tokens antes de enfileirar no Redis ---
+  TRUNCATE_BORDER_MAX_TOKENS: "4000"
+  TRUNCATE_BORDER_KEEP_HEAD_LINES: "20"
+  TRUNCATE_BORDER_KEEP_TAIL_LINES: "30"
+
+  # --- TTL Redis working buffer (041): expiração automática de mensagens antigas (segundos) ---
+  WORKING_BUFFER_TTL_SEC: "86400"
+  WORKING_BUFFER_KEY_PREFIX: "project:v1:working_buffer:"
+
+  # --- Segregação critérios de aceite (041): tag que o script de limpeza NUNCA remove ---
+  CRITERIOS_ACEITE_TAG: "<!-- CRITERIOS_ACEITE -->"
+  CRITERIOS_ACEITE_TAG_END: "<!-- /CRITERIOS_ACEITE -->"
+
+  # --- Invariantes de negócio (041): tag no SESSION-STATE que o DevOps nunca apaga ---
+  INVARIANT_TAG: "<!-- INVARIANTE_NEGOCIO -->"
+  INVARIANT_TAG_END: "<!-- /INVARIANTE_NEGOCIO -->"
+
+  # --- Gancho validação de contexto (041): habilitar varredura local antes da sumarização (0=off, 1=on) ---
+  CONTEXT_VALIDATION_HOOK_ENABLED: "1"
+
+  _README: |
+    config-perfis / truncamento-finops: Perfis por agente e pipeline de truncamento/FinOps.
+    Gateway deve aplicar MAX_TOKENS_PER_REQUEST_* antes de enviar ao provedor.
+    Script scripts/truncate_payload_border.py aplica truncamento na borda antes de enfileirar.
+    Scripts de limpeza/compacted do DevOps devem usar regex para ignorar blocos CRITERIOS_ACEITE e INVARIANTE_NEGOCIO.
