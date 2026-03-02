@@ -29,7 +29,7 @@ Este documento descreve o fluxo em que o **Diretor** coloca um **tema para anali
 
 ## Configuração técnica
 
-- O canal **#all-clawdevsai** está na allowlist do Slack no OpenClaw (`channels.slack.groupPolicy: allowlist`, `channels.slack.channels.<ID>`). O ID do canal é configurável: **`SLACK_ALL_CLAWDEVSAI_CHANNEL_ID`** no `.env` (local) ou no Secret do K8s; padrão: `CDAHISCLSQKC` (#all-clawdevsai).
+- O canal **#all-clawdevsai** está na allowlist do Slack no OpenClaw (`channels.slack.groupPolicy: allowlist`, `channels.slack.channels.<ID>`). O ID do canal é configurável: **`OPENCLAW_SLACK_ALL_CLAWDEVSAI_CHANNEL_ID`** (ou `SLACK_ALL_CLAWDEVSAI_CHANNEL_ID`) no `.env` — ver [.env.example](../.env.example); no cluster o script `k8s-openclaw-secret-from-env.sh` grava no Secret; padrão: `C0AHSCLSQKC` (#all-clawdevsai).
 - O app **ClawdevsAI** deve estar **adicionado ao canal** (Integrações → Adicionar apps → ClawdevsAI).
 - O **Diretor** deve estar na allowlist de DM (`SLACK_DIRECTOR_USER_ID` ou `SLACK_ALLOWED_USER_IDS`) para que mensagens no canal sejam autorizadas, conforme política do gateway.
 - Discussões entre agentes no Slack usam **Ollama (LLM local GPU)** conforme política do projeto.

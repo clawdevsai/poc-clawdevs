@@ -49,19 +49,13 @@ Para trocar CEO/PO para nuvem: editar `llm-providers-configmap.yaml` (`agent_ceo
 - **Pods técnicos (100% offline):** Um ou mais deployments/jobs com OpenClaw sub-agents (Developer, Architect, QA, CyberSec, UX, DBA, DevOps) usando apenas Ollama no cluster e Redis; NetworkPolicy sem egress. Slot único de revisão (code:ready) já implementado na Fase 0.
 - **Fluxo:** Diretor → Telegram → CEO → PO → Redis (cmd:strategy, task:backlog, draft.2.issue, code:ready) → consumidores técnicos → GPU Lock → Ollama → resultado de volta ao Redis/CEO.
 
-## Workspace SOUL por agente (Fase 1 — fechamento)
+## Workspace SOUL por agente (Fase 1 — implementado)
 
-Cada agente pode carregar seu SOUL de **/workspace/soul/{agent_id}.md**. O gateway monta os ConfigMaps soul-management-agents e soul-development-agents em `/workspace/soul` (initContainer soul-merge); os arquivos ficam como `ceo.md`, `po.md`, `devops.md`, `architect.md`, `developer.md`, `qa.md`, `cybersec.md`, `ux.md`, `dba.md`. No OpenClaw, configurar por agente o **workspace** ou **customInstructions** apontando para o SOUL do agente, por exemplo:
-
-- **CEO:** workspace com SOUL.md (workspace-ceo) ou `/workspace/soul/ceo.md`.
-- **PO:** carregar `/workspace/soul/po.md`.
-- **Demais:** `/workspace/soul/{id}.md` (id = devops, architect, developer, qa, cybersec, ux, dba).
-
-Referência de config (exemplo): [07-configuracao-e-prompts.md](07-configuracao-e-prompts.md). Governance Proposer usa ConfigMap soul-governance-agents (`governance_proposer.md`).
+**Implementado:** Cada agente tem **workspace próprio** com seu SOUL: `/workspace/ceo`, `/workspace/po`, `/workspace/developer`, etc. O initContainer `soul-merge` copia os ConfigMaps soul-management-agents e soul-development-agents para `/workspace/soul/*.md` e em seguida cria `/workspace/<id>/SOUL.md` para cada agente (ceo, po, devops, architect, developer, qa, cybersec, ux, dba). O OpenClaw está configurado com `agents.list[].workspace: "/workspace/<id>"`. Assim, no Slack cada agente responde com sua identidade (Ricardo/CEO, Marina/PO, Lucas/Developer, Rafael/QA, etc.). Variáveis de ambiente (um app Slack por agente): [.env.example](../.env.example). Tokens: [42-slack-tokens-setup.md](42-slack-tokens-setup.md). Governance Proposer usa ConfigMap soul-governance-agents (`governance_proposer.md`).
 
 ## Próximos passos (evoluções já implementadas para fechar Fase 1)
 
-1. ~~**SOUL workspace por agente**~~ — Acima; montagem em /workspace/soul com arquivos por id.
+1. ~~**SOUL workspace por agente**~~ — Implementado: /workspace/ceo, /workspace/po, … com SOUL.md cada um; config openclaw com workspace por agente; agentes no Slack validados (nomes e funções corretos).
 2. **Management nuvem:** Documentação e line-up feitos (019); checklist em [validacao-fase1-019.md](issues/validacao-fase1-019.md).
 3. **Pods separados (014):** Implementados em [k8s/development-team/architect/](../k8s/development-team/architect/), [qa/](../k8s/development-team/qa/), [cybersec/](../k8s/development-team/cybersec/), [dba/](../k8s/development-team/dba/) (replicas: 0; ativar com pipeline de streams). Script [scripts/slot_agent_single.py](../scripts/slot_agent_single.py).
 4. **017 no orquestrador:** Script de referência [scripts/orchestrator_autonomy.py](../scripts/orchestrator_autonomy.py) (five strikes, orçamento degradação, digest); doc [43-autonomia-nivel-4-matriz-escalonamento.md](43-autonomia-nivel-4-matriz-escalonamento.md).

@@ -71,7 +71,7 @@ Para criar ou atualizar o secret **a partir do seu `.env`** (evitando copiar tok
 ./scripts/k8s-openclaw-secret-from-env.sh
 ```
 
-O script lê `.env` na raiz do repo e aplica `openclaw-telegram` no namespace `ai-agents` com as chaves definidas (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID; Slack: OPENCLAW_SLACK_APP_TOKEN, OPENCLAW_SLACK_BOT_TOKEN, OPENCLAW_SLACK_DIRECTOR_USER_ID, OPENCLAW_SLACK_ALLOWED_USER_IDS — ou fallback SLACK_*). O Secret é gravado com nomes SLACK_* para o gateway. Depois: `kubectl rollout restart deployment/openclaw -n ai-agents`.
+O script lê **`.env`** na raiz do repo (modelo: **[.env.example](../.env.example)**) e aplica `openclaw-telegram` no namespace `ai-agents` com as chaves definidas: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID; Slack: OPENCLAW_SLACK_*, SLACK_DIRECTOR_USER_ID, SLACK_ALL_CLAWDEVSAI_CHANNEL_ID e **por agente** CEO_SLACK_APP_TOKEN, CEO_SLACK_BOT_TOKEN, PO_SLACK_*, DEVELOPER_SLACK_*, etc. (conforme [.env.example](../.env.example)). O Secret é gravado com os mesmos nomes para o gateway. Depois: `kubectl rollout restart deployment/openclaw -n ai-agents`.
 
 ### 3.2. Slack OpenClaw (opcional)
 
@@ -88,9 +88,9 @@ Documentação do canal Slack: [OpenClaw — Slack](https://docs.openclaw.ai/cha
 kubectl patch secret openclaw-telegram -n ai-agents -p '{"stringData":{"SLACK_APP_TOKEN":"xapp-...","SLACK_BOT_TOKEN":"xoxb-...","SLACK_DIRECTOR_USER_ID":"U01234ABCD"}}'
 ```
 
-## 4. OpenClaw (ConfigMap + Workspace CEO + Deployment)
+## 4. OpenClaw (ConfigMap + Workspace por agente + Deployment)
 
-O agente CEO obedece ao **perfil SOUL** ([docs/soul/CEO.md](soul/CEO.md)): o ConfigMap `openclaw-workspace-ceo` fornece `SOUL.md` no workspace; o OpenClaw injeta esse conteúdo no system prompt. Assim o CEO responde em tom executivo e direto, na **mesma língua** que o Diretor usar, e segue as restrições (nunca escrever código, nunca aprovar PRs, etc.). Aplicar também o workspace do CEO:
+Cada agente usa **seu próprio workspace** com SOUL distinto: `/workspace/ceo`, `/workspace/po`, `/workspace/developer`, etc. (initContainer `soul-merge` copia os ConfigMaps soul-management-agents e soul-development-agents para esses diretórios). O CEO obedece ao **perfil SOUL** ([docs/soul/CEO.md](soul/CEO.md)) em `/workspace/ceo/SOUL.md`; o PO em `/workspace/po/SOUL.md` (Marina); o Developer em `/workspace/developer/SOUL.md` (Lucas); e assim por diante. Assim cada agente responde no Slack com nome e função corretos. Aplicar também o workspace-ceo (vazio; a lógica está no soul-merge):
 
 ```bash
 kubectl apply -f k8s/management-team/openclaw/workspace-ceo-configmap.yaml

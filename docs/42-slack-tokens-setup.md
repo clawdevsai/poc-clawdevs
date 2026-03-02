@@ -1,6 +1,8 @@
 # Slack: onde achar os tokens (OpenClaw — app próprio)
 
-Referência rápida para configurar o canal Slack do **OpenClaw** (Socket Mode). No ClawDevs cada agente tem seu próprio app Slack: o OpenClaw usa **OPENCLAW_SLACK_*** no `.env`; o orquestrador usa **ORCHESTRATOR_SLACK_*** ou o Secret `orchestrator-slack`. Este doc cobre o app do OpenClaw (workspace [clawdevsai](https://clawdevsai.slack.com)). Ver também: [37-deploy-fase0-telegram-ceo-ollama.md](37-deploy-fase0-telegram-ceo-ollama.md) (seção 3.2) e [config/openclaw/README.md](../config/openclaw/README.md).
+Referência rápida para configurar o canal Slack do **OpenClaw** (Socket Mode). No ClawDevs **cada agente tem seu próprio app Slack**; a lista completa de variáveis está em **[.env.example](../.env.example)** na raiz do repositório — use-o como modelo ao criar o `.env`. O OpenClaw usa **OPENCLAW_SLACK_*** e, por agente, **CEO_SLACK_***, **PO_SLACK_***, **DEVELOPER_SLACK_***, etc.; o orquestrador usa **ORCHESTRATOR_SLACK_*** ou o Secret `orchestrator-slack`. Este doc cobre os apps Slack (workspace [clawdevsai](https://clawdevsai.slack.com)). Ver também: [37-deploy-fase0-telegram-ceo-ollama.md](37-deploy-fase0-telegram-ceo-ollama.md) (seção 3.2) e [config/openclaw/README.md](../config/openclaw/README.md).
+
+**Validação:** Com o `.env` preenchido conforme `.env.example` (um app por agente, tokens corretos), o script `./scripts/k8s-openclaw-secret-from-env.sh` e o deployment com workspace por agente (`/workspace/ceo`, `/workspace/po`, etc.), os agentes no Slack respondem com a identidade correta: **Marina** (PO), **Ricardo** (CEO), **Lucas** (Developer), **Rafael** (QA), etc. Cada um usa seu SOUL em `/workspace/<agentId>/SOUL.md`.
 
 **Modelo para conversa no Slack:** discussões entre agentes no Slack usam **Ollama (LLM local)**. Para apenas conversa (menor uso de VRAM): use um modelo pequeno — padrão na config local é **`ollama/qwen2.5:3b`**; alternativas: Phi-3 mini, Ministral-3:3b. Detalhes em [config/openclaw/README.md](../config/openclaw/README.md#modelo-menor-para-conversa-apenas-no-slack).
 
@@ -60,6 +62,8 @@ No ClawDevs **cada agente** (CEO, PO, Developer, DevOps, Architect, QA, CyberSec
 
 **Nunca reutilize o BOT token de um agente em outro.** Por exemplo: não use `CEO_SLACK_BOT_TOKEN` em `DEVELOPER_SLACK_BOT_TOKEN`. Se fizer isso, as respostas no Slack aparecerão como outro app (ex.: CEO) ou as menções serão tratadas pelo agente errado — cada um precisa conversar com você com sua própria personalidade (SOUL). O gateway OpenClaw usa um *account* por agente; cada account exige o par APP_TOKEN + BOT_TOKEN do **mesmo** app desse agente.
 
+**Referência de variáveis:** Todas as chaves por agente (incl. `*_SLACK_WEBHOOK_URL`, `*_SLACK_ALERTS_CHANNEL_ID`) estão listadas em [.env.example](../.env.example). Copie esse arquivo para `.env`, preencha os valores ao criar cada app em api.slack.com e rode `./scripts/k8s-openclaw-secret-from-env.sh` + `kubectl rollout restart deployment/openclaw -n ai-agents`.
+
 ---
 
 ## Como criar o app no Slack (api.slack.com/apps)
@@ -107,6 +111,59 @@ settings:
 
 Avance (Next), escolha o workspace **ClawDevsAi** e crie o app. Depois: **Install App** (Bot Token) e **Basic Information → App-Level Tokens** (App Token com `connections:write`).
 
+### Manifest JSON (modelo por agente)
+
+Para criar **um app por agente** (Developer, CEO, PO, QA, etc.) usando **From a manifest**, use o JSON abaixo como modelo. Troque apenas `display_information.name` e `features.bot_user.display_name` pelo nome do agente (ex.: `"Developer"`, `"CEO"`, `"PO"`, `"QA"`). Em **Create an App** escolha **From a manifest** → aba **JSON** (não YAML) e cole o conteúdo.
+
+| Campo | Uso |
+|-------|-----|
+| `display_information.name` | Nome do app no Slack (ex.: Developer, CEO, PO, QA). |
+| `bot_user.display_name` | Nome do bot nas conversas; use o mesmo do app. |
+| `oauth_config.scopes.bot` | Scopes mínimos: `chat:write`, `im:history`, `app_mentions:read`, `channels:history`, `groups:history`. |
+| `event_subscriptions.bot_events` | `app_mention` (menções em canal), `message.im` (DM). |
+| `socket_mode_enabled: true` | Obrigatório para o OpenClaw (Socket Mode). |
+
+```json
+{
+    "display_information": {
+        "name": "Developer"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "Developer",
+            "always_online": true
+        }
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "chat:write",
+                "im:history",
+                "app_mentions:read",
+                "channels:history",
+                "groups:history"
+            ]
+        }
+    },
+    "settings": {
+        "event_subscriptions": {
+            "bot_events": [
+                "app_mention",
+                "message.im"
+            ]
+        },
+        "interactivity": {
+            "is_enabled": true
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": true,
+        "token_rotation_enabled": false
+    }
+}
+```
+
+**Outros agentes:** para CEO, PO, QA, DevOps, Architect, CyberSec, UX, DBA, repita o processo: crie um novo app **From a manifest** (JSON), altere `"name"` e `"display_name"` para o nome do agente (ex.: `"CEO"`, `"PO"`, `"QA"`), crie o app no workspace e depois em **Basic Information → App-Level Tokens** gere o App Token (`connections:write`) e em **Install App** copie o Bot Token. Preencha no `.env` as variáveis correspondentes (ex.: `CEO_SLACK_APP_TOKEN`, `CEO_SLACK_BOT_TOKEN`) conforme [.env.example](../.env.example).
+
 ### Opção B: From scratch
 
 1. **Create an App** → **From scratch** → nome (ex.: ClawdevsAI) e workspace **ClawDevsAi**.
@@ -124,11 +181,10 @@ Em seguida, siga a [Ordem recomendada](#ordem-recomendada-após-criar-o-app) aci
 
 ## Uso no projeto (OpenClaw)
 
-- Coloque os valores no **`.env`** na raiz do repositório (nunca commitar), com prefixo **OPENCLAW_** (cada agente tem seu próprio app):
-  - `OPENCLAW_SLACK_APP_TOKEN=xapp-...`
-  - `OPENCLAW_SLACK_BOT_TOKEN=xoxb-...`
-  - Opcional: `OPENCLAW_SLACK_DIRECTOR_USER_ID=U01234ABCD` (ID do Diretor no Slack para allowlist em DMs; ver abaixo onde achar).
-- O script `./scripts/k8s-openclaw-secret-from-env.sh` lê OPENCLAW_SLACK_* (ou SLACK_* em fallback) e grava no **Secret** `openclaw-telegram` com chaves `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`, `SLACK_DIRECTOR_USER_ID` para o gateway no cluster.
+- Use **[.env.example](../.env.example)** como modelo: copie para `.env` e preencha os valores (nunca commitar `.env` com valores reais).
+- **Conexão default (Socket Mode):** `OPENCLAW_SLACK_APP_TOKEN`, `OPENCLAW_SLACK_BOT_TOKEN`, `OPENCLAW_SLACK_ALL_CLAWDEVSAI_CHANNEL_ID`; opcional: `OPENCLAW_SLACK_DIRECTOR_USER_ID` (ID do Diretor para allowlist em DMs; ver abaixo).
+- **Por agente (um app por agente):** `CEO_SLACK_APP_TOKEN`/`CEO_SLACK_BOT_TOKEN`, `PO_SLACK_*`, `DEVELOPER_SLACK_*`, `QA_SLACK_*`, etc. — lista completa em [.env.example](../.env.example).
+- O script `./scripts/k8s-openclaw-secret-from-env.sh` lê o `.env` e grava no **Secret** `openclaw-telegram`; em seguida: `kubectl rollout restart deployment/openclaw -n ai-agents`.
 
 ### Onde achar OPENCLAW_SLACK_DIRECTOR_USER_ID
 
