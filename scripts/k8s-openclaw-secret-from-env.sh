@@ -32,9 +32,15 @@ ARGS=()
 [[ -n "$SLACK_DIRECTOR_USER_ID" ]] && ARGS+=(--from-literal=SLACK_DIRECTOR_USER_ID="$SLACK_DIRECTOR_USER_ID")
 [[ -n "$SLACK_ALLOWED_USER_IDS" ]] && ARGS+=(--from-literal=SLACK_ALLOWED_USER_IDS="$SLACK_ALLOWED_USER_IDS")
 [[ -n "$SLACK_ALL_CLAWDEVSAI_CHANNEL_ID" ]] && ARGS+=(--from-literal=SLACK_ALL_CLAWDEVSAI_CHANNEL_ID="$SLACK_ALL_CLAWDEVSAI_CHANNEL_ID")
-# Conta Slack PO: para @PO responder no canal, gateway conecta também o app PO (multi-account)
-[[ -n "$PO_SLACK_APP_TOKEN" ]]    && ARGS+=(--from-literal=PO_SLACK_APP_TOKEN="$PO_SLACK_APP_TOKEN")
-[[ -n "$PO_SLACK_BOT_TOKEN" ]]    && ARGS+=(--from-literal=PO_SLACK_BOT_TOKEN="$PO_SLACK_BOT_TOKEN")
+# Contas Slack por agente (um app por agente; gateway conecta cada app com accountId = ceo, po, devops, ...)
+for key in CEO PO DEVOPS ARCHITECT DEVELOPER QA CYBERSEC UX DBA; do
+  app_var="${key}_SLACK_APP_TOKEN"
+  bot_var="${key}_SLACK_BOT_TOKEN"
+  app_val="${!app_var}"
+  bot_val="${!bot_var}"
+  [[ -n "$app_val" ]] && ARGS+=(--from-literal="${key}_SLACK_APP_TOKEN=$app_val")
+  [[ -n "$bot_val" ]] && ARGS+=(--from-literal="${key}_SLACK_BOT_TOKEN=$bot_val")
+done
 
 if [[ ${#ARGS[@]} -eq 0 ]]; then
   echo "Erro: nenhuma variável relevante definida no .env (TELEGRAM_*, OPENCLAW_SLACK_* ou SLACK_*)."

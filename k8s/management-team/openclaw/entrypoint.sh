@@ -41,14 +41,28 @@ fi
 CHAN_ID="${SLACK_ALL_CLAWDEVSAI_CHANNEL_ID:-CDAHISCLSQKC}"
 sed "s/__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__/$CHAN_ID/g" "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
 
-# 4) Conta Slack PO (multi-account): quando PO_SLACK_APP_TOKEN e PO_SLACK_BOT_TOKEN estão definidos, injeta accounts.po para @PO responder
-if [ -n "$PO_SLACK_APP_TOKEN" ] && [ -n "$PO_SLACK_BOT_TOKEN" ]; then
-  escape_json() { printf '%s' "$1" | tr -d '\n' | sed 's/\\/\\\\/g; s/"/\\"/g'; }
-  PO_APP_ESC=$(escape_json "$PO_SLACK_APP_TOKEN")
-  PO_BOT_ESC=$(escape_json "$PO_SLACK_BOT_TOKEN")
-  PO_JSON="\"po\": { \"mode\": \"socket\", \"appToken\": \"$PO_APP_ESC\", \"botToken\": \"$PO_BOT_ESC\" }"
-  PO_JSON_SED=$(printf '%s' "$PO_JSON" | sed 's/\\/\\\\/g; s/&/\\&/g')
-  sed "s/\"accounts\": {}/\"accounts\": { $PO_JSON_SED }/" "$CONFIG_RUN" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_RUN"
+# 4) Contas Slack por agente (multi-account): injeta accounts.<id> via Node (evita falha do sed com JSON longo)
+if command -v node >/dev/null 2>&1; then
+  CONFIG_RUN="$CONFIG_RUN" node -e "
+    const fs = require('fs');
+    const path = process.env.CONFIG_RUN || '/tmp/openclaw.json';
+    const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+    if (!config.channels || !config.channels.slack) process.exit(0);
+    const agents = [
+      ['ceo','CEO'],['po','PO'],['devops','DEVOPS'],['architect','ARCHITECT'],['developer','DEVELOPER'],
+      ['qa','QA'],['cybersec','CYBERSEC'],['ux','UX'],['dba','DBA']
+    ];
+    const accounts = {};
+    for (const [id, prefix] of agents) {
+      const app = process.env[prefix + '_SLACK_APP_TOKEN'];
+      const bot = process.env[prefix + '_SLACK_BOT_TOKEN'];
+      if (app && bot) accounts[id] = { mode: 'socket', appToken: app, botToken: bot };
+    }
+    if (Object.keys(accounts).length > 0) {
+      config.channels.slack.accounts = accounts;
+      fs.writeFileSync(path, JSON.stringify(config, null, 2));
+    }
+  "
 fi
 
 export OPENCLAW_CONFIG_PATH="$CONFIG_RUN"

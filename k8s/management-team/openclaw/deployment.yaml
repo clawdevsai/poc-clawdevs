@@ -27,7 +27,7 @@ spec:
               mountPath: /workspace
         - name: soul-merge
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace/soul && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; if [ -f /workspace/soul/ceo.md ]; then cp /workspace/soul/ceo.md /workspace/SOUL.md; fi; chmod -R u+rwX /workspace/soul"]
+          command: ["sh", "-c", "mkdir -p /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; for id in ceo po devops architect developer qa cybersec ux dba; do if [ -f /workspace/soul/$id.md ]; then cp /workspace/soul/$id.md /workspace/$id/SOUL.md; fi; done; chmod -R u+rwX /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace
@@ -88,6 +88,18 @@ spec:
                   name: openclaw-telegram
                   key: SLACK_ALL_CLAWDEVSAI_CHANNEL_ID
                   optional: true
+            - name: CEO_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: CEO_SLACK_APP_TOKEN
+                  optional: true
+            - name: CEO_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: CEO_SLACK_BOT_TOKEN
+                  optional: true
             - name: PO_SLACK_APP_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -99,6 +111,90 @@ spec:
                 secretKeyRef:
                   name: openclaw-telegram
                   key: PO_SLACK_BOT_TOKEN
+                  optional: true
+            - name: DEVOPS_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: DEVOPS_SLACK_APP_TOKEN
+                  optional: true
+            - name: DEVOPS_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: DEVOPS_SLACK_BOT_TOKEN
+                  optional: true
+            - name: ARCHITECT_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: ARCHITECT_SLACK_APP_TOKEN
+                  optional: true
+            - name: ARCHITECT_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: ARCHITECT_SLACK_BOT_TOKEN
+                  optional: true
+            - name: DEVELOPER_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: DEVELOPER_SLACK_APP_TOKEN
+                  optional: true
+            - name: DEVELOPER_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: DEVELOPER_SLACK_BOT_TOKEN
+                  optional: true
+            - name: QA_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: QA_SLACK_APP_TOKEN
+                  optional: true
+            - name: QA_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: QA_SLACK_BOT_TOKEN
+                  optional: true
+            - name: CYBERSEC_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: CYBERSEC_SLACK_APP_TOKEN
+                  optional: true
+            - name: CYBERSEC_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: CYBERSEC_SLACK_BOT_TOKEN
+                  optional: true
+            - name: UX_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: UX_SLACK_APP_TOKEN
+                  optional: true
+            - name: UX_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: UX_SLACK_BOT_TOKEN
+                  optional: true
+            - name: DBA_SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: DBA_SLACK_APP_TOKEN
+                  optional: true
+            - name: DBA_SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: DBA_SLACK_BOT_TOKEN
                   optional: true
           volumeMounts:
             - name: config

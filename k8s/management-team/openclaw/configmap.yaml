@@ -48,21 +48,29 @@ data:
         }
       },
       "agents": {
-        "defaults": { "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+        "defaults": { "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/ceo" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "architect", "name": "Architect", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "developer", "name": "Developer", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "qa", "name": "QA", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "cybersec", "name": "CyberSec", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "ux", "name": "UX", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "dba", "name": "DBA", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/ceo" },
+          { "id": "po", "name": "Product Owner", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/po" },
+          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/devops" },
+          { "id": "architect", "name": "Architect", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/architect" },
+          { "id": "developer", "name": "Developer", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/developer" },
+          { "id": "qa", "name": "QA", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/qa" },
+          { "id": "cybersec", "name": "CyberSec", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/cybersec" },
+          { "id": "ux", "name": "UX", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/ux" },
+          { "id": "dba", "name": "DBA", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace/dba" }
         ]
       },
       "bindings": [
-        { "match": { "channel": "slack", "accountId": "po" }, "agentId": "po" }
+        { "match": { "channel": "slack", "accountId": "ceo" }, "agentId": "ceo" },
+        { "match": { "channel": "slack", "accountId": "po" }, "agentId": "po" },
+        { "match": { "channel": "slack", "accountId": "devops" }, "agentId": "devops" },
+        { "match": { "channel": "slack", "accountId": "architect" }, "agentId": "architect" },
+        { "match": { "channel": "slack", "accountId": "developer" }, "agentId": "developer" },
+        { "match": { "channel": "slack", "accountId": "qa" }, "agentId": "qa" },
+        { "match": { "channel": "slack", "accountId": "cybersec" }, "agentId": "cybersec" },
+        { "match": { "channel": "slack", "accountId": "ux" }, "agentId": "ux" },
+        { "match": { "channel": "slack", "accountId": "dba" }, "agentId": "dba" }
       ]
     }
   config.yaml: |
@@ -82,9 +90,11 @@ data:
             - id: "ollama/ministral-3:3b-cloud"
               label: "Ministral 3 3B Cloud (discussões Slack)"
 
+    # Workspace por agente: cada um tem /workspace/<id>/SOUL.md (Ricardo=CEO, Marina=PO, etc.).
     agents:
       defaults:
         model: "ollama/ministral-3:3b-cloud"
+        workspace: "/workspace/ceo"
         subagents:
           maxSpawnDepth: 2
           maxChildrenPerAgent: 5
@@ -95,38 +105,47 @@ data:
       list:
         - id: ceo
           name: "CEO"
+          workspace: "/workspace/ceo"
           description: "Estratégia e interface com o Diretor. Único que recebe Telegram; no Slack participa com os demais."
           model: "ollama/ministral-3:3b-cloud"
         - id: po
           name: "Product Owner"
+          workspace: "/workspace/po"
           description: "Backlog e priorização. Sub-agent do CEO."
           model: "ollama/ministral-3:3b-cloud"
         - id: devops
           name: "DevOps/SRE"
+          workspace: "/workspace/devops"
           description: "IaC, CI/CD, FinOps. Sub-agent. Padrão Ollama GPU."
           model: "ollama/ministral-3:3b-cloud"
         - id: architect
           name: "Architect"
+          workspace: "/workspace/architect"
           description: "Governança técnica, code review. Sub-agent. Padrão Ollama GPU."
           model: "ollama/ministral-3:3b-cloud"
         - id: developer
           name: "Developer"
+          workspace: "/workspace/developer"
           description: "Implementação. Sub-agent. Padrão Ollama GPU."
           model: "ollama/ministral-3:3b-cloud"
         - id: qa
           name: "QA"
+          workspace: "/workspace/qa"
           description: "Testes e qualidade. Sub-agent. Padrão Ollama GPU."
           model: "ollama/ministral-3:3b-cloud"
         - id: cybersec
           name: "CyberSec"
+          workspace: "/workspace/cybersec"
           description: "Segurança. Sub-agent. Padrão Ollama GPU."
           model: "ollama/ministral-3:3b-cloud"
         - id: ux
           name: "UX"
+          workspace: "/workspace/ux"
           description: "Experiência do usuário. Sub-agent. Padrão Ollama GPU."
           model: "ollama/ministral-3:3b-cloud"
         - id: dba
           name: "DBA"
+          workspace: "/workspace/dba"
           description: "Dados e queries. Sub-agent. Padrão Ollama GPU."
           model: "ollama/ministral-3:3b-cloud"
 

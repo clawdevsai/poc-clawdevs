@@ -49,6 +49,19 @@ No **Socket Mode**, os dois são obrigatórios: o App Token é quem "liga" o can
 
 ---
 
+## Um app Slack por agente
+
+No ClawDevs **cada agente** (CEO, PO, Developer, DevOps, Architect, QA, CyberSec, UX, DBA) deve ter **seu próprio app** em [api.slack.com/apps](https://api.slack.com/apps) e suas próprias variáveis no `.env`:
+
+- `CEO_SLACK_APP_TOKEN` / `CEO_SLACK_BOT_TOKEN`
+- `PO_SLACK_APP_TOKEN` / `PO_SLACK_BOT_TOKEN`
+- `DEVELOPER_SLACK_APP_TOKEN` / `DEVELOPER_SLACK_BOT_TOKEN`
+- (e assim por diante para DEVOPS, ARCHITECT, QA, CYBERSEC, UX, DBA)
+
+**Nunca reutilize o BOT token de um agente em outro.** Por exemplo: não use `CEO_SLACK_BOT_TOKEN` em `DEVELOPER_SLACK_BOT_TOKEN`. Se fizer isso, as respostas no Slack aparecerão como outro app (ex.: CEO) ou as menções serão tratadas pelo agente errado — cada um precisa conversar com você com sua própria personalidade (SOUL). O gateway OpenClaw usa um *account* por agente; cada account exige o par APP_TOKEN + BOT_TOKEN do **mesmo** app desse agente.
+
+---
+
 ## Como criar o app no Slack (api.slack.com/apps)
 
 Em **[Your Apps](https://api.slack.com/apps)** clique em **"Create an App"**. Você pode criar **"From a manifest"** (YAML abaixo) ou **"From scratch"** (configurar tudo na UI).
@@ -136,6 +149,44 @@ Esse valor **não** fica em api.slack.com/apps (Basic Information, App Credentia
 3. Escolha **Copy member ID** (ou "Copiar ID do membro").
 
 Alternativa: no link do perfil do usuário (ex.: `.../user/U01234ABCD`), o trecho que começa com `U` é o user ID.
+
+---
+
+## Pod em crash / `account_inactive` (CEO e PO não respondem)
+
+Se o pod do OpenClaw no Minikube fica em **Error** (Back-off restarting) e os logs mostram:
+
+```text
+[slack] [default] starting provider
+Unhandled promise rejection: Error: An API error occurred: account_inactive
+```
+
+a conexão Slack do **provider default** está com token inválido ou app inativo. O gateway usa primeiro o app **OpenClaw** (variáveis `OPENCLAW_SLACK_APP_TOKEN` e `OPENCLAW_SLACK_BOT_TOKEN`). Se esse app estiver desinstalado, revogado ou com token antigo, o Slack devolve `account_inactive` e o processo cai — por isso CEO e PO deixam de responder (o pod nem fica pronto).
+
+**O que fazer:**
+
+1. **Verificar o app OpenClaw no Slack**  
+   Acesse [api.slack.com/apps](https://api.slack.com/apps) e abra o app usado como gateway (o que gerou os tokens em `OPENCLAW_SLACK_*`).
+
+2. **Reinstalar o app no workspace**  
+   Em **Install App** (ou **OAuth & Permissions**), use **Reinstall to Workspace** se o app tiver sido desinstalado ou os tokens revogados.
+
+3. **Renovar os tokens**  
+   - **App-Level Token:** Basic Information → App-Level Tokens → gerar novo com scope `connections:write` → atualizar **OPENCLAW_SLACK_APP_TOKEN** no `.env`.  
+   - **Bot Token:** OAuth & Permissions → (Re)Install to Workspace → copiar **Bot User OAuth Token** → atualizar **OPENCLAW_SLACK_BOT_TOKEN** no `.env**.
+
+4. **Atualizar o Secret e reiniciar o deployment**  
+   ```bash
+   ./scripts/k8s-openclaw-secret-from-env.sh
+   kubectl rollout restart deployment/openclaw -n ai-agents
+   ```
+
+5. **Conferir se o pod sobe**  
+   ```bash
+   kubectl get pods -n ai-agents -l app=openclaw
+   kubectl logs -n ai-agents deployment/openclaw --tail=50
+   ```  
+   Quando o **default** Slack conectar sem `account_inactive`, o pod fica **Running** e os agentes (CEO, PO, etc.) voltam a poder responder. Se você usa um app por agente (CEO_SLACK_*, PO_SLACK_*), confira também em api.slack.com que cada app está instalado e com tokens válidos no `.env`.
 
 ---
 
