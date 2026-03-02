@@ -71,21 +71,21 @@ Para criar ou atualizar o secret **a partir do seu `.env`** (evitando copiar tok
 ./scripts/k8s-openclaw-secret-from-env.sh
 ```
 
-O script lê `.env` na raiz do repo e aplica `openclaw-telegram` no namespace `ai-agents` com as chaves definidas (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, SLACK_APP_TOKEN, SLACK_BOT_TOKEN, SLACK_DIRECTOR_USER_ID, SLACK_ALLOWED_USER_IDS). Depois: `kubectl rollout restart deployment/openclaw -n ai-agents`.
+O script lê `.env` na raiz do repo e aplica `openclaw-telegram` no namespace `ai-agents` com as chaves definidas (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID; Slack: OPENCLAW_SLACK_APP_TOKEN, OPENCLAW_SLACK_BOT_TOKEN, OPENCLAW_SLACK_DIRECTOR_USER_ID, OPENCLAW_SLACK_ALLOWED_USER_IDS — ou fallback SLACK_*). O Secret é gravado com nomes SLACK_* para o gateway. Depois: `kubectl rollout restart deployment/openclaw -n ai-agents`.
 
-### 3.2. Slack (opcional)
+### 3.2. Slack OpenClaw (opcional)
 
-Para habilitar o canal **Slack** (todos os agentes podem conversar; discussões = Ollama local GPU), adicione ao mesmo secret `openclaw-telegram` (ou use o script acima com .env já preenchido):
+Cada agente que fala via Slack tem **seu próprio app** no Slack. Para o **OpenClaw** (gateway: DM + canal de discussão; discussões = Ollama local GPU), defina no `.env` as variáveis **OPENCLAW_SLACK_*** e rode `./scripts/k8s-openclaw-secret-from-env.sh` (o script grava no Secret com chaves SLACK_* para o gateway):
 
-- **SLACK_APP_TOKEN** (xapp-...) — App Token com Socket Mode. Criar app em [Slack API](https://api.slack.com/apps) para o workspace (ex.: clawdevsai), habilitar Socket Mode, criar App Token com `connections:write`.
-- **SLACK_BOT_TOKEN** (xoxb-...) — Bot Token (após instalar o app no workspace).
-- **SLACK_DIRECTOR_USER_ID** (opcional) — ID do Diretor no Slack (ex.: U01234ABCD) para allowlist em DMs. Se omitido, usar pairing: `openclaw pairing approve slack <CODE>`.
+- **OPENCLAW_SLACK_APP_TOKEN** (xapp-...) — App Token com Socket Mode. Criar app em [Slack API](https://api.slack.com/apps) para o workspace (ex.: clawdevsai), habilitar Socket Mode, criar App Token com `connections:write`.
+- **OPENCLAW_SLACK_BOT_TOKEN** (xoxb-...) — Bot Token (após instalar o app no workspace).
+- **OPENCLAW_SLACK_DIRECTOR_USER_ID** (opcional) — ID do Diretor no Slack (ex.: U01234ABCD) para allowlist em DMs. Se omitido, usar pairing: `openclaw pairing approve slack <CODE>`.
 
 Documentação do canal Slack: [OpenClaw — Slack](https://docs.openclaw.ai/channels/slack).
 
 ```bash
+# Ou patch manual (chaves no Secret são SLACK_* para o container):
 kubectl patch secret openclaw-telegram -n ai-agents -p '{"stringData":{"SLACK_APP_TOKEN":"xapp-...","SLACK_BOT_TOKEN":"xoxb-...","SLACK_DIRECTOR_USER_ID":"U01234ABCD"}}'
-# Ou recriar o secret incluindo TELEGRAM_* e SLACK_*
 ```
 
 ## 4. OpenClaw (ConfigMap + Workspace CEO + Deployment)
@@ -108,14 +108,14 @@ O deployment `openclaw` já sobe o gateway **dentro do cluster** (conecta em `ol
 2. Criar o secret a partir do `.env`: `./scripts/k8s-openclaw-secret-from-env.sh`.
 3. Reiniciar o deployment para carregar o secret: `kubectl rollout restart deployment/openclaw -n ai-agents`.
 
-O pod do openclaw passa a rodar o gateway com Telegram e Slack (quando as chaves estiverem no secret). Não é necessário rodar `run-openclaw-telegram-ollama.sh` no host.
+O pod do openclaw passa a rodar o gateway com Telegram e Slack (quando as chaves estiverem no secret). Não é necessário rodar `run-openclaw-telegram-slack-ollama.sh` no host.
 
 **Opção C — Rodar OpenClaw no host (teste rápido com port-forward):**  
-Use o script `scripts/run-openclaw-telegram-ollama.sh`, que faz port-forward do Ollama e inicia o gateway com a config `config/openclaw/openclaw.local.json5`. **Para o bot responder no perfil CEO** (tom executivo, pt-BR, SOUL), essa config define `agents.defaults.workspace: "config/openclaw/workspace-ceo"`, onde está o `SOUL.md` do CEO; o script deve ser executado **na raiz do repositório** para que esse caminho exista. Sem o workspace configurado, o modelo recebe apenas o prompt genérico e responde como assistente, não como CEO.
+Use o script `scripts/run-openclaw-telegram-slack-ollama.sh`, que faz port-forward do Ollama e inicia o gateway com a config `config/openclaw/openclaw.local.json5`. **Para o bot responder no perfil CEO** (tom executivo, pt-BR, SOUL), essa config define `agents.defaults.workspace: "config/openclaw/workspace-ceo"`, onde está o `SOUL.md` do CEO; o script deve ser executado **na raiz do repositório** para que esse caminho exista. Sem o workspace configurado, o modelo recebe apenas o prompt genérico e responde como assistente, não como CEO.
 
 ```bash
 # Na raiz do repo (obrigatório para workspace CEO)
-./scripts/run-openclaw-telegram-ollama.sh
+./scripts/run-openclaw-telegram-slack-ollama.sh
 ```
 
 Ou manualmente (port-forward + config com workspace):
@@ -180,12 +180,12 @@ kubectl scale deployment openclaw -n ai-agents --replicas=0
 Garanta no **`.env`** na raiz do repo:
 
 - `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` (Telegram, CEO)
-- `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN` e, se quiser allowlist em DM, `SLACK_DIRECTOR_USER_ID`
+- `OPENCLAW_SLACK_APP_TOKEN`, `OPENCLAW_SLACK_BOT_TOKEN` e, se quiser allowlist em DM, `OPENCLAW_SLACK_DIRECTOR_USER_ID`
 
 Depois:
 
 ```bash
-./scripts/run-openclaw-telegram-ollama.sh
+./scripts/run-openclaw-telegram-slack-ollama.sh
 ```
 
 O script faz port-forward do `svc/ollama-service` para `127.0.0.1:11434` e inicia o gateway com a config local (todos os agentes, modelo `qwen2.5:3b` para Slack). Quando aparecer "Slack habilitado. Envie mensagem no Slack ou no Telegram para testar.", o gateway está pronto.
@@ -200,9 +200,9 @@ No workspace **ClawDevsAi** (Slack):
    - *"Converse no Slack e pergunte ao Diretor: podemos adiar a entrega do módulo X?"*
    - Ou mencione o bot e faça a pergunta: *"@ClawdevsAI Pergunte ao Diretor: [sua pergunta]"*
 
-O gateway roteia a mensagem para o agente (CEO ou o agente que atender no Slack); a resposta usa o Ollama do cluster (port-forward) com o modelo configurado para Slack (`qwen2.5:3b`). Se você configurou `SLACK_DIRECTOR_USER_ID`, apenas o Diretor pode iniciar DM; em canal, todos podem mencionar o bot.
+O gateway roteia a mensagem para o agente (CEO ou o agente que atender no Slack); a resposta usa o Ollama do cluster (port-forward) com o modelo configurado para Slack (`qwen2.5:3b`). Se você configurou `OPENCLAW_SLACK_DIRECTOR_USER_ID`, apenas o Diretor pode iniciar DM; em canal, todos podem mencionar o bot.
 
-**Primeiro acesso no Slack (pairing):** Se não tiver `SLACK_DIRECTOR_USER_ID` no `.env`, no primeiro DM o gateway pode pedir aprovação. No terminal onde o script está rodando: `openclaw pairing list slack` e depois `openclaw pairing approve slack <CODE>`.
+**Primeiro acesso no Slack (pairing):** Se não tiver `OPENCLAW_SLACK_DIRECTOR_USER_ID` no `.env`, no primeiro DM o gateway pode pedir aprovação. No terminal onde o script está rodando: `openclaw pairing list slack` e depois `openclaw pairing approve slack <CODE>`.
 
 Ref: [42-slack-tokens-setup.md](42-slack-tokens-setup.md), [config/openclaw/README.md](../config/openclaw/README.md).
 

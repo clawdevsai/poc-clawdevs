@@ -18,7 +18,7 @@ Para trocar: em `openclaw.local.json5` altere `agents.defaults.model` e os `mode
 ## Telegram + Ollama (script pronto)
 
 - **Config:** `openclaw.local.json5` — gateway local, canal Telegram, canal Slack (opcional), provedor Ollama em `http://127.0.0.1:11434/v1`.
-- **Script:** `scripts/run-openclaw-telegram-ollama.sh` — faz port-forward do `svc/ollama-service` para 11434 e inicia `openclaw gateway`. Se `SLACK_APP_TOKEN` e `SLACK_BOT_TOKEN` estiverem no `.env`, o Slack é habilitado automaticamente.
+- **Script:** `scripts/run-openclaw-telegram-slack-ollama.sh` — faz port-forward do `svc/ollama-service` para 11434 e inicia `openclaw gateway`. Se `SLACK_APP_TOKEN` e `SLACK_BOT_TOKEN` estiverem no `.env`, o Slack é habilitado automaticamente.
 
 Uso:
 
@@ -26,7 +26,7 @@ Uso:
 2. No host: defina `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` (ou `.env` na raiz). Para Slack: `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN` e opcionalmente `SLACK_DIRECTOR_USER_ID` (ver [docs OpenClaw Slack](https://docs.openclaw.ai/channels/slack)).
 3. Execute:
    ```bash
-   ./scripts/run-openclaw-telegram-ollama.sh
+   ./scripts/run-openclaw-telegram-slack-ollama.sh
    ```
 4. Envie uma mensagem ao **ClawDev bot** no Telegram (ou no Slack, se habilitado); a resposta sai do LLM Ollama.
 
@@ -61,7 +61,7 @@ Você **não** precisa criar um usuário no Slack para cada agente (CEO, PO, Dev
 
 ## O que falta para a conversa funcionar no Slack
 
-1. **Gateway rodando** — Local: `./scripts/run-openclaw-telegram-ollama.sh` (com `SLACK_APP_TOKEN` e `SLACK_BOT_TOKEN` no `.env`). **No K8s:** os tokens precisam estar no **Secret** do cluster, não só no `.env`: rode `./scripts/k8s-openclaw-secret-from-env.sh` e depois `kubectl rollout restart deployment/openclaw -n ai-agents`. Sem isso, nada acontece no Slack.
+1. **Gateway rodando** — Local: `./scripts/run-openclaw-telegram-slack-ollama.sh` (com `SLACK_APP_TOKEN` e `SLACK_BOT_TOKEN` no `.env`). **No K8s:** os tokens precisam estar no **Secret** do cluster, não só no `.env`: rode `./scripts/k8s-openclaw-secret-from-env.sh` e depois `kubectl rollout restart deployment/openclaw -n ai-agents`. Sem isso, nada acontece no Slack.
 2. **Quem pode mandar DM** — Se usar allowlist: coloque o seu Slack User ID (ex.: do Diego) em `SLACK_ALLOWED_USER_IDS` no `.env`, ou deixe allowlist vazia e use **pairing**: no primeiro DM, no terminal rode `openclaw pairing approve slack <CODE>`.
 3. **App no canal** — Para os agentes participarem de discussões em canal (#all-clawdevsai, #new-channel, etc.), **convide o app ClawdevsAI para o canal** (no canal: Integrações → Adicionar apps → ClawdevsAI). Assim o app recebe mensagens do canal e pode responder ou fazer os agentes discutirem entre si.
 4. **Mencione o app em canal** — Em canais, o Slack costuma exigir **@menção** do app. Escreva por exemplo: *"@ClawdevsAI Oi"* ou *"@ClawdevsAI Tema: analisar migração para K8s"*.

@@ -14,15 +14,14 @@ echo "1. Secret openclaw-telegram tem SLACK_APP_TOKEN e SLACK_BOT_TOKEN?"
 if ! kubectl get secret openclaw-telegram -n ai-agents &>/dev/null; then
   echo "   ERRO: Secret openclaw-telegram não existe."
   echo "   Faça: ./scripts/k8s-openclaw-secret-from-env.sh"
-  echo "   (Isso copia SLACK_* do .env para o Secret.)"
+  echo "   (O script lê OPENCLAW_SLACK_* ou SLACK_* do .env e grava no Secret.)"
   exit 1
 fi
 HAS_APP=$(kubectl get secret openclaw-telegram -n ai-agents -o jsonpath='{.data.SLACK_APP_TOKEN}' 2>/dev/null | wc -c)
 HAS_BOT=$(kubectl get secret openclaw-telegram -n ai-agents -o jsonpath='{.data.SLACK_BOT_TOKEN}' 2>/dev/null | wc -c)
 if [[ "${HAS_APP:-0}" -lt 10 || "${HAS_BOT:-0}" -lt 10 ]]; then
   echo "   ERRO: Secret não tem SLACK_APP_TOKEN e/ou SLACK_BOT_TOKEN."
-  echo "   O pod NÃO lê o .env do seu PC; os tokens precisam estar no Secret."
-  echo "   Faça: ./scripts/k8s-openclaw-secret-from-env.sh"
+  echo "   O pod NÃO lê o .env do seu PC; defina OPENCLAW_SLACK_APP_TOKEN e OPENCLAW_SLACK_BOT_TOKEN no .env e rode: ./scripts/k8s-openclaw-secret-from-env.sh"
   echo "   Depois: kubectl rollout restart deployment/openclaw -n ai-agents"
   exit 1
 fi
@@ -53,7 +52,7 @@ if [[ -n "$POD" ]]; then
     echo "   OK: slack.enabled = true no pod."
   else
     echo "   ERRO: slack.enabled não está true no pod."
-    echo "   O entrypoint só habilita Slack quando SLACK_APP_TOKEN e SLACK_BOT_TOKEN existem no ambiente do container."
+    echo "   O entrypoint só habilita Slack quando SLACK_APP_TOKEN e SLACK_BOT_TOKEN existem no ambiente do container (Secret preenchido a partir de OPENCLAW_SLACK_* no .env)."
     echo "   Confirme que o Secret tem as chaves e reinicie: kubectl rollout restart deployment/openclaw -n ai-agents"
   fi
 else
@@ -64,7 +63,7 @@ echo ""
 echo "4. No Slack:"
 echo "   - Convide o app ClawdevsAI para o canal (#all-clawdevsai: Integrações → Adicionar apps → ClawdevsAI)."
 echo "   - Em canal, MENCIONE o app: @ClawdevsAI e depois a mensagem (ex.: \"@ClawdevsAI Oi\")."
-echo "   - Em DM com o app, seu User ID deve estar em SLACK_DIRECTOR_USER_ID ou SLACK_ALLOWED_USER_IDS no .env (e no Secret)."
+echo "   - Em DM com o app, seu User ID deve estar em OPENCLAW_SLACK_DIRECTOR_USER_ID ou OPENCLAW_SLACK_ALLOWED_USER_IDS no .env (e no Secret)."
 echo ""
 echo "5. Ver logs do gateway em tempo real:"
 echo "   kubectl logs -n ai-agents -l app=openclaw -f --tail=50"

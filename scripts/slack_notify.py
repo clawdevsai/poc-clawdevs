@@ -18,15 +18,22 @@ def send_slack(
     webhook_url: str | None = None,
     bot_token: str | None = None,
     channel: str | None = None,
+    env_prefix: str | None = None,
 ) -> bool:
     """
     Envia mensagem ao Slack. Usa webhook se SLACK_WEBHOOK_URL estiver definido;
     senão usa SLACK_BOT_TOKEN + SLACK_ALERTS_CHANNEL_ID (ou channel passado).
+    Se env_prefix for passado (ex.: "ORCHESTRATOR_"), lê {prefix}SLACK_WEBHOOK_URL etc.
     Retorna True se enviou com sucesso.
     """
-    webhook_url = webhook_url or os.environ.get("SLACK_WEBHOOK_URL", "").strip()
-    bot_token = bot_token or os.environ.get("SLACK_BOT_TOKEN", "").strip()
-    channel = channel or os.environ.get("SLACK_ALERTS_CHANNEL_ID") or os.environ.get("SLACK_ALL_CLAWDEVSAI_CHANNEL_ID", "").strip()
+    p = (env_prefix or "").strip()
+    webhook_key = f"{p}SLACK_WEBHOOK_URL" if p else "SLACK_WEBHOOK_URL"
+    bot_key = f"{p}SLACK_BOT_TOKEN" if p else "SLACK_BOT_TOKEN"
+    channel_key = f"{p}SLACK_ALERTS_CHANNEL_ID" if p else "SLACK_ALERTS_CHANNEL_ID"
+    channel_fallback_key = f"{p}SLACK_ALL_CLAWDEVSAI_CHANNEL_ID" if p else "SLACK_ALL_CLAWDEVSAI_CHANNEL_ID"
+    webhook_url = webhook_url or os.environ.get(webhook_key, "").strip()
+    bot_token = bot_token or os.environ.get(bot_key, "").strip()
+    channel = channel or os.environ.get(channel_key, "").strip() or os.environ.get(channel_fallback_key, "").strip()
 
     if webhook_url:
         return _send_webhook(webhook_url, text)
@@ -69,7 +76,8 @@ def main() -> None:
         print("Uso: slack_notify.py <mensagem>", file=sys.stderr)
         sys.exit(1)
     text = " ".join(sys.argv[1:])
-    ok = send_slack(text)
+    prefix = os.environ.get("SLACK_ENV_PREFIX", "").strip() or None
+    ok = send_slack(text, env_prefix=prefix)
     sys.exit(0 if ok else 1)
 
 

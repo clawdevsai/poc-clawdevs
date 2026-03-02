@@ -1,0 +1,35 @@
+CEO:
+
+
+{
+    "display_information": {
+        "name": "CEO"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "CEO",
+            "always_online": true
+        }
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "chat:write",
+                "im:history",
+                "app_mentions:read",
+                "channels:history",
+                "groups:history"
+            ]
+        }
+    },
+    "settings": {
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": true,
+        "token_rotation_enabled": false
+    }
+}
+
+SLACK_APP_TOKEN: xapp-1-A0AJT2B7HK2-10595358502583-f0ebcefc5d4b5326371565790750591d7459b7ddce645ada2be12465612458e9
+SLACK_BOT_TOKEN: xoxb-10601006973077-10610790899410-mANkvvTUHMWU6dxzyOsoBynx
+
+-------------------------------

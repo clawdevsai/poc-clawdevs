@@ -117,9 +117,11 @@ def run_once(r) -> None:
                 f"(5º strike: {five}, omissão cosmética: {omission}, sprint: {sprint_total}). "
                 f"Esteira pausada. Revisar relatório e executar unblock-degradation.sh para retomar."
             )
+            env = dict(os.environ)
+            env.setdefault("SLACK_ENV_PREFIX", "ORCHESTRATOR_")
             subprocess.run(
                 [sys.executable, os.path.join(os.path.dirname(__file__), "slack_notify.py"), msg],
-                env=os.environ,
+                env=env,
                 timeout=10,
                 capture_output=True,
             )

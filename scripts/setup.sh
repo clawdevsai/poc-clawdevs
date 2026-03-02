@@ -47,15 +47,15 @@ if [[ -z "$TELEGRAM_BOT_TOKEN" || -z "$TELEGRAM_CHAT_ID" ]]; then
   exit 1
 fi
 echo ""
-echo "==> Slack (opcional — todos os agentes podem conversar no Slack; discussões = Ollama local GPU)"
-read -r -p "Habilitar Slack? [s/N] " SLACK_YN
-SLACK_APP_TOKEN=""
-SLACK_BOT_TOKEN=""
-SLACK_DIRECTOR_USER_ID=""
+echo "==> Slack OpenClaw (opcional — app próprio para gateway DM + canal; discussões = Ollama local GPU)"
+read -r -p "Habilitar Slack para OpenClaw? [s/N] " SLACK_YN
+OPENCLAW_SLACK_APP_TOKEN=""
+OPENCLAW_SLACK_BOT_TOKEN=""
+OPENCLAW_SLACK_DIRECTOR_USER_ID=""
 if [[ "${SLACK_YN,,}" == "s" || "${SLACK_YN,,}" == "sim" ]]; then
-  read -r -p "SLACK_APP_TOKEN (xapp-...): " SLACK_APP_TOKEN
-  read -r -p "SLACK_BOT_TOKEN (xoxb-...): " SLACK_BOT_TOKEN
-  read -r -p "SLACK_DIRECTOR_USER_ID (opcional, ex. U01234ABCD): " SLACK_DIRECTOR_USER_ID || true
+  read -r -p "OPENCLAW_SLACK_APP_TOKEN (xapp-...): " OPENCLAW_SLACK_APP_TOKEN
+  read -r -p "OPENCLAW_SLACK_BOT_TOKEN (xoxb-...): " OPENCLAW_SLACK_BOT_TOKEN
+  read -r -p "OPENCLAW_SLACK_DIRECTOR_USER_ID (opcional, ex. U01234ABCD): " OPENCLAW_SLACK_DIRECTOR_USER_ID || true
 fi
 echo "Opcional: Ollama Cloud (deixe vazio para uso 100% local no cluster)"
 read -r -p "OLLAMA_API_KEY (Ollama Cloud): " OLLAMA_API_KEY_OPTIONAL || true
@@ -147,9 +147,9 @@ SECRET_FILE="$REPO_ROOT/k8s/management-team/openclaw/secret.yaml"
   printf '  TELEGRAM_BOT_TOKEN: "%s"\n' "$TELEGRAM_BOT_TOKEN"
   printf '  TELEGRAM_CHAT_ID: "%s"\n' "$TELEGRAM_CHAT_ID"
   [[ -n "$OLLAMA_API_KEY_OPTIONAL" ]] && printf '  OLLAMA_API_KEY: "%s"\n' "$OLLAMA_API_KEY_OPTIONAL"
-  [[ -n "$SLACK_APP_TOKEN" ]] && printf '  SLACK_APP_TOKEN: "%s"\n' "$SLACK_APP_TOKEN"
-  [[ -n "$SLACK_BOT_TOKEN" ]] && printf '  SLACK_BOT_TOKEN: "%s"\n' "$SLACK_BOT_TOKEN"
-  [[ -n "$SLACK_DIRECTOR_USER_ID" ]] && printf '  SLACK_DIRECTOR_USER_ID: "%s"\n' "$SLACK_DIRECTOR_USER_ID"
+  [[ -n "$OPENCLAW_SLACK_APP_TOKEN" ]] && printf '  SLACK_APP_TOKEN: "%s"\n' "$OPENCLAW_SLACK_APP_TOKEN"
+  [[ -n "$OPENCLAW_SLACK_BOT_TOKEN" ]] && printf '  SLACK_BOT_TOKEN: "%s"\n' "$OPENCLAW_SLACK_BOT_TOKEN"
+  [[ -n "$OPENCLAW_SLACK_DIRECTOR_USER_ID" ]] && printf '  SLACK_DIRECTOR_USER_ID: "%s"\n' "$OPENCLAW_SLACK_DIRECTOR_USER_ID"
 } > "$SECRET_FILE"
 echo "    Secret gravado em k8s/management-team/openclaw/secret.yaml (não commitar)."
 

@@ -106,7 +106,7 @@ Gere o código ou patch mínimo que tornaria este PR aprovável. Output apenas c
     except Exception:
         pass
     try:
-        send_slack(f"*ClawDevs — Fallback Architect (2º strike)*\nIssue `{issue_id}`: patch de compromisso gerado. Ver Redis key `{key}`.")
+        send_slack(f"*ClawDevs — Fallback Architect (2º strike)*\nIssue `{issue_id}`: patch de compromisso gerado. Ver Redis key `{key}`.", env_prefix="ORCHESTRATOR_")
     except Exception:
         pass
     return content

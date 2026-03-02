@@ -1,6 +1,6 @@
-# Slack: onde achar SLACK_BOT_TOKEN e SLACK_APP_TOKEN
+# Slack: onde achar os tokens (OpenClaw — app próprio)
 
-Referência rápida para configurar o canal Slack do OpenClaw (Socket Mode). Usado no ClawDevs para que todos os agentes conversem no workspace [clawdevsai](https://clawdevsai.slack.com). Ver também: [37-deploy-fase0-telegram-ceo-ollama.md](37-deploy-fase0-telegram-ceo-ollama.md) (seção 3.1) e [config/openclaw/README.md](../config/openclaw/README.md).
+Referência rápida para configurar o canal Slack do **OpenClaw** (Socket Mode). No ClawDevs cada agente tem seu próprio app Slack: o OpenClaw usa **OPENCLAW_SLACK_*** no `.env`; o orquestrador usa **ORCHESTRATOR_SLACK_*** ou o Secret `orchestrator-slack`. Este doc cobre o app do OpenClaw (workspace [clawdevsai](https://clawdevsai.slack.com)). Ver também: [37-deploy-fase0-telegram-ceo-ollama.md](37-deploy-fase0-telegram-ceo-ollama.md) (seção 3.2) e [config/openclaw/README.md](../config/openclaw/README.md).
 
 **Modelo para conversa no Slack:** discussões entre agentes no Slack usam **Ollama (LLM local)**. Para apenas conversa (menor uso de VRAM): use um modelo pequeno — padrão na config local é **`ollama/qwen2.5:3b`**; alternativas: Phi-3 mini, Ministral-3:3b. Detalhes em [config/openclaw/README.md](../config/openclaw/README.md#modelo-menor-para-conversa-apenas-no-slack).
 
@@ -16,29 +16,29 @@ Tudo é configurado no **Slack API** do seu app:
 ### Ordem recomendada (após criar o app)
 
 1. **Settings → Socket Mode** — Ative **"Enable Socket Mode"** (toggle verde). A página explica que é preciso um **App Level Token** para estabelecer a conexão WebSocket.
-2. **Settings → Basic Information** — Role a página até o fim. Aparece a seção **"App-Level Tokens"**. Clique em **Generate Token and Scopes**, scope **`connections:write`**, copie o token (`xapp-...`) → **SLACK_APP_TOKEN**.
-3. **Settings → Install App** (ou **Features → OAuth & Permissions**) — **Install to Workspace** → autorize no ClawDevsAi → copie o **Bot User OAuth Token** (`xoxb-...`) → **SLACK_BOT_TOKEN**.
+2. **Settings → Basic Information** — Role a página até o fim. Aparece a seção **"App-Level Tokens"**. Clique em **Generate Token and Scopes**, scope **`connections:write`**, copie o token (`xapp-...`) → **OPENCLAW_SLACK_APP_TOKEN** no `.env`.
+3. **Settings → Install App** (ou **Features → OAuth & Permissions**) — **Install to Workspace** → autorize no ClawDevsAi → copie o **Bot User OAuth Token** (`xoxb-...`) → **OPENCLAW_SLACK_BOT_TOKEN** no `.env`.
 
-### SLACK_BOT_TOKEN (`xoxb-...`)
+### OPENCLAW_SLACK_BOT_TOKEN (`xoxb-...`)
 
 - Menu **Install App** ou **OAuth & Permissions**.
 - Em **OAuth Tokens for Your Workspace** está o **Bot User OAuth Token** (só após instalar o app no workspace).
 - Começa com `xoxb-`.
-- Esse é o valor de **SLACK_BOT_TOKEN**.
+- Esse é o valor de **OPENCLAW_SLACK_BOT_TOKEN** no `.env`.
 
-### SLACK_APP_TOKEN (`xapp-...`)
+### OPENCLAW_SLACK_APP_TOKEN (`xapp-...`)
 
 - **Antes:** em **Socket Mode**, ative **Enable Socket Mode**.
 - Depois: **Basic Information** → role até **App-Level Tokens** → **Generate Token and Scopes**.
 - Crie um token com o scope **`connections:write`**.
 - O token começa com `xapp-`.
-- Esse é o valor de **SLACK_APP_TOKEN**.
+- Esse é o valor de **OPENCLAW_SLACK_APP_TOKEN** no `.env`.
 
 ---
 
 ## Diferença entre os dois
 
-| | **SLACK_APP_TOKEN** (`xapp-...`) | **SLACK_BOT_TOKEN** (`xoxb-...`) |
+| | **OPENCLAW_SLACK_APP_TOKEN** (`xapp-...`) | **OPENCLAW_SLACK_BOT_TOKEN** (`xoxb-...`) |
 |---|-----------------------------------|-----------------------------------|
 | **Tipo** | App-Level Token | Bot User OAuth Token |
 | **Onde** | Basic Information → App-Level Tokens (após ativar Socket Mode) | OAuth & Permissions (após instalar o app no workspace) |
@@ -97,8 +97,8 @@ Avance (Next), escolha o workspace **ClawDevsAi** e crie o app. Depois: **Instal
 ### Opção B: From scratch
 
 1. **Create an App** → **From scratch** → nome (ex.: ClawdevsAI) e workspace **ClawDevsAi**.
-2. No app criado: **Socket Mode** → Enable → **Basic Information → App-Level Tokens** → Generate com scope `connections:write` → copiar **SLACK_APP_TOKEN** (`xapp-...`).
-3. **OAuth & Permissions** → **Install to Workspace** (se ainda não instalou) → copiar **Bot User OAuth Token** → **SLACK_BOT_TOKEN** (`xoxb-...`).
+2. No app criado: **Socket Mode** → Enable → **Basic Information → App-Level Tokens** → Generate com scope `connections:write` → copiar **OPENCLAW_SLACK_APP_TOKEN** (`xapp-...`) no `.env`.
+3. **OAuth & Permissions** → **Install to Workspace** (se ainda não instalou) → copiar **Bot User OAuth Token** → **OPENCLAW_SLACK_BOT_TOKEN** (`xoxb-...`) no `.env`.
 4. **Event Subscriptions** (ou Subscribe to bot events): ativar por exemplo `app_mention`, `message.im`, `message.channels`, conforme [OpenClaw — Slack](https://docs.openclaw.ai/channels/slack).
 
 ### Depois de criar o app (tela "Review summary & create your app")
@@ -109,17 +109,17 @@ Em seguida, siga a [Ordem recomendada](#ordem-recomendada-após-criar-o-app) aci
 
 ---
 
-## Uso no projeto
+## Uso no projeto (OpenClaw)
 
-- Coloque os valores no **`.env`** na raiz do repositório (nunca commitar):
-  - `SLACK_APP_TOKEN=xapp-...`
-  - `SLACK_BOT_TOKEN=xoxb-...`
-  - Opcional: `SLACK_DIRECTOR_USER_ID=U01234ABCD` (ID do Diretor no Slack para allowlist em DMs; ver abaixo onde achar).
-- Ou use o **Secret** no Kubernetes (`openclaw-telegram` com chaves `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`, `SLACK_DIRECTOR_USER_ID`) quando o OpenClaw rodar no cluster.
+- Coloque os valores no **`.env`** na raiz do repositório (nunca commitar), com prefixo **OPENCLAW_** (cada agente tem seu próprio app):
+  - `OPENCLAW_SLACK_APP_TOKEN=xapp-...`
+  - `OPENCLAW_SLACK_BOT_TOKEN=xoxb-...`
+  - Opcional: `OPENCLAW_SLACK_DIRECTOR_USER_ID=U01234ABCD` (ID do Diretor no Slack para allowlist em DMs; ver abaixo onde achar).
+- O script `./scripts/k8s-openclaw-secret-from-env.sh` lê OPENCLAW_SLACK_* (ou SLACK_* em fallback) e grava no **Secret** `openclaw-telegram` com chaves `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`, `SLACK_DIRECTOR_USER_ID` para o gateway no cluster.
 
-### Onde achar SLACK_DIRECTOR_USER_ID
+### Onde achar OPENCLAW_SLACK_DIRECTOR_USER_ID
 
-Esse valor **não** fica em api.slack.com/apps (Basic Information, App Credentials ou App-Level Tokens). É o **ID do usuário Slack** da pessoa que é o Diretor/CEO no workspace (formato `U01234ABCD`). Use no `.env`: `SLACK_DIRECTOR_USER_ID=U...`.
+Esse valor **não** fica em api.slack.com/apps (Basic Information, App Credentials ou App-Level Tokens). É o **ID do usuário Slack** da pessoa que é o Diretor/CEO no workspace (formato `U01234ABCD`). Use no `.env`: `OPENCLAW_SLACK_DIRECTOR_USER_ID=U...`.
 
 **Qual ID usar:** o da pessoa que é o Diretor/CEO na sua organização. Em geral é o **Primary Workspace Owner** (dono do workspace). No workspace ClawDevsAi pode usar o do **clawdevsai** (dono) como Diretor; os outros membros aparecem como "Invited Member".
 

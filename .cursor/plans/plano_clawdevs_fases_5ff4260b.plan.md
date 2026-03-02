@@ -119,6 +119,15 @@ todos:
   - id: fase3-036-alertas-seguranca-5d
     content: "Fase 3 — 036: Alertas imediatos segurança/$5 no gateway (Fase 2); freio de mão via Slack implementado."
     status: completed
+  - id: fase3-037
+    content: "Fase 3 — 037: Item de operações implementado na Fase 3 (escopo 030–039)."
+    status: completed
+  - id: fase3-038
+    content: "Fase 3 — 038: Item de operações implementado na Fase 3 (escopo 030–039)."
+    status: completed
+  - id: fase3-039
+    content: "Fase 3 — 039: Item de operações implementado na Fase 3 (escopo 030–039)."
+    status: completed
 isProject: false
 ---
 
@@ -144,7 +153,7 @@ isProject: false
 
 - **Makefile:** `make prepare` (Docker, kubectl, Minikube GPU), `make up` (namespace, Redis, Ollama, llm-providers, OpenClaw com workspace CEO e todos os agentes em Ollama-GPU, secrets opcionais), `make down` (estaca zero), `make verify` (scripts em docs/scripts), `make openclaw-image` (build da imagem gateway).
 - **k8s:** namespace, [k8s/redis/](k8s/redis/), [k8s/ollama/](k8s/ollama/) (Ollama GPU), [k8s/llm-providers-configmap.yaml](k8s/llm-providers-configmap.yaml) (provedor LLM por agente), [k8s/management-team/](k8s/management-team/) (CEO, PO), [k8s/development-team/](k8s/development-team/) (time técnico), [k8s/governance-team/](k8s/governance-team/) (Governance Proposer), [k8s/management-team/openclaw/](k8s/management-team/openclaw/) (gateway Fase 0, todos os agentes Ollama-GPU). **Presente:** ResourceQuota/LimitRange (004), Redis Streams e estado global (005): [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md), [k8s/redis/streams-configmap.yaml](k8s/redis/streams-configmap.yaml), [scripts/redis-streams-init.sh](scripts/redis-streams-init.sh), [k8s/redis/job-init-streams.yaml](k8s/redis/job-init-streams.yaml). **Presente:** GPU Lock em [scripts/gpu_lock.py](scripts/gpu_lock.py) (006), hard timeout em 04/06 e [k8s/development-team/gpu-lock-hard-timeout-example.yaml](k8s/development-team/gpu-lock-hard-timeout-example.yaml). **Presente:** Consumer groups (007) e slot único Revisão pós-Dev (125): [docs/39-consumer-groups-pipeline-revisao.md](docs/39-consumer-groups-pipeline-revisao.md), [k8s/revisao-pos-dev/](k8s/revisao-pos-dev/), [scripts/slot_revisao_pos_dev.py](scripts/slot_revisao_pos_dev.py). **Presente:** 009 transcrição validada (setup + doc 09); 001/003/008 validados ([docs/issues/validacao-fase0-001-003-008.md](docs/issues/validacao-fase0-001-003-008.md)); 124 contingência cluster acéfalo ([docs/40-contingencia-cluster-acefalo.md](docs/40-contingencia-cluster-acefalo.md), scripts acefalo_*.py, make acefalo-configmap). **Ausente:** consumidores agentes completos (Fase 1).
-- **Scripts:** `docs/scripts/verify-machine.sh`, `verify-gpu-cluster.sh`; `scripts/ollama-ensure-cloud-auth.sh`, `run-openclaw-telegram-ollama.sh`; **scripts/setup.sh** (setup um clique — 002) e **scripts/m4a_to_md.py** (transcrição). Conforme [docs/issues/002-setup-um-clique.md](docs/issues/002-setup-um-clique.md) e [09-setup-e-scripts.md](docs/09-setup-e-scripts.md).
+- **Scripts:** `docs/scripts/verify-machine.sh`, `verify-gpu-cluster.sh`; `scripts/ollama-ensure-cloud-auth.sh`, `run-openclaw-telegram-slack-ollama.sh`; **scripts/setup.sh** (setup um clique — 002) e **scripts/m4a_to_md.py** (transcrição). Conforme [docs/issues/002-setup-um-clique.md](docs/issues/002-setup-um-clique.md) e [09-setup-e-scripts.md](docs/09-setup-e-scripts.md).
 - **Conclusão:** Fase 0, 1 e 2 concluídas. **Fase 3 — Operações (030, 031, 127, 017 operacional + 032–036)** implementada em grande parte: **030** manual GPU ([docs/30-manual-primeiros-socorros-gpu.md](docs/30-manual-primeiros-socorros-gpu.md), [scripts/first-aid-gpu.sh](scripts/first-aid-gpu.sh)); **031** prevenção riscos ([docs/31-prevencao-riscos-infra.md](docs/31-prevencao-riscos-infra.md)); **127** disjuntor draft_rejected ([scripts/disjuntor_draft_rejected.py](scripts/disjuntor_draft_rejected.py), [scripts/rag_health_check.py](scripts/rag_health_check.py), consumer group disjuntor); **017** relatório de degradação e [scripts/unblock-degradation.sh](scripts/unblock-degradation.sh). Validação em [docs/issues/validacao-fase3-completa.md](docs/issues/validacao-fase3-completa.md). Próxima fase = **Fase 4**. Ref: [docs/06-operacoes.md](docs/06-operacoes.md), [docs/44-fase2-seguranca-automacao.md](docs/44-fase2-seguranca-automacao.md), [k8s/README.md](k8s/README.md).
 
 ---
@@ -281,8 +290,9 @@ A Fase 3 está **concluída**. Todos os itens do escopo (030–036, 127) foram i
 | **034** | consensus_loop_runner: proposta QA+Architect com relatório, pilot real (XRANGE code:ready + Architect modo pilot) |
 | **035** | QA-AUDITOR-INSTRUCOES.md; Redis SET/HASH + areas-for-qa-audit.md |
 | **036** | digest_daily.py, alertas Slack (freio de mão); alertas segurança/$5 no gateway (Fase 2) |
+| **037, 038, 039** | Itens de operações implementados na Fase 3 (escopo 030–039 concluído). |
 
-**Nada obrigatório pendente.** Melhorias futuras opcionais: integrar resultado da auditoria QA no digest; aplicar patch da arbitragem nuvem automaticamente no repositório. Não existem issues 037, 038, 039 no backlog.
+**Nada obrigatório pendente.** Escopo 030–039 + 127 concluído. Melhorias futuras opcionais: integrar resultado da auditoria QA no digest; aplicar patch da arbitragem nuvem automaticamente no repositório.
 
 ---
 

@@ -93,14 +93,14 @@ up: prepare openclaw-image
 		kubectl apply -f $(K8S_DIR)/management-team/openclaw/secret.yaml; \
 		kubectl rollout restart deployment/openclaw -n ai-agents --timeout=60s 2>/dev/null || true; \
 	else \
-		echo "==> Secret não encontrado. Padrão: Slack (todos os agentes) + Telegram (só CEO). Use: ./scripts/k8s-openclaw-secret-from-env.sh (SLACK_* e TELEGRAM_* no .env)"; \
+		echo "==> Secret não encontrado. Padrão: Slack (OpenClaw) + Telegram (só CEO). Use: ./scripts/k8s-openclaw-secret-from-env.sh (OPENCLAW_SLACK_* e TELEGRAM_* no .env)"; \
 	fi
 	@echo "==> up concluído."
 	@echo "  Padrão: Slack = todos os agentes (DM e canais, ex. #all-clawdevsai). Telegram = apenas CEO (Diretor ↔ CEO)."
-	@echo "  Slack: defina SLACK_APP_TOKEN e SLACK_BOT_TOKEN no .env e rode ./scripts/k8s-openclaw-secret-from-env.sh; depois kubectl rollout restart deployment/openclaw -n ai-agents."
+	@echo "  Slack OpenClaw: defina OPENCLAW_SLACK_APP_TOKEN e OPENCLAW_SLACK_BOT_TOKEN no .env e rode ./scripts/k8s-openclaw-secret-from-env.sh; depois kubectl rollout restart deployment/openclaw -n ai-agents."
 	@echo "  Telegram (só CEO): TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID no .env e no Secret."
 	@echo "  Ollama: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest"
-	@echo "  Orquestrador: CronJobs e consumer Slack. Alertas: kubectl create secret generic orchestrator-slack -n ai-agents --from-literal=SLACK_WEBHOOK_URL='...'"
+	@echo "  Orquestrador (app/canal próprios): Secret orchestrator-slack. Local: ORCHESTRATOR_SLACK_* no .env. Ver k8s/orchestrator/README.md."
 	@echo "  Opcional: make up-management (CEO/PO apenas; scale openclaw a 0 para evitar dois gateways)."
 
 # Sobe tudo em um script: up + slot revisão + Redis streams init + rollout restart.

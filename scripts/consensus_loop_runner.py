@@ -150,7 +150,8 @@ def run_once(r) -> bool:
         from slack_notify import send_slack
         send_slack(
             "*ClawDevs — Loop de consenso*\n"
-            "Subfluxo em execução (relatório carregado, proposta QA+Architect gerada). Executando pilot."
+            "Subfluxo em execução (relatório carregado, proposta QA+Architect gerada). Executando pilot.",
+            env_prefix="ORCHESTRATOR_",
         )
     except Exception:
         pass

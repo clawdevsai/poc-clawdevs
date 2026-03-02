@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Conecta o OpenClaw ao seu bot do Telegram e usa o Ollama do cluster para responder.
+# Conecta o OpenClaw ao Telegram (bot CEO) e ao Slack (todos os agentes) e usa o Ollama do cluster para responder.
 # Pré-requisitos: kubectl (contexto apontando para o cluster com namespace ai-agents), Node.js/npx (openclaw roda via npx).
-# Variáveis: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID (ou arquivo .env na raiz do projeto).
+# Variáveis: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID; para Slack: OPENCLAW_SLACK_* ou SLACK_* (ou arquivo .env na raiz).
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -24,6 +24,14 @@ if [[ -f "$REPO_ROOT/.env" ]]; then
   source "$REPO_ROOT/.env"
   set +a
 fi
+
+# OpenClaw Slack: preferir OPENCLAW_SLACK_*, fallback para SLACK_* (transição)
+SLACK_APP_TOKEN="${OPENCLAW_SLACK_APP_TOKEN:-$SLACK_APP_TOKEN}"
+SLACK_BOT_TOKEN="${OPENCLAW_SLACK_BOT_TOKEN:-$SLACK_BOT_TOKEN}"
+SLACK_DIRECTOR_USER_ID="${OPENCLAW_SLACK_DIRECTOR_USER_ID:-$SLACK_DIRECTOR_USER_ID}"
+SLACK_ALLOWED_USER_IDS="${OPENCLAW_SLACK_ALLOWED_USER_IDS:-$SLACK_ALLOWED_USER_IDS}"
+SLACK_ALL_CLAWDEVSAI_CHANNEL_ID="${OPENCLAW_SLACK_ALL_CLAWDEVSAI_CHANNEL_ID:-$SLACK_ALL_CLAWDEVSAI_CHANNEL_ID}"
+SLACK_ENABLED="${OPENCLAW_SLACK_ENABLED:-$SLACK_ENABLED}"
 
 if [[ -z "$TELEGRAM_BOT_TOKEN" ]]; then
   echo "Erro: defina TELEGRAM_BOT_TOKEN (ou coloque em .env)."
@@ -117,7 +125,7 @@ echo "    Telegram: só CEO. Slack: todos (discussões = Ollama local GPU)."
 if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" ]]; then
   echo "    Slack habilitado. Envie mensagem no Slack ou no Telegram para testar."
   echo "    Ex.: no Slack (DM ou canal): \"Pergunta ao Diretor: Qual a prioridade desta semana?\""
-  echo "    Se alguém mandar DM e nada acontecer: adicione o Slack User ID em SLACK_ALLOWED_USER_IDS no .env (ou use pairing: openclaw pairing approve slack <CODE>). Log: OPENCLAW_LOG=1 ./scripts/run-openclaw-telegram-ollama.sh"
+  echo "    Se alguém mandar DM e nada acontecer: adicione o Slack User ID em OPENCLAW_SLACK_ALLOWED_USER_IDS no .env (ou use pairing: openclaw pairing approve slack <CODE>). Log: OPENCLAW_LOG=1 ./scripts/run-openclaw-telegram-slack-ollama.sh"
 else
   echo "    Envie uma mensagem ao seu bot no Telegram para testar."
 fi

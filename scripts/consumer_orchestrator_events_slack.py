@@ -2,7 +2,7 @@
 """
 Consumidor do stream orchestrator:events — envia cada evento ao Slack (Fase 3).
 Executar como processo contínuo (Deployment no cluster) ou em foreground.
-Requer: REDIS_*, SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN + SLACK_ALERTS_CHANNEL_ID.
+Requer: REDIS_*, ORCHESTRATOR_SLACK_* (ou SLACK_* no cluster via Secret orchestrator-slack).
 Ref: docs/06-operacoes.md, STREAM_ORCHESTRATOR_EVENTS.
 """
 import os
@@ -60,7 +60,7 @@ def run_loop():
                 for msg_id, raw in messages:
                     msg = raw if isinstance(raw, dict) else dict(zip((raw or [])[::2], (raw or [])[1::2]))
                     text = _format_message(msg)
-                    if send_slack(text):
+                    if send_slack(text, env_prefix="ORCHESTRATOR_"):
                         r.xack(STREAM_ORCHESTRATOR_EVENTS, CONSUMER_GROUP, msg_id)
                     # 5º strike (032): tentar arbitragem na nuvem
                     if msg.get("type") == "issue_back_to_po" and msg.get("reason") == "fifth_strike":
@@ -68,7 +68,7 @@ def run_loop():
                         if iid:
                             try:
                                 if run_arbitrage_cloud(r, iid):
-                                    send_slack(f"*ClawDevs — Arbitragem nuvem*\nIssue `{iid}`: solução gravada em Redis (`cloud_arbitrage_solution`).")
+                                    send_slack(f"*ClawDevs — Arbitragem nuvem*\nIssue `{iid}`: solução gravada em Redis (`cloud_arbitrage_solution`).", env_prefix="ORCHESTRATOR_")
                             except Exception:
                                 pass
                     # Se send_slack falhou, não faz XACK (reprocessar depois)
@@ -80,9 +80,21 @@ def run_loop():
 
 
 def main():
-    while not (os.environ.get("SLACK_WEBHOOK_URL") or os.environ.get("SLACK_BOT_TOKEN")):
-        print("[consumer_orchestrator_events_slack] Aguardando SLACK_WEBHOOK_URL ou SLACK_BOT_TOKEN (Secret phase3-slack).", file=sys.stderr)
+    has_slack = (
+        os.environ.get("ORCHESTRATOR_SLACK_WEBHOOK_URL")
+        or os.environ.get("ORCHESTRATOR_SLACK_BOT_TOKEN")
+        or os.environ.get("SLACK_WEBHOOK_URL")
+        or os.environ.get("SLACK_BOT_TOKEN")
+    )
+    while not has_slack:
+        print("[consumer_orchestrator_events_slack] Aguardando ORCHESTRATOR_SLACK_* ou SLACK_* (Secret orchestrator-slack no cluster).", file=sys.stderr)
         time.sleep(30)
+        has_slack = (
+            os.environ.get("ORCHESTRATOR_SLACK_WEBHOOK_URL")
+            or os.environ.get("ORCHESTRATOR_SLACK_BOT_TOKEN")
+            or os.environ.get("SLACK_WEBHOOK_URL")
+            or os.environ.get("SLACK_BOT_TOKEN")
+        )
     print(f"[consumer_orchestrator_events_slack] Iniciando (stream={STREAM_ORCHESTRATOR_EVENTS} group={CONSUMER_GROUP}).")
     run_loop()
 

@@ -1,6 +1,6 @@
 {
   // Config para rodar OpenClaw no host: Telegram (ClawDev bot) + Ollama no cluster via port-forward 11434.
-  // Uso: scripts/run-openclaw-telegram-ollama.sh (faz port-forward e inicia o gateway)
+  // Uso: scripts/run-openclaw-telegram-slack-ollama.sh (faz port-forward e inicia o gateway)
   gateway: {
     mode: "local",
     port: 18789,
