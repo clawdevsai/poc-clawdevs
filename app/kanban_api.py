@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 Kanban API — Backend REST para o dashboard Kanban do ClawDevs.
