@@ -21,6 +21,7 @@ data:
   STREAM_REVIEW_DONE: "review_done"
   STREAM_EVENT_DEVOPS: "event:devops"
   STREAM_AUDIT_QUEUE: "audit:queue"
+  STREAM_KANBAN_EVENTS: "kanban:events"
 
   # Prefixo de chaves de estado (ex.: project:v1:issue:42)
   KEY_PREFIX_PROJECT: "project:v1"

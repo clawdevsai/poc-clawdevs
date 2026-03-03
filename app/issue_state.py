@@ -75,9 +75,20 @@ def get_issue_state(r, issue_id: str) -> str | None:
     return r.get(key)
 
 
-def transition(r, issue_id: str, new_state: str, ttl_sec: int | None = None) -> bool:
-    """Alias para set_issue_state (transição de estado)."""
-    return set_issue_state(r, issue_id, new_state, ttl_sec)
+def transition(r, issue_id: str, new_state: str, ttl_sec: int | None = None, agent: str = "agent") -> bool:
+    """
+    Alias para set_issue_state (transição de estado).
+    Agora também publica evento no Kanban se o publicador estiver disponível.
+    """
+    old_state = get_issue_state(r, issue_id)
+    ok = set_issue_state(r, issue_id, new_state, ttl_sec)
+    if ok:
+        try:
+            from kanban_event_publisher import publish_kanban_event
+            publish_kanban_event(r, issue_id, old_state, new_state, agent)
+        except ImportError:
+            pass
+    return ok
 
 
 if __name__ == "__main__":
