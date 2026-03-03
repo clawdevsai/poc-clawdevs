@@ -1,5 +1,6 @@
-# Workspace CEO: arquivos opcionais para /workspace do gateway (ex.: SOUL.md inicial).
-# O initContainer soul-merge já monta soul-management-agents e soul-development-agents em /workspace/soul.
+# Workspace CEO: templates de memória para /workspace/ceo no gateway.
+# SOUL do CEO vem de soul-management-agents (soul-merge). Aqui: MEMORY.md e memory/working-buffer.md.
+# InitContainer soul-merge copia estes arquivos para /workspace/ceo (e /workspace/ceo/memory/).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,4 +8,42 @@ metadata:
   namespace: ai-agents
   labels:
     app: openclaw
-data: {}
+data:
+  MEMORY.md: |
+    # MEMORY — Memória curada de longo prazo
+
+    Preferências do usuário, projetos, decisões, lições aprendidas. Decisões por omissão cosmética são registradas pelo script cosmetic_omission.py.
+
+    Ref: docs/28-memoria-longo-prazo-elite.md, docs/agents-devs/MEMORY.md.
+
+    ---
+
+    ## Sobre o usuário / Diretor
+
+    - (preferências, contexto)
+
+    ## Projetos ativos
+
+    - (resumos e status)
+
+    ## Decisões e lições
+
+    - (escolhas importantes, lições aprendidas)
+
+    ## Preferências
+
+    - (estilo de comunicação, ferramentas, fluxos)
+  working-buffer.md: |
+    # Working Buffer — Zona entre ~60% contexto e compactação
+
+    Atualizar **a cada troca** após o uso de contexto atingir ~60%. Usado para **recuperação pós-compactação**.
+
+    Ref: docs/agents-devs/protocolo-wal-working-buffer.md.
+
+    ---
+
+    <!-- Formato por troca:
+    ## YYYY-MM-DD HH:MM
+    **Humano:** (resumo ou trecho da mensagem)
+    **Resposta:** (1–2 frases + detalhes chave)
+    -->

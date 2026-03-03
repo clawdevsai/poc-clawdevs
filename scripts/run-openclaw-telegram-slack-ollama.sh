@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
+# DESCONTINUADO: o gateway deve rodar apenas no K8s. Use: make up, k8s-openclaw-secret-from-env.sh, kubectl rollout restart deployment/openclaw -n ai-agents.
+# Este script é só para emergência/debug local (ex.: port-forward do Ollama + gateway no host).
 # Conecta o OpenClaw ao Telegram (bot CEO) e ao Slack (todos os agentes) e usa o Ollama do cluster para responder.
 # Pré-requisitos: kubectl (contexto apontando para o cluster com namespace ai-agents), Node.js/npx (openclaw roda via npx).
 # Variáveis: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID; para Slack: OPENCLAW_SLACK_* ou SLACK_* (ou arquivo .env na raiz).
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG_SRC="$REPO_ROOT/config/openclaw/openclaw.local.json5"
-CONFIG_RUN="$REPO_ROOT/config/openclaw/openclaw.local.run.json5"
+CONFIG_SRC="$REPO_ROOT/k8s/management-team/openclaw/openclaw.local.json5.example"
+CONFIG_RUN="${TMPDIR:-/tmp}/openclaw.local.run.json5.$$"
 PF_PID=""
 
 cleanup() {
@@ -120,7 +122,7 @@ fi
 
 echo "==> Iniciando OpenClaw gateway (Telegram: só CEO; Slack: todos os agentes; Ollama em 127.0.0.1:11434)..."
 echo "    Config: $OPENCLAW_CONFIG_PATH"
-echo "    Workspace único: config/openclaw/workspace-ceo (CWD=$REPO_ROOT)"
+echo "    Config: k8s/management-team/openclaw (CWD=$REPO_ROOT)"
 echo "    Telegram: só CEO. Slack: todos (discussões = Ollama local GPU)."
 if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" ]]; then
   echo "    Slack habilitado. Envie mensagem no Slack ou no Telegram para testar."

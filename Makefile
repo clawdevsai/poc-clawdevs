@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap devops-compact-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap url-sandbox-run url-sandbox-trigger-configmap url-sandbox-trigger-apply quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply dashboarding
+.PHONY: prepare up down up-all openclaw-image verify reset-memory test-github-access revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap devops-compact-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap url-sandbox-run url-sandbox-trigger-configmap url-sandbox-trigger-apply quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply dashboarding
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -273,6 +273,15 @@ orchestrator-apply: orchestrator-configmap
 	@echo "==> Aplicando orquestrador (configmap-env, CronJobs, consumer Slack)..."
 	@kubectl apply -f $(K8S_DIR)/orchestrator/
 	@echo "==> Orquestrador aplicado. Ref: docs/06-operacoes.md"
+
+# Reset de memória dos agentes: Redis (chaves project:v1:*) + arquivos do workspace (MEMORY.md, working-buffer.md).
+# Requer cluster com Redis (make up) ou REDIS_HOST+REDIS_PORT com port-forward. Opcional: RESET_REDIS=0 (só repo), RESET_REPO=0 (só Redis).
+reset-memory:
+	@$(CURDIR)/scripts/reset_agent_memory.sh
+
+# Testa acesso ao GitHub: host (.env) e/ou cluster (pods com clawdevs-github-secret). Uso: make test-github-access [MODE=host|cluster|all]
+test-github-access:
+	@$(CURDIR)/scripts/test_github_access.sh $(or $(MODE),all)
 
 # Abre o dashboard do Minikube no navegador. Habilita o addon e inicia o proxy.
 dashboard:

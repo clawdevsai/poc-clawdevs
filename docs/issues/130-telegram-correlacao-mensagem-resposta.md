@@ -13,7 +13,7 @@ Garantir que, quando o bot responder no Telegram, a resposta seja **sempre** ass
 - [ ] Verificar na documentação do OpenClaw (docs.openclaw.ai) se existe:
   - Opção de processamento **sequencial por chat** (uma mensagem por vez por conversa), ou
   - Uso de `reply_to_message_id` (ou equivalente) ao enviar a resposta.
-- [ ] Se houver parâmetros de config relevantes (ex.: `channels.telegram.serializedPerChat`, `replyToMessageId`), adicionar a `k8s/management-team/openclaw/configmap.yaml` e `config/openclaw/openclaw.local.json5` e documentar.
+- [ ] Se houver parâmetros de config relevantes (ex.: `channels.telegram.serializedPerChat`, `replyToMessageId`), adicionar a `k8s/management-team/openclaw/configmap.yaml` e documentar em [openclaw-config-ref.md](../openclaw-config-ref.md).
 - [ ] Se não houver suporte no OpenClaw, registrar no upstream ou contornar com fila serializada por chat no gateway.
 
 ## Referências

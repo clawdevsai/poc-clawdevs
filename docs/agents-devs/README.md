@@ -23,6 +23,7 @@ Documentos operacionais para agentes: templates, protocolos, checklists e refer�
 | **Critérios de aceite** | [CRITERIOS_ACEITE-example.md](CRITERIOS_ACEITE-example.md) | Exemplo de critérios com tag de proteção. |
 | **Memória (seis camadas)** | [memoria-elite-seis-camadas-implementacao.md](memoria-elite-seis-camadas-implementacao.md) | Mapeamento camadas → scripts e docs. |
 | **WAL e Working Buffer** | [protocolo-wal-working-buffer.md](protocolo-wal-working-buffer.md) | Gatilhos WAL, fluxo, recuperação pós-compactação. |
+| **Interação entre agentes** | [interacao-agentes-mensageria.md](interacao-agentes-mensageria.md) | Um OpenClaw; mensageria = gatilho; conversa compartilhada no canal/thread; um agente por vez; nunca DM entre agentes. |
 | **Habilidades proativas e heartbeat** | [habilidades-proativas-heartbeat-implementacao.md](habilidades-proativas-heartbeat-implementacao.md) | Proativo, persistente, FinOps, ADL/VFM, checklist heartbeat. |
 | **Escrita humanizada** | [escrita-humanizada-checklist.md](escrita-humanizada-checklist.md) | Checklist padrões de IA; revisar texto antes de enviar. |
 | **MEMORY (decisões por omissão)** | [MEMORY.md](MEMORY.md) | Registro de aprovações por omissão cosmética. |

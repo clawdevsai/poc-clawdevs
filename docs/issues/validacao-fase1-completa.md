@@ -10,7 +10,7 @@
 |---|-------|------------|--------|
 | **010** | Definição canônica dos nove agentes | [02-agentes.md](../02-agentes.md); tabela de conflitos; [010-definicao-oito-agentes-status.md](010-definicao-oito-agentes-status.md) | OK |
 | **011** | SOUL — identidade e prompts | [docs/soul/](../soul/) (fonte); k8s/management-team/soul (CEO+PO), k8s/development-team/soul (7 agentes), k8s/governance-team/soul; gateway monta em /workspace/soul (soul-merge) | OK |
-| **012** | Pods CEO e PO (nuvem) | [k8s/management-team/](../../k8s/management-team/); make up-management; openclaw + workspace-ceo; llm-providers | OK |
+| **012** | Pods CEO e PO (nuvem) | [k8s/management-team/](../../k8s/management-team/); make up-management; openclaw + workspace-ceo-configmap + soul; llm-providers | OK |
 | **013** | Pod Developer | [k8s/development-team/developer/](../../k8s/development-team/developer/); PVC, task:backlog, GPU Lock; make developer-configmap. OpenCode na imagem = evolução | OK |
 | **014** | Pods Architect, QA, CyberSec, UX | Slot único [k8s/development-team/revisao-pos-dev/](../../k8s/development-team/revisao-pos-dev/) (Architect→QA→CyberSec→DBA). Pods separados = evolução | OK |
 | **015** | Código de conduta | [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md) | OK |

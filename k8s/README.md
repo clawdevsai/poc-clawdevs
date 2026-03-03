@@ -10,7 +10,7 @@ Provedor de LLM por agente: `llm-providers-configmap.yaml` (ollama_local, ollama
 |-------|----------|
 | **ollama/** | Deployment Ollama GPU, Service, PVC. Inferência local no cluster. |
 | **redis/** | Redis (deployment, service), streams-configmap.yaml, job-init-streams.yaml. Ref: [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md). |
-| **management-team/** | CEO e PO. **openclaw/** — gateway (Dockerfile, configmap, deployment, workspace-ceo, secret.example). **soul/** — ConfigMap soul-management-agents (PO; CEO em workspace-ceo). configmap.yaml, deployment.yaml (openclaw-management). |
+| **management-team/** | CEO e PO. **openclaw/** — gateway (Dockerfile, configmap, deployment, workspace-ceo-configmap, openclaw.local.json5.example). **soul/** — ConfigMap soul-management-agents (CEO, PO). |
 | **development-team/** | Time técnico (100% offline). **soul/** — ConfigMap soul-development-agents (devops, architect, developer, qa, cybersec, ux, dba). **developer/**, **revisao-pos-dev/**, configmap, networkpolicy, gpu-lock-hard-timeout-example.yaml. |
 | **governance-team/** | Governance Proposer. **soul/** — SOUL do agente. configmap.yaml, deployment.yaml. |
 

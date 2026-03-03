@@ -8,6 +8,10 @@ Os agentes interagem com o GitHub por meio do **GitHub CLI** (`gh`). Uso de `gh 
 
 **Segurança:** Nunca expor tokens em chat, logs ou repositório. Seguir postura Zero Trust e validação em runtime ([05-seguranca-e-etica.md](05-seguranca-e-etica.md), [14-seguranca-runtime-agentes.md](14-seguranca-runtime-agentes.md)) ao executar comandos que acessam recursos externos.
 
+**Identificação no histórico:** Sempre que um agente criar issue, PR ou comentário no GitHub, deve **identificar-se no conteúdo** para constar no histórico. Incluir no corpo (ex.: no final) a linha: `— Criado por [Nome do agente, função] — ClawDevs` (ex.: "— Criada por Marina, PO — ClawDevs"). Assim fica registrado no histórico do repo quem (qual agente) criou ou alterou o item.
+
+**URLs — case-sensitive:** Links do GitHub exigem caminho em **minúsculo**. Usar `/issues`, `/pulls`, não `/Issues` nem `/Pulls` (evita 404). Ex.: lista de issues = `https://github.com/clawdevsai/clawdevs/issues`.
+
 ---
 
 ## Pull Requests

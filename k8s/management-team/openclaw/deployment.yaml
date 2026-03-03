@@ -27,7 +27,7 @@ spec:
               mountPath: /workspace
         - name: soul-merge
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; for id in ceo po devops architect developer qa cybersec ux dba; do if [ -f /workspace/soul/$id.md ]; then cp /workspace/soul/$id.md /workspace/$id/SOUL.md; fi; done; chmod -R u+rwX /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba"]
+          command: ["sh", "-c", "mkdir -p /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; for id in ceo po devops architect developer qa cybersec ux dba; do if [ -f /workspace/soul/$id.md ]; then cp /workspace/soul/$id.md /workspace/$id/SOUL.md; fi; done; mkdir -p /workspace/ceo/memory && cp /ceo-memory/MEMORY.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/working-buffer.md /workspace/ceo/memory/ 2>/dev/null; chmod -R u+rwX /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace
@@ -36,6 +36,9 @@ spec:
               readOnly: true
             - name: soul-development-agents
               mountPath: /soul-dev
+              readOnly: true
+            - name: workspace-ceo-configmap
+              mountPath: /ceo-memory
               readOnly: true
       containers:
         - name: gateway
@@ -230,6 +233,10 @@ spec:
         - name: soul-development-agents
           configMap:
             name: soul-development-agents
+            optional: true
+        - name: workspace-ceo-configmap
+          configMap:
+            name: workspace-ceo-configmap
             optional: true
         - name: workspace
           emptyDir: {}

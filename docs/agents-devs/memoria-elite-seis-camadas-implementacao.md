@@ -8,7 +8,7 @@ Mapeamento das **seis camadas** para artefatos, scripts e documentação (issue 
 
 | Requisito | Artefato no repo |
 |-----------|-------------------|
-| SESSION-STATE.md com estado ativo; sobrevive à compactação | [SESSION-STATE.example.md](SESSION-STATE.example.md); workspace: `config/openclaw/workspace-ceo/` (SOUL + soul-merge para outros agentes) |
+| SESSION-STATE.md com estado ativo; sobrevive à compactação | [SESSION-STATE.example.md](SESSION-STATE.example.md); workspace no K8s: soul-merge + workspace-ceo-configmap (`k8s/management-team/openclaw/`) |
 | Gancho de validação de contexto (intenções/regras sem tag → Session State) | [scripts/context_validation_hook.py](../../scripts/context_validation_hook.py) |
 | Validação reversa PO (resumo vs critérios de aceite; rejeitar truncamento) | [scripts/validate_reverse_po_after_summary.sh](../../scripts/validate_reverse_po_after_summary.sh), [validate_reverse_po.py](../../scripts/validate_reverse_po.py) |
 | Invariantes de negócio com tag; script de limpeza que nunca remove linhas tagadas | Tag `<!-- INVARIANTE_NEGOCIO -->` em SESSION-STATE; [scripts/compact_preserve_protected.py](../../scripts/compact_preserve_protected.py) (regex preserva bloco) |
@@ -41,8 +41,8 @@ Decisões estruturadas branch-aware. Documentado em [28-memoria-longo-prazo-elit
 
 | Requisito | Artefato no repo |
 |-----------|-------------------|
-| MEMORY.md (memória curada, decisões, lições, preferências) | [MEMORY.md](MEMORY.md) (decisões por omissão cosmética); template em doc 28 §3; workspace: [config/openclaw/workspace-ceo/MEMORY.md](../../config/openclaw/workspace-ceo/MEMORY.md) |
-| memory/ (diários, destilação) | `memory/working-buffer.md` em workspace-ceo; doc 28: memory/logs, projects, groups, system |
+| MEMORY.md (memória curada, decisões, lições, preferências) | [MEMORY.md](MEMORY.md) (decisões por omissão cosmética); template em doc 28 §3; no K8s: workspace-ceo-configmap (MEMORY.md) |
+| memory/ (diários, destilação) | `memory/working-buffer.md` no workspace (K8s workspace-ceo-configmap); doc 28: memory/logs, projects, groups, system |
 | Instruções por momento da sessão | [28-memoria-longo-prazo-elite.md](../28-memoria-longo-prazo-elite.md) — "Instruções por momento da sessão" (início, durante, encerramento) |
 
 Ref: [10-self-improvement-agentes.md](../10-self-improvement-agentes.md), [13-habilidades-proativas.md](../13-habilidades-proativas.md).
