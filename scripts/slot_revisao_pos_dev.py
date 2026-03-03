@@ -226,22 +226,47 @@ def processar_mensagem(r, stream: str, msg_id: str, data: dict) -> None:
     print(f"[Slot] XACK {stream} {GROUP_REVISAO} {msg_id}")
 
 
+def get_redis_with_retry(max_attempts=30, delay_sec=10):
+    """Obtém cliente Redis com retry para quando o Redis ainda não está pronto (ex.: minikube)."""
+    for attempt in range(1, max_attempts + 1):
+        try:
+            r = get_redis()
+            r.ping()
+            return r
+        except Exception as e:
+            print(f"[Slot] Redis indisponível (tentativa {attempt}/{max_attempts}): {e}", file=sys.stderr)
+            if attempt == max_attempts:
+                raise
+            time.sleep(delay_sec)
+    raise RuntimeError("Redis não disponível após retries")
+
+
 def main() -> None:
-    r = get_redis()
+    r = get_redis_with_retry()
     print(f"[Slot] Consumindo stream={STREAM_CODE_READY} group={GROUP_REVISAO} consumer={CONSUMER_NAME}")
 
     while True:
-        if is_consumption_paused(r=r):
-            time.sleep(60)
+        try:
+            if is_consumption_paused(r=r):
+                time.sleep(60)
+                continue
+            # XREADGROUP: ">" = novas mensagens nunca entregues a nenhum consumer do group (0 = pendentes deste consumer)
+            reply = r.xreadgroup(
+                GROUP_REVISAO,
+                CONSUMER_NAME,
+                {STREAM_CODE_READY: ">"},
+                block=BLOCK_MS,
+                count=1,
+            )
+        except Exception as e:
+            print(f"[Slot] Erro de conexão Redis (reconectando em 15s): {e}", file=sys.stderr)
+            time.sleep(15)
+            try:
+                r = get_redis_with_retry(max_attempts=3, delay_sec=5)
+            except Exception:
+                time.sleep(15)
+                continue
             continue
-        # XREADGROUP: ">" = novas mensagens nunca entregues a nenhum consumer do group (0 = pendentes deste consumer)
-        reply = r.xreadgroup(
-            GROUP_REVISAO,
-            CONSUMER_NAME,
-            {STREAM_CODE_READY: ">"},
-            block=BLOCK_MS,
-            count=1,
-        )
         if not reply:
             continue
         for stream, messages in reply:

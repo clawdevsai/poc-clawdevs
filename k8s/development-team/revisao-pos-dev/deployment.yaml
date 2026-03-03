@@ -51,7 +51,7 @@ spec:
         - name: scripts
           configMap:
             name: revisao-slot-scripts
-            optional: true
+            optional: false
 ---
 apiVersion: v1
 kind: Service

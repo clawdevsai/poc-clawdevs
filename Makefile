@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap devops-compact-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply
+.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap devops-compact-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply dashboarding
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -247,6 +247,13 @@ orchestrator-apply: orchestrator-configmap
 	@echo "==> Aplicando orquestrador (configmap-env, CronJobs, consumer Slack)..."
 	@kubectl apply -f $(K8S_DIR)/orchestrator/
 	@echo "==> Orquestrador aplicado. Ref: docs/06-operacoes.md"
+
+# Abre o dashboard do Minikube no navegador. Habilita o addon e inicia o proxy.
+dashboard:
+	@echo "==> Habilitando addon dashboard..."
+	@minikube addons enable dashboard 2>/dev/null || true
+	@echo "==> Abrindo dashboard..."
+	@minikube dashboard
 
 # 3. down: derruba tudo — deployments, PVCs, secrets, configmaps e namespace. Ambiente em estaca zero.
 down:

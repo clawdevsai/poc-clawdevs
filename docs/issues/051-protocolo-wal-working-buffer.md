@@ -9,11 +9,11 @@ Implementar o protocolo WAL (Write-Ahead Log): em toda mensagem, detectar corre�
 
 ## Critérios de aceite
 
-- [ ] Gatilhos WAL documentados e aplicados (correções, nomes, preferências, decisões, valores).
-- [ ] Fluxo: Parar → Escrever SESSION-STATE.md → Responder.
-- [ ] Working Buffer atualizado a cada troca após 60% de contexto; conteúdo usado para recuperação pós-compactação.
-- [ ] Regra de ouro comunicada aos agentes: "O histórico de chat é buffer, não armazenamento; escrever agora."
-- [ ] Integração com **gancho de validação de contexto (operado localmente, antes da sumarização na nuvem):** modelo local (ex.: Llama 3) varre o buffer de trabalho buscando **exclusivamente intenções do usuário ou regras informais que não ganharam tag**; se achar algo crítico, propor extração para o **Session State** (arquivo principal de estado). Ver [07-configuracao-e-prompts.md](../07-configuracao-e-prompts.md) e [28-memoria-longo-prazo-elite.md](../28-memoria-longo-prazo-elite.md).
+- [x] Gatilhos WAL documentados e aplicados (correções, nomes, preferências, decisões, valores). **Ref:** [docs/agents-devs/protocolo-wal-working-buffer.md](../agents-devs/protocolo-wal-working-buffer.md) §1 (tabela de gatilhos); [13-habilidades-proativas.md](../13-habilidades-proativas.md).
+- [x] Fluxo: Parar → Escrever SESSION-STATE.md → Responder. **Ref:** [protocolo-wal-working-buffer.md](../agents-devs/protocolo-wal-working-buffer.md) §2.
+- [x] Working Buffer atualizado a cada troca após 60% de contexto; conteúdo usado para recuperação pós-compactação. **Ref:** [protocolo-wal-working-buffer.md](../agents-devs/protocolo-wal-working-buffer.md) §3 e §4; template em [config/openclaw/workspace-ceo/memory/working-buffer.md](../../config/openclaw/workspace-ceo/memory/working-buffer.md).
+- [x] Regra de ouro comunicada aos agentes: "O histórico de chat é buffer, não armazenamento; escrever agora." **Ref:** [protocolo-wal-working-buffer.md](../agents-devs/protocolo-wal-working-buffer.md) (regra de ouro) e [13-habilidades-proativas.md](../13-habilidades-proativas.md); incluir em SOUL/AGENTS quando injetar workspace.
+- [x] Integração com **gancho de validação de contexto (operado localmente, antes da sumarização na nuvem):** [scripts/context_validation_hook.py](../../scripts/context_validation_hook.py) varre o buffer buscando intenções/regras sem tag e propõe extração para SESSION-STATE. **Ref:** [protocolo-wal-working-buffer.md](../agents-devs/protocolo-wal-working-buffer.md) §5, [07-configuracao-e-prompts.md](../07-configuracao-e-prompts.md), [28-memoria-longo-prazo-elite.md](../28-memoria-longo-prazo-elite.md).
 
 ## Referências
 
