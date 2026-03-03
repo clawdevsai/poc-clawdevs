@@ -27,8 +27,9 @@ Ref: [estrategia-uso-hardware-gpu-cpu.md](estrategia-uso-hardware-gpu-cpu.md), [
 - **Consumidor:** Um único job/pod **"Revisão pós-Dev"** que:
   1. Lê mensagens do stream `code:ready` com `XREADGROUP GROUP revisao-pos-dev`.
   2. **Adquire o GPU Lock** uma vez ([scripts/gpu_lock.py](../scripts/gpu_lock.py)).
-  3. Carrega **um** modelo (ex.: Llama 3 8B) e executa **em sequência interna** (sem liberar o lock): Architect → QA → CyberSec → DBA (e opcionalmente UX).
-  4. Libera o lock e envia **XACK** só após **100% concluído em disco** (semântica idempotente).
+  3. Carrega **um** modelo e executa **em sequência** (sem liberar o lock) os **6 papéis**: Architect → QA → CyberSec → DBA → UX → PO. Persiste resultado em `project:v1:issue:{id}:review:{role}` (approved/rejected).
+  4. **Só quando todos os 6 aprovarem:** estado → Approved; Arquiteto executa **merge** (`gh pr merge`); estado → Merged. Se algum rejeitar: evento `review_rejected` e não faz merge.
+  5. Libera o lock e envia **XACK** só após **100% concluído em disco** (semântica idempotente).
 - **Hard timeout:** O Job tem `activeDeadlineSeconds: 300` (5 min) para cobrir a duração total do slot; evita lock órfão. Ver [04-infraestrutura.md](04-infraestrutura.md) e [k8s/development-team/gpu-lock-hard-timeout-example.yaml](../k8s/development-team/gpu-lock-hard-timeout-example.yaml).
 
 ---

@@ -47,5 +47,5 @@ spec:
                 name: rotation-scripts
                 optional: true
 ---
-# ConfigMap com o script (aplicar com: kubectl create configmap rotation-scripts -n ai-agents --from-file=rotate_gateway_token.py=scripts/rotate_gateway_token.py --dry-run=client -o yaml | kubectl apply -f -)
+# ConfigMap com o script (aplicar com: make rotation-configmap ou --from-file=rotate_gateway_token.py=app/rotate_gateway_token.py)
 # Ou make rotation-configmap

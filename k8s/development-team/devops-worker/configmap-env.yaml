@@ -1,0 +1,17 @@
+# Variáveis para o trigger DevOps (openclaw-first: envia event:devops ao agente DevOps).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devops-worker-env
+  namespace: ai-agents
+  labels:
+    app: devops-worker
+data:
+  REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
+  REDIS_PORT: "6379"
+  STREAM_EVENT_DEVOPS: "event:devops"
+  DEVOPS_GROUP: "clawdevs"
+  DEVOPS_BLOCK_MS: "5000"
+  KEY_PREFIX_PROJECT: "project:v1"
+  OPENCLAW_GATEWAY_WS: "ws://openclaw.ai-agents.svc.cluster.local:18789"
+  OPENCLAW_DEVOPS_SESSION_KEY: "agent:devops:main"

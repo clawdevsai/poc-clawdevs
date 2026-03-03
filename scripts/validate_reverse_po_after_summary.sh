@@ -7,6 +7,7 @@
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SUMMARY_FILE="${1:?Uso: $0 SUMMARY_FILE CRITERIA_FILE}"
 CRITERIA_FILE="${2:?Uso: $0 SUMMARY_FILE CRITERIA_FILE}"
 
@@ -19,4 +20,4 @@ if [[ ! -f "$CRITERIA_FILE" ]]; then
   exit 2
 fi
 
-exec python3 "$SCRIPT_DIR/validate_reverse_po.py" --summary "$SUMMARY_FILE" --criteria "$CRITERIA_FILE"
+exec python3 "$REPO_ROOT/app/validate_reverse_po.py" --summary "$SUMMARY_FILE" --criteria "$CRITERIA_FILE"

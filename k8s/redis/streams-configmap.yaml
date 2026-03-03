@@ -19,6 +19,8 @@ data:
   STREAM_REVIEW_QA_DONE: "review_qa_done"
   STREAM_REVIEW_CYBERSEC_DONE: "review_cybersec_done"
   STREAM_REVIEW_DONE: "review_done"
+  STREAM_EVENT_DEVOPS: "event:devops"
+  STREAM_AUDIT_QUEUE: "audit:queue"
 
   # Prefixo de chaves de estado (ex.: project:v1:issue:42)
   KEY_PREFIX_PROJECT: "project:v1"

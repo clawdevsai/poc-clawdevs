@@ -39,9 +39,9 @@ trap cleanup EXIT
 if command -v redis-cli &>/dev/null; then
   redis-cli -h 127.0.0.1 -p 6379 XADD code:ready "*" issue_id 42 branch main ts "$(date +%s)" && echo "    Publicado via redis-cli"
 elif [ -d "$REPO_ROOT/.venv" ] && [ -f "$REPO_ROOT/.venv/bin/python3" ]; then
-  (cd "$REPO_ROOT" && . .venv/bin/activate && REDIS_HOST=127.0.0.1 REDIS_PORT=6379 python3 scripts/publish_event_redis.py code:ready issue_id=42 branch=main) && echo "    Publicado via publish_event_redis.py"
+  (cd "$REPO_ROOT" && . .venv/bin/activate && REDIS_HOST=127.0.0.1 REDIS_PORT=6379 python3 app/publish_event_redis.py code:ready issue_id=42 branch=main) && echo "    Publicado via publish_event_redis.py"
 else
-  (cd "$REPO_ROOT" && REDIS_HOST=127.0.0.1 REDIS_PORT=6379 python3 scripts/publish_event_redis.py code:ready issue_id=42 branch=main 2>/dev/null) && echo "    Publicado" || echo "    (instale redis: pip install redis ou use redis-cli)"
+  (cd "$REPO_ROOT" && REDIS_HOST=127.0.0.1 REDIS_PORT=6379 python3 app/publish_event_redis.py code:ready issue_id=42 branch=main 2>/dev/null) && echo "    Publicado" || echo "    (instale redis: pip install redis ou use redis-cli)"
 fi
 sleep 5
 cleanup 2>/dev/null || true

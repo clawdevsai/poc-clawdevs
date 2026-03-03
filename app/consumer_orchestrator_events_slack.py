@@ -26,6 +26,14 @@ BLOCK_MS = int(os.environ.get("ORCHESTRATOR_EVENTS_BLOCK_MS", "5000"))
 def _format_message(msg: dict) -> str:
     """Formata payload do evento para texto Slack (legível)."""
     t = msg.get("type", "event")
+    if t == "feature_complete":
+        return (
+            "*ClawDevs — Feature concluída (para o Diretor)*\n"
+            + (f"• Issue: `{msg.get('issue_id', '')}`\n" if msg.get("issue_id") else "")
+            + (f"• Repositório: {msg.get('repo', '')}\n" if msg.get("repo") else "")
+            + (f"• Resumo: {msg.get('summary', '')}\n" if msg.get("summary") else "")
+            + (f"• Link: {msg.get('link', '')}" if msg.get("link") else "")
+        )
     parts = [f"*ClawDevs — {t}*"]
     for k, v in msg.items():
         if k == "type" or not v:
@@ -58,7 +66,13 @@ def run_loop():
                 continue
             for stream_name, messages in streams:
                 for msg_id, raw in messages:
-                    msg = raw if isinstance(raw, dict) else dict(zip((raw or [])[::2], (raw or [])[1::2]))
+                    if isinstance(raw, dict):
+                        msg = {k: (v.decode() if isinstance(v, bytes) else v) for k, v in raw.items()}
+                    else:
+                        arr = raw or []
+                        keys = [x.decode() if isinstance(x, bytes) else x for x in arr[::2]]
+                        vals = [x.decode() if isinstance(x, bytes) else x for x in arr[1::2]]
+                        msg = dict(zip(keys, vals))
                     text = _format_message(msg)
                     if send_slack(text, env_prefix="ORCHESTRATOR_"):
                         r.xack(STREAM_ORCHESTRATOR_EVENTS, CONSUMER_GROUP, msg_id)

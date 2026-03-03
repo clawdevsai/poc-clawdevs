@@ -1,0 +1,19 @@
+# Variáveis para o trigger PO (openclaw-first: consome cmd:strategy, envia ao agente PO no Gateway).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: po-env
+  namespace: ai-agents
+  labels:
+    app: po
+data:
+  REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
+  REDIS_PORT: "6379"
+  STREAM_CMD_STRATEGY: "cmd:strategy"
+  PO_GROUP: "clawdevs"
+  PO_BLOCK_MS: "5000"
+  KEY_PREFIX_PROJECT: "project:v1"
+  STRATEGY_DOC_KEY: "project:v1:strategy_doc"
+  # OpenClaw Gateway (triggers chamam sessions.send). Ajuste se o Service tiver outro nome/porta.
+  OPENCLAW_GATEWAY_WS: "ws://openclaw.ai-agents.svc.cluster.local:18789"
+  OPENCLAW_PO_SESSION_KEY: "agent:po:main"

@@ -1,34 +1,35 @@
-# Pod DBA (Fase 1 — 014). Consome review_cybersec_done, publica review_done.
+# DevOps worker: consome event:devops (após merge), seta estado Deployed.
+# Requer ConfigMap devops-worker-scripts (devops_worker.py, gpu_lock.py, issue_state.py).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dba-slot
+  name: devops-worker
   namespace: ai-agents
   labels:
-    app: dba-slot
+    app: devops-worker
 spec:
   replicas: 0
   selector:
     matchLabels:
-      app: dba-slot
+      app: devops-worker
   template:
     metadata:
       labels:
-        app: dba-slot
+        app: devops-worker
     spec:
       containers:
-        - name: slot
+        - name: worker
           image: python:3.12-slim
           command:
             - /bin/sh
             - -c
-            - "pip install -q redis && cd /config && exec python slot_agent_single.py"
+            - "pip install -q redis && cd /config && exec python devops_worker.py"
           envFrom:
             - secretRef:
                 name: clawdevs-github-secret
                 optional: true
             - configMapRef:
-                name: dba-slot-env
+                name: devops-worker-env
           env:
             - name: POD_NAME
               valueFrom:
@@ -40,26 +41,13 @@ spec:
               readOnly: true
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "128Mi"
+              cpu: "50m"
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "256Mi"
+              cpu: "200m"
       volumes:
         - name: scripts
           configMap:
-            name: agent-slot-scripts
+            name: devops-worker-scripts
             optional: true
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: dba-slot-service
-  namespace: ai-agents
-  labels:
-    app: dba-slot
-spec:
-  selector:
-    app: dba-slot
-  ports: []
-  type: ClusterIP

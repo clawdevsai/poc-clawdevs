@@ -1,4 +1,4 @@
-# Variáveis de ambiente para o pod Developer (013).
+# Variáveis para o trigger Developer (openclaw-first: envia task:backlog ao agente Developer).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,5 +10,10 @@ data:
   REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
   REDIS_PORT: "6379"
   DEVELOPER_STREAM: "task:backlog"
+  STREAM_CODE_READY: "code:ready"
   DEVELOPER_GROUP: "clawdevs"
   DEVELOPER_BLOCK_MS: "5000"
+  KEY_PREFIX_PROJECT: "project:v1"
+  DEV_LOCK_TTL_SEC: "3600"
+  OPENCLAW_GATEWAY_WS: "ws://openclaw.ai-agents.svc.cluster.local:18789"
+  OPENCLAW_DEVELOPER_SESSION_KEY: "agent:developer:main"

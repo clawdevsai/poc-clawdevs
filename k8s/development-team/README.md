@@ -1,33 +1,63 @@
-# Development Team — Time técnico (100% offline)
+# Development Team — Pipeline (openclaw-first)
 
-Agentes técnicos: **DevOps**, **Architect**, **Developer**, **QA**, **CyberSec**, **UX**, **DBA**. Operam **100% offline** da internet (NetworkPolicy egress bloqueado); inferência via **Ollama GPU** no cluster por padrão.
+Pods que **consomem Redis** e **enviam mensagens ao OpenClaw Gateway**. Não rodam LLM; a lógica fica nos agentes do Gateway.
 
-Provedor de LLM por agente: ConfigMap `clawdevs-llm-providers` (chaves `agent_devops`, `agent_architect`, etc.). Valores: `ollama_local` | `ollama_cloud` | `openrouter` | `qwen_oauth` | `moonshot_ai` | `openai` | `huggingface_inference`. Padrão: **ollama_local**.
+## Fluxo
 
-Na Fase 0 atual, o time técnico roda como **sub-agents** do gateway Management (CEO/PO); um deployment dedicado 100% offline pode ser adicionado em fases posteriores usando este ConfigMap e a NetworkPolicy.
+| Stream / evento | Pod | Ação |
+|-----------------|-----|------|
+| cmd:strategy | **po** | Envia ao agente PO (criar issues, publicar draft.2.issue) |
+| draft.2.issue | **architect-draft** | Envia ao Architect (aprovar → task:backlog ou rejeitar) |
+| task:backlog | **developer** | Envia ao Developer (implementar; publicar code:ready) |
+| code:ready | **revisao-pos-dev** | Envia aos 6 papéis (Architect, QA, CyberSec, DBA, UX, PO); merge → event:devops |
+| event:devops | **devops-worker** | Envia ao DevOps (Deployed, feature_complete) |
+| audit:queue | **audit-runner** | Envia a QA, DBA, CyberSec, UX (auditoria periódica) |
 
-**Revisão pós-Dev (slot único):** [revisao-pos-dev/](revisao-pos-dev/) consome `code:ready`, executa Architect→QA→CyberSec→DBA em sequência. **Pods separados (evolução 014):** [architect/](architect/), [qa/](qa/), [cybersec/](cybersec/), [dba/](dba/) formam um pipeline (replicas: 0 por padrão); `make agent-slots-configmap` e aplicar os manifestos; inicializar consumer groups com [scripts/redis-streams-init.sh](../scripts/redis-streams-init.sh).
+**gateway-redis-adapter**: serviço HTTP para o Gateway/agentes publicarem em Redis (POST /publish, /write-strategy).
 
-## GitHub (todos os agentes)
+## Pastas
 
-Para que os agentes tenham acesso ao GitHub (gh CLI, push/pull, Issues, PRs), crie o Secret a partir do `.env`:
+| Pasta | Deployment | ConfigMap env | ConfigMap scripts (Makefile) |
+|-------|------------|---------------|------------------------------|
+| **po/** | po | po-env | po-scripts (`make configmap-po`) |
+| **architect-draft/** | architect-draft | architect-draft-env | architect-draft-scripts |
+| **developer/** | developer | developer-env | developer-scripts |
+| **revisao-pos-dev/** | revisao-pos-dev | revisao-pos-dev-env | revisao-slot-scripts |
+| **devops-worker/** | devops-worker | devops-worker-env | devops-worker-scripts |
+| **audit-runner/** | audit-runner | audit-runner-env | audit-runner-scripts |
+| **gateway-redis-adapter/** | gateway-redis-adapter | (configmap-env) | gateway-redis-adapter-scripts |
 
-```bash
-# Exporte do .env (ou defina GITHUB_TOKEN no shell) e crie o secret:
-export $(grep -E '^GITHUB_TOKEN=|^GH_TOKEN=' .env 2>/dev/null | xargs)
-kubectl create secret generic clawdevs-github-secret -n ai-agents \
-  --from-literal=GITHUB_TOKEN="${GITHUB_TOKEN:?defina GITHUB_TOKEN no .env}" \
-  --from-literal=GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}" \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-Os deployments (architect, developer, qa, cybersec, dba, revisao-pos-dev, gateway-redis-adapter) e o OpenClaw já referenciam `clawdevs-github-secret` com `optional: true`; se o Secret não existir, os pods sobem sem as variáveis. Ver [secret-github.example.yaml](secret-github.example.yaml). Ref: [docs/20-ferramenta-github-gh.md](../docs/20-ferramenta-github-gh.md).
+Todos os triggers precisam de **OPENCLAW_GATEWAY_WS** (já em cada configmap-env). Os scripts precisam do **openclaw** CLI no container ou de um bridge; hoje os pods usam imagem `python:3.12-slim` e os scripts chamam o Gateway via `openclaw_gateway_call.py` (que usa subprocess do CLI). Para produção, use uma imagem que inclua o OpenClaw CLI ou exponha um serviço de bridge.
 
 ## Apply
 
 ```bash
+make configmaps-pipeline
 kubectl apply -f k8s/development-team/configmap.yaml
-# Opcional (quando houver pod dedicado): kubectl apply -f k8s/development-team/networkpolicy.yaml
+kubectl apply -f k8s/development-team/po/
+kubectl apply -f k8s/development-team/architect-draft/
+kubectl apply -f k8s/development-team/developer/
+kubectl apply -f k8s/development-team/revisao-pos-dev/
+kubectl apply -f k8s/development-team/devops-worker/
+kubectl apply -f k8s/development-team/audit-runner/
+kubectl apply -f k8s/development-team/gateway-redis-adapter/
 ```
 
-Ref: [docs/04-infraestrutura.md](../docs/04-infraestrutura.md), [docs/14-seguranca-runtime-agentes.md](../docs/14-seguranca-runtime-agentes.md).
+Deployments sobem com **replicas: 0**. Escale quando for usar:
+
+```bash
+kubectl scale deployment po -n ai-agents --replicas=1
+kubectl scale deployment architect-draft -n ai-agents --replicas=1
+# etc.
+```
+
+## GitHub
+
+Secret `clawdevs-github-secret` (GITHUB_TOKEN, GH_TOKEN) é referenciado com `optional: true`. Crie para os agentes usarem `gh`:
+
+```bash
+kubectl create secret generic clawdevs-github-secret -n ai-agents \
+  --from-literal=GITHUB_TOKEN="..." --from-literal=GH_TOKEN="..."
+```
+
+Ref: [secret-github.example.yaml](secret-github.example.yaml), [docs/20-ferramenta-github-gh.md](../docs/20-ferramenta-github-gh.md).

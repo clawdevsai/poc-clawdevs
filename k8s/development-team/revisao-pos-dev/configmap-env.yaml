@@ -1,5 +1,4 @@
-# Variáveis de ambiente para o slot Revisão pós-Dev (007/125 + Fase 3).
-# Stream, consumer group, Redis; Architect real via Ollama quando OLLAMA_BASE_URL definido.
+# Variáveis para o slot Revisão pós-Dev (openclaw-first: 6 papéis via Gateway).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,11 +9,11 @@ metadata:
 data:
   STREAM_CODE_READY: "code:ready"
   CONSUMER_GROUP_REVISAO: "revisao-pos-dev"
-  SLOT_REVISAO_TIMEOUT_SEC: "300"
+  SLOT_BLOCK_MS: "5000"
+  SLOT_REVIEW_TIMEOUT_SEC: "120"
   REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
   REDIS_PORT: "6379"
-  # Architect via Ollama (Fase 3 — 032). Vazio = stub (aprova sempre).
-  OLLAMA_BASE_URL: "http://ollama-service.ai-agents.svc.cluster.local:11434"
-  ARCHITECT_MODEL: "glm-5:cloud"
-  ARCHITECT_TIMEOUT_SEC: "120"
   KEY_PREFIX_PROJECT: "project:v1"
+  STREAM_EVENT_DEVOPS: "event:devops"
+  OPENCLAW_GATEWAY_WS: "ws://openclaw.ai-agents.svc.cluster.local:18789"
+  # GITHUB_REPO: "owner/repo" (ou use secret clawdevs-github-secret)

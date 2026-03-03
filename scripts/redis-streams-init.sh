@@ -59,12 +59,28 @@ else
   echo "    $ORCHESTRATOR_EVENTS: group $SLACK_GROUP já existe"
 fi
 
-# Disjuntor draft_rejected (127): consumer group para scripts/disjuntor_draft_rejected.py
+# event:devops — DevOps worker (após merge; estado Deployed)
+EVENT_DEVOPS="${EVENT_DEVOPS:-event:devops}"
+if $REDIS_CLI -h "$REDIS_HOST" -p "$REDIS_PORT" XGROUP CREATE "$EVENT_DEVOPS" "$GROUP" "$" MKSTREAM 2>/dev/null; then
+  echo "    $EVENT_DEVOPS: stream e group $GROUP (DevOps worker) criados"
+else
+  echo "    $EVENT_DEVOPS: group $GROUP já existe"
+fi
+
+# Disjuntor draft_rejected (127): consumer group para app/disjuntor_draft_rejected.py
 DISJUNTOR_GROUP="${DISJUNTOR_GROUP:-disjuntor}"
 if $REDIS_CLI -h "$REDIS_HOST" -p "$REDIS_PORT" XGROUP CREATE "draft_rejected" "$DISJUNTOR_GROUP" "$" MKSTREAM 2>/dev/null; then
   echo "    draft_rejected: group $DISJUNTOR_GROUP (disjuntor 127) criado"
 else
   echo "    draft_rejected: group $DISJUNTOR_GROUP já existe"
+fi
+
+# audit:queue — auditorias sequenciais (QA, DBA, Security, UX)
+AUDIT_QUEUE="${AUDIT_QUEUE:-audit:queue}"
+if $REDIS_CLI -h "$REDIS_HOST" -p "$REDIS_PORT" XGROUP CREATE "$AUDIT_QUEUE" "$GROUP" "$" MKSTREAM 2>/dev/null; then
+  echo "    $AUDIT_QUEUE: stream e group $GROUP (audit runner) criados"
+else
+  echo "    $AUDIT_QUEUE: group $GROUP já existe"
 fi
 
 echo "==> Concluído. Slot Revisão pós-Dev: XREADGROUP GROUP $REVISAO_GROUP ... no stream $CODE_READY."

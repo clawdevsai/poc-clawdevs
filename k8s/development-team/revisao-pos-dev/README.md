@@ -8,8 +8,8 @@ Criar o ConfigMap a partir dos scripts (uma vez):
 
 ```bash
 kubectl create configmap revisao-slot-scripts -n ai-agents \
-  --from-file=slot_revisao_pos_dev.py=scripts/slot_revisao_pos_dev.py \
-  --from-file=gpu_lock.py=scripts/gpu_lock.py \
+  --from-file=slot_revisao_pos_dev.py=app/slot_revisao_pos_dev.py \
+  --from-file=gpu_lock.py=app/gpu_lock.py \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 

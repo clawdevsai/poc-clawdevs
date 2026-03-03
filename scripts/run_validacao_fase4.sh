@@ -11,7 +11,7 @@ cd "$REPO_ROOT"
 FAILED=0
 
 echo "==> 1. test_config_finops.py"
-if ! python3 scripts/test_config_finops.py 2>&1; then
+if ! python3 app/test_config_finops.py 2>&1; then
   echo "[FALHA] test_config_finops.py" >&2
   FAILED=1
 fi
@@ -29,7 +29,7 @@ if [ -f "$CRITERIA_FILE" ]; then
     echo "[FALHA] validate_reverse_po esperava exit 0 com resumo que cobre critérios" >&2
     FAILED=1
   fi
-  if python3 scripts/validate_reverse_po.py --summary "$SUMMARY_FAIL" --criteria "$CRITERIA_FILE" 2>/dev/null; then
+  if python3 app/validate_reverse_po.py --summary "$SUMMARY_FAIL" --criteria "$CRITERIA_FILE" 2>/dev/null; then
     echo "[FALHA] validate_reverse_po esperava exit 1 com resumo que omite critérios" >&2
     FAILED=1
   fi

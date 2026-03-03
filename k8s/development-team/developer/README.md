@@ -14,8 +14,8 @@ O deployment espera o ConfigMap `developer-scripts` com `developer_worker.py` e 
 
 ```bash
 kubectl create configmap developer-scripts -n ai-agents \
-  --from-file=developer_worker.py=scripts/developer_worker.py \
-  --from-file=gpu_lock.py=scripts/gpu_lock.py \
+  --from-file=developer_worker.py=app/developer_worker.py \
+  --from-file=gpu_lock.py=app/gpu_lock.py \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 

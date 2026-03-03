@@ -21,7 +21,7 @@ Há **um único OpenClaw** com vários agentes; a **mensageria** é só **gatilh
 |--------|----------|----------------|-----|
 | **cmd:strategy** | CEO | PO | Diretriz estratégica; PO gera backlog. |
 | **task:backlog** | PO | DevOps, Developer | Tarefas prontas para desenvolvimento. |
-| **draft.2.issue** | PO | Architect | Rascunho para validação técnica (ciclo de rascunho). |
+| **draft.2.issue** | PO | Architect (draft consumer) | Rascunho para validação técnica; Architect consome e aprova → task:backlog ou rejeita → draft_rejected. |
 | **draft_rejected** | Architect | PO | Rascunho rejeitado; PO reescreve antes de publicar em task:backlog. |
 | **code:ready** | Developer | Architect, QA, CyberSec, DBA (slot único) | Código pronto para revisão; job "Revisão pós-Dev" consome uma vez e executa a sequência. |
 
@@ -34,7 +34,7 @@ Criar streams e consumer groups (uma vez após o Redis estar no ar):
 
 ## 2. Contrato de publicação (produtores — Fase 1, issue 018)
 
-**Quem publica:** O gateway OpenClaw (após resposta do CEO ou do PO) ou um orquestrador deve publicar nos streams conforme o fluxo. Para testes manuais ou E2E, use o script [scripts/publish_event_redis.py](../scripts/publish_event_redis.py).
+**Quem publica:** O gateway OpenClaw (após resposta do CEO ou do PO) ou um orquestrador deve publicar nos streams conforme o fluxo. Para testes manuais ou E2E, use o script [app/publish_event_redis.py](../app/publish_event_redis.py).
 
 | Stream | Publicado por | Campos mínimos da mensagem (exemplo) | Observação |
 |--------|----------------|--------------------------------------|------------|
@@ -54,7 +54,10 @@ O **estado da verdade** fica em chaves Redis; o stream carrega apenas **ID de tr
 
 | Padrão | Exemplo | Uso |
 |--------|---------|-----|
+| **project:v1:strategy_doc** | `project:v1:strategy_doc` | Documento estratégico do CEO (Memoria/SharedMemory). CEO grava via Gateway `POST /write-strategy`; PO e outros leem. Opcional: `project:v1:strategy:{project_id}` se multi-projeto. |
 | **project:v1:issue:{id}** | `project:v1:issue:42` | Especificação da issue/tarefa (PO grava; Developer/Architect leem). |
+| **project:v1:issue:{id}:state** | `project:v1:issue:42:state` | Estado da issue na máquina de estados: Backlog, Refinamento, Ready, InProgress, InReview, Approved, Merged, Deployed, Monitoring, Done. Ver [agents-devs/state-machine-issues.md](agents-devs/state-machine-issues.md). |
+| **project:v1:issue:{id}:dev_lock** | — | Lock exclusivo por story (SETNX + TTL); apenas um Dev trabalha na issue por vez. |
 | **project:v1:backlog** | — | Metadado ou lista de IDs no backlog (conforme orquestrador). |
 | **project:v1:working_buffer:{suffix}** | `project:v1:working_buffer:session:abc` | Buffer de conversa/contexto compartilhado entre turnos; usar TTL (ex.: `redis_buffer_writer.write_working_buffer`). Ver [integracao-040-041-gateway-orquestrador.md](issues/integracao-040-041-gateway-orquestrador.md). |
 | **gpu:lock** | — | GPU Lock (SETNX + TTL dinâmico); ver [scripts/gpu_lock.md](scripts/gpu_lock.md). |

@@ -1,0 +1,29 @@
+# CronJob: publica mensagem em audit:queue para o audit runner (QA, DBA, Security, UX).
+# O consumidor app/audit_runner.py processa em sequência e pode criar Issues no GitHub.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: audit-queue-trigger
+  namespace: ai-agents
+  labels:
+    app: orchestrator
+spec:
+  schedule: "0 2 * * *"  # 02:00 UTC diário
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: trigger
+              image: redis:7-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  redis-cli -h redis-service.ai-agents.svc.cluster.local XADD audit:queue "*" ts "$(date +%s)" scope "daily"
+                  echo "Audit queue trigger done"

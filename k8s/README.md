@@ -1,43 +1,60 @@
 # Kubernetes — ClawDevs
 
-Estrutura **centralizada por times**. Na raiz de `k8s/` ficam apenas pastas principais e arquivos cluster-wide.
+Recursos para rodar o ecossistema no cluster (Minikube ou outro). Arquitetura **openclaw-first**: o Gateway OpenClaw roda os agentes; os pods do pipeline são **triggers** que consomem Redis e enviam mensagens ao Gateway.
 
-Provedor de LLM por agente: `llm-providers-configmap.yaml` (ollama_local, ollama_cloud, openrouter, etc.). Ver [07-configuracao-e-prompts.md](docs/07-configuracao-e-prompts.md).
-
-## Estrutura (pastas principais)
+## Estrutura
 
 | Pasta | Conteúdo |
 |-------|----------|
-| **ollama/** | Deployment Ollama GPU, Service, PVC. Inferência local no cluster. |
-| **redis/** | Redis (deployment, service), streams-configmap.yaml, job-init-streams.yaml. Ref: [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md). |
-| **management-team/** | CEO e PO. **openclaw/** — gateway (Dockerfile, configmap, deployment, workspace-ceo-configmap, openclaw.local.json5.example). **soul/** — ConfigMap soul-management-agents (CEO, PO). |
-| **development-team/** | Time técnico (100% offline). **soul/** — ConfigMap soul-development-agents (devops, architect, developer, qa, cybersec, ux, dba). **developer/**, **revisao-pos-dev/**, configmap, networkpolicy, gpu-lock-hard-timeout-example.yaml. |
-| **governance-team/** | Governance Proposer. **soul/** — SOUL do agente. configmap.yaml, deployment.yaml. |
+| **namespace.yaml** | Namespace `ai-agents` |
+| **limits.yaml** | ResourceQuota e LimitRange (ex.: 65% hardware) |
+| **llm-providers-configmap.yaml** | Provedores LLM por agente (ollama_local, etc.) |
+| **redis/** | Redis (deployment, service), streams-configmap, job-init-streams |
+| **ollama/** | Ollama GPU (deployment, service, PVC) |
+| **management-team/** | OpenClaw (gateway), SOUL management, config; opcional deploy CEO/PO separado |
+| **development-team/** | Triggers do pipeline (PO, Architect-draft, Developer, Revisão-slot, DevOps, Audit) + gateway-redis-adapter |
+| **orchestrator/** | Consumer Slack (orchestrator:events), CronJobs (audit-queue, digest, cosmetic) |
+| **security/** | Fase 2: phase2-config, egress-whitelist, token rotation, url-sandbox, quarentena |
+| **governance-team/** | Governance Proposer (opcional) |
+| **sandbox/** | Job quarentena pipeline (opcional) |
 
-Arquivos na raiz: `namespace.yaml`, `limits.yaml` (ResourceQuota 65%), `llm-providers-configmap.yaml`.
+## Ordem de apply (recomendada)
 
-## Ordem de apply (make up)
+Use **`make up`** para subir o núcleo (namespace, Redis, Ollama, OpenClaw, phase2, orchestrator).
+
+Para o pipeline completo (triggers que chamam o Gateway):
 
 ```bash
-kubectl apply -f namespace.yaml
-kubectl apply -f limits.yaml
-kubectl apply -f redis/
-kubectl apply -f ollama/deployment.yaml
-kubectl apply -f llm-providers-configmap.yaml
-# Gateway e SOUL
-kubectl apply -f management-team/openclaw/configmap.yaml
-kubectl apply -f management-team/openclaw/workspace-ceo-configmap.yaml
-kubectl apply -f management-team/openclaw/deployment.yaml
-kubectl apply -f management-team/soul/configmap.yaml
-# Secret Telegram: management-team/openclaw/secret.yaml (opcional)
+make configmaps-pipeline
+kubectl apply -f k8s/development-team/configmap.yaml
+kubectl apply -f k8s/development-team/po/
+kubectl apply -f k8s/development-team/architect-draft/
+kubectl apply -f k8s/development-team/developer/
+kubectl apply -f k8s/development-team/revisao-pos-dev/
+kubectl apply -f k8s/development-team/devops-worker/
+kubectl apply -f k8s/development-team/audit-runner/
+kubectl apply -f k8s/development-team/gateway-redis-adapter/
+# Ajuste replicas conforme necessário (ex.: kubectl scale deployment po -n ai-agents --replicas=1)
 ```
 
-Ou use **`make up`** (build da imagem com `make openclaw-image`).
+Ou aplique tudo de uma vez (cada subpasta tem deployment + configmap-env):
 
-## Layout por time
+```bash
+make configmaps-pipeline
+for dir in po architect-draft developer revisao-pos-dev devops-worker audit-runner gateway-redis-adapter; do
+  kubectl apply -f k8s/development-team/$dir/
+done
+```
 
-- **Management:** Gateway em `management-team/openclaw/`; SOUL em `management-team/soul/`. Alternativa só CEO/PO: `make up-management` (scale openclaw a 0 para um único gateway Telegram). Ref: Fase 1 — 012.
-- **Development:** Developer pod em `development-team/developer/` (`make developer-configmap` + `kubectl apply -f development-team/developer/`). Slot revisão em `development-team/revisao-pos-dev/` (`make revisao-slot-configmap` + apply). SOUL dev em `development-team/soul/`.
-- **Governance:** `governance-team/` (soul/, configmap, deployment).
+## Pré-requisitos
 
-Ref: [docs/openclaw-sub-agents-architecture.md](docs/openclaw-sub-agents-architecture.md), [docs/04-infraestrutura.md](docs/04-infraestrutura.md), [docs/41-fase1-agentes-soul-pods.md](docs/41-fase1-agentes-soul-pods.md).
+- **OpenClaw** rodando no cluster (deployment `openclaw`, service expondo porta 18789).
+- **ConfigMaps de scripts** criados com `make configmaps-pipeline` (po-scripts, architect-draft-scripts, etc.).
+- **OPENCLAW_GATEWAY_WS** nos ConfigMaps de env dos triggers (já definido como `ws://openclaw.ai-agents.svc.cluster.local:18789`). Se o Service do OpenClaw tiver outro nome/porta, edite os configmap-env.
+- **Secrets**: `clawdevs-github-secret` (opcional) para gh nos pods; `openclaw-telegram` para o gateway; `orchestrator-slack` para o consumer Slack.
+
+## Referências
+
+- [docs/agents-devs/openclaw-first-triggers.md](../docs/agents-devs/openclaw-first-triggers.md) — papel dos triggers e ferramentas dos agentes
+- [docs/openclaw-sub-agents-architecture.md](../docs/openclaw-sub-agents-architecture.md)
+- [docs/38-redis-streams-estado-global.md](../docs/38-redis-streams-estado-global.md)

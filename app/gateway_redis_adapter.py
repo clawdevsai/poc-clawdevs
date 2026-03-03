@@ -137,6 +137,11 @@ r = redis.Redis(
     decode_responses=True,
 )
 
+# Memoria (SharedMemory): chave do documento estratégico (CEO grava, PO lê)
+KEY_PREFIX_PROJECT = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
+STRATEGY_DOC_KEY = os.environ.get("STRATEGY_DOC_KEY", f"{KEY_PREFIX_PROJECT}:strategy_doc")
+STRATEGY_DOC_TTL_SEC = int(os.environ.get("STRATEGY_DOC_TTL_SEC", "0"))  # 0 = sem TTL
+
 
 def _allowed_domains_set():
     raw = os.environ.get("ALLOWED_DOMAINS", "")
@@ -146,6 +151,37 @@ def _allowed_domains_set():
         if d and not d.startswith("#"):
             out.add(d)
     return out
+
+
+@app.route("/write-strategy", methods=["POST"])
+def write_strategy():
+    """
+    CEO grava documento estratégico na Memoria (SharedMemory).
+    POST JSON: { "body": "conteúdo do documento" } ou form body=...
+    Opcional: "project_id" para chave project:v1:strategy:{id}. TTL via STRATEGY_DOC_TTL_SEC (0 = sem TTL).
+    """
+    try:
+        body = request.get_json(force=True, silent=True) or {}
+    except Exception:
+        body = {}
+    if not body and request.form:
+        body = dict(request.form)
+    doc_body = body.get("body") or (request.form and request.form.get("body"))
+    if isinstance(doc_body, list):
+        doc_body = doc_body[0] if doc_body else ""
+    if not doc_body:
+        return jsonify({"error": "Missing 'body' (document content)"}), 400
+    doc_body = str(doc_body)
+    project_id = (body.get("project_id") or "").strip()
+    key = f"{KEY_PREFIX_PROJECT}:strategy:{project_id}" if project_id else STRATEGY_DOC_KEY
+    try:
+        if STRATEGY_DOC_TTL_SEC and STRATEGY_DOC_TTL_SEC > 0:
+            r.setex(key, STRATEGY_DOC_TTL_SEC, doc_body)
+        else:
+            r.set(key, doc_body)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"ok": True, "key": key}), 200
 
 
 @app.route("/health", methods=["GET"])

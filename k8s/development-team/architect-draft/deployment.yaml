@@ -1,35 +1,32 @@
-# Pod Architect (Fase 1 — 014, evolução). Consome code:ready, publica review_architect_done.
-# Requer: make agent-slots-configmap. Replicas: 0 (ativar para pipeline por agente).
+# Consumidor Architect draft: consome draft.2.issue, aprova → task:backlog / rejeita → draft_rejected.
+# Requer ConfigMap architect-draft-scripts (architect_draft_consumer.py, gpu_lock.py, issue_state.py).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: architect-slot
+  name: architect-draft
   namespace: ai-agents
   labels:
-    app: architect-slot
+    app: architect-draft
 spec:
   replicas: 0
   selector:
     matchLabels:
-      app: architect-slot
+      app: architect-draft
   template:
     metadata:
       labels:
-        app: architect-slot
+        app: architect-draft
     spec:
       containers:
-        - name: slot
+        - name: worker
           image: python:3.12-slim
           command:
             - /bin/sh
             - -c
-            - "pip install -q redis && cd /config && exec python slot_agent_single.py"
+            - "pip install -q redis && cd /config && exec python architect_draft_consumer.py"
           envFrom:
-            - secretRef:
-                name: clawdevs-github-secret
-                optional: true
             - configMapRef:
-                name: architect-slot-env
+                name: architect-draft-env
           env:
             - name: POD_NAME
               valueFrom:
@@ -49,18 +46,5 @@ spec:
       volumes:
         - name: scripts
           configMap:
-            name: agent-slot-scripts
+            name: architect-draft-scripts
             optional: true
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: architect-slot-service
-  namespace: ai-agents
-  labels:
-    app: architect-slot
-spec:
-  selector:
-    app: architect-slot
-  ports: []
-  type: ClusterIP

@@ -31,6 +31,14 @@ Referência para todos os agentes (CEO, PO, DevOps, Architect, Developer, QA, Cy
 3. **Turno único:** O agente dá **uma** resposta e encerra o turno; não complementa nem envia follow-up no mesmo turno.
 4. **Próximo:** O Diretor ou outro agente (acionado por orquestração/ordem definida) fala em seguida na mesma conversa.
 
+### CEO → Memoria + evento para PO
+
+Após análise, o CEO deve: (1) gravar o documento estratégico na Memoria via Gateway `POST /write-strategy` (body do documento); (2) publicar evento para o PO via `POST /publish` com `stream: "cmd:strategy"` e dados mínimos (`directive`, `source=ceo`). O PO worker consome `cmd:strategy`, lê o contexto em `project:v1:strategy_doc`, cria Issues no GitHub e publica em `draft.2.issue`.
+
+### Feature concluída (PO → CEO → Diretor)
+
+Quando uma feature está Deployed, o DevOps worker emite evento `feature_complete` no stream `orchestrator:events`. O consumer Slack envia ao canal do Diretor a mensagem de entrega final (issue, repo, resumo, link). Ver [state-machine-issues.md](state-machine-issues.md).
+
 ---
 
 ## Integração via Redis

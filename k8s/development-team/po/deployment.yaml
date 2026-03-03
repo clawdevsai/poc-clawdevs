@@ -1,34 +1,35 @@
-# Pod CyberSec (Fase 1 — 014). Consome review_qa_done, publica review_cybersec_done.
+# Pod PO: consome cmd:strategy, lê Memoria, cria Issues no GitHub, publica draft.2.issue.
+# Requer ConfigMap po-scripts (po_worker.py, gpu_lock.py, issue_state.py). Optional: gh no image ou init.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cybersec-slot
+  name: po
   namespace: ai-agents
   labels:
-    app: cybersec-slot
+    app: po
 spec:
   replicas: 0
   selector:
     matchLabels:
-      app: cybersec-slot
+      app: po
   template:
     metadata:
       labels:
-        app: cybersec-slot
+        app: po
     spec:
       containers:
-        - name: slot
+        - name: worker
           image: python:3.12-slim
           command:
             - /bin/sh
             - -c
-            - "pip install -q redis && cd /config && exec python slot_agent_single.py"
+            - "pip install -q redis && cd /config && exec python po_worker.py"
           envFrom:
             - secretRef:
                 name: clawdevs-github-secret
                 optional: true
             - configMapRef:
-                name: cybersec-slot-env
+                name: po-env
           env:
             - name: POD_NAME
               valueFrom:
@@ -48,18 +49,5 @@ spec:
       volumes:
         - name: scripts
           configMap:
-            name: agent-slot-scripts
+            name: po-scripts
             optional: true
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: cybersec-slot-service
-  namespace: ai-agents
-  labels:
-    app: cybersec-slot
-spec:
-  selector:
-    app: cybersec-slot
-  ports: []
-  type: ClusterIP
