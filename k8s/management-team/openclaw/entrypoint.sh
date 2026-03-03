@@ -19,6 +19,12 @@ fi
 # Pre-replace non-quoted placeholders to ensure valid JSON for Node.js parsing
 sed -i "s/__SLACK_ENABLED__/false/g" "$CONFIG_RUN"
 
+# --- Inject Secrets ---
+AUTH_TOKEN="${OPENCLAW_AUTH_TOKEN:-default-auth-token}"
+API_KEY="${OLLAMA_API_KEY:-default-ollama-key}"
+sed -i "s/__OPENCLAW_AUTH_TOKEN__/$AUTH_TOKEN/g" "$CONFIG_RUN"
+sed -i "s/__OLLAMA_API_KEY__/$API_KEY/g" "$CONFIG_RUN"
+
 # --- Slack: habilitar e injetar accounts via Node.js ---
 # O formato segue a doc: channels.slack.accounts.<id> = { mode, appToken, botToken }
 # dmPolicy/groupPolicy/channels ficam no nível channels.slack (herdados por todos os accounts).

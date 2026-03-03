@@ -25,13 +25,13 @@ data:
         "bind": "lan",
         "auth": {
           "mode": "token",
-          "token": "clawdevs-premium-auth-token-2026-secure-stable"
+          "token": "__OPENCLAW_AUTH_TOKEN__"
         },
         "controlUi": { 
           "enabled": true,
-          "allowInsecureAuth": true,
-          "dangerouslyAllowHostHeaderOriginFallback": true,
-          "dangerouslyDisableDeviceAuth": true
+          "allowInsecureAuth": false,
+          "dangerouslyAllowHostHeaderOriginFallback": false,
+          "dangerouslyDisableDeviceAuth": false
         } 
       },
       "channels": {
@@ -62,7 +62,7 @@ data:
           "ollama": {
             "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434",
             "api": "ollama",
-            "apiKey": "1b0a724e3f464facbdcb96dfa5916a01.OIUFHlZ5ov71JmKn5AerTeVb",
+            "apiKey": "__OLLAMA_API_KEY__",
             "models": [
               { "id": "glm-5:cloud", "name": "GLM-5 Cloud", "contextWindow": 128000, "maxTokens": 4096 },
               { "id": "qwen2.5:3b", "name": "Qwen 2.5 3B", "contextWindow": 32000, "maxTokens": 4096 },
@@ -96,9 +96,10 @@ data:
       },
       "tools": {
         "profile": "messaging",
+        "deny": ["exec", "browser", "apply_patch", "file_writer"],
         "subagents": {
           "tools": {
-            "deny": ["gateway", "cron"]
+            "deny": ["gateway", "cron", "exec"]
           }
         }
       },
