@@ -24,6 +24,8 @@ _CONFIG = os.environ.get("CONFIG_DIR", os.path.dirname(os.path.abspath(__file__)
 if _CONFIG not in sys.path:
     sys.path.insert(0, _CONFIG)
 
+import kanban_db
+
 REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD") or None
@@ -109,6 +111,9 @@ r = redis.Redis(
     decode_responses=True,
 )
 
+# Initialize SQLite
+kanban_db.init_db()
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -128,14 +133,8 @@ def _get_issue_data(issue_id: str) -> dict | None:
 
 
 def _list_all_issues() -> list[dict]:
-    """Lista todas as issues do índice Kanban."""
-    issue_ids = r.smembers(KANBAN_INDEX_KEY)
-    issues = []
-    for iid in sorted(issue_ids):
-        issue = _get_issue_data(iid)
-        if issue:
-            issues.append(issue)
-    return issues
+    """Lista todas as issues do SQLite (persistente)."""
+    return kanban_db.get_all_issues()
 
 
 # ── Board ─────────────────────────────────────────────────────────────────────
@@ -210,13 +209,21 @@ def create_issue():
     # Adicionar ao índice do Kanban
     r.sadd(KANBAN_INDEX_KEY, issue_id)
 
+    # Persistir no SQLite
+    issue_type = (body.get("type") or "task").strip().lower()
+    kanban_db.save_issue(issue_id, issue_type, title, summary, state, priority, agent)
+
     # Publicar evento
     publish_kanban_issue_created(r, issue_id, title, agent)
+
+    # Auto-registrar atividade de criação
+    kanban_db.add_activity(agent, f"Created {issue_type}: {title}")
 
     return jsonify({
         "ok": True,
         "id": issue_id,
         "state": state,
+        "type": issue_type
     }), 201
 
 
@@ -250,8 +257,14 @@ def update_issue_state(issue_id):
     # Garantir que está no índice
     r.sadd(KANBAN_INDEX_KEY, issue_id)
 
+    # Atualizar no SQLite
+    kanban_db.update_issue_state(issue_id, new_state)
+
     # Publicar evento
     publish_kanban_event(r, issue_id, old_state, new_state, agent)
+
+    # Registrar atividade
+    kanban_db.add_activity(agent, f"Moved issue {issue_id} to {new_state}")
 
     return jsonify({
         "ok": True,
@@ -263,9 +276,30 @@ def update_issue_state(issue_id):
 
 @app.route("/api/issues/<issue_id>", methods=["DELETE"])
 def delete_issue(issue_id):
-    """Remove issue do Kanban (não apaga do Redis, apenas do índice)."""
+    """Remove issue do Kanban index (Redis)."""
     r.srem(KANBAN_INDEX_KEY, issue_id)
     return jsonify({"ok": True, "id": issue_id})
+
+
+@app.route("/api/activities", methods=["GET"])
+def get_activities():
+    """Retorna log de atividades recentes dos agentes."""
+    limit = request.args.get("limit", 50, type=int)
+    items = kanban_db.get_recent_activities(limit)
+    return jsonify(items)
+
+
+@app.route("/api/activities", methods=["POST"])
+def post_activity():
+    """Agentes usam este endpoint para dizer o que estão fazendo."""
+    body = request.get_json(force=True, silent=True) or {}
+    agent = (body.get("agent") or "unknown").strip()
+    message = (body.get("message") or "").strip()
+    if not message:
+        return jsonify({"error": "Missing 'message'"}), 400
+    
+    kanban_db.add_activity(agent, message)
+    return jsonify({"ok": True}), 201
 
 
 # ── Server-Sent Events ───────────────────────────────────────────────────────

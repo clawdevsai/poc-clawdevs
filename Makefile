@@ -259,12 +259,13 @@ configmap-kanban-api:
 	@kubectl create configmap kanban-api-scripts -n ai-agents \
 	  --from-file=kanban_api.py=app/kanban_api.py \
 	  --from-file=issue_state.py=app/issue_state.py \
+	  --from-file=kanban_db.py=app/kanban_db.py \
 	  --from-file=kanban_event_publisher.py=app/kanban_event_publisher.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 kanban-image:
 	@echo "==> Build kanban-ui:local (Minikube Docker)..."
-	eval $$(minikube docker-env) && docker build -t kanban-ui:v7 kanban-ui
+	eval $$(minikube docker-env) && docker build -t kanban-ui:v8 kanban-ui
 	@echo "==> kanban-ui:local concluído."
 
 kanban-apply: configmap-kanban-api kanban-image

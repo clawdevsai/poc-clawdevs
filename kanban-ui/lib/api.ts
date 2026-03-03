@@ -2,6 +2,7 @@
 
 export interface Issue {
     id: string;
+    type: "task" | "story" | "epic";
     title: string;
     summary: string;
     state: string;
@@ -24,6 +25,13 @@ export interface KanbanEvent {
     ts: string;
     action?: string;
     title?: string;
+}
+
+export interface Activity {
+    id: number;
+    agent: string;
+    message: string;
+    timestamp: string;
 }
 
 /**
@@ -57,6 +65,7 @@ export async function createIssue(data: {
     summary?: string;
     priority?: string;
     state?: string;
+    type?: string;
 }): Promise<{ ok: boolean; id: string; state: string }> {
     const res = await fetch(`${getApiUrl()}/issues`, {
         method: "POST",
@@ -78,6 +87,24 @@ export async function updateIssueState(
         body: JSON.stringify({ state, agent }),
     });
     if (!res.ok) throw new Error(`Failed to update issue: ${res.status}`);
+    return res.json();
+}
+
+export async function fetchActivities(limit: number = 20): Promise<Activity[]> {
+    const res = await fetch(`${getApiUrl()}/activities?limit=${limit}`, {
+        cache: "no-store"
+    });
+    if (!res.ok) throw new Error(`Failed to fetch activities: ${res.status}`);
+    return res.json();
+}
+
+export async function postActivity(agent: string, message: string): Promise<{ ok: boolean }> {
+    const res = await fetch(`${getApiUrl()}/activities`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agent, message }),
+    });
+    if (!res.ok) throw new Error(`Failed to post activity: ${res.status}`);
     return res.json();
 }
 
