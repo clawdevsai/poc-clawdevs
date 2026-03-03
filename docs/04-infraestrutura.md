@@ -107,7 +107,7 @@ Pastas por time e componente:
 
 - **ollama/** — Deployment Ollama GPU, Service, PVC. Inferência local no cluster; todos os agentes integram com Ollama-GPU por padrão.
 - **redis/** — Redis Streams (estado global e eventos).
-- **management-team/** — CEO e PO: **openclaw/** (gateway: Dockerfile, configmap, deployment, workspace-ceo), **soul/** (ConfigMap soul-agents). Servidor para CEO e PO.
+- **management-team/** — CEO e PO: **openclaw/** (gateway: Dockerfile, configmap, deployment, workspace-ceo-configmap), **soul/** (ConfigMap soul-management-agents). Servidor para CEO e PO.
 - **development-team/** — DevOps, Architect, Developer, QA, CyberSec, UX, DBA: **soul/**, **developer/** (pod 013), **revisao-pos-dev/** (slot 125), config e NetworkPolicy (100% offline).
 - **governance-team/** — Governance Proposer: **soul/**, config e deployment (CPU, sessão isolada).
 

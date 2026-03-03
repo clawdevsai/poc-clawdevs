@@ -111,7 +111,7 @@ O deployment `openclaw` já sobe o gateway **dentro do cluster** (conecta em `ol
 O pod do openclaw passa a rodar o gateway com Telegram e Slack (quando as chaves estiverem no secret). Não é necessário rodar `run-openclaw-telegram-slack-ollama.sh` no host.
 
 **Opção C — Rodar OpenClaw no host (teste rápido com port-forward):**  
-Use o script `scripts/run-openclaw-telegram-slack-ollama.sh`, que faz port-forward do Ollama e inicia o gateway com a config `config/openclaw/openclaw.local.json5`. **Para o bot responder no perfil CEO** (tom executivo, pt-BR, SOUL), essa config define `agents.defaults.workspace: "config/openclaw/workspace-ceo"`, onde está o `SOUL.md` do CEO; o script deve ser executado **na raiz do repositório** para que esse caminho exista. Sem o workspace configurado, o modelo recebe apenas o prompt genérico e responde como assistente, não como CEO.
+Para rodar o gateway **no host** (emergência/debug): use `scripts/run-openclaw-telegram-slack-ollama.sh`, que faz port-forward do Ollama e usa a config em `k8s/management-team/openclaw/openclaw.local.json5.example`. **Uso normal:** tudo no K8s (`make up`); o SOUL do CEO vem de soul-management-agents (soul-merge no pod).
 
 ```bash
 # Na raiz do repo (obrigatório para workspace CEO)
@@ -123,8 +123,8 @@ Ou manualmente (port-forward + config com workspace):
 ```bash
 kubectl port-forward -n ai-agents svc/ollama-service 11434:11434 &
 export TELEGRAM_BOT_TOKEN='...'
-export OPENCLAW_CONFIG_PATH="$(pwd)/config/openclaw/openclaw.local.json5"
-# CWD deve ser a raiz do repo (workspace CEO = config/openclaw/workspace-ceo)
+export OPENCLAW_CONFIG_PATH="$(pwd)/k8s/management-team/openclaw/openclaw.local.json5.example"
+# CWD = raiz do repo. Uso normal: gateway no K8s (make up).
 openclaw gateway
 ```
 
@@ -204,7 +204,7 @@ O gateway roteia a mensagem para o agente (CEO ou o agente que atender no Slack)
 
 **Primeiro acesso no Slack (pairing):** Se não tiver `OPENCLAW_SLACK_DIRECTOR_USER_ID` no `.env`, no primeiro DM o gateway pode pedir aprovação. No terminal onde o script está rodando: `openclaw pairing list slack` e depois `openclaw pairing approve slack <CODE>`.
 
-Ref: [42-slack-tokens-setup.md](42-slack-tokens-setup.md), [config/openclaw/README.md](../config/openclaw/README.md).
+Ref: [42-slack-tokens-setup.md](42-slack-tokens-setup.md), [openclaw-config-ref.md](openclaw-config-ref.md).
 
 ## Resumo da arquitetura (Fase 0)
 
@@ -213,7 +213,7 @@ Ref: [42-slack-tokens-setup.md](42-slack-tokens-setup.md), [config/openclaw/READ
 | **openclaw**| Gateway: canal Telegram → agente CEO → Ollama|
 | **ollama-gpu** | Modelo local (ex.: stewyphoenix19/phi3-mini_v1:latest, ministral-3:3b) |
 | **redis**   | Disponível para estado/streams (fase futura) |
-| **openclaw-workspace-ceo** | SOUL.md no workspace → CEO segue perfil [soul/CEO.md](soul/CEO.md) |
+| **soul-management-agents + workspace-ceo-configmap** | SOUL CEO em soul ConfigMap; MEMORY/working-buffer em workspace-ceo-configmap. CEO segue [soul/CEO.md](soul/CEO.md). |
 
 Doc de arquitetura: [openclaw-sub-agents-architecture.md](openclaw-sub-agents-architecture.md).
 
@@ -237,10 +237,10 @@ Validação e line-up sugerido por agente: [issues/validacao-fase1-019.md](issue
 
 Para **reduzir o tempo de resposta** no chat do Telegram sem aumentar hardware:
 
-- **Modelo do CEO:** O CEO está configurado para usar **stewyphoenix19/phi3-mini_v1:latest** (modelo mais leve) com `contextWindow: 4096` e `maxTokens: 1024` no OpenClaw — respostas curtas e objetivas saem mais rápido. Ver `k8s/management-team/openclaw/configmap.yaml` (gateway) e `config/openclaw/openclaw.local.json5`.
+- **Modelo do CEO:** O CEO está configurado para usar **stewyphoenix19/phi3-mini_v1:latest** (modelo mais leve) com `contextWindow: 4096` e `maxTokens: 1024` no OpenClaw — respostas curtas e objetivas saem mais rápido. Ver `k8s/management-team/openclaw/configmap.yaml` (gateway) e `k8s/management-team/openclaw/openclaw.local.json5.example` (exemplo local).
 - **OLLAMA_KEEP_ALIVE:** O deployment do Ollama usa `5m` para manter o modelo na VRAM entre mensagens; evita latência de reload. Ver `k8s/ollama/deployment.yaml`.
 - **OLLAMA_CONTEXT_LENGTH:** Opcionalmente definido (ex.: 8192) no deployment para limitar contexto global e uso de VRAM; alinha com o SOUL compacto do CEO. Ver [04-infraestrutura.md](04-infraestrutura.md).
-- **SOUL do CEO:** Manter a versão compacta em `openclaw-workspace-ceo` (respostas curtas, uma linha para cumprimentos).
+- **SOUL do CEO:** Manter a versão compacta em `k8s/management-team/soul/configmap.yaml` (ceo.md) (respostas curtas, uma linha para cumprimentos).
 - **Streaming:** Se o OpenClaw e o canal Telegram suportarem resposta em streaming, habilitar reduz a **latência percebida** (texto aparecendo aos poucos); consultar a documentação do OpenClaw.
 
 Garantir que o modelo do CEO esteja puxado no cluster: `kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest` (ou via port-forward).

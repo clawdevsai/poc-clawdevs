@@ -38,7 +38,7 @@ Os agentes seguem: **habilidades proativas** ([13-habilidades-proativas.md](13-h
 | **Agentes e arquitetura** | [02](02-agentes.md), [03](03-arquitetura.md), [04](04-infraestrutura.md) |
 | **Segurança** | [05](05-seguranca-e-etica.md), [14](14-seguranca-runtime-agentes.md), [15](15-seguranca-aplicacao-owasp.md), [16](16-ciso-habilidades.md), [20-zero-trust-fluxo](20-zero-trust-fluxo.md), [21-quarentena-disco-pipeline](21-quarentena-disco-pipeline.md), [27-kill-switch-redis](27-kill-switch-redis.md) |
 | **Operações** | [06](06-operacoes.md), [estrategia-uso-hardware-gpu-cpu](estrategia-uso-hardware-gpu-cpu.md), [38](38-redis-streams-estado-global.md), [39](39-consumer-groups-pipeline-revisao.md), [40](40-contingencia-cluster-acefalo.md) |
-| **Config e setup** | [07](07-configuracao-e-prompts.md), [09](09-setup-e-scripts.md) |
+| **Config e setup** | [07](07-configuracao-e-prompts.md), [09](09-setup-e-scripts.md), [openclaw-config-ref](openclaw-config-ref.md) (OpenClaw — tudo no K8s) |
 | **Fluxos** | [08](08-exemplo-de-fluxo.md), [fluxo-completo-mermaid](fluxo-completo-mermaid.md), [42-fluxo-e2e-operacao-2fa](42-fluxo-e2e-operacao-2fa.md) |
 | **Ferramentas e skills** | [10](10-self-improvement-agentes.md)–[19](19-descoberta-instalacao-skills.md), [28](28-memoria-longo-prazo-elite.md), [29](29-criacao-de-skills.md), [31](31-ollama-local.md)–[34](34-mcp-github-publico.md) |
 | **Deploy e fases** | [37](37-deploy-fase0-telegram-ceo-ollama.md), [41](41-fase1-agentes-soul-pods.md), [42-slack-tokens-setup](42-slack-tokens-setup.md), [43](43-autonomia-nivel-4-matriz-escalonamento.md), [44](44-fase2-seguranca-automacao.md) |

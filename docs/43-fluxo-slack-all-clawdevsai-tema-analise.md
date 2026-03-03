@@ -36,7 +36,7 @@ Este documento descreve o fluxo em que o **Diretor** coloca um **tema para anali
 
 ## Referências
 
-- [config/openclaw/README.md](../config/openclaw/README.md) — Config e uso do OpenClaw com Slack.
+- [openclaw-config-ref.md](openclaw-config-ref.md) — Config OpenClaw (tudo no K8s); uso com Slack.
 - [docs/openclaw-sub-agents-architecture.md](openclaw-sub-agents-architecture.md) — Sub-agents e roteamento.
 - [02-agentes.md](02-agentes.md) — Definição dos agentes.
 - [OpenClaw — Slack](https://docs.openclaw.ai/channels/slack) — Canal Slack no OpenClaw.

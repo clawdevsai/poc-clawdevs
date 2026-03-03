@@ -1,0 +1,52 @@
+{
+  // Example: config para rodar OpenClaw no host (emergência/debug). Uso normal: tudo no K8s (make up).
+  // Uso local: scripts/run-openclaw-telegram-slack-ollama.sh (port-forward Ollama + este arquivo).
+  gateway: {
+    mode: "local",
+    port: 18789,
+    bind: "loopback",
+  },
+  channels: {
+    telegram: {
+      enabled: true,
+      dmPolicy: "allowlist",
+      allowFrom: [],
+      groups: {},
+    },
+    slack: {
+      enabled: false,
+      mode: "socket",
+      dmPolicy: "allowlist",
+      allowFrom: [],
+      dm: { enabled: true, groupEnabled: false },
+      groupPolicy: "allowlist",
+      channels: {
+        "__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__": {},
+      },
+    },
+  },
+  models: {
+    mode: "merge",
+    providers: {
+      ollama: {
+        baseUrl: "http://127.0.0.1:11434/v1",
+        api: "openai-completions",
+        models: [
+          { id: "glm-5:cloud", name: "GLM-5 Cloud", contextWindow: 32000, maxTokens: 4096 },
+          { id: "qwen2.5:3b", name: "Qwen 2.5 3B", contextWindow: 4096, maxTokens: 2048 },
+          { id: "ministral-3:3b-cloud", name: "Ministral 3 3B Cloud", contextWindow: 32000, maxTokens: 4096 },
+        ],
+      },
+    },
+  },
+  agents: {
+    defaults: {
+      model: "ollama/ministral-3:3b-cloud",
+      workspace: "",
+    },
+    list: [
+      { id: "ceo", name: "CEO", model: "ollama/ministral-3:3b-cloud" },
+      { id: "po", name: "PO", model: "ollama/ministral-3:3b-cloud" },
+    ],
+  },
+}

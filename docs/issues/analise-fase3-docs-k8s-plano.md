@@ -55,7 +55,7 @@ Ordem de apply e referências ao Makefile e a `k8s/README.md` estão alinhadas. 
 
 ### 2.2 Config (`config/`)
 
-- **config/openclaw/** — `openclaw.local.json5`, README (Slack/Telegram, modelo, run script, fluxo #all-clawdevsai), `workspace-ceo/SOUL.md`.
+- **OpenClaw:** config em k8s/management-team/openclaw/ (configmap, workspace-ceo-configmap); SOUL em soul ConfigMaps. Ref: [docs/openclaw-config-ref.md](../openclaw-config-ref.md).
 - Uso principal: rodar OpenClaw no host com Slack/Telegram e port-forward para Ollama; não altera o que a Fase 3 exige no cluster.
 
 ### 2.3 Scripts (`scripts/`)

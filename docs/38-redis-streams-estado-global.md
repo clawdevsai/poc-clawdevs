@@ -6,6 +6,15 @@ Ref: [03-arquitetura.md](03-arquitetura.md), [06-operacoes.md](06-operacoes.md),
 
 ---
 
+## 0. Mensageria como gatilho e integração Redis
+
+Há **um único OpenClaw** com vários agentes; a **mensageria** é só **gatilho** para acordar quem deve falar ou trabalhar. Dois caminhos:
+
+- **Slack/canal:** gatilho para **conversa** (ex.: tema para análise no #all-clawdevsai). A conversa compartilhada é o próprio canal/thread; um agente por vez é regra na SOUL.
+- **Redis Streams:** gatilho para o **pipeline** (cmd:strategy → PO, task:backlog → Developer, etc.). O Gateway Redis Adapter recebe `POST /publish` (ou `/publish-to-cloud`) e faz XADD; o pod do agente consome com XREADGROUP — **um agente por vez** por stream (consumer groups). Contexto compartilhado pode usar **working buffer** (chaves com TTL). Detalhes: [agents-devs/interacao-agentes-mensageria.md](agents-devs/interacao-agentes-mensageria.md) (§ Integração via Redis).
+
+---
+
 ## 1. Streams (canais de eventos)
 
 | Stream | Produtor | Consumidor(es) | Uso |
@@ -47,6 +56,7 @@ O **estado da verdade** fica em chaves Redis; o stream carrega apenas **ID de tr
 |--------|---------|-----|
 | **project:v1:issue:{id}** | `project:v1:issue:42` | Especificação da issue/tarefa (PO grava; Developer/Architect leem). |
 | **project:v1:backlog** | — | Metadado ou lista de IDs no backlog (conforme orquestrador). |
+| **project:v1:working_buffer:{suffix}** | `project:v1:working_buffer:session:abc` | Buffer de conversa/contexto compartilhado entre turnos; usar TTL (ex.: `redis_buffer_writer.write_working_buffer`). Ver [integracao-040-041-gateway-orquestrador.md](issues/integracao-040-041-gateway-orquestrador.md). |
 | **gpu:lock** | — | GPU Lock (SETNX + TTL dinâmico); ver [scripts/gpu_lock.md](scripts/gpu_lock.md). |
 
 O PO grava a especificação em `project:v1:issue:42`; o Developer recebe no stream apenas `{"issue_id": "42"}` e lê o conteúdo pela chave.
