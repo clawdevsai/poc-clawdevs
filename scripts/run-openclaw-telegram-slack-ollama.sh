@@ -127,7 +127,7 @@ echo "    Telegram: só CEO. Slack: todos (discussões = Ollama local GPU)."
 if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" ]]; then
   echo "    Slack habilitado. Envie mensagem no Slack ou no Telegram para testar."
   echo "    Ex.: no Slack (DM ou canal): \"Pergunta ao Diretor: Qual a prioridade desta semana?\""
-  echo "    Se alguém mandar DM e nada acontecer: adicione o Slack User ID em OPENCLAW_SLACK_ALLOWED_USER_IDS no .env (ou use pairing: openclaw pairing approve slack <CODE>). Log: OPENCLAW_LOG=1 ./scripts/run-openclaw-telegram-slack-ollama.sh"
+  echo "    Se alguém mandar DM e nada acontecer: adicione o Slack User ID em OPENCLAW_SLACK_ALLOWED_USER_IDS no .env (ou use pairing: openclaw pairing approve slack <CODE>). Log em logs/: OPENCLAW_LOG=1 ./scripts/run-openclaw-telegram-slack-ollama.sh"
 else
   echo "    Envie uma mensagem ao seu bot no Telegram para testar."
 fi
@@ -145,10 +145,12 @@ if ! command -v npx >/dev/null 2>&1; then
 fi
 
 # Log em arquivo para depuração (ex.: nada acontece no Slack). Use OPENCLAW_LOG=1 ou OPENCLAW_LOG=/caminho/log.txt
+# Com OPENCLAW_LOG=1 o log fica em logs/openclaw-gateway.log na raiz do projeto.
 LOG_FILE=""
 if [[ -n "${OPENCLAW_LOG:-}" ]]; then
   if [[ "$OPENCLAW_LOG" == "1" ]]; then
-    LOG_FILE="$REPO_ROOT/openclaw-gateway.log"
+    mkdir -p "$REPO_ROOT/logs"
+    LOG_FILE="$REPO_ROOT/logs/openclaw-gateway.log"
   else
     LOG_FILE="$OPENCLAW_LOG"
   fi

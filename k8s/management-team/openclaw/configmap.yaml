@@ -31,7 +31,8 @@ data:
           "enabled": true,
           "allowInsecureAuth": false,
           "dangerouslyAllowHostHeaderOriginFallback": false,
-          "dangerouslyDisableDeviceAuth": false
+          "dangerouslyDisableDeviceAuth": false,
+          "allowedOrigins": ["http://192.168.49.2:30000"]
         } 
       },
       "channels": {
@@ -74,7 +75,7 @@ data:
       },
       "agents": {
         "defaults": {
-          "model": "ollama/deepseek-r1:8b",
+          "model": "ollama/glm-5:cloud",
           "workspace": "/workspace/ceo",
           "subagents": {
             "maxSpawnDepth": 2,
@@ -84,8 +85,8 @@ data:
           }
         },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/deepseek-r1:14b", "workspace": "/workspace/ceo" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/deepseek-r1:8b", "workspace": "/workspace/po" },
+          { "id": "ceo", "name": "CEO", "model": "ollama/glm-5:cloud", "workspace": "/workspace/ceo" },
+          { "id": "po", "name": "Product Owner", "model": "ollama/glm-5:cloud", "workspace": "/workspace/po" },
           { "id": "devops", "name": "DevOps/SRE", "model": "ollama/glm-5:cloud", "workspace": "/workspace/devops" },
           { "id": "architect", "name": "Architect", "model": "ollama/glm-5:cloud", "workspace": "/workspace/architect" },
           { "id": "developer", "name": "Developer", "model": "ollama/glm-5:cloud", "workspace": "/workspace/developer" },
