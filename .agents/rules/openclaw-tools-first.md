@@ -1,0 +1,41 @@
+---
+trigger: always_on
+glob:
+description: Prioridade às tools do OpenClaw; sempre pesquisar na documentação se existe solução antes de implementar
+---
+
+# OpenClaw Tools First — Prioridade às ferramentas nativas
+
+**Prioridade:** usar as **tools do OpenClaw** em vez de código ou scripts próprios. **Sempre pesquisar** na documentação OpenClaw se já existe solução (tool, plugin, config ou skill) antes de implementar.
+
+## Princípio
+
+- **Preferir** as tools expostas pelo OpenClaw (exec, browser, sessions, message, cron, gateway, etc.) e configurá-las via `openclaw.json` (perfis, allow/deny, byProvider).
+- **Antes de codar:** consultar o [índice da documentação](https://docs.openclaw.ai/llms.txt) e as páginas de [Tools](https://docs.openclaw.ai/tools); só implementar quando **não houver** tool ou extensão documentada.
+- **Skills:** verificar [Skills](https://docs.openclaw.ai/tools/skills), [Creating Skills](https://docs.openclaw.ai/tools/creating-skills) e [Skills Config](https://docs.openclaw.ai/tools/skills-config) antes de criar lógica custom.
+
+## Checklist rápido
+
+1. **Tools overview:** [docs.openclaw.ai/tools](https://docs.openclaw.ai/tools) — inventário de tools (exec, process, browser, sessions, message, cron, gateway, web_search, web_fetch, apply_patch, etc.).
+2. **Config:** `tools.profile`, `tools.allow`/`tools.deny`, `tools.byProvider`, `agents.list[].tools.*`.
+3. **Plugins/opcionais:** apply_patch, diffs, llm-task, lobster, firecrawl — ver páginas específicas.
+4. **Só então** escrever código ou script se nenhuma tool/skill cobrir o caso.
+
+## Referências (sempre pesquisar aqui)
+
+| Área | Onde |
+|------|------|
+| **Tools (geral)** | [Tools](https://docs.openclaw.ai/tools), [apply_patch](https://docs.openclaw.ai/tools/apply-patch), [diffs](https://docs.openclaw.ai/tools/diffs), [loop-detection](https://docs.openclaw.ai/tools/loop-detection), [reactions](https://docs.openclaw.ai/tools/reactions), [thinking](https://docs.openclaw.ai/tools/thinking) |
+| **Exec e segurança** | [exec](https://docs.openclaw.ai/tools/exec), [exec-approvals](https://docs.openclaw.ai/tools/exec-approvals), [elevated](https://docs.openclaw.ai/tools/elevated) |
+| **Web** | [web](https://docs.openclaw.ai/tools/web), [Brave Search](https://docs.openclaw.ai/brave-search), [Perplexity](https://docs.openclaw.ai/perplexity), [firecrawl](https://docs.openclaw.ai/tools/firecrawl) |
+| **Browser** | [browser](https://docs.openclaw.ai/tools/browser), [browser-login](https://docs.openclaw.ai/tools/browser-login), [chrome-extension](https://docs.openclaw.ai/tools/chrome-extension), [browser-linux-troubleshooting](https://docs.openclaw.ai/tools/browser-linux-troubleshooting) |
+| **Agentes e sessões** | [agent-send](https://docs.openclaw.ai/tools/agent-send), [subagents](https://docs.openclaw.ai/tools/subagents), [acp-agents](https://docs.openclaw.ai/tools/acp-agents), [multi-agent-sandbox-tools](https://docs.openclaw.ai/tools/multi-agent-sandbox-tools) |
+| **Workflows e plugins** | [llm-task](https://docs.openclaw.ai/tools/llm-task), [lobster](https://docs.openclaw.ai/tools/lobster) |
+| **Skills e comandos** | [skills](https://docs.openclaw.ai/tools/skills), [skills-config](https://docs.openclaw.ai/tools/skills-config), [creating-skills](https://docs.openclaw.ai/tools/creating-skills), [slash-commands](https://docs.openclaw.ai/tools/slash-commands) |
+
+**Índice completo:** https://docs.openclaw.ai/llms.txt — usar para descobrir outras páginas.
+
+## Regras relacionadas
+
+- [openclaw-first.md](.agents/rules/openclaw-first.md) — maximizar uso do OpenClaw; código só quando não houver solução
+- [openclaw-only-code.md](.agents/rules/openclaw-only-code.md) — sistema 100% OpenClaw + Ollama no K8s

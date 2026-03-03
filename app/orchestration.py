@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fase 3 — Chaves e helpers: five strikes por issue, aprovação por omissão cosmética,
+Chaves e helpers: five strikes por issue, aprovação por omissão cosmética,
 orçamento de degradação, loop de consenso, QA auditor.
 Ref: docs/06-operacoes.md, docs/issues/032–036.
 """

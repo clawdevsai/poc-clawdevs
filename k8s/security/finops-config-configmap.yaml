@@ -8,7 +8,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: security
-    phase: "4"
 data:
   # --- Perfis por agente (040): max tokens por request no Gateway (FinOps na borda) ---
   MAX_TOKENS_PER_REQUEST_CEO: "8192"

@@ -16,7 +16,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
-from orchestration_phase3 import get_redis, cloud_arbitrage_solution_key
+from orchestration import get_redis, cloud_arbitrage_solution_key
 
 KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "").strip()

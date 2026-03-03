@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from orchestration_phase3 import get_redis, STREAM_DIGEST, DEGRADATION_REPORT_DIR
+from orchestration import get_redis, STREAM_DIGEST, DEGRADATION_REPORT_DIR
 
 DIGEST_OUTPUT_DIR = os.environ.get("DIGEST_OUTPUT_DIR", "docs/agents-devs")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")

@@ -67,5 +67,8 @@ metadata:
 spec:
   selector:
     app: developer
-  ports: []
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
   type: ClusterIP

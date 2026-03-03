@@ -8,7 +8,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: security
-    phase: "2"
 spec:
   schedule: "*/3 * * * *"  # a cada 3 min
   concurrencyPolicy: Forbid
@@ -30,7 +29,7 @@ spec:
                 - "pip install -q kubernetes && exec python /scripts/rotate_gateway_token.py"
               envFrom:
                 - configMapRef:
-                    name: phase2-config
+                    name: security-config
                     optional: true
               env:
                 - name: NAMESPACE

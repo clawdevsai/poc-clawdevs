@@ -32,7 +32,7 @@ spec:
                 name: clawdevs-github-secret
                 optional: true
             - configMapRef:
-                name: phase2-config
+                name: security-config
                 optional: true
             - configMapRef:
                 name: finops-config

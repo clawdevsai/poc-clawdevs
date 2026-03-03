@@ -11,8 +11,8 @@ MINIKUBE_MEMORY ?= 20g
 .PHONY: configmaps-pipeline configmaps-phase2 configmaps-orchestrator
 .PHONY: configmap-developer configmap-revisao-slot configmap-agent-slots configmap-gateway-adapter configmap-devops-worker configmap-audit-runner configmap-devops-compact configmap-acefalo
 .PHONY: configmap-rotation configmap-url-sandbox configmap-url-sandbox-trigger configmap-quarantine
-.PHONY: phase2-apply phase2-configmaps orchestrator-apply orchestrator-configmap
-.PHONY: verify reset-memory test-github-access dashboard
+.PHONY: security-apply security-configmaps orchestrator-apply orchestrator-configmap
+.PHONY: verify reset-memory test-github-access dashboard status status-pods
 
 # ------------------------------------------------------------------------------
 # Help
@@ -22,7 +22,7 @@ help:
 	@echo ""
 	@echo "  Cluster"
 	@echo "    make prepare      Minikube + Docker + GPU addon"
-	@echo "    make up           prepare + openclaw-image + namespace, Redis, Ollama, OpenClaw, phase2, orchestrator"
+	@echo "    make up           prepare + secrets do .env + namespace, Redis, Ollama, OpenClaw, security, orchestrator + pipeline"
 	@echo "    make up-all      up + slot configmaps + Redis streams init + rollouts (scripts/up-all.sh)"
 	@echo "    make down        Remove namespace e recursos (estaca zero)"
 	@echo ""
@@ -31,19 +31,21 @@ help:
 	@echo "    make up-management    Deploy CEO/PO (scale openclaw a 0 se usar dois gateways)"
 	@echo ""
 	@echo "  ConfigMaps (scripts para pods)"
-	@echo "    make configmaps-pipeline     PO, Architect-draft, Developer, Revisão-slot, DevOps-worker, Gateway-adapter"
+	@echo "    make configmaps-pipeline     PO, Architect-draft, Developer, Revisão-slot, DevOps-worker, Audit-runner, Gateway-adapter"
 	@echo "    make configmaps-phase2       rotation, url-sandbox, quarantine, gateway-adapter"
 	@echo "    make configmaps-orchestrator orchestrator-scripts (Slack, digest, cosmetic)"
 	@echo "    make configmap-<nome>        Um só (ex: configmap-developer)"
 	@echo ""
 	@echo "  Fase 2 / Orchestrator"
-	@echo "    make phase2-configmaps   Cria ConfigMaps da Fase 2"
-	@echo "    make phase2-apply        phase2-configmaps + kubectl apply -f k8s/security/"
+	@echo "    make security-configmaps  Cria ConfigMaps de segurança"
+	@echo "    make security-apply      security-configmaps + kubectl apply -f k8s/security/"
 	@echo "    make orchestrator-configmap"
 	@echo "    make orchestrator-apply  orchestrator-configmap + kubectl apply -f k8s/orchestrator/"
 	@echo ""
 	@echo "  Utilitários"
 	@echo "    make verify             Verificação hardware + cluster"
+	@echo "    make status             Minikube + pods e deployments (ai-agents)"
+	@echo "    make status-pods        Logs recentes dos pods principais"
 	@echo "    make reset-memory       Reset Redis + workspace (MEMORY.md, etc.)"
 	@echo "    make test-github-access  [MODE=host|cluster|all]"
 	@echo "    make dashboard          Minikube dashboard no browser"
@@ -92,6 +94,8 @@ up: prepare openclaw-image
 	kubectl apply -f $(K8S_DIR)/namespace.yaml
 	@echo "==> Aplicando ResourceQuota e LimitRange..."
 	kubectl apply -f $(K8S_DIR)/limits.yaml
+	@echo "==> Secrets a partir do .env (openclaw-telegram, clawdevs-github, orchestrator-slack, rotation-source)..."
+	@$(CURDIR)/scripts/secrets-from-env.sh || true
 	@echo "==> Aplicando Redis..."
 	kubectl apply -f $(K8S_DIR)/redis/deployment.yaml
 	kubectl apply -f $(K8S_DIR)/redis/streams-configmap.yaml
@@ -113,7 +117,7 @@ up: prepare openclaw-image
 	kubectl apply -f $(K8S_DIR)/management-team/soul/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/development-team/soul/configmap.yaml
 	@if [ -d $(K8S_DIR)/security ]; then \
-		$(MAKE) phase2-configmaps; \
+		$(MAKE) security-configmaps; \
 		kubectl apply -f $(K8S_DIR)/security/; \
 	fi
 	@if [ -d $(K8S_DIR)/orchestrator ]; then \
@@ -126,14 +130,20 @@ up: prepare openclaw-image
 	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
 	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
 		kubectl apply -f $(K8S_DIR)/management-team/openclaw/secret.yaml; \
-		kubectl rollout restart deployment/openclaw -n ai-agents --timeout=60s 2>/dev/null || true; \
-	else \
-		echo "==> Secret openclaw-telegram não encontrado. Use: ./scripts/k8s-openclaw-secret-from-env.sh"; \
 	fi
-	@echo "==> up concluído."
-	@echo "  Slack/Telegram: OPENCLAW_SLACK_*, TELEGRAM_* no .env → k8s-openclaw-secret-from-env.sh"
+	@kubectl rollout restart deployment/openclaw -n ai-agents --timeout=60s 2>/dev/null || true
+	@echo "==> Pipeline (ConfigMaps + deployments PO, Architect, Developer, Revisão, DevOps, Audit, Gateway-adapter)..."
+	@$(MAKE) configmaps-pipeline
+	@for dir in po architect-draft developer revisao-pos-dev devops-worker audit-runner gateway-redis-adapter; do \
+		kubectl apply -f $(K8S_DIR)/development-team/$$dir/ 2>/dev/null || true; \
+	done
+	@if ! kubectl get job redis-streams-init -n ai-agents &>/dev/null; then \
+		echo "==> Redis streams init (job one-shot)..."; \
+		kubectl apply -f $(K8S_DIR)/redis/job-init-streams.yaml; \
+	fi
+	@echo "==> up concluído (cluster + secrets do .env + pipeline)."
+	@echo "  Secrets: preenchidos a partir do .env (openclaw-telegram, clawdevs-github, orchestrator-slack)."
 	@echo "  Ollama: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull <modelo>"
-	@echo "  Pipeline (PO, Developer, Revisão, DevOps, etc.): make configmaps-pipeline && kubectl apply -f k8s/development-team/"
 
 up-all:
 	@$(CURDIR)/scripts/up-all.sh
@@ -170,7 +180,7 @@ up-management:
 # ------------------------------------------------------------------------------
 # ConfigMaps — Pipeline (PO, Architect-draft, Developer, Revisão, DevOps, Gateway-adapter)
 # ------------------------------------------------------------------------------
-configmaps-pipeline: configmap-po configmap-architect-draft configmap-developer configmap-revisao-slot configmap-devops-worker configmap-gateway-adapter
+configmaps-pipeline: configmap-po configmap-architect-draft configmap-developer configmap-revisao-slot configmap-devops-worker configmap-audit-runner configmap-gateway-adapter
 	@echo "==> ConfigMaps do pipeline aplicados."
 
 configmap-po:
@@ -205,7 +215,7 @@ configmap-revisao-slot:
 	  --from-file=slot_revisao_pos_dev.py=app/slot_revisao_pos_dev.py \
 	  --from-file=gpu_lock.py=app/gpu_lock.py \
 	  --from-file=openclaw_gateway_call.py=app/openclaw_gateway_call.py \
-	  --from-file=orchestration_phase3.py=app/orchestration_phase3.py \
+	  --from-file=orchestration.py=app/orchestration.py \
 	  --from-file=architect_fallback.py=app/architect_fallback.py \
 	  --from-file=microadr_generate.py=app/microadr_generate.py \
 	  --from-file=acefalo_redis.py=app/acefalo_redis.py \
@@ -266,8 +276,8 @@ configmap-agent-slots:
 # ------------------------------------------------------------------------------
 # ConfigMaps — Phase2 (segurança: rotação, url-sandbox, quarentena)
 # ------------------------------------------------------------------------------
-configmaps-phase2: configmap-rotation configmap-url-sandbox configmap-quarantine configmap-gateway-adapter
-	@echo "==> ConfigMaps Fase 2 aplicados."
+configmaps-phase2: configmap-rotation configmap-url-sandbox configmap-url-sandbox-trigger configmap-quarantine configmap-gateway-adapter
+	@echo "==> ConfigMaps de segurança aplicados."
 
 configmap-rotation:
 	@echo "==> ConfigMap rotation-scripts..."
@@ -296,14 +306,14 @@ configmap-quarantine:
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 # ------------------------------------------------------------------------------
-# Phase2 apply (security/)
+# Security apply (security/)
 # ------------------------------------------------------------------------------
-phase2-configmaps: configmaps-phase2
+security-configmaps: configmaps-phase2
 
-phase2-apply: phase2-configmaps
+security-apply: security-configmaps
 	@echo "==> Aplicando k8s/security/..."
 	@kubectl apply -f $(K8S_DIR)/security/
-	@echo "==> Fase 2 configurada."
+	@echo "==> Segurança configurada."
 
 # ------------------------------------------------------------------------------
 # ConfigMaps — Orchestrator (Slack consumer, digest, cosmetic)
@@ -313,7 +323,7 @@ configmaps-orchestrator: orchestrator-configmap
 orchestrator-configmap:
 	@echo "==> ConfigMap orchestrator-scripts..."
 	@kubectl create configmap orchestrator-scripts -n ai-agents \
-	  --from-file=orchestration_phase3.py=app/orchestration_phase3.py \
+	  --from-file=orchestration.py=app/orchestration.py \
 	  --from-file=slack_notify.py=app/slack_notify.py \
 	  --from-file=consumer_orchestrator_events_slack.py=app/consumer_orchestrator_events_slack.py \
 	  --from-file=arbitrage_cloud.py=app/arbitrage_cloud.py \
@@ -333,6 +343,35 @@ orchestrator-apply: orchestrator-configmap
 verify:
 	@docs/scripts/verify-machine.sh
 	@docs/scripts/verify-gpu-cluster.sh
+
+status:
+	@echo "==> Minikube..."
+	@minikube status 2>/dev/null || true
+	@echo ""
+	@echo "==> Pods (ai-agents)..."
+	@kubectl get pods -n ai-agents -o wide 2>/dev/null || true
+	@echo ""
+	@echo "==> Deployments..."
+	@kubectl get deployments -n ai-agents 2>/dev/null || true
+	@echo ""
+	@echo "==> Services..."
+	@kubectl get svc -n ai-agents 2>/dev/null || true
+
+status-pods:
+	@echo "==> Redis (tail 5)..."
+	@kubectl logs -n ai-agents deployment/redis --tail=5 2>/dev/null || true
+	@echo ""
+	@echo "==> OpenClaw (tail 5)..."
+	@kubectl logs -n ai-agents deployment/openclaw --tail=5 2>/dev/null || true
+	@echo ""
+	@echo "==> Ollama (tail 5)..."
+	@kubectl logs -n ai-agents deployment/ollama-gpu --tail=5 2>/dev/null || true
+	@echo ""
+	@echo "==> Revisão pós-Dev (tail 5)..."
+	@kubectl logs -n ai-agents deployment/revisao-pos-dev --tail=5 2>/dev/null || true
+	@echo ""
+	@echo "==> Slack events consumer (tail 5)..."
+	@kubectl logs -n ai-agents deployment/slack-events-consumer --tail=5 2>/dev/null || true
 
 reset-memory:
 	@$(CURDIR)/scripts/reset_agent_memory.sh
@@ -359,7 +398,7 @@ quarantine-pipeline-configmap: configmap-quarantine
 
 url-sandbox-run: configmap-url-sandbox
 	@test -n "$(URL)" || (echo "Uso: make url-sandbox-run URL=https://exemplo.com"; exit 1)
-	@kubectl patch configmap phase2-config -n ai-agents -p '{"data":{"URL_SANDBOX_TARGET":"$(URL)"}}'
+	@kubectl patch configmap security-config -n ai-agents -p '{"data":{"URL_SANDBOX_TARGET":"$(URL)"}}'
 	@kubectl delete job url-sandbox -n ai-agents --ignore-not-found=true
 	@kubectl apply -f $(K8S_DIR)/security/job-url-sandbox.yaml
 	@echo "Acompanhe: kubectl logs -f job/url-sandbox -n ai-agents"

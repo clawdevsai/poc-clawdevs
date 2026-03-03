@@ -112,7 +112,7 @@ def process_task(r, stream: str, msg_id: str, data) -> None:
                 r.delete(_dev_lock_key(issue_id))
                 r.xack(stream, GROUP, msg_id)
                 try:
-                    from orchestration_phase3 import emit_event
+                    from orchestration import emit_event
                     emit_event(r, "task_returned_to_po", issue_id=issue_id, reason=reason or "finops_limit")
                 except Exception:
                     pass

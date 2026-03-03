@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Valida no cluster a rotação de tokens (Fase 2 — 025).
-# Uso: ./scripts/validate-phase2-token-rotation.sh
+# Uso: ./scripts/validate-token-rotation.sh
 # Requer: cluster acessível (minikube start; make up já aplicado).
 set -e
 NS="${NAMESPACE:-ai-agents}"

@@ -8,7 +8,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: security
-    phase: "4"
 data:
   # CEO: nuvem sob demanda, temperature 0.7, constraint: proibido código; freio $5/dia; filtrar tarefas antes de enviar ao PO
   profile_ceo: '{"model_cloud":"gpt-4o/gemini-1.5-pro","temperature":0.7,"skills":["web_search","telegram_notify","financial_report"],"constraint":"no_code;filter_tasks_before_po;$5_day_brake"}'

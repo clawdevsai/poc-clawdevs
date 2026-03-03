@@ -9,7 +9,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: security
-    phase: "2"
 data:
   # Lista de domínios permitidos (um por linha ou CSV). Exemplos oficiais.
   ALLOWED_DOMAINS: |

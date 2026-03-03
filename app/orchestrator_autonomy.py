@@ -14,7 +14,7 @@ from pathlib import Path
 
 # Importar chaves e helpers Fase 3 (strikes, consenso, digest)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from orchestration_phase3 import (
+from orchestration import (
     get_redis,
     get_int,
     KEY_FIVE_STRIKES,

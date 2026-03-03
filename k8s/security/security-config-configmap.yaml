@@ -1,14 +1,13 @@
-# Configuração central Fase 2 — Segurança. Tudo automatizável via env (orquestrador/Gateway/scripts).
-# Aplicar com: kubectl apply -f k8s/security/phase2-config-configmap.yaml
+# Configuração central Segurança. Tudo automatizável via env (orquestrador/Gateway/scripts).
+# Aplicar com: kubectl apply -f k8s/security/security-config-configmap.yaml
 # Ref: docs/42-fase2-seguranca.md
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: phase2-config
+  name: security-config
   namespace: ai-agents
   labels:
     app: security
-    phase: "2"
 data:
   # --- Token bucket e degradação (126) ---
   TOKEN_BUCKET_MAX_PER_HOUR: "5"

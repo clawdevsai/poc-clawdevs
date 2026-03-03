@@ -1,5 +1,5 @@
 # Job template: sandbox para fetch de URL desconhecida (020).
-# URL_SANDBOX_TARGET: definir em phase2-config (ConfigMap); vazio = skip. One-off: make url-sandbox-run URL=https://...
+# URL_SANDBOX_TARGET: definir em security-config (ConfigMap); vazio = skip. One-off: make url-sandbox-run URL=https://...
 # Resultado em volume; evento em digest:daily.
 apiVersion: batch/v1
 kind: Job
@@ -8,7 +8,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: url-sandbox
-    phase: "2"
 spec:
   ttlSecondsAfterFinished: 600
   backoffLimit: 0
@@ -24,10 +23,10 @@ spec:
           command: ["python", "/scripts/url_sandbox_fetch.py"]
           envFrom:
             - configMapRef:
-                name: phase2-config
+                name: security-config
                 optional: true
           env:
-            # URL_SANDBOX_TARGET vem de phase2-config (vazio = skip). One-off: make url-sandbox-run URL=https://...
+            # URL_SANDBOX_TARGET vem de security-config (vazio = skip). One-off: make url-sandbox-run URL=https://...
             - name: REDIS_HOST
               value: "redis-service.ai-agents.svc.cluster.local"
           volumeMounts:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Testes Fase 3 (sem Redis/Ollama obrigatórios).
-Rode: python scripts/test_phase3.py
+Testes orquestração (sem Redis/Ollama obrigatórios).
+Rode: python app/test_orchestration.py
 Com Redis: pip install redis, inicie Redis e os testes de integração rodarão.
 """
 import os
@@ -12,12 +12,12 @@ REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 sys.path.insert(0, SCRIPT_DIR)
 os.chdir(REPO_ROOT)
 
-def test_orchestration_phase3():
-    from orchestration_phase3 import is_cosmetic, get_int, strike_key
+def test_orchestration():
+    from orchestration import is_cosmetic, get_int, strike_key
     assert is_cosmetic(["a.css", "b.md"]) is True
     assert is_cosmetic(["a.py"]) is False
     assert is_cosmetic([]) is False
-    print("  orchestration_phase3 is_cosmetic: ok")
+    print("  orchestration is_cosmetic: ok")
 
 def test_slot_payload():
     from slot_revisao_pos_dev import _payload_to_dict
@@ -55,22 +55,22 @@ def test_slot_architect_on_error():
 
 def test_redis_integration():
     try:
-        from orchestration_phase3 import get_redis, get_strikes, increment_strike, reset_strikes
+        from orchestration import get_redis, get_strikes, increment_strike, reset_strikes
         r = get_redis()
         r.ping()
         # cleanup
-        reset_strikes(r, "test-phase3")
-        n = increment_strike(r, "test-phase3")
+        reset_strikes(r, "test_run")
+        n = increment_strike(r, "test_run")
         assert n == 1
-        assert get_strikes(r, "test-phase3") == 1
-        reset_strikes(r, "test-phase3")
+        assert get_strikes(r, "test_run") == 1
+        reset_strikes(r, "test_run")
         print("  Redis + strikes: ok")
     except Exception as e:
         print(f"  Redis + strikes: skip (Redis indisponível: {e})")
 
 def main():
-    print("==> Testes Fase 3")
-    test_orchestration_phase3()
+    print("==> Testes orquestração")
+    test_orchestration()
     test_slot_payload()
     test_slot_architect_stub()
     test_slot_architect_on_error()

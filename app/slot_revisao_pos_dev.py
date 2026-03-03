@@ -24,7 +24,7 @@ except ImportError:
         return False
 
 try:
-    from orchestration_phase3 import record_architect_rejection
+    from orchestration import record_architect_rejection
 except ImportError:
     def record_architect_rejection(r, issue_id: str) -> int:
         return 0
@@ -223,7 +223,7 @@ def processar_mensagem(r, stream: str, msg_id: str, data: dict) -> None:
                 break
         if not all_approved:
             try:
-                from orchestration_phase3 import emit_event
+                from orchestration import emit_event
                 emit_event(r, "review_rejected", issue_id=issue_id or "", reason=reason[:200])
             except Exception:
                 pass

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Serviço HTTP que dispara o Job url-sandbox no cluster (patch phase2-config + delete/create Job).
+Serviço HTTP que dispara o Job url-sandbox no cluster (patch security-config + delete/create Job).
 Usado pelo Cloudflare Worker (Cron) para automatizar fetch de URL agendado.
 Rota: POST /trigger com {"url": "https://..."} e opcional Authorization: Bearer <TRIGGER_SECRET>.
 """
@@ -21,7 +21,7 @@ except ImportError:
     sys.exit(1)
 
 NAMESPACE = os.environ.get("NAMESPACE", "ai-agents")
-CONFIGMAP_NAME = "phase2-config"
+CONFIGMAP_NAME = "security-config"
 JOB_NAME = "url-sandbox"
 TRIGGER_SECRET = os.environ.get("TRIGGER_SECRET", "")
 
@@ -81,7 +81,7 @@ def trigger():
     except Exception as e:
         return jsonify({"error": f"k8s config: {e}"}), 500
 
-    # 1) Patch ConfigMap phase2-config
+    # 1) Patch ConfigMap security-config
     try:
         body = {"data": {"URL_SANDBOX_TARGET": url}}
         v1.patch_namespaced_config_map(CONFIGMAP_NAME, NAMESPACE, body)
@@ -99,7 +99,7 @@ def trigger():
     job_body = {
         "apiVersion": "batch/v1",
         "kind": "Job",
-        "metadata": {"name": JOB_NAME, "namespace": NAMESPACE, "labels": {"app": "url-sandbox", "phase": "2"}},
+        "metadata": {"name": JOB_NAME, "namespace": NAMESPACE, "labels": {"app": "url-sandbox"}},
         "spec": {
             "ttlSecondsAfterFinished": 600,
             "backoffLimit": 0,
@@ -112,7 +112,7 @@ def trigger():
                             "name": "fetch",
                             "image": "python:3.12-slim",
                             "command": ["python", "/scripts/url_sandbox_fetch.py"],
-                            "envFrom": [{"configMapRef": {"name": "phase2-config", "optional": True}}],
+                            "envFrom": [{"configMapRef": {"name": "security-config", "optional": True}}],
                             "env": [{"name": "REDIS_HOST", "value": "redis-service.ai-agents.svc.cluster.local"}],
                             "volumeMounts": [
                                 {"name": "scripts", "mountPath": "/scripts", "readOnly": True},

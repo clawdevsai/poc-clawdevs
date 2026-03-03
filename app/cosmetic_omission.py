@@ -13,7 +13,7 @@ import os
 import sys
 import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from orchestration_phase3 import (
+from orchestration import (
     get_redis,
     is_cosmetic,
     start_cosmetic_timer,

@@ -12,7 +12,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
-from orchestration_phase3 import get_redis, architect_fallback_patch_key
+from orchestration import get_redis, architect_fallback_patch_key
 
 try:
     from slack_notify import send_slack

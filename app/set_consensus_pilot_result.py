@@ -8,7 +8,7 @@ Ref: docs/06-operacoes.md (Loop de consenso automatizado)
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from orchestration_phase3 import get_redis, KEY_CONSENSUS_PILOT_RESULT
+from orchestration import get_redis, KEY_CONSENSUS_PILOT_RESULT
 
 def main():
     if len(sys.argv) < 2 or sys.argv[1].lower() not in ("success", "fail"):

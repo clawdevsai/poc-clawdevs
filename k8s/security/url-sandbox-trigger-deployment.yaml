@@ -1,4 +1,4 @@
-# Serviço HTTP que dispara o Job url-sandbox (patch phase2-config + delete/create Job).
+# Serviço HTTP que dispara o Job url-sandbox (patch security-config + delete/create Job).
 # Usado pelo Cloudflare Worker (Cron). Requer make url-sandbox-trigger-configmap.
 # Opcional: Secret url-sandbox-trigger-secret com TRIGGER_SECRET para autenticar POST /trigger.
 apiVersion: apps/v1
@@ -8,7 +8,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: url-sandbox-trigger
-    phase: "2"
 spec:
   replicas: 1
   selector:

@@ -1,4 +1,4 @@
-# RBAC para o serviço url-sandbox-trigger: patch phase2-config e create/delete Job url-sandbox.
+# RBAC para o serviço url-sandbox-trigger: patch security-config e create/delete Job url-sandbox.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -6,7 +6,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: url-sandbox-trigger
-    phase: "2"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -16,7 +15,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    resourceNames: ["phase2-config"]
+    resourceNames: ["security-config"]
     verbs: ["get", "patch", "update"]
   - apiGroups: ["batch"]
     resources: ["jobs"]

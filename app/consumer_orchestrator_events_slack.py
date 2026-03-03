@@ -10,7 +10,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from orchestration_phase3 import get_redis, STREAM_ORCHESTRATOR_EVENTS
+from orchestration import get_redis, STREAM_ORCHESTRATOR_EVENTS
 from slack_notify import send_slack
 try:
     from arbitrage_cloud import run as run_arbitrage_cloud

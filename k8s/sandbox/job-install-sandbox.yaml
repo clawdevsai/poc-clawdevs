@@ -9,7 +9,6 @@ metadata:
   namespace: ai-agents
   labels:
     app: install-sandbox
-    phase: "2"
 spec:
   ttlSecondsAfterFinished: 300
   backoffLimit: 0

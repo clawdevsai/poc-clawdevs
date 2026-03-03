@@ -9,7 +9,7 @@ Ref: docs/06-operacoes.md, docs/issues/032-five-strikes-fallback-arbitragem.md
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from orchestration_phase3 import (
+from orchestration import (
     get_redis,
     get_strikes,
     increment_strike,

@@ -4,11 +4,11 @@
 # Ref: docs/30-manual-primeiros-socorros-gpu.md, docs/06-operacoes.md
 set -e
 NS="${NAMESPACE:-ai-agents}"
-PHASE=""
+STEP=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --phase) PHASE="$2"; shift 2 ;;
+    --step) STEP="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
@@ -22,9 +22,9 @@ run_phase1() {
   if timeout 5 nvidia-smi &>/dev/null; then
     nvidia-smi
     echo ""
-    echo "Se há Memory Leak ou zumbis, rode: $0 --phase 2"
+    echo "Se há Memory Leak ou zumbis, rode: $0 --step 2"
   else
-    echo "nvidia-smi travou. Rode: $0 --phase 3 (reset driver)"
+    echo "nvidia-smi travou. Rode: $0 --step 3 (reset driver)"
     return 2
   fi
 }
@@ -51,12 +51,12 @@ run_phase3() {
   echo "Fase 3 concluída. Reinicie minikube: minikube start ..."
 }
 
-if [[ -n "$PHASE" ]]; then
-  case "$PHASE" in
+if [[ -n "$STEP" ]]; then
+  case "$STEP" in
     1) run_phase1 ;;
     2) run_phase2 ;;
     3) run_phase3 ;;
-    *) echo "Uso: $0 --phase 1|2|3"; exit 2 ;;
+    *) echo "Uso: $0 --step 1|2|3"; exit 2 ;;
   esac
   exit 0
 fi
