@@ -29,7 +29,8 @@ data:
             "apiKey": "ollama-local",
             "api": "ollama",
             "models": [
-              { "id": "qwen2.5:3b", "name": "Qwen 2.5 3B (local, padrão)", "contextWindow": 32000, "maxTokens": 4096 },
+              { "id": "deepseek-r1:8b", "name": "DeepSeek R1 8B (local, PO padrão)", "contextWindow": 32000, "maxTokens": 4096 },
+              { "id": "deepseek-r1:14b", "name": "DeepSeek R1 14B (local, CEO padrão)", "contextWindow": 32000, "maxTokens": 8192 },
               { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1 (local, leve)", "contextWindow": 16000, "maxTokens": 1024 },
               { "id": "ministral-3:3b", "name": "Ministral 3 3B (local)", "contextWindow": 32000, "maxTokens": 4096 }
             ]
@@ -37,10 +38,10 @@ data:
         }
       },
       "agents": {
-        "defaults": { "model": "ollama/qwen2.5:3b", "workspace": "/workspace" },
+        "defaults": { "model": "ollama/deepseek-r1:8b", "workspace": "/workspace" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama_cloud/llama3.3:70b", "chatModel": "ollama/llama3.1:8b", "workspace": "/workspace" },
-          { "id": "po", "name": "Product Owner", "model": "ollama_cloud/llama3.3:70b", "chatModel": "ollama/llama3.1:8b", "workspace": "/workspace" }
+          { "id": "ceo", "name": "CEO", "model": "ollama_cloud/deepseek-v3.1:671b-cloud", "chatModel": "ollama_cloud/deepseek-v3.1:671b-cloud", "workspace": "/workspace" },
+          { "id": "po", "name": "Product Owner", "model": "ollama_cloud/deepseek-v3.1:671b-cloud", "chatModel": "ollama_cloud/deepseek-v3.1:671b-cloud", "workspace": "/workspace" }
         ]
       },
       "bindings": [
