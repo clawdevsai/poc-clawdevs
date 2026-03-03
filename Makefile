@@ -12,6 +12,7 @@ MINIKUBE_MEMORY ?= 20g
 .PHONY: configmap-developer configmap-revisao-slot configmap-agent-slots configmap-gateway-adapter configmap-devops-worker configmap-audit-runner configmap-devops-compact configmap-acefalo
 .PHONY: configmap-rotation configmap-url-sandbox configmap-url-sandbox-trigger configmap-quarantine
 .PHONY: security-apply security-configmaps orchestrator-apply orchestrator-configmap
+.PHONY: configmap-kanban-api kanban-image kanban-apply kanban-url
 .PHONY: verify reset-memory test-github-access dashboard status status-pods
 
 # ------------------------------------------------------------------------------
@@ -248,6 +249,29 @@ configmap-gateway-adapter:
 	  --from-file=truncate_payload_border.py=app/truncate_payload_border.py \
 	  --from-file=preflight_summarize.py=app/preflight_summarize.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
+
+configmap-kanban-api:
+	@echo "==> ConfigMap kanban-api-scripts..."
+	@kubectl create configmap kanban-api-scripts -n ai-agents \
+	  --from-file=kanban_api.py=app/kanban_api.py \
+	  --from-file=issue_state.py=app/issue_state.py \
+	  --from-file=kanban_event_publisher.py=app/kanban_event_publisher.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+
+kanban-image:
+	@echo "==> Build kanban-ui:local (Minikube Docker)..."
+	eval $$(minikube docker-env) && docker build -t kanban-ui:local kanban-ui
+	@echo "==> kanban-ui:local concluído."
+
+kanban-apply: configmap-kanban-api kanban-image
+	@echo "==> Aplicando k8s/kanban/..."
+	kubectl apply -f $(K8S_DIR)/kanban/
+	@echo "==> Kanban aplicado."
+
+kanban-url:
+	@IP=$$(minikube ip); \
+	echo "==> Kanban UI:  http://$$IP:32000"; \
+	echo "==> Kanban API: http://$$IP:32001"
 
 configmap-devops-compact:
 	@echo "==> ConfigMap devops-compact-script..."

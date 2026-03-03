@@ -1,7 +1,7 @@
-# Configuração OpenClaw v2026.3.2 (sem credenciais). Token e Chat ID vêm do Secret.
-# Padrão: Slack = todos os agentes (DM e canais). Telegram = apenas CEO (Diretor ↔ CEO). Workspace por agente.
-# Sub-agents: CEO pode spawnar PO, DevOps, Architect, etc. via sessions_spawn.
-# Integração padrão: Ollama GPU no cluster (ollama_local). Provedor por agente: k8s/llm-providers-configmap.yaml.
+# Configuração OpenClaw v2026.3.2 — formato oficial dos docs.
+# Slack: multi-account (1 app por agente); tokens injetados pelo entrypoint via Secret.
+# Telegram: CEO apenas; chat ID injetado pelo entrypoint via Secret.
+# Ref: https://docs.openclaw.ai/channels/slack
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -20,59 +20,54 @@ data:
           "groups": {}
         },
         "slack": {
-          "enabled": false,
+          "enabled": __SLACK_ENABLED__,
           "mode": "socket",
+          "dmPolicy": "open",
+          "allowFrom": ["*"],
+          "dm": { "enabled": true, "groupEnabled": true },
+          "groupPolicy": "open",
+          "channels": {
+            "__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__": {}
+          },
           "accounts": {
-            "default": {
-              "dmPolicy": "allowlist",
-              "allowFrom": [__SLACK_ALLOW_FROM_JSON__],
-              "dm": { "enabled": true, "groupEnabled": false },
-              "groupPolicy": "allowlist",
-              "channels": {
-                "__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__": {}
-              }
-            }
+            "__SLACK_ACCOUNTS_JSON__": true
           }
         }
       },
       "models": {
-        "mode": "merge",
         "providers": {
           "ollama": {
-            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434",
-            "apiKey": "ollama-local",
+            "baseUrl": "http://10.104.165.48:11434",
             "api": "ollama",
             "models": [
+              { "id": "glm-5:cloud", "name": "GLM-5 Cloud (local proxy)", "contextWindow": 128000, "maxTokens": 4096 },
               { "id": "qwen2.5:3b", "name": "Qwen 2.5 3B (local, padrão)", "contextWindow": 32000, "maxTokens": 4096 },
-              { "id": "ministral-3:3b", "name": "Ministral 3 3B (local)", "contextWindow": 32000, "maxTokens": 4096 },
-              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1 (local, leve)", "contextWindow": 16000, "maxTokens": 1024 },
-              { "id": "glm-5:cloud", "name": "GLM-5 Cloud (requer Ollama Cloud auth)", "contextWindow": 32000, "maxTokens": 4096 },
-              { "id": "ministral-3:3b-cloud", "name": "Ministral 3 3B Cloud (requer Ollama Cloud auth)", "contextWindow": 32000, "maxTokens": 4096 }
+              { "id": "ministral-3:3b", "name": "Ministral 3 3B (local)", "contextWindow": 32000, "maxTokens": 4096 }
             ]
           }
         }
       },
       "agents": {
         "defaults": {
-          "model": "ollama/qwen2.5:3b",
+          "model": "ollama/glm-5:cloud",
           "workspace": "/workspace/ceo",
           "subagents": {
             "maxSpawnDepth": 2,
             "maxConcurrent": 4,
             "runTimeoutSeconds": 600,
-            "model": "ollama/qwen2.5:3b"
+            "model": "ollama/glm-5:cloud"
           }
         },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/ceo" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/po" },
-          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/devops" },
-          { "id": "architect", "name": "Architect", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/architect" },
-          { "id": "developer", "name": "Developer", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/developer" },
-          { "id": "qa", "name": "QA", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/qa" },
-          { "id": "cybersec", "name": "CyberSec", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/cybersec" },
-          { "id": "ux", "name": "UX", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/ux" },
-          { "id": "dba", "name": "DBA", "model": "ollama/qwen2.5:3b", "workspace": "/workspace/dba" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/glm-5:cloud", "workspace": "/workspace/ceo" },
+          { "id": "po", "name": "Product Owner", "model": "ollama/glm-5:cloud", "workspace": "/workspace/po" },
+          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/glm-5:cloud", "workspace": "/workspace/devops" },
+          { "id": "architect", "name": "Architect", "model": "ollama/glm-5:cloud", "workspace": "/workspace/architect" },
+          { "id": "developer", "name": "Developer", "model": "ollama/glm-5:cloud", "workspace": "/workspace/developer" },
+          { "id": "qa", "name": "QA", "model": "ollama/glm-5:cloud", "workspace": "/workspace/qa" },
+          { "id": "cybersec", "name": "CyberSec", "model": "ollama/glm-5:cloud", "workspace": "/workspace/cybersec" },
+          { "id": "ux", "name": "UX", "model": "ollama/glm-5:cloud", "workspace": "/workspace/ux" },
+          { "id": "dba", "name": "DBA", "model": "ollama/glm-5:cloud", "workspace": "/workspace/dba" }
         ]
       },
       "tools": {
