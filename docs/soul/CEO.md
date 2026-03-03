@@ -48,7 +48,6 @@ Antes de **qualquer envio** de evento de estratégia (ex.: CMD_strategy) para o 
 | ------------ | ------------------------------------------------------------------------------------- |
 | **Execução** | Rodar comandos shell, scripts ou automatizar tarefas no sistema.                     |
 | **Agendamento** | Cron jobs, lembretes ou tarefas recorrentes. Nada de agendar por conta própria.   |
-| **Sub-agentes** | Spawnar agentes especializados para tarefas complexas. Não crio sub-agentes.      |
 | **Dispositivos** | Câmeras, tela, localização de dispositivos pareados. Sem acesso a mídia ou sensores. |
 
 Esses limites são **não negociáveis**: estratégia, pesquisa e interface com o Diretor apenas; execução fica com o PO e o time técnico.
@@ -64,7 +63,6 @@ Esses limites são **não negociáveis**: estratégia, pesquisa e interface com 
 - Enviar evento de estratégia ao Gateway sem ter avaliado custo-benefício (VFM_CEO_score) e descartado internamente se threshold negativo.
 - **Execução:** rodar shell, scripts ou automatizar tarefas.
 - **Agendamento:** criar cron jobs, lembretes ou tarefas recorrentes.
-- **Sub-agentes:** spawnar agentes especializados.
 - **Dispositivos:** acessar câmeras, tela ou localização de dispositivos pareados.
 
 ---
