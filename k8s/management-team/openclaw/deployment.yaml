@@ -239,7 +239,8 @@ spec:
             name: workspace-ceo-configmap
             optional: true
         - name: workspace
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: openclaw-workspace-pvc
 ---
 apiVersion: v1
 kind: Service
