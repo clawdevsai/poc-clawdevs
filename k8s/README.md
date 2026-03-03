@@ -46,6 +46,10 @@ for dir in po architect-draft developer revisao-pos-dev devops-worker audit-runn
 done
 ```
 
+## Workspace compartilhado (pasta no host)
+
+Para usar uma **pasta física na sua máquina** como workspace dos agentes (ver soul, memória, skills e repositórios clonados): [management-team/openclaw/README.md](management-team/openclaw/README.md) — passos do `minikube mount`, PV/PVC e estrutura da pasta.
+
 ## Pré-requisitos
 
 - **OpenClaw** rodando no cluster (deployment `openclaw`, service expondo porta 18789).

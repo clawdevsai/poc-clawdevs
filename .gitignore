@@ -9,3 +9,5 @@ k8s/ollama/secret.yaml
 .venv
 *.txt
 logs/
+# Workspace compartilhado (pasta física no host; pode ficar no repo)
+agent-shared/
