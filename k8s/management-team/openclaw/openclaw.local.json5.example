@@ -9,7 +9,7 @@
   channels: {
     telegram: {
       enabled: true,
-      dmPolicy: "allowlist",
+      dmPolicy: "pairing",
       allowFrom: [],
       groups: {},
     },
@@ -20,33 +20,48 @@
       allowFrom: [],
       dm: { enabled: true, groupEnabled: false },
       groupPolicy: "allowlist",
-      channels: {
-        "__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__": {},
-      },
+      channels: {},
     },
   },
   models: {
     mode: "merge",
     providers: {
       ollama: {
-        baseUrl: "http://127.0.0.1:11434/v1",
-        api: "openai-completions",
+        baseUrl: "http://127.0.0.1:11434",
+        api: "ollama",
         models: [
-          { id: "glm-5:cloud", name: "GLM-5 Cloud", contextWindow: 32000, maxTokens: 4096 },
-          { id: "qwen2.5:3b", name: "Qwen 2.5 3B", contextWindow: 4096, maxTokens: 2048 },
-          { id: "ministral-3:3b-cloud", name: "Ministral 3 3B Cloud", contextWindow: 32000, maxTokens: 4096 },
+          { id: "qwen2.5:3b", name: "Qwen 2.5 3B (local, padrão)", contextWindow: 32000, maxTokens: 4096 },
+          { id: "ministral-3:3b", name: "Ministral 3 3B (local)", contextWindow: 32000, maxTokens: 4096 },
+          { id: "stewyphoenix19/phi3-mini_v1:latest", name: "Phi3 Mini v1 (local, leve)", contextWindow: 16000, maxTokens: 1024 },
         ],
       },
     },
   },
   agents: {
     defaults: {
-      model: "ollama/ministral-3:3b-cloud",
+      model: "ollama/qwen2.5:3b",
       workspace: "",
+      subagents: {
+        maxSpawnDepth: 2,
+        maxChildrenPerAgent: 5,
+        maxConcurrent: 4,
+        runTimeoutSeconds: 600,
+        model: "ollama/qwen2.5:3b",
+      },
     },
     list: [
-      { id: "ceo", name: "CEO", model: "ollama/ministral-3:3b-cloud" },
-      { id: "po", name: "PO", model: "ollama/ministral-3:3b-cloud" },
+      { id: "ceo", name: "CEO", model: "ollama/qwen2.5:3b", description: "Estratégia e interface com o Diretor." },
+      { id: "po", name: "Product Owner", model: "ollama/qwen2.5:3b", description: "Backlog e priorização." },
+      { id: "devops", name: "DevOps/SRE", model: "ollama/qwen2.5:3b", description: "IaC, CI/CD, FinOps." },
+      { id: "architect", name: "Architect", model: "ollama/qwen2.5:3b", description: "Governança técnica, code review." },
+      { id: "developer", name: "Developer", model: "ollama/qwen2.5:3b", description: "Implementação." },
+      { id: "qa", name: "QA", model: "ollama/qwen2.5:3b", description: "Testes e qualidade." },
+      { id: "cybersec", name: "CyberSec", model: "ollama/qwen2.5:3b", description: "Segurança." },
+      { id: "ux", name: "UX", model: "ollama/qwen2.5:3b", description: "Experiência do usuário." },
+      { id: "dba", name: "DBA", model: "ollama/qwen2.5:3b", description: "Dados e queries." },
     ],
   },
+  bindings: [
+    { match: { channel: "telegram" }, agentId: "ceo" },
+  ],
 }

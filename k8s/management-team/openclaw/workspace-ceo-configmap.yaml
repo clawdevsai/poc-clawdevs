@@ -47,3 +47,25 @@ data:
     **Humano:** (resumo ou trecho da mensagem)
     **Resposta:** (1–2 frases + detalhes chave)
     -->
+  USER.md: |
+    # USER.md — Contexto do Diretor (mínimo para economia de tokens)
+
+    - **Nome:** (preencher)
+    - **Timezone:** America/Sao_Paulo
+    - **Missão:** Construir o ClawDevs — time de agentes IA autônomos no K8s
+
+    ## Métricas de Sucesso
+
+    - Agentes funcionando via Telegram + Slack
+    - Custo zero (Ollama local, open source)
+    - Cluster estável (< 65% recursos)
+  IDENTITY.md: |
+    # IDENTITY.md — Identidade do Sistema ClawDevs
+
+    - **Sistema:** ClawDevs AI — time de agentes autônomos
+    - **Stack:** OpenClaw v2026.3.2 + Ollama (GPU local) + Redis + K8s (Minikube)
+    - **Princípios:** Open source, custo zero, alta performance
+    - **Idioma:** Português do Brasil (pt-BR)
+    - **Modelo padrão:** ollama/qwen2.5:3b (leve, local)
+    - **Sub-agents:** CEO delega via sessions_spawn; 9 agentes especializados
+

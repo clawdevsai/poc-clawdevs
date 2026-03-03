@@ -153,7 +153,7 @@ if [[ -n "${OPENCLAW_LOG:-}" ]]; then
     LOG_FILE="$OPENCLAW_LOG"
   fi
   echo "    Log gateway: $LOG_FILE (tail -f para acompanhar)"
-  exec npx --yes openclaw@latest gateway 2>&1 | tee -a "$LOG_FILE"
+  exec npx --yes openclaw@2026.3.2 gateway 2>&1 | tee -a "$LOG_FILE"
 fi
 
-exec npx --yes openclaw@latest gateway
+exec npx --yes openclaw@2026.3.2 gateway

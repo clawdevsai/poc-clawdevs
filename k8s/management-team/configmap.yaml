@@ -25,22 +25,25 @@ data:
         "mode": "merge",
         "providers": {
           "ollama": {
-            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434/v1",
+            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434",
             "apiKey": "ollama-local",
-            "api": "openai-completions",
+            "api": "ollama",
             "models": [
-              { "id": "glm-5:cloud", "name": "GLM-5 Cloud (padrão Ollama)", "contextWindow": 32000, "maxTokens": 4096 },
-              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1", "contextWindow": 16000, "maxTokens": 1024 },
-              { "id": "ministral-3:3b", "name": "Ministral 3 3B", "contextWindow": 32000, "maxTokens": 4096 }
+              { "id": "qwen2.5:3b", "name": "Qwen 2.5 3B (local, padrão)", "contextWindow": 32000, "maxTokens": 4096 },
+              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi3 Mini v1 (local, leve)", "contextWindow": 16000, "maxTokens": 1024 },
+              { "id": "ministral-3:3b", "name": "Ministral 3 3B (local)", "contextWindow": 32000, "maxTokens": 4096 }
             ]
           }
         }
       },
       "agents": {
-        "defaults": { "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
+        "defaults": { "model": "ollama/qwen2.5:3b", "workspace": "/workspace" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/glm-5:cloud", "workspace": "/workspace" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/qwen2.5:3b", "workspace": "/workspace" },
+          { "id": "po", "name": "Product Owner", "model": "ollama/qwen2.5:3b", "workspace": "/workspace" }
         ]
-      }
+      },
+      "bindings": [
+        { "match": { "channel": "telegram" }, "agentId": "ceo" }
+      ]
     }

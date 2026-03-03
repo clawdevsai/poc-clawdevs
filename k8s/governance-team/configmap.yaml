@@ -14,9 +14,9 @@ data:
       "models": {
         "providers": {
           "ollama": {
-            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434/v1",
+            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434",
             "apiKey": "ollama-local",
-            "api": "openai-completions"
+            "api": "ollama"
           }
         }
       },
