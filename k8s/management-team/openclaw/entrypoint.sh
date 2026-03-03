@@ -102,4 +102,4 @@ sed -i "s/__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__/$CHAN_ID/g" "$CONFIG_RUN"
 sed -i '/"__SLACK_ACCOUNTS_JSON__"/d' "$CONFIG_RUN"
 
 export OPENCLAW_CONFIG_PATH="$CONFIG_RUN"
-exec openclaw gateway --allow-unconfigured --port 18789 --bind lan
+exec openclaw gateway --log-level debug --allow-unconfigured --port 18789 --bind lan
