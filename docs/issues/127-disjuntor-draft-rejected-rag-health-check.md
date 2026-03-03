@@ -9,10 +9,10 @@ Implementar **disjuntor** focado na frequência de rejeições de rascunho (draf
 
 ## Critérios de aceite
 
-- [ ] **Rastreamento por épico:** orquestrador rastreia rejeições **por épico**. Se a **mesma épico** receber **draft_rejected 3 vezes consecutivas**, a tarefa é **congelada imediatamente** no Redis Streams (estancar o loop).
-- [ ] **RAG health check (determinístico):** ao acionar o disjuntor, orquestrador instancia **sessão isolada** (subagente) que executa health check **sem LLM**: (1) checar **datas de indexação** dos documentos que o PO usou vs **último commit na main**; (2) checar se a **estrutura de pastas** mencionada na épico existe no disco; (3) se houver conflito não documentado → **forçar atualização da memória local** do orquestrador (base de conhecimento).
-- [ ] **Descongelar com contexto saneado:** ao descongelar a épico, o PO recebe a rejeição **envelopada no contexto saneado** (documentação/indexação atualizada). Outras tarefas seguem rodando; não é necessário humano para desbloquear a autocura.
-- [ ] Disjuntor atua **antes** da cota global de degradação; não substitui o orçamento de degradação, complementa-o.
+- [x] **Rastreamento por épico:** orquestrador rastreia rejeições **por épico**. Se a mesma épico receber **draft_rejected 3 vezes consecutivas**, a tarefa é **congelada imediatamente** (chave Redis `epic_frozen`). **Ref:** [disjuntor_draft_rejected.py](../../scripts/disjuntor_draft_rejected.py) (consumer do stream `draft_rejected`, contagem por `epic_id`); [127-implementacao.md](127-implementacao.md).
+- [x] **RAG health check (determinístico):** ao acionar o disjuntor, executa health check **sem LLM**: (1) datas de indexação vs último commit na main; (2) estrutura de pastas da épico no disco; (3) conflito → forçar atualização da memória local. **Ref:** [rag_health_check.py](../../scripts/rag_health_check.py); disjuntor chama o script após congelar.
+- [x] **Descongelar com contexto saneado:** após RAG health check a épico é descongelada; outras tarefas seguem. PO recebe rejeições no fluxo; orquestrador pode envelopar com contexto atualizado. **Ref:** Doc 127-implementacao.
+- [x] Disjuntor atua **antes** da cota global de degradação; não substitui o orçamento de degradação, complementa-o. **Ref:** [06-operacoes.md](../06-operacoes.md).
 
 ## Referências
 

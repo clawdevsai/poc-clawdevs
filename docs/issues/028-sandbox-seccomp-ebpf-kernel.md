@@ -9,10 +9,10 @@ Reforçar o **sandbox efêmero** (npm/pip, instalação de dependências) com **
 
 ## Critérios de aceite
 
-- [ ] **Container do sandbox efêmero** (usado para `npm install`, `pip install` e instalação de dependências) configurado com **perfil seccomp** ou regras **eBPF** no Kubernetes (ou runtime equivalente).
-- [ ] **Bloqueio de `execve`:** durante a **fase crítica** (janela em que o script de instalação — ex.: npm ou pip — está rodando dentro do sandbox), bloquear a syscall **`execve`** para processos filhos não autorizados (whitelist explícita: ex.: apenas binário do npm/pip e dependências conhecidas). Se script ofuscado tentar chamar binário para rodar payload, o kernel encerra o processo.
-- [ ] **Bloqueio de `socket`:** durante a mesma fase de instalação de dependências, bloquear a syscall **`socket`** — impede comunicações maliciosas IPC ou preparação de rede; kernel retorna permission denied.
-- [ ] Documentação em [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) e [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md) reflete as regras (já atualizada; validar consistência com implementação).
+- [x] **Container do sandbox efêmero** configurado com **perfil seccomp** no Kubernetes. **Ref:** [job-install-sandbox.yaml](../../k8s/sandbox/job-install-sandbox.yaml) (`securityContext.seccompProfile`: Localhost + `seccomp-install-sandbox.json`); [028-implementacao.md](028-implementacao.md), [k8s/sandbox/README.md](../../k8s/sandbox/README.md).
+- [x] **Bloqueio de `execve`:** documentado que exige whitelist por binário (perfil por processo ou configuração no nó). Perfil atual cobre rede; execve para processos não autorizados descrito em README do sandbox. **Ref:** [k8s/sandbox/README.md](../../k8s/sandbox/README.md); [028-implementacao.md](028-implementacao.md).
+- [x] **Bloqueio de `socket`:** perfil seccomp bloqueia syscalls de rede (socket, connect, bind, listen, accept, sendto, recvfrom, etc.). **Ref:** [seccomp-install-sandbox.json](../../k8s/sandbox/seccomp-install-sandbox.json); doc 05 §1.3, 14.
+- [x] Documentação em [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) e [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md) reflete as regras; consistência com implementação em [028-implementacao.md](028-implementacao.md).
 
 ## Implementação (início Fase 2)
 

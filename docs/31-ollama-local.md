@@ -148,5 +148,5 @@ curl $OLLAMA_HOST/api/pull -d '{"name":"phi3:mini"}'
 ## Segurança e alinhamento
 
 - **Zero Trust:** Instalação do skill ollama-local segue o fluxo de [19-descoberta-instalacao-skills.md](19-descoberta-instalacao-skills.md) e checklist em [05-seguranca-e-etica.md](05-seguranca-e-etica.md).
-- **Recursos:** Uso de modelos locais deve respeitar o limite do host (ex.: 65% no cluster) e GPU Lock; ver [04-infraestrutura.md](04-infraestrutura.md) e [06-operacoes.md](06-operacoes.md).
+- **Recursos:** Uso de modelos locais deve respeitar o limite do host (ex.: 65% no cluster). **Integração com GPU Lock:** agentes locais (Developer, Architect, QA, CyberSec, UX) adquirem o lock ([scripts/gpu_lock.py](../scripts/gpu_lock.py)) antes de chamar o Ollama; ao terminar, liberam o lock. O slot de revisão pós-dev adquire o lock uma vez e executa as etapas em sequência. Ver [04-infraestrutura.md](04-infraestrutura.md) e [06-operacoes.md](06-operacoes.md).
 - **Auto-atualização:** Atualização de skills (incluindo ollama-local) pelo DevOps conforme [21-auto-atualizacao-ambiente.md](21-auto-atualizacao-ambiente.md).

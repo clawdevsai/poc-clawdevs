@@ -11,7 +11,7 @@ Ref: [040-perfis-agente-manifesto-config.md](040-perfis-agente-manifesto-config.
 | Critério | Estado | O que falta |
 |----------|--------|-------------|
 | Perfil CEO, PO, perfis locais | Config (agent-profiles) e doc 07 | — |
-| **Constraints por agente aplicadas** | Parcial | Gateway/orquestrador **ler** agent-profiles e aplicar regras (ex.: Architect 80% cobertura no slot já via prompt; DevOps 82°C em phase2-config). |
+| **Constraints por agente aplicadas** | Parcial | Gateway **lê** agent-profiles (gateway_redis_adapter `_get_profile_json`, envFrom no deployment). Architect 80% no slot; DevOps 82°C em phase2-config. Outras constraints (CEO, PO) no OpenClaw/orquestrador. |
 | **DevOps/UX apenas CPU** | Implementado | **gateway-redis-adapter** tem `nodeSelector: workload-type: cpu-only`. Para pods DevOps/UX dedicados futuros: usar o mesmo selector (ver k8s/limits.yaml). Nó sem label: remover selector ou `kubectl label node minikube workload-type=cpu-only`. |
 
 ---
