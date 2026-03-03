@@ -11,6 +11,8 @@ Recursos Kubernetes para a **Fase 2 — Segurança**: configuração central e w
 | **rotation-rbac.yaml** | ServiceAccount + Role + RoleBinding para CronJob de rotação de tokens |
 | **cronjob-token-rotation.yaml** | CronJob (a cada 3 min): sincroniza openclaw-telegram-rotation-source → openclaw-telegram |
 | **job-url-sandbox.yaml** | Job template: fetch de URL em sandbox (URL_SANDBOX_TARGET); resultado em digest:daily |
+| **url-sandbox-trigger-rbac.yaml** | RBAC para o serviço url-sandbox-trigger (patch phase2-config, create/delete Job) |
+| **url-sandbox-trigger-deployment.yaml** | Serviço HTTP POST /trigger para disparar o Job; usado pelo Cloudflare Worker (Cron). Ver [cloudflare/url-sandbox-cron/](../../cloudflare/url-sandbox-cron/README.md) |
 | **trusted-packages-configmap.yaml** | Opcional: lista TRUSTED_PACKAGES (matriz de confiança) |
 | **finops-config-configmap.yaml** | truncamento-finops — FinOps e truncamento: MAX_TOKENS_PER_REQUEST_*, PREFLIGHT_SUMMARIZE_MIN_INTERACTIONS, TRUNCATE_BORDER_*, WORKING_BUFFER_TTL_SEC, tags CRITERIOS_ACEITE e INVARIANTE |
 | **agent-profiles-configmap.yaml** | config-perfis — Perfis por agente (modelo, temperature, skills, constraint) para Gateway/orquestrador |
@@ -36,6 +38,10 @@ envFrom:
 ```
 
 Exemplo: deployment do gateway-redis-adapter usa `envFrom: phase2-config` (optional: true para não falhar se o ConfigMap não existir).
+
+## Automação url-sandbox com Cloudflare (Cron)
+
+Para disparar o Job url-sandbox em horário agendado via Cloudflare Worker: aplique o trigger (`make url-sandbox-trigger-apply`), exponha o Service via Cloudflare Tunnel e configure o Worker em **[cloudflare/url-sandbox-cron/](../../cloudflare/url-sandbox-cron/README.md)**.
 
 ## Contrato de automação
 

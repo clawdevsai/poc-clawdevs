@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap devops-compact-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply dashboarding
+.PHONY: prepare up down up-all openclaw-image verify revisao-slot-configmap agent-slots-configmap gateway-redis-adapter-configmap devops-compact-configmap acefalo-configmap up-management developer-configmap phase2-apply phase2-configmaps rotation-configmap url-sandbox-configmap url-sandbox-run url-sandbox-trigger-configmap url-sandbox-trigger-apply quarantine-pipeline-configmap orchestrator-configmap orchestrator-apply dashboarding
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -219,6 +219,32 @@ url-sandbox-configmap:
 	@kubectl create configmap url-sandbox-scripts -n ai-agents \
 	  --from-file=url_sandbox_fetch.py=scripts/url_sandbox_fetch.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
+
+# Rodar Job url-sandbox com uma URL (atualiza phase2-config, deleta job anterior, aplica Job).
+# Uso: make url-sandbox-run URL=https://exemplo.com
+url-sandbox-run: url-sandbox-configmap
+	@test -n "$(URL)" || (echo "Uso: make url-sandbox-run URL=https://exemplo.com"; exit 1)
+	@echo "==> Definindo URL_SANDBOX_TARGET em phase2-config..."
+	@kubectl patch configmap phase2-config -n ai-agents -p '{"data":{"URL_SANDBOX_TARGET":"$(URL)"}}'
+	@echo "==> Deletando job url-sandbox anterior (se existir)..."
+	@kubectl delete job url-sandbox -n ai-agents --ignore-not-found=true
+	@echo "==> Aplicando Job url-sandbox (usa URL do phase2-config)"
+	@kubectl apply -f $(K8S_DIR)/security/job-url-sandbox.yaml
+	@echo "==> Job criado. Acompanhe: kubectl logs -f job/url-sandbox -n ai-agents"
+
+# Serviço HTTP para disparar url-sandbox (Cloudflare Worker Cron). Requer apply do RBAC e deployment.
+url-sandbox-trigger-configmap:
+	@echo "==> Criando ConfigMap url-sandbox-trigger-scripts..."
+	@kubectl create configmap url-sandbox-trigger-scripts -n ai-agents \
+	  --from-file=url_sandbox_trigger.py=scripts/url_sandbox_trigger.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+
+url-sandbox-trigger-apply: url-sandbox-trigger-configmap
+	@echo "==> Aplicando url-sandbox-trigger (RBAC + Deployment + Service)..."
+	@kubectl apply -f $(K8S_DIR)/security/url-sandbox-trigger-rbac.yaml
+	@kubectl apply -f $(K8S_DIR)/security/url-sandbox-trigger-deployment.yaml
+	@echo "==> Trigger no ar. Opcional: kubectl create secret generic url-sandbox-trigger-secret -n ai-agents --from-literal=TRIGGER_SECRET='...'"
+	@echo "==> Exponha o Service via Cloudflare Tunnel e configure o Worker com TRIGGER_ENDPOINT + TRIGGER_SECRET."
 
 quarantine-pipeline-configmap:
 	@echo "==> Criando ConfigMap quarantine-pipeline-scripts..."

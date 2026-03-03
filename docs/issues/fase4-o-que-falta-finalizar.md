@@ -20,7 +20,7 @@ Ref: [.cursor/plans/plano_clawdevs_fases_5ff4260b.plan.md](../../.cursor/plans/p
 | 1 | **Ler agent-profiles no adapter** | `scripts/gateway_redis_adapter.py` + deployment envFrom `agent-profiles` | Feito: `_get_profile_json(profile)` lê env; resposta `/publish-to-cloud` inclui `profile_suggestion` com modelo/temperature/constraint quando disponível. |
 | 2 | **Pipeline que chama validate_reverse_po** | `scripts/validate_reverse_po_after_summary.sh` + [integracao-040-041-gateway-orquestrador.md](integracao-040-041-gateway-orquestrador.md) | Feito: wrapper `SUMMARY_FILE CRITERIA_FILE` propaga exit code; doc atualizado. |
 | 3 | **CronJob ou doc para compactação DevOps** | [docs/issues/devops-compactacao-buffer.md](devops-compactacao-buffer.md) + [k8s/development-team/devops-compact-cronjob-example.yaml](../../k8s/development-team/devops-compact-cronjob-example.yaml) + `make devops-compact-configmap` | Feito: doc com uso manual e agendamento; exemplo CronJob; target Makefile para ConfigMap. |
-| 4 | **Marcar Fase 4 concluída no plano** | `.cursor/plans/plano_clawdevs_fases_5ff4260b.plan.md` | Pendente: adicionar todo "Fase 4 — 040/041" com status completed. |
+| 4 | **Marcar Fase 4 concluída no plano** | `.cursor/plans/plano_clawdevs_fases_5ff4260b.plan.md` | Feito: todo fase4-config-finops com status completed. |
 
 ---
 
@@ -47,6 +47,7 @@ Ref: [.cursor/plans/plano_clawdevs_fases_5ff4260b.plan.md](../../.cursor/plans/p
 
 - [ ] `kubectl apply -f k8s/security/` aplica sem erro (finops-config, agent-profiles).
 - [ ] `python3 scripts/test_config_finops.py` — todos os testes passam.
+- [ ] **Script único:** `./scripts/run_validacao_fase4.sh` — roda test_config_finops e validate_reverse_po (exit 0/1 conforme critérios).
 - [ ] Gateway-redis-adapter sobe com envFrom finops-config (e opcional nodeSelector cpu-only).
 - [ ] `POST /publish-to-cloud` com body válido retorna 200 e publica no Redis.
 - [ ] Validação reversa: `validate_reverse_po.py --summary X --criteria Y` → exit 0 quando resumo cobre critérios; exit 1 quando omite.

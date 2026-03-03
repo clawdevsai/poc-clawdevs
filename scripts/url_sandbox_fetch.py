@@ -56,15 +56,16 @@ def publish_digest(url: str, ok: bool, size: int, error: str) -> None:
 
 
 def main() -> int:
-    if not URL.strip():
-        print("Defina URL_SANDBOX_TARGET", file=sys.stderr)
-        return 2
-    ok, content, err = fetch(URL.strip())
+    url = URL.strip()
+    if not url or url == "__URL_SANDBOX_TARGET__":
+        print("URL_SANDBOX_TARGET não definido; nada a fazer (exit 0).", file=sys.stderr)
+        return 0  # sucesso: Job aplicado sem URL não deve falhar
+    ok, content, err = fetch(url)
     os.makedirs(os.path.dirname(OUTPUT_PATH) or ".", exist_ok=True)
     with open(OUTPUT_PATH, "wb") as f:
         f.write(content)
     if PUBLISH_DIGEST:
-        publish_digest(URL, ok, len(content), err)
+        publish_digest(url, ok, len(content), err)
     if not ok:
         print(f"Fetch falhou: {err}", file=sys.stderr)
         return 1

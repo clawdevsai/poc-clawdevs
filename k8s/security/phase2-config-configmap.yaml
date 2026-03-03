@@ -30,6 +30,8 @@ data:
   # Matriz de confiança: TRUSTED_PACKAGES / TRUSTED_PACKAGES_FILE (opcional)
 
   # --- URL sandbox (020) ---
+  # URL a buscar no Job url-sandbox. Deixe "" para skip; ou defina aqui e aplique o Job (envFrom usa este valor se Job não override).
+  URL_SANDBOX_TARGET: ""
   URL_SANDBOX_TIMEOUT: "30"
   URL_SANDBOX_MAX_BYTES: "1048576"
 

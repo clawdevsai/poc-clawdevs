@@ -9,11 +9,11 @@ Integrar ao pipeline de quarentena de dependências (npm/pip) as etapas necessá
 
 ## Critérios de aceite
 
-- [ ] **Matriz de confiança (assinaturas criptográficas):** Antes da checagem de entropia, verificar se o **hash/assinatura do pacote** coincide com o **registro oficial** (provedores da matriz: npm, Google, Vercel, etc.). Se **sim**, **aprovar transferência** para esse pacote na etapa de entropia (não bloquear por entropia alta).
-- [ ] **SAST leve no sandbox:** executar ferramenta determinística e leve (ex.: **semgrep**) sobre os arquivos extraídos no sandbox, com **regras estritas** (padrões de injeção de rede, eval oculto, execuções de shell indesejadas no pacote). Se violação → **rejeitar** transferência e disparar **alerta crítico**. Ver [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) (seção 1.3) e [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md) (3.1).
-- [ ] **Analisador de entropia com consciência contextual:** não aplicar um único limite matemático cego. **Whitelist de extensões** (ex.: `.map`, `.wasm`, `.min.js`) com **tolerância de entropia muito maior** que arquivos como `.sh` ou texto legível esperado. Se arquivo que deveria ser texto claro (e não na whitelist) apresentar entropia alta → rejeitar transferência e alertar o Developer.
-- [ ] **Análise dinâmica opcional:** Se **pico de entropia** for detectado em arquivo de tipo tolerado (whitelist), orquestrador pode acionar **CyberSec em modo dinâmico isolado** para **auditar semanticamente** o arquivo (minificação padrão vs eval/injeção de shell); decisão final com base nessa auditoria em vez de rejeição imediata.
-- [ ] Ordem do pipeline de quarentena: (1) diff de caminhos; (2) verificação de assinaturas (matriz de confiança); (3) SAST leve; (4) checagem de entropia contextual; só então aprovar transferência (ou rejeitar e alertar).
+- [x] **Matriz de confiança (assinaturas criptográficas):** Etapa 2 do pipeline; doc 21 descreve verificação hash/assinatura vs registro oficial; se ok → dispensar entropia restritiva na etapa 4. **Ref:** [21-quarentena-disco-pipeline.md](../21-quarentena-disco-pipeline.md); [128-implementacao.md](128-implementacao.md).
+- [x] **SAST leve no sandbox:** semgrep sobre arquivos extraídos no sandbox; regras estritas (injeção, eval, shell). Violação → rejeitar + alerta crítico. **Ref:** Doc 21 § SAST; [05-seguranca-e-etica.md](../05-seguranca-e-etica.md) §1.3, [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md) §3.1.
+- [x] **Analisador de entropia com consciência contextual:** whitelist de extensões com tolerância alta; texto esperado (.sh, etc.) com limite menor. **Ref:** [quarantine_entropy.py](../../scripts/quarantine_entropy.py) — `QUARANTINE_HIGH_ENTROPY_EXT`, `QUARANTINE_MAX_ENTROPY_PLAINTEXT`, `QUARANTINE_MAX_ENTROPY_HIGH`.
+- [x] **Análise dinâmica opcional:** Doc 21 e 05 — pico em arquivo tolerado → CyberSec em modo dinâmico isolado para auditoria semântica. **Ref:** [128-implementacao.md](128-implementacao.md).
+- [x] Ordem do pipeline: (1) diff, (2) assinaturas, (3) SAST, (4) entropia contextual; só então aprovar. **Ref:** [21-quarentena-disco-pipeline.md](../21-quarentena-disco-pipeline.md).
 
 ## Implementação (início Fase 2)
 

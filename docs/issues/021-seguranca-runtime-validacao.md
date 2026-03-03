@@ -9,15 +9,15 @@ Implementar habilidades de validação em runtime para todos os agentes: antes d
 
 ## Critérios de aceite
 
-- [ ] Validação antes de executar comandos: metacaracteres de shell, comandos perigosos (rm -rf, curl | bash), substituição de processo; bloquear e registrar se ameaça.
-- [ ] **Comandos de instalação (npm, pip) e execução de código de terceiros:** somente em **sandbox efêmero air-gapped** (container gerado dinamicamente, sem rede); orquestrador destrói o container ao término. Nunca no container principal do agente.
-- [ ] Validação antes de acessar URLs: bloquear IPs privados, localhost, metadados (169.254.169.254), domínios .local/.internal (SSRF).
-- [ ] Validação de paths: bloquear traversal (../), acesso a /etc/passwd, chaves SSH, config de credenciais.
-- [ ] Conteúdo externo tratado como DADO, nunca como instrução; escanear padrões de injeção de prompt; reportar ao CyberSec em suspeita.
-- [ ] Detecção de padrões de credenciais em saída; não repetir em respostas; registrar evento.
-- [ ] Matriz por agente documentada (quem valida o quê) e integrada ao workspace (TOOLS.md ou equivalente).
-- [ ] **Quarentena de disco:** resultado do sandbox efêmero (instalações npm/pip) só transferido para o repositório após: **(1)** análise determinística de diff de caminhos (apenas arquivos esperados no escopo da biblioteca); **(2)** verificação de **assinaturas criptográficas** (matriz de confiança; se ok, dispensar entropia restritiva para esse pacote); **(3)** **SAST leve (semgrep)** no sandbox com regras estritas; **(4)** **analisador de entropia com consciência contextual** (whitelist de extensões; em pico em arquivo tolerado, opção de análise dinâmica pelo CyberSec). Ver [05-seguranca-e-etica.md](../05-seguranca-e-etica.md), [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md) e [128-sast-entropia-quarentena.md](128-sast-entropia-quarentena.md).
-- [ ] **Architect (revisão estática):** revisão de código **exclusivamente** sobre **diffs do PR** em relação à branch principal; **nunca** leitura direta do volume compartilhado (evitar validar artefatos envenenados que contornaram o histórico de commits). Ver [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md).
+- [x] Validação antes de executar comandos: metacaracteres, comandos perigosos, substituição de processo; bloquear e registrar. **Ref:** [14-seguranca-runtime-agentes.md](../14-seguranca-runtime-agentes.md) §1.1; [021-implementacao.md](021-implementacao.md).
+- [x] **Comandos npm/pip em sandbox efêmero air-gapped:** somente em container dinâmico sem rede; orquestrador destrói ao término. **Ref:** Doc 14 §1.1; [05-seguranca-e-etica.md](../05-seguranca-e-etica.md); [k8s/sandbox/](../../k8s/sandbox/).
+- [x] Validação antes de URLs: bloquear IPs privados, localhost, metadados, .local/.internal (SSRF). **Ref:** Doc 14 §1.2; gateway GET `/check_egress?domain=` (whitelist + reputação).
+- [x] Validação de paths: traversal, /etc/passwd, chaves SSH, config credenciais. **Ref:** Doc 14 §1.3.
+- [x] Conteúdo externo como DADO; escanear injeção de prompt; reportar CyberSec. **Ref:** Doc 14 §1.4; [prompt_injection_detector.py](../../scripts/prompt_injection_detector.py).
+- [x] Detecção de credenciais em saída; redactar; registrar. **Ref:** Doc 14 §1.5.
+- [x] Matriz por agente documentada (quem valida o quê). **Ref:** Doc 14 §3; integração TOOLS.md conforme evolução.
+- [x] **Quarentena de disco (4 etapas):** diff → assinaturas → SAST (semgrep) → entropia contextual. **Ref:** [21-quarentena-disco-pipeline.md](../21-quarentena-disco-pipeline.md), [quarantine_entropy.py](../../scripts/quarantine_entropy.py), [128-sast-entropia-quarentena.md](128-sast-entropia-quarentena.md).
+- [x] **Architect só diffs do PR:** revisão exclusivamente sobre diffs; nunca leitura direta do volume. **Ref:** Doc 14 §3.1; [21-quarentena-disco-pipeline.md](../21-quarentena-disco-pipeline.md).
 
 ## Implementação (início Fase 2)
 

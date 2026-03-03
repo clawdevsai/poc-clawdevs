@@ -12,7 +12,7 @@ Ref: [040-perfis-agente-manifesto-config.md](040-perfis-agente-manifesto-config.
 
 | Item | Situação | Ação |
 |------|----------|------|
-| **Ler agent-profiles no Gateway/Orquestrador** | ConfigMap existe; nenhum código no repo **lê** os perfis (modelo, temperature, constraint) para aplicar em runtime | Implementar leitura do ConfigMap `agent-profiles` (ou env injetado) no gateway-redis-adapter ou no orquestrador: ao rotear tarefa/evento, escolher modelo e limites conforme perfil do agente |
+| **Ler agent-profiles no Gateway/Orquestrador** | **Implementado** | `gateway_redis_adapter.py` lê env do ConfigMap `agent-profiles` (`_get_profile_json`); resposta `/publish-to-cloud` inclui `profile_suggestion`; deployment usa envFrom agent-profiles. |
 | **Constraints aplicadas por agente** | Parcial | Architect 80% cobertura: já via prompt no slot; DevOps 82°C: phase2-config; outras constraints (ex.: CEO no_code, PO draft_cycle) dependem do OpenClaw/orquestrador externo aplicar as regras ao interpretar o perfil |
 
 ### 1.2 truncamento-finops — Truncamento e FinOps
@@ -21,13 +21,13 @@ Ref: [040-perfis-agente-manifesto-config.md](040-perfis-agente-manifesto-config.
 |------|----------|------|
 | **OpenClaw aplicar MAX_TOKENS ao enviar ao provedor** | Config (finops-config) está no deployment; código do OpenClaw é **fora do repo** | No código do OpenClaw (externo): antes de chamar API do provedor, capar o payload com `MAX_TOKENS_PER_REQUEST_*` conforme perfil; ou sempre enviar via adapter usando `POST /publish-to-cloud` |
 | **OpenClaw usar `/publish-to-cloud`** | Rota existe no adapter; quem chama é o OpenClaw | Configurar o OpenClaw para usar `POST /publish-to-cloud` (com `profile` e `preflight`) em vez de `/publish` quando o evento for destinado à nuvem |
-| **Pipeline PO: chamar validate_reverse_po** | Script e SOUL documentados; **nenhum job/pipeline no repo** chama o script após gerar resumo | Adicionar passo no pipeline que gera resumo (ex.: após preflight ou job de compactação): executar `validate_reverse_po.py --summary <arquivo> --criteria <issue>`; se exit 1, não substituir buffer pelo resumo |
-| **DevOps: usar devops_compact_safe.sh no cron** | Script existe; **nenhum CronJob** no k8s chama o script na higiene de buffers | Criar CronJob (ou doc de exemplo) que rode `devops_compact_safe.sh` sobre os paths de buffer configurados |
+| **Pipeline PO: chamar validate_reverse_po** | **Implementado** | [validate_reverse_po_after_summary.sh](../../scripts/validate_reverse_po_after_summary.sh); doc [integracao-040-041-gateway-orquestrador.md](integracao-040-041-gateway-orquestrador.md). Pipeline que gera resumo deve chamar o script; exit 1 → não substituir buffer. |
+| **DevOps: usar devops_compact_safe.sh no cron** | **Implementado** | [devops-compact-cronjob-example.yaml](../../k8s/development-team/devops-compact-cronjob-example.yaml), [devops-compactacao-buffer.md](devops-compactacao-buffer.md); `make devops-compact-configmap`. |
 | **Acelerador preditivo** | Documentado em 07/05; **não implementado** no adapter/orquestrador | Se desejado: ao prever estouro (ex.: por tamanho do diff ou histórico de tokens), rotear para modelo local em CPU em vez de só acionar freio (usar PREDICTIVE_LOCAL_THRESHOLD_DIFF_LINES do phase2-config) |
 
 ### 1.3 Resumo desenvolvimento
 
-- **No repositório:** ler `agent-profiles` e aplicar perfil no adapter; pipeline que chama `validate_reverse_po` após gerar resumo; CronJob (ou doc) para compactação segura do DevOps.
+- **No repositório (concluído):** ler `agent-profiles` no adapter; wrapper `validate_reverse_po_after_summary.sh` e doc de pipeline; CronJob exemplo e doc para compactação DevOps.
 - **Fora do repositório:** OpenClaw usar `/publish-to-cloud` e aplicar MAX_TOKENS ao provedor; aplicar constraints de negócio (CEO, PO) conforme perfis.
 
 ---
