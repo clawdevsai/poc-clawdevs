@@ -10,7 +10,30 @@ metadata:
 data:
   openclaw.json: |
     {
-      "gateway": { "mode": "local", "port": 18789, "bind": "lan", "controlUi": { "dangerouslyAllowHostHeaderOriginFallback": true } },
+      "plugins": {
+        "entries": {
+          "device-pair": {
+            "config": {
+              "publicUrl": "http://192.168.49.2:30000"
+            }
+          }
+        }
+      },
+      "gateway": { 
+        "mode": "local", 
+        "port": 18789, 
+        "bind": "lan",
+        "auth": {
+          "mode": "token",
+          "token": "clawdevs-premium-auth-token-2026-secure-stable"
+        },
+        "controlUi": { 
+          "enabled": true,
+          "allowInsecureAuth": true,
+          "dangerouslyAllowHostHeaderOriginFallback": true,
+          "dangerouslyDisableDeviceAuth": true
+        } 
+      },
       "channels": {
         "telegram": {
           "enabled": true,
@@ -37,12 +60,13 @@ data:
       "models": {
         "providers": {
           "ollama": {
-            "baseUrl": "http://10.104.165.48:11434",
+            "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434",
             "api": "ollama",
+            "apiKey": "1b0a724e3f464facbdcb96dfa5916a01.OIUFHlZ5ov71JmKn5AerTeVb",
             "models": [
-              { "id": "glm-5:cloud", "name": "GLM-5 Cloud (local proxy)", "contextWindow": 128000, "maxTokens": 4096 },
-              { "id": "qwen2.5:3b", "name": "Qwen 2.5 3B (local, padrão)", "contextWindow": 32000, "maxTokens": 4096 },
-              { "id": "ministral-3:3b", "name": "Ministral 3 3B (local)", "contextWindow": 32000, "maxTokens": 4096 }
+              { "id": "glm-5:cloud", "name": "GLM-5 Cloud", "contextWindow": 128000, "maxTokens": 4096 },
+              { "id": "qwen2.5:3b", "name": "Qwen 2.5 3B", "contextWindow": 32000, "maxTokens": 4096 },
+              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi-3 Mini", "contextWindow": 4000, "maxTokens": 1024 }
             ]
           }
         }

@@ -254,4 +254,5 @@ spec:
   ports:
     - port: 18789
       targetPort: 18789
-  type: ClusterIP
+      nodePort: 30000
+  type: NodePort

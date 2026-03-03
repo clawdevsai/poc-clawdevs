@@ -21,7 +21,7 @@ spec:
         workload-type: cpu-only
       containers:
         - name: ui
-          image: kanban-ui:v3
+          image: kanban-ui:v7
           imagePullPolicy: IfNotPresent
           env:
             - name: NEXT_PUBLIC_API_URL

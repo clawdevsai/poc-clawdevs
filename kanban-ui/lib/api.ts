@@ -26,20 +26,20 @@ export interface KanbanEvent {
     title?: string;
 }
 
-// Resolve API URL: in-browser use relative proxy, in-cluster use internal service
+/**
+ * Resolve API URL:
+ * Client-side: Uses relative path '/api' which is proxied by next.config.mjs
+ * Server-side: Uses internal K8s service URL
+ */
 function getApiUrl(): string {
-    // Client-side (Browser): ALWAYS use the relative proxy to avoid cross-origin and hardcoded URL issues
     if (typeof window !== "undefined") {
-        return "/kanban-api";
+        return "/api";
     }
-
-    // Server-side (during SSR or internal calls): use internal service
-    // Do NOT use NEXT_PUBLIC variables here as they get inlined at build time.
-    return process.env.INTERNAL_API_URL || "http://kanban-api-service.ai-agents.svc.cluster.local:5001";
+    return process.env.INTERNAL_API_URL || "http://kanban-api-service.ai-agents.svc.cluster.local:5001/api";
 }
 
 export async function fetchBoard(): Promise<BoardData> {
-    const res = await fetch(`${getApiUrl()}/api/board`, {
+    const res = await fetch(`${getApiUrl()}/board`, {
         cache: "no-store",
     });
     if (!res.ok) throw new Error(`Failed to fetch board: ${res.status}`);
@@ -47,7 +47,7 @@ export async function fetchBoard(): Promise<BoardData> {
 }
 
 export async function fetchIssue(id: string): Promise<Issue> {
-    const res = await fetch(`${getApiUrl()}/api/issues/${id}`);
+    const res = await fetch(`${getApiUrl()}/issues/${id}`);
     if (!res.ok) throw new Error(`Failed to fetch issue: ${res.status}`);
     return res.json();
 }
@@ -56,8 +56,9 @@ export async function createIssue(data: {
     title: string;
     summary?: string;
     priority?: string;
+    state?: string;
 }): Promise<{ ok: boolean; id: string; state: string }> {
-    const res = await fetch(`${getApiUrl()}/api/issues`, {
+    const res = await fetch(`${getApiUrl()}/issues`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -71,7 +72,7 @@ export async function updateIssueState(
     state: string,
     agent: string = "director"
 ): Promise<{ ok: boolean; from: string; to: string }> {
-    const res = await fetch(`${getApiUrl()}/api/issues/${id}/state`, {
+    const res = await fetch(`${getApiUrl()}/issues/${id}/state`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ state, agent }),
@@ -84,7 +85,7 @@ export async function syncExistingIssues(): Promise<{
     ok: boolean;
     synced: number;
 }> {
-    const res = await fetch(`${getApiUrl()}/api/sync`, {
+    const res = await fetch(`${getApiUrl()}/sync`, {
         method: "POST",
     });
     if (!res.ok) throw new Error(`Failed to sync: ${res.status}`);
@@ -92,5 +93,5 @@ export async function syncExistingIssues(): Promise<{
 }
 
 export function getSSEUrl(): string {
-    return `${getApiUrl()}/api/events`;
+    return `${getApiUrl()}/events`;
 }

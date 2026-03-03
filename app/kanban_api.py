@@ -201,7 +201,11 @@ def create_issue():
     })
 
     # Definir estado inicial
-    set_issue_state(r, issue_id, "New")
+    state = (body.get("state") or "New").strip()
+    if state not in VALID_STATES:
+        state = "New"
+    
+    set_issue_state(r, issue_id, state)
 
     # Adicionar ao índice do Kanban
     r.sadd(KANBAN_INDEX_KEY, issue_id)
@@ -212,7 +216,7 @@ def create_issue():
     return jsonify({
         "ok": True,
         "id": issue_id,
-        "state": "New",
+        "state": state,
     }), 201
 
 

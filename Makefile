@@ -145,6 +145,10 @@ up: prepare openclaw-image
 	@echo "==> up concluído (cluster + secrets do .env + pipeline)."
 	@echo "  Secrets: preenchidos a partir do .env (openclaw-telegram, clawdevs-github, orchestrator-slack)."
 	@echo "  Ollama: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull <modelo>"
+	@IP=$$(minikube ip); \
+	echo ""; \
+	echo "  🚀 OpenClaw Control UI: http://$$IP:30000"; \
+	echo ""
 
 up-all:
 	@$(CURDIR)/scripts/up-all.sh
@@ -260,7 +264,7 @@ configmap-kanban-api:
 
 kanban-image:
 	@echo "==> Build kanban-ui:local (Minikube Docker)..."
-	eval $$(minikube docker-env) && docker build -t kanban-ui:v3 kanban-ui
+	eval $$(minikube docker-env) && docker build -t kanban-ui:v7 kanban-ui
 	@echo "==> kanban-ui:local concluído."
 
 kanban-apply: configmap-kanban-api kanban-image

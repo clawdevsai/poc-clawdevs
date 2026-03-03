@@ -16,7 +16,12 @@ export default function KanbanBoard() {
     const [data, setData] = useState<BoardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [recentIds, setRecentIds] = useState<Set<string>>(new Set());
+    const [mounted, setMounted] = useState(false);
+
+    // Prevent hydration mismatch
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const loadBoard = useCallback(async () => {
         try {
@@ -24,35 +29,25 @@ export default function KanbanBoard() {
             const boardData = await fetchBoard();
             setData(boardData);
             setError(null);
-        } catch (err) {
+        } catch (err: any) {
             setError("Unable to connect to the agent pipeline. Please ensure the backend is running.");
-            console.error(err);
+            console.error("Board fetch error:", err);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    const { connected } = useSSE((event: KanbanEvent) => {
+    const { connected } = useSSE(() => {
         loadBoard();
-        if (event.issue_id) {
-            setRecentIds((prev) => {
-                const next = new Set(prev);
-                next.add(event.issue_id);
-                return next;
-            });
-            setTimeout(() => {
-                setRecentIds((prev) => {
-                    const next = new Set(prev);
-                    next.delete(event.issue_id);
-                    return next;
-                });
-            }, 5000);
-        }
     });
 
     useEffect(() => {
-        loadBoard();
-    }, [loadBoard]);
+        if (mounted) {
+            loadBoard();
+        }
+    }, [mounted, loadBoard]);
+
+    if (!mounted) return null;
 
     if (loading && !data) {
         return (
@@ -105,7 +100,7 @@ export default function KanbanBoard() {
                             title={config.title}
                             color={config.color}
                             icon={config.icon}
-                            count={`${items.length}/${items.length + 5}`} // Mocking total for aesthetic
+                            count={`${items.length}/${items.length + 5}`}
                             items={items}
                         />
                     );

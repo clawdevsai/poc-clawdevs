@@ -14,15 +14,15 @@ import {
 } from "lucide-react";
 
 const navItems = [
-    { icon: Layout, label: "Explorar", active: true },
-    { icon: Briefcase, label: "Criação" },
-    { icon: Users, label: "Trabalho" },
-    { icon: BookOpen, label: "Educação" },
-    { icon: Gamepad2, label: "Jogos" },
-    { icon: Music, label: "Áudio e Vídeo" },
-    { icon: Globe, label: "Rede e Internet" },
-    { icon: Settings, label: "Util Requisitos" },
-    { icon: Bell, label: "Notificações" },
+    { icon: Layout, label: "Explore", active: true },
+    { icon: Briefcase, label: "Creation" },
+    { icon: Users, label: "Agents" }, // Changed from 'Work' to 'Agents' as requested
+    { icon: BookOpen, label: "Education" },
+    { icon: Gamepad2, label: "Games" },
+    { icon: Music, label: "Audio & Video" },
+    { icon: Globe, label: "Network & Internet" },
+    { icon: Settings, label: "Requirements" },
+    { icon: Bell, label: "Notifications" },
 ];
 
 const jobs = [
@@ -40,7 +40,7 @@ export default function Sidebar() {
                     <div className="w-8 h-8 rounded-lg bg-status-new flex items-center justify-center">
                         <Layout className="w-5 h-5 text-white" />
                     </div>
-                    <span className="font-bold text-lg tracking-tight">ClawDevs</span>
+                    <span className="font-bold text-lg tracking-tight text-white">ClawDevs</span>
                 </div>
 
                 <nav className="space-y-1 mb-8">
@@ -57,7 +57,7 @@ export default function Sidebar() {
 
                 <div className="mt-10">
                     <h3 className="px-4 text-[11px] font-bold text-foreground-muted uppercase tracking-widest mb-4">
-                        Jobs / Agentes
+                        Jobs / Agents
                     </h3>
                     <div className="space-y-1">
                         {jobs.map((job, i) => (
@@ -82,7 +82,7 @@ export default function Sidebar() {
                 <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-status-interviewed flex-shrink-0" />
                     <div className="overflow-hidden">
-                        <p className="text-sm font-bold truncate">Diretor Luke</p>
+                        <p className="text-sm font-bold truncate text-white">Director Luke</p>
                         <p className="text-[11px] text-foreground-muted truncate">Admin Plane</p>
                     </div>
                 </div>
