@@ -15,7 +15,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Build the application
-RUN npm run build
+RUN echo "Build timestamp: $(date +%s)" && npm run build
 
 # Runner stage
 FROM node:22-alpine AS runner

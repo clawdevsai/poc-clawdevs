@@ -1,9 +1,16 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import KanbanColumn from "./KanbanColumn";
+import Column from "./Column";
 import { fetchBoard, BoardData, KanbanEvent } from "../lib/api";
 import { useSSE } from "../lib/useSSE";
+import { Star, CheckSquare, Users, AlertCircle, RefreshCw } from "lucide-react";
+
+const COLUMN_CONFIG: Record<string, { title: string; color: string; icon: any }> = {
+    "New": { title: "New", color: "blue", icon: Star },
+    "Shortlisted": { title: "Shortlisted", color: "orange", icon: CheckSquare },
+    "Interviewed": { title: "Interviewed", color: "teal", icon: Users },
+};
 
 export default function KanbanBoard() {
     const [data, setData] = useState<BoardData | null>(null);
@@ -18,28 +25,21 @@ export default function KanbanBoard() {
             setData(boardData);
             setError(null);
         } catch (err) {
-            setError("Erro ao carregar o quadro. Verifique a conexão com a API.");
+            setError("Unable to connect to the agent pipeline. Please ensure the backend is running.");
             console.error(err);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Use SSE for real-time updates
-    const { connected, lastEvent } = useSSE((event: KanbanEvent) => {
-        // Optimistic or reactive update: refresh the whole board for simplicity
-        // and to ensure consistency with Redis state.
+    const { connected } = useSSE((event: KanbanEvent) => {
         loadBoard();
-
-        // Highlight the changed issue
         if (event.issue_id) {
             setRecentIds((prev) => {
                 const next = new Set(prev);
                 next.add(event.issue_id);
                 return next;
             });
-
-            // Remove highlight after 5 seconds
             setTimeout(() => {
                 setRecentIds((prev) => {
                     const next = new Set(prev);
@@ -56,28 +56,27 @@ export default function KanbanBoard() {
 
     if (loading && !data) {
         return (
-            <div className="flex flex-col items-center justify-center h-[60vh]">
-                <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4" />
-                <p className="text-gray-400 font-medium">Sincronizando com os agentes...</p>
+            <div className="flex flex-col items-center justify-center h-full">
+                <div className="w-10 h-10 border-2 border-status-new/20 border-t-status-new rounded-full animate-spin mb-4" />
+                <p className="text-foreground-muted text-sm font-medium animate-pulse">Syncing with agents...</p>
             </div>
         );
     }
 
     if (error && !data) {
         return (
-            <div className="flex flex-col items-center justify-center h-[60vh] text-center px-4">
-                <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+            <div className="flex flex-col items-center justify-center h-full text-center px-8">
+                <div className="w-16 h-16 bg-status-shortlisted/10 rounded-2xl flex items-center justify-center mb-6">
+                    <AlertCircle className="w-8 h-8 text-status-shortlisted" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Ops! Algo deu errado</h3>
-                <p className="text-gray-400 mb-6 max-w-md">{error}</p>
+                <h3 className="text-xl font-extrabold text-white mb-2 tracking-tight">Backend Connection Error</h3>
+                <p className="text-foreground-muted text-sm mb-8 max-w-sm leading-relaxed">{error}</p>
                 <button
                     onClick={loadBoard}
-                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-colors"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold text-sm transition-all"
                 >
-                    Tentar Novamente
+                    <RefreshCw className="w-4 h-4" />
+                    Try Again
                 </button>
             </div>
         );
@@ -87,26 +86,30 @@ export default function KanbanBoard() {
 
     return (
         <div className="flex flex-col h-full">
-            {/* Connection indicator */}
-            <div className="flex items-center gap-2 mb-6 ml-1">
-                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500 pulse-dot' : 'bg-rose-500'} shadow-sm`} />
-                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                    {connected ? 'LIVE FEED ACTIVE' : 'RECONNECTING TO AGENTS...'}
-                </span>
+            <div className="flex items-center gap-3 mb-8">
+                <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-status-shortlisted'}`} />
+                    <span className="text-[10px] font-black text-foreground-muted uppercase tracking-widest leading-none">
+                        {connected ? 'Pipeline Live' : 'Reconnecting'}
+                    </span>
+                </div>
             </div>
 
-            {/* Columns container */}
-            <div className="flex-1 overflow-x-auto pb-6 -mx-1 px-1 custom-scrollbar">
-                <div className="flex flex-nowrap gap-4 h-full min-h-[500px]">
-                    {data.columns.map((state) => (
-                        <KanbanColumn
+            <div className="flex-1 overflow-x-auto pb-8 -mx-8 px-8 flex gap-8">
+                {data.columns.map((state) => {
+                    const config = COLUMN_CONFIG[state] || { title: state, color: "gray", icon: Star };
+                    const items = data.board[state] || [];
+                    return (
+                        <Column
                             key={state}
-                            state={state}
-                            issues={data.board[state] || []}
-                            recentIds={recentIds}
+                            title={config.title}
+                            color={config.color}
+                            icon={config.icon}
+                            count={`${items.length}/${items.length + 5}`} // Mocking total for aesthetic
+                            items={items}
                         />
-                    ))}
-                </div>
+                    );
+                })}
             </div>
         </div>
     );

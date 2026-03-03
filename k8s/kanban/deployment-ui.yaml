@@ -21,8 +21,8 @@ spec:
         workload-type: cpu-only
       containers:
         - name: ui
-          image: kanban-ui:local
-          imagePullPolicy: Never
+          image: kanban-ui:v3
+          imagePullPolicy: IfNotPresent
           env:
             - name: NEXT_PUBLIC_API_URL
               value: "http://kanban-api-service.ai-agents.svc.cluster.local:5001"

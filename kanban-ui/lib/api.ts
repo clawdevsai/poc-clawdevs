@@ -26,17 +26,16 @@ export interface KanbanEvent {
     title?: string;
 }
 
-// Resolve API URL: in-browser use relative proxy, in-cluster use env var
+// Resolve API URL: in-browser use relative proxy, in-cluster use internal service
 function getApiUrl(): string {
-    // Client-side: use relative /api path (proxied by next.config)
+    // Client-side (Browser): ALWAYS use the relative proxy to avoid cross-origin and hardcoded URL issues
     if (typeof window !== "undefined") {
         return "/kanban-api";
     }
-    // Server-side: use the env var pointing to the cluster service
-    return (
-        process.env.NEXT_PUBLIC_API_URL ||
-        "http://kanban-api-service.ai-agents.svc.cluster.local:5001"
-    );
+
+    // Server-side (during SSR or internal calls): use internal service
+    // Do NOT use NEXT_PUBLIC variables here as they get inlined at build time.
+    return process.env.INTERNAL_API_URL || "http://kanban-api-service.ai-agents.svc.cluster.local:5001";
 }
 
 export async function fetchBoard(): Promise<BoardData> {

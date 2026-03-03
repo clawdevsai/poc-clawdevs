@@ -58,8 +58,7 @@ try:
 except ImportError:
     # Fallback se não estiver no path
     VALID_STATES = {
-        "Backlog", "Refinamento", "Ready", "InProgress", "InReview",
-        "Approved", "Merged", "Deployed", "Monitoring", "Done",
+        "New", "Shortlisted", "Interviewed",
     }
 
     def get_issue_state(r, issue_id):
@@ -97,8 +96,7 @@ except ImportError:
 
 # ── Ordered columns for the Kanban board ─────────────────────────────────────
 COLUMNS_ORDER = [
-    "Backlog", "Refinamento", "Ready", "InProgress", "InReview",
-    "Approved", "Merged", "Deployed", "Monitoring", "Done",
+    "New", "Shortlisted", "Interviewed",
 ]
 
 app = Flask(__name__)
@@ -125,7 +123,7 @@ def _get_issue_data(issue_id: str) -> dict | None:
     if not data:
         return None
     data["id"] = issue_id
-    data["state"] = get_issue_state(r, issue_id) or "Backlog"
+    data["state"] = get_issue_state(r, issue_id) or "New"
     return data
 
 
@@ -148,11 +146,11 @@ def get_board():
     issues = _list_all_issues()
     columns = {col: [] for col in COLUMNS_ORDER}
     for issue in issues:
-        state = issue.get("state", "Backlog")
+        state = issue.get("state", "New")
         if state in columns:
             columns[state].append(issue)
         else:
-            columns["Backlog"].append(issue)
+            columns["New"].append(issue)
     return jsonify({
         "columns": COLUMNS_ORDER,
         "board": columns,
@@ -203,7 +201,7 @@ def create_issue():
     })
 
     # Definir estado inicial
-    set_issue_state(r, issue_id, "Backlog")
+    set_issue_state(r, issue_id, "New")
 
     # Adicionar ao índice do Kanban
     r.sadd(KANBAN_INDEX_KEY, issue_id)
@@ -214,7 +212,7 @@ def create_issue():
     return jsonify({
         "ok": True,
         "id": issue_id,
-        "state": "Backlog",
+        "state": "New",
     }), 201
 
 

@@ -78,6 +78,9 @@ data:
           }
         }
       },
+      "session": {
+        "dmScope": "per-account-channel-peer"
+      },
       "bindings": [
         { "match": { "channel": "telegram" }, "agentId": "ceo" },
         { "match": { "channel": "slack", "accountId": "ceo" }, "agentId": "ceo" },
@@ -88,6 +91,15 @@ data:
         { "match": { "channel": "slack", "accountId": "qa" }, "agentId": "qa" },
         { "match": { "channel": "slack", "accountId": "cybersec" }, "agentId": "cybersec" },
         { "match": { "channel": "slack", "accountId": "ux" }, "agentId": "ux" },
-        { "match": { "channel": "slack", "accountId": "dba" }, "agentId": "dba" }
+        { "match": { "channel": "slack", "accountId": "dba" }, "agentId": "dba" },
+        { "match": { "channel": "slack", "peer": { "id": "ceo", "kind": "dm" } }, "agentId": "ceo" },
+        { "match": { "channel": "slack", "peer": { "id": "po", "kind": "dm" } }, "agentId": "po" },
+        { "match": { "channel": "slack", "peer": { "id": "devops", "kind": "dm" } }, "agentId": "devops" },
+        { "match": { "channel": "slack", "peer": { "id": "architect", "kind": "dm" } }, "agentId": "architect" },
+        { "match": { "channel": "slack", "peer": { "id": "developer", "kind": "dm" } }, "agentId": "developer" },
+        { "match": { "channel": "slack", "peer": { "id": "qa", "kind": "dm" } }, "agentId": "qa" },
+        { "match": { "channel": "slack", "peer": { "id": "cybersec", "kind": "dm" } }, "agentId": "cybersec" },
+        { "match": { "channel": "slack", "peer": { "id": "ux", "kind": "dm" } }, "agentId": "ux" },
+        { "match": { "channel": "slack", "peer": { "id": "dba", "kind": "dm" } }, "agentId": "dba" }
       ]
     }

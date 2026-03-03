@@ -260,7 +260,7 @@ configmap-kanban-api:
 
 kanban-image:
 	@echo "==> Build kanban-ui:local (Minikube Docker)..."
-	eval $$(minikube docker-env) && docker build -t kanban-ui:local kanban-ui
+	eval $$(minikube docker-env) && docker build -t kanban-ui:v3 kanban-ui
 	@echo "==> kanban-ui:local concluído."
 
 kanban-apply: configmap-kanban-api kanban-image

@@ -1,30 +1,57 @@
 "use client";
 
 import React from "react";
+import { Search, Plus, Trash2, Edit2, UserPlus, Bell } from "lucide-react";
 
 export default function Header() {
     return (
-        <header className="flex items-center justify-between py-6 mb-8 border-b border-white/5">
-            <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                    </svg>
+        <header className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-background sticky top-0 z-10">
+            <div className="space-y-1">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-extrabold text-white tracking-tight">
+                        Senior Java Developer
+                    </h2>
+                    <div className="flex items-center gap-2">
+                        <button className="p-2 text-foreground-muted hover:text-white transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button className="p-2 text-foreground-muted hover:text-white transition-colors">
+                            <Edit2 className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-                        ClawDevs <span className="text-indigo-500">Kanban</span>
-                    </h1>
-                    <p className="text-xs text-gray-500 font-medium">Monitoramento do Pipeline de Agentes</p>
-                </div>
+
+                <nav className="flex items-center gap-6">
+                    <div className="text-sm font-bold border-b-2 border-status-new pb-1 -mb-[26px]">
+                        Kanban board
+                    </div>
+                    <div className="text-sm font-bold text-foreground-muted hover:text-white transition-colors pb-1 cursor-pointer">
+                        Job info
+                    </div>
+                </nav>
             </div>
 
-            <div className="flex items-center gap-3">
-                {/* Diretor simple indicator */}
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/5">
-                    <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                    <span className="text-xs font-bold text-gray-300">DIRETOR</span>
+            <div className="flex items-center gap-4">
+                <div className="relative">
+                    <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" />
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        className="bg-white/5 border border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-status-new transition-all w-64"
+                    />
                 </div>
+
+                <button className="flex items-center gap-2 px-4 py-2 bg-status-new hover:bg-opacity-90 transition-all rounded-xl text-white text-sm font-bold shadow-lg shadow-status-new/20">
+                    <UserPlus className="w-4 h-4" />
+                    Invite candidate
+                </button>
+
+                <div className="w-px h-6 bg-white/10 mx-2" />
+
+                <button className="p-2 text-foreground-muted hover:text-white transition-colors relative">
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-status-shortlisted rounded-full border border-background" />
+                </button>
             </div>
         </header>
     );
