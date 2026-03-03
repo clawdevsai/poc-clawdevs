@@ -16,29 +16,29 @@ data:
       list:
         - id: devops
           name: "DevOps/SRE"
-          model: "ollama_cloud/qwen2.5-coder:32b"
+          model: "ollama/qwen2.5-coder:14b"
           chatModel: "ollama/qwen2.5-coder:7b"
         - id: architect
           name: "Architect"
-          model: "ollama_cloud/qwen2.5-coder:72b"
+          model: "ollama/qwen2.5-coder:14b"
           chatModel: "ollama/qwen2.5-coder:7b"
         - id: developer
           name: "Developer"
-          model: "ollama_cloud/qwen3-coder-next:cloud"
-          chatModel: "ollama/qwen3.5:9b"
+          model: "ollama/qwen2.5-coder:14b"
+          chatModel: "ollama/qwen2.5-coder:7b"
         - id: qa
           name: "QA"
-          model: "ollama_cloud/qwen2.5-coder:72b"
+          model: "ollama/llama3.1:8b"
           chatModel: "ollama/llama3.1:8b"
         - id: cybersec
           name: "CyberSec"
-          model: "ollama_cloud/llama3.3:70b"
+          model: "ollama/llama3.1:8b"
           chatModel: "ollama/llama3.1:8b"
         - id: ux
           name: "UX"
-          model: "ollama_cloud/llama3.2-vision:90b"
+          model: "ollama/llama3.2-vision:11b"
           chatModel: "ollama/llama3.2-vision:11b"
         - id: dba
           name: "DBA"
-          model: "ollama_cloud/qwen2.5-coder:32b"
+          model: "ollama/qwen2.5-coder:14b"
           chatModel: "ollama/qwen2.5-coder:7b"

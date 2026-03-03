@@ -38,7 +38,7 @@ spec:
             # Ex.: "glm-5:cloud" ou "glm-5:cloud ministral-3:3b" (separados por espaço). Deixe vazio para usar só a lista dos agentes.
             # Apenas modelos locais (sem cloud auth). Para modelos cloud, configure OLLAMA_API_KEY no secret.
             - name: OLLAMA_PRELOAD_MODELS
-              value: "qwen2.5:3b"
+              value: "deepseek-r1:14b deepseek-r1:8b"
             # GPU: se o cluster tiver nvidia-device-plugin e GPU disponível, descomente CUDA_VISIBLE_DEVICES e as linhas nvidia.com/gpu em resources abaixo.
             # - name: CUDA_VISIBLE_DEVICES
             #   value: "0"
