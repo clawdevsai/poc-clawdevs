@@ -63,6 +63,7 @@ Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) d
 
 ### Observações
 
+- **Acesso leitura/escrita:** Todos os agentes (CEO, PO, Developer, etc.) têm permissão para **ler e escrever** em qualquer pasta sob `/workspace`. O init garante que `/workspace/workspace` exista com permissão 777 para repositórios compartilhados.
 - **Performance:** O mount 9P do Minikube pode ter lentidão em pastas com muitos arquivos (>600). **Clone git:** clonar em `/tmp` e depois `mv` para `/workspace/workspace/<repo>` evita erro 526 ("cannot pread pack file") no 9p; manter `workspace/<repo>/` com estrutura normal costuma ser aceitável após o clone.
 - **UID/GID:** O mount DEVE usar `--uid=0 --gid=0` (o container roda como root). O `make shared` já faz isso. Sem as flags corretas, o pod terá `EIO: i/o error` e o agente não responderá.
 - **Alternativa sem host:** Se não for usar pasta no host, use o PVC dinâmico original: em `deployment.yaml` troque `claimName` para `openclaw-workspace-pvc` e aplique `k8s/management-team/openclaw/pvc.yaml` em vez do PV/PVC compartilhado.

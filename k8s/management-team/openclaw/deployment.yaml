@@ -19,9 +19,11 @@ spec:
     spec:
       serviceAccountName: openclaw-router
       initContainers:
+        # Não fazer chmod -R em /workspace: no mount 9P isso pode causar I/O error no container principal.
+        # Criar pasta de repositórios compartilhados com permissão de leitura/escrita para todos os agentes.
         - name: workspace-init
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace /workspace/.openclaw-session-store /workspace /workspace/.ssh && chmod -R u+rwX /workspace /workspace/.openclaw-session-store /workspace && chmod 700 /workspace/.ssh"]
+          command: ["sh", "-c", "mkdir -p /workspace/.openclaw-session-store /workspace/.ssh /workspace/workspace && chmod -R u+rwX /workspace/.openclaw-session-store && chmod 700 /workspace/.ssh && chmod 777 /workspace/workspace"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace
@@ -68,10 +70,12 @@ spec:
                 cp /developer-memory/$f /workspace/developer/ 2>/dev/null
               done
 
-              # Permissões
+              # Permissões: cada agente pode ler/escrever na sua pasta; pasta compartilhada (repos) acessível a todos
               for id in ceo po devops architect developer qa cybersec ux dba; do
                 chmod -R u+rwX /workspace/$id
               done
+              mkdir -p /workspace/workspace
+              chmod 777 /workspace/workspace
           volumeMounts:
             - name: workspace
               mountPath: /workspace
