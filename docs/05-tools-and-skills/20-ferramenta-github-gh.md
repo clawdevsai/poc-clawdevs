@@ -4,7 +4,9 @@ Os agentes interagem com o GitHub por meio do **GitHub CLI** (`gh`). Uso de `gh 
 
 **Requisito:** `gh` instalado e autenticado (`gh auth login`). Sempre usar `--repo owner/repo` quando o comando não for executado dentro de um repositório git, ou usar URLs diretas quando aplicável.
 
-**Token no .env:** Para ter acesso ao git e ao `gh` (push, pull, Issues, PRs), defina o token no arquivo `.env` na raiz do repositório: `GH_TOKEN=ghp_...` ou `GITHUB_TOKEN=ghp_...`. Scripts que rodam no host podem carregar o `.env` (ex.: `source .env` antes de chamar `gh`). O `.env` não deve ser commitado (está no `.gitignore`). Ver [.env.example](../.env.example).
+**Autenticação no host (recomendado: SSH):** Use chave SSH para git (clone, push, pull). Crie a chave e registre no GitHub: [21-github-ssh-setup.md](21-github-ssh-setup.md). No `.env` defina `GIT_SSH_KEY_PATH=~/.ssh/id_ed25519_github` (ou o caminho da sua chave). Para `gh` no host, use `gh auth login -h github.com -p ssh` e selecione a chave. O `.env` não deve ser commitado (está no `.gitignore`). Ver [.env.example](../../.env.example).
+
+**Token (alternativa):** Para scripts que usam `gh` sem SSH ou para os **pods** (CEO, PO, etc.), use `GH_TOKEN`/`GITHUB_TOKEN` no `.env`; o script `scripts/cluster/secrets-from-env.sh` cria o Secret `clawdevs-github-secret` no cluster a partir dessas variáveis.
 
 **Segurança:** Nunca expor tokens em chat, logs ou repositório. Seguir postura Zero Trust e validação em runtime ([05-seguranca-e-etica.md](05-seguranca-e-etica.md), [14-seguranca-runtime-agentes.md](14-seguranca-runtime-agentes.md)) ao executar comandos que acessam recursos externos.
 

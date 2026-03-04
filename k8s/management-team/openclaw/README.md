@@ -57,11 +57,12 @@ Após o init e o uso pelos agentes, você verá em `~/clawdevs-shared` (ou o cam
 | **soul/** | SOUL de cada agente (ceo.md, po.md, developer.md, …) |
 | **ceo/**, **po/**, **devops/**, **architect/**, **developer/**, **qa/**, **cybersec/**, **ux/**, **dba/** | Cada um com SOUL.md, memory/, e arquivos que o OpenClaw criar (AGENTS.md, notas) |
 | **workspace/** | Repositórios clonados pelos agentes (ex.: clawdevs/docs, outros repos) |
+| **.ssh/** | Chave SSH para git (clone/push). **Não vem gerada** — coloque em `<pasta-host>/.ssh/` os arquivos `id_ed25519_github` e `id_ed25519_github.pub` (gere no host com `ssh-keygen` e registre o `.pub` no GitHub). Os agentes usam `GIT_SSH_COMMAND` apontando para `/workspace/.ssh/id_ed25519_github`. |
 
-Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) devem ir em **`/workspace`** dentro do pod; na sua máquina isso aparece em `<pasta-host>/workspace/`.
+Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) devem ir em **`/workspace`** dentro do pod; na sua máquina isso aparece em `<pasta-host>/workspace/`. Para git via SSH, use URL `git@github.com:owner/repo.git`; a chave deve estar em `/workspace/.ssh/` (host: `<pasta-host>/.ssh/`).
 
 ### Observações
 
-- **Performance:** O mount 9P do Minikube pode ter lentidão em pastas com muitos arquivos (>600). Para muitos repos, manter `workspace/<repo>/` com estrutura normal costuma ser aceitável.
+- **Performance:** O mount 9P do Minikube pode ter lentidão em pastas com muitos arquivos (>600). **Clone git:** clonar em `/tmp` e depois `mv` para `/workspace/workspace/<repo>` evita erro 526 ("cannot pread pack file") no 9p; manter `workspace/<repo>/` com estrutura normal costuma ser aceitável após o clone.
 - **UID/GID:** O mount DEVE usar `--uid=0 --gid=0` (o container roda como root). O `make shared` já faz isso. Sem as flags corretas, o pod terá `EIO: i/o error` e o agente não responderá.
 - **Alternativa sem host:** Se não for usar pasta no host, use o PVC dinâmico original: em `deployment.yaml` troque `claimName` para `openclaw-workspace-pvc` e aplique `k8s/management-team/openclaw/pvc.yaml` em vez do PV/PVC compartilhado.

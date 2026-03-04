@@ -21,7 +21,7 @@ spec:
       initContainers:
         - name: workspace-init
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace /workspace/.openclaw-session-store /workspace && chmod -R u+rwX /workspace /workspace/.openclaw-session-store /workspace"]
+          command: ["sh", "-c", "mkdir -p /workspace /workspace/.openclaw-session-store /workspace /workspace/.ssh && chmod -R u+rwX /workspace /workspace/.openclaw-session-store /workspace && chmod 700 /workspace/.ssh"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace
@@ -112,6 +112,9 @@ spec:
               value: "--max-old-space-size=1024"
             - name: OLLAMA_API_KEY
               value: "ollama-local"
+            # Agentes usam chave SSH em /workspace/.ssh (host: ~/clawdevs-shared/.ssh); o arquivo não vem gerado — coloque id_ed25519_github (e .pub) lá.
+            - name: GIT_SSH_COMMAND
+              value: "ssh -i /workspace/.ssh/id_ed25519_github -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
             - name: TELEGRAM_BOT_TOKEN
               valueFrom:
                 secretKeyRef:
