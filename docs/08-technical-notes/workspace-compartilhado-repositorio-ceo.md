@@ -8,7 +8,7 @@ O CEO (via Slack) informou ter baixado o repositório e analisado a documentaç�
 
 1. **Workspace do CEO no pod:** `workspace` do agente CEO é **`/workspace/ceo`** (openclaw.json).
 2. **Onde o `exec` roda:** Comandos `exec` (ex.: `git clone`) rodam com CWD = `/workspace/ceo`.
-3. **Clone sem caminho:** `git clone https://github.com/clawdevsai/clawdevs` criaria **`/workspace/ceo/clawdevs`** (ou nome do repo), não em `/workspace/repos`.
+3. **Clone sem caminho:** `git clone https://github.com/clawdevs-ai/clawdevs` criaria **`/workspace/ceo/clawdevs`** (ou nome do repo), não em `/workspace/repos`.
 4. **No host:** `/workspace` no pod = `~/clawdevs-shared` no host. Logo:
    - Se o CEO clonou de fato → repo estaria em **`~/clawdevs-shared/ceo/clawdevs`** (ou `ceo/<nome-do-repo>`).
    - A pasta **`~/clawdevs-shared/repos`** no host corresponde a **`/workspace/repos`** no pod; essa pasta **não é criada** pelo init e só existe se algum agente criar e clonar aí.
@@ -44,7 +44,7 @@ O CEO (via Slack) informou ter baixado o repositório e analisado a documentaç�
 
 Para que repositórios clonados pelo CEO apareçam em **`~/clawdevs-shared/repos`**, o CEO deve clonar **explicitamente** em `/workspace/repos`:
 
-- Exemplo: `git clone https://github.com/clawdevsai/clawdevs /workspace/repos/clawdevs`
+- Exemplo: `git clone https://github.com/clawdevs-ai/clawdevs /workspace/repos/clawdevs`
 
 Foi adicionada instrução no workspace do CEO (TOOLS.md / bootstrap) para sempre clonar repositórios em **`/workspace/repos/<nome-repo>`**.
 

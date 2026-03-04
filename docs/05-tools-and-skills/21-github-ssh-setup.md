@@ -84,7 +84,7 @@ Os agentes (CEO, PO, etc.) usam a chave em **`/workspace/.ssh/`** no pod (= **`~
    chmod 600 ~/clawdevs-shared/.ssh/id_ed25519_github
    ```
 
-3. O deployment do OpenClaw já define `GIT_SSH_COMMAND` apontando para `/workspace/.ssh/id_ed25519_github`. Os agentes devem usar URL SSH nos clones, ex.: `git clone git@github.com:clawdevsai/clawdevs /workspace/repos/clawdevs`.
+3. O deployment do OpenClaw já define `GIT_SSH_COMMAND` apontando para `/workspace/.ssh/id_ed25519_github`. Os agentes devem usar URL SSH nos clones, ex.: `git clone git@github.com:clawdevs-ai/clawdevs /workspace/repos/clawdevs`.
 
 ## 8. Resolver "Permission denied (publickey)" no pod
 
@@ -92,7 +92,7 @@ Se no pod aparecer `git@github.com: Permission denied (publickey)` ao clonar:
 
 **Opção A — Corrigir SSH:** A chave pública usada no pod deve estar no GitHub na **conta que tem acesso** ao repositório. No host, veja a chave: `cat ~/clawdevs-shared/.ssh/id_ed25519_github.pub`. No GitHub: **Settings** → **SSH and GPG keys** → **New SSH key** → cole o conteúdo e salve.
 
-**Opção B — Usar HTTPS com token (fallback):** O pod recebe `GITHUB_TOKEN` do Secret `clawdevs-github-secret`. Clone assim: `git clone https://x-access-token:$GITHUB_TOKEN@github.com/clawdevsai/clawdevs.git /workspace/repos/clawdevs`. Funciona sem configurar SSH no GitHub.
+**Opção B — Usar HTTPS com token (fallback):** O pod recebe `GITHUB_TOKEN` do Secret `clawdevs-github-secret`. Clone assim: `git clone https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_ORG/clawdevs.git /workspace/repos/clawdevs`. Funciona sem configurar SSH no GitHub.
 
 ## Referências
 
@@ -109,7 +109,7 @@ O pod `devops-worker` recebe acesso total ao GitHub através do Secret `clawdevs
 |---|---|
 | `GITHUB_TOKEN` / `GH_TOKEN` | PAT para `gh` CLI e clone HTTPS |
 | `GITHUB_USER` | `clawdevsai` |
-| `GITHUB_ORG` | `clawdevsai` |
+| `GITHUB_ORG` | `clawdevs-ai` |
 | `GITHUB_SSH_PRIVATE_KEY` | Chave SSH privada em **base64** |
 
 O deployment inclui um `initContainer` (`setup-ssh`) que:
@@ -120,14 +120,14 @@ O deployment inclui um `initContainer` (`setup-ssh`) que:
 O container principal herda `GIT_SSH_COMMAND` já configurado. Os agentes DevOps usam:
 
 ```bash
-# Padrão — SSH
-git clone git@github.com:clawdevsai/<repo>.git /workspace/repos/<repo>
+# Padrão — SSH (org)
+git clone git@github.com:clawdevs-ai/<repo>.git /workspace/repos/<repo>
 
-# Fallback — HTTPS com token
-git clone https://x-access-token:$GITHUB_TOKEN@github.com/clawdevsai/<repo>.git /workspace/repos/<repo>
+# Fallback — HTTPS com token (org)
+git clone https://x-access-token:$GITHUB_TOKEN@github.com/clawdevs-ai/<repo>.git /workspace/repos/<repo>
 
 # gh CLI (autenticado via GH_TOKEN)
-gh repo list clawdevsai
+gh repo list clawdevs-ai
 ```
 
 ### Gerar e registrar `GITHUB_SSH_PRIVATE_KEY` no `.env`

@@ -1,7 +1,9 @@
 # Configuração OpenClaw v2026.3.2 — formato oficial dos docs.
 # Slack: multi-account (1 app por agente); tokens injetados pelo entrypoint via Secret.
 # Telegram: CEO apenas; chat ID injetado pelo entrypoint via Secret.
-# Ref: https://docs.openclaw.ai/channels/slack
+# tools.exec: global = gateway, full, ask off. CEO tem override em list: tools.exec.security = deny.
+# Demais agentes (po, devops, architect, ...): override em list com host=gateway, security=full, ask=off.
+# Ref: https://docs.openclaw.ai/channels/slack, https://docs.openclaw.ai/tools/exec-approvals
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -93,20 +95,25 @@ data:
           }
         },
         "list": [
-          { "id": "ceo", "name": "Rafael", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ceo" },
-          { "id": "po", "name": "Marina", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/po" },
-          { "id": "devops", "name": "Sérgio", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/devops" },
-          { "id": "architect", "name": "Vera", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/architect" },
-          { "id": "developer", "name": "Leo", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/developer" },
-          { "id": "qa", "name": "Renata", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/qa" },
-          { "id": "cybersec", "name": "Jade", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/cybersec" },
-          { "id": "ux", "name": "Luna", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ux" },
-          { "id": "dba", "name": "Dante", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/dba" }
+          { "id": "ceo", "name": "Rafael", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ceo", "tools": { "exec": { "security": "deny" } } },
+          { "id": "po", "name": "Marina", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/po", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
+          { "id": "devops", "name": "Sérgio", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/devops", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
+          { "id": "architect", "name": "Vera", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/architect", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
+          { "id": "developer", "name": "Leo", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/developer", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
+          { "id": "qa", "name": "Renata", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/qa", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
+          { "id": "cybersec", "name": "Jade", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/cybersec", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
+          { "id": "ux", "name": "Luna", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ux", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
+          { "id": "dba", "name": "Dante", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/dba", "tools": { "exec": { "host": "gateway", "security": "full", "ask": "off" } } }
         ]
       },
       "tools": {
         "profile": "messaging",
         "allow": ["sessions_spawn", "exec", "group:fs", "group:web"],
+        "exec": {
+          "host": "gateway",
+          "security": "full",
+          "ask": "off"
+        },
         "subagents": {
           "tools": {
             "deny": ["gateway", "cron"]

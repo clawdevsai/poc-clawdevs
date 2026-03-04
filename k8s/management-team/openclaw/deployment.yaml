@@ -70,8 +70,8 @@ spec:
                 cp /developer-memory/$f /workspace/developer/ 2>/dev/null
               done
 
-              # DevOps bootstrap (TOOLS.md com path obrigatório /workspace/repos para repos; nunca /workspace/devops)
-              for f in TOOLS.md; do
+              # DevOps bootstrap (TOOLS.md + GITHUB-CONTEXT.md com org clawdevs-ai e path /workspace/repos)
+              for f in TOOLS.md GITHUB-CONTEXT.md; do
                 cp /devops-memory/$f /workspace/devops/ 2>/dev/null
               done
 

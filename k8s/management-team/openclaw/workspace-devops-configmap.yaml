@@ -10,6 +10,37 @@ metadata:
   labels:
     app: openclaw
 data:
+  GITHUB-CONTEXT.md: |
+    # Contexto GitHub — dados completos para o agente DevOps
+
+    ## Organização (destino padrão dos repositórios)
+
+    | Campo        | Valor |
+    |--------------|--------|
+    | Nome exibido | clawdevs.ai |
+    | Slug / login | clawdevs-ai (usar em URLs e em `gh`) |
+    | URL perfil   | https://github.com/clawdevs-ai |
+    | Variável env| `$GITHUB_ORG` = clawdevs-ai |
+
+    Os repositórios devem ser criados **na organização** (não na conta pessoal), para aparecerem em https://github.com/clawdevs-ai.
+
+    ## Conta pessoal (autenticação)
+
+    | Campo        | Valor |
+    |--------------|--------|
+    | Login        | clawdevsai |
+    | Variável env | `$GITHUB_USER` = clawdevsai |
+    | Permissão na org | Owner da organização clawdevs-ai |
+
+    O token (`$GITHUB_TOKEN` / `$GH_TOKEN`) está associado a esta conta; com ele você cria repositórios na organização via `gh repo create $GITHUB_ORG/<nome-repo>`.
+
+    ## Resumo para comandos
+
+    - **Criar repo na organização:** `gh repo create $GITHUB_ORG/<nome-repo> --private --description="..." --clone=false`
+    - **Verificar:** `gh repo view $GITHUB_ORG/<nome-repo>` ou `gh repo list $GITHUB_ORG --limit 5`
+    - **Clone (org):** `git clone https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_ORG/<nome-repo>.git ...`
+    - **Link ao usuário:** `https://github.com/$GITHUB_ORG/<nome-repo>` (ex.: https://github.com/clawdevs-ai/user-api)
+
   TOOLS.md: |
     # TOOLS.md — DevOps: onde criar repositórios e como enviar ao GitHub
 
@@ -71,13 +102,27 @@ data:
     - **Nunca** criar o projeto em `/workspace/devops` (seu CWD): aí o Diretor não vê em `~/clawdevs-shared/repos` e o repositório fica invisível fora do K8s.
     - Para evitar erro 526 no mount 9P: clonar em `/tmp/<nome>` e depois mover: `git clone <url> /tmp/<nome> && mv /tmp/<nome> /workspace/repos/<nome>`.
 
-    ## Fluxo: criar repositório no GitHub e deixar visível no host
+    ## Fluxo: criar repositório na organização GitHub e deixar visível no host
 
-    1. **Criar no GitHub:** usar `gh repo create <owner>/<nome-repo> --private --description="..." --clone=false`. Se `gh` não existir ou falhar, criar via API: `curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/user/repos -d '{"name":"<nome-repo>","private":true,"description":"..."}'`.
-    2. **Clonar no path correto:** `git clone https://x-access-token:$GITHUB_TOKEN@github.com/<owner>/<nome-repo>.git /tmp/<nome-repo> && mv /tmp/<nome-repo> /workspace/repos/<nome-repo>`.
-    3. **Trabalhar sempre em `/workspace/repos/<nome-repo>`:** criar README, .gitignore, etc. dentro desse diretório.
-    4. **Commit e push:** `cd /workspace/repos/<nome-repo> && git add -A && git status && git commit -m "Initial commit with structure" && git push -u origin main` (ou master).
-    5. **Sempre informar o usuário** do resultado (sucesso ou mensagem de erro do push). Se o push falhar, reportar o erro exato para o usuário poder corrigir.
+    **Obrigatório:** Para criar um repositório você **deve invocar a tool exec** com o comando real. Não basta descrever o plano em texto — chame a tool `exec` com `command` igual a: `gh repo create $GITHUB_ORG/<nome-repo> --private --description="..." --clone=false`. Sem chamar exec, o repositório não é criado.
+
+    **Organização:** repositórios são criados na **organização** clawdevs.ai (slug `$GITHUB_ORG` = clawdevs-ai). Ver `GITHUB-CONTEXT.md` para dados completos.
+
+    1. **Criar na organização:** invocar **exec** com comando: `gh repo create $GITHUB_ORG/<nome-repo> --private --description="..." --clone=false`. Se `gh` falhar, usar API da org: `curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/orgs/$GITHUB_ORG/repos -d '{"name":"<nome-repo>","private":true,"description":"..."}'`.
+    2. **Erro comum (OAuth App access restrictions):** se a saída trouxer `organization has enabled OAuth App access restrictions` (HTTP 403), **parar imediatamente** e reportar o erro completo ao usuário. Pedir para liberar o app GitHub CLI na organização (`Settings -> Third-party access -> GitHub CLI -> Grant access`) ou usar token/app autorizado pela org.
+    3. **Verificar criação antes de afirmar sucesso:** após o comando, **sempre** conferir a saída do exec. Só dizer ao usuário que o repositório foi criado se a saída indicar sucesso (ex.: "Created repository", URL, exit 0). Se houver erro, **reportar o texto exato do erro** ao usuário e não afirmar que criou.
+    4. **Confirmar que o repo existe (recomendado):** `gh repo view $GITHUB_ORG/<nome-repo>` ou `gh repo list $GITHUB_ORG --limit 5`. Só informar sucesso ao usuário se o repo aparecer.
+    5. **Clonar no path correto:** `git clone https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_ORG/<nome-repo>.git /tmp/<nome-repo> && mv /tmp/<nome-repo> /workspace/repos/<nome-repo>`.
+    6. **Trabalhar sempre em `/workspace/repos/<nome-repo>`:** criar README, .gitignore, etc. dentro desse diretório.
+    7. **Commit e push:** `cd /workspace/repos/<nome-repo> && git add -A && git status && git commit -m "Initial commit with structure" && git push -u origin main` (ou master).
+    8. **Sempre informar o usuário** do resultado (sucesso ou mensagem de erro do push).
+    9. **Link do repositório:** usar **sempre** a organização: `https://github.com/$GITHUB_ORG/<nome-repo>`. Exemplo correto: `https://github.com/clawdevs-ai/user-api`. **Nunca** usar placeholders na URL.
+
+    ## Regra crítica: nunca afirmar sucesso sem verificar
+
+    **Nunca** dizer ao usuário que o repositório foi criado no GitHub antes de:
+    - Ter executado de fato o comando (`gh repo create` ou `curl` na API) via tool exec;
+    - Ter lido a saída do comando: só é sucesso se a saída mostrar confirmação (ex.: "Created repository", URL, ou exit 0). Se a saída mostrar erro (Authentication failed, Repository already exists, 404, etc.), informar **o texto do erro** ao usuário e não dizer que criou.
 
     ## Resumo
 

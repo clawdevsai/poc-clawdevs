@@ -1,71 +1,128 @@
-# Investigação: DevOps não preenche ~/clawdevs-shared/repos e repo não aparece no GitHub
+# Investigação: DevOps não cria repositório no GitHub — causa raiz e resolução
 
-**Data:** 2026-03-04
+**Data:** 2026-03-04  
+**Status:** Resolvido
+
+---
 
 ## Sintoma
 
-- Usuário pediu ao DevOps (via Slack) criar o repositório **user-api** (privado, descrição "Gerenciado de cadastro de usuario", estrutura inicial).
-- O DevOps respondeu que iria: criar no GitHub, clonar em `/workspace/repos/user-api`, adicionar estrutura e fazer push.
-- **Nada apareceu** em `~/clawdevs-shared/repos` no host nem o repositório **user-api** na conta [clawdevsai no GitHub](https://github.com/clawdevsai?tab=repositories) (que tem acesso total via token/SSH).
+- Usuário pediu ao DevOps (via Slack) para criar o repositório **user-api** na organização **clawdevs-ai**.
+- O DevOps respondeu com um plano, mostrou o comando `gh repo create clawdevs-ai/user-api ...`, mas **não criou o repo** no GitHub e **não informou o erro** ao usuário.
+- `~/clawdevs-shared/repos/` no host ficou vazio; https://github.com/clawdevs-ai não tinha repositórios.
 
-## Causa raiz
+---
 
-### 1. `gh` CLI não está instalado na imagem do gateway OpenClaw
+## Causas identificadas (em ordem cronológica)
 
-O **TOOLS.md** do workspace DevOps (ConfigMap `workspace-devops-configmap`) instrui:
+### 1. `gh` CLI e token — OK
 
-1. **Criar no GitHub:** `gh repo create <owner>/<nome-repo> --private --description="..." --clone=false`
-2. Clonar em `/tmp/<nome-repo>` e mover para `/workspace/repos/<nome-repo>`
-3. Commit e push
+- `gh` instalado no pod (`/usr/bin/gh`), autenticado como `clawdevsai` via `GH_TOKEN`.
+- Scopes do token: `repo`, `workflow`, `read:user`, `user:email`.
+- Secret `clawdevs-github-secret` presente com `GITHUB_USER=clawdevsai`, `GITHUB_ORG=clawdevs-ai`.
 
-O **Dockerfile** do OpenClaw (`k8s/management-team/openclaw/Dockerfile`) instala apenas:
+### 2. Path e mount — OK
 
-- `curl`, `git`  
-- **Não instala `gh`** (GitHub CLI).
+- PVC `openclaw-shared-workspace-pvc` → `/workspace` no pod = `~/clawdevs-shared` no host.
+- `/workspace/repos/` acessível e com permissão 777.
 
-Quando o agente tenta executar `gh repo create ...`, o comando **não existe** no container. O passo 1 falha; o repositório nunca é criado no GitHub e o fluxo não avança. Nada é clonado em `/workspace/repos/`, então nada aparece em `~/clawdevs-shared/repos` no host.
+### 3. Exec bloqueado por aprovação no gateway (corrigido)
 
-### 2. Path e mount (já corretos)
+O OpenClaw usava por padrão `security: allowlist` e `ask: on-miss` para exec no gateway. Sem UI de aprovação no pod K8s, o fallback era **deny** e o comando `gh repo create` ficava como `approval-pending` e não rodava.
 
-- O deployment usa o PVC `openclaw-shared-workspace-pvc` → PV com `hostPath: /agent-shared`.
-- O host monta `~/clawdevs-shared` em `/agent-shared` no Minikube via `make shared` (minikube mount).
-- Dentro do pod, `/workspace` = conteúdo de `/agent-shared` = `~/clawdevs-shared` no host.
-- `/workspace/repos/` no pod = `~/clawdevs-shared/repos/` no host.
+**Correção:** em `openclaw-config` (configmap.yaml), exec foi configurado por agente:
+- **CEO:** `tools.exec.security: "deny"` (CEO não executa no host).
+- **Demais agentes** (po, devops, architect, developer, qa, cybersec, ux, dba): `tools.exec` com `host: "gateway"`, `security: "full"`, `ask: "off"`.
 
-Se o DevOps tivesse conseguido criar e clonar o repo em `/workspace/repos/user-api`, o conteúdo apareceria no host. O problema não é o path nem o mount e sim a falha no primeiro passo (`gh` inexistente).
+Ref: [Exec tool](https://docs.openclaw.ai/tools/exec), [Exec approvals](https://docs.openclaw.ai/tools/exec-approvals).
 
-### 3. GitHub
+### 4. Falso positivo — agente diz que criou sem verificar (corrigido)
 
-- A conta clawdevsai tem 1 repositório listado (**clawdevs**, privado). O **user-api** não foi criado porque `gh repo create` nunca rodou com sucesso.
-- O Secret `clawdevs-github-secret` (GITHUB_TOKEN / GH_TOKEN) está disponível no pod; quando `gh` estiver instalado, ele usará automaticamente `GH_TOKEN`/`GITHUB_TOKEN` para autenticação.
+O modelo respondia em texto que "criou o repositório" sem ter chamado a tool `exec` ou sem ter lido a saída.
 
-## Correções aplicadas
+**Correção:** regras no TOOLS.md e soul-devops exigem:
+- Invocar a tool `exec` com o comando real.
+- Ler a saída do exec antes de afirmar sucesso.
+- Reportar o texto exato do erro se falhar.
 
-1. **Instalar `gh` (GitHub CLI) na imagem OpenClaw**  
-   - No Dockerfile: instalar `gh` (ex.: via script oficial ou pacote) para que o fluxo documentado no TOOLS.md do DevOps funcione.
-2. **Opcional – fallback no TOOLS.md:**  
-   - Se `gh` não estiver disponível ou falhar, instruir o agente a criar o repositório via **GitHub API** com `curl` e `GITHUB_TOKEN`, depois usar `git clone`/`git push` em `/workspace/repos/<nome-repo>`.
+### 5. OAuth App access restrictions na organização (causa raiz final — resolvido)
 
-## Como validar após a correção
+Mesmo com exec funcionando, `gh repo create clawdevs-ai/...` retornava:
 
-1. Rebuild da imagem e restart do deployment:
-   ```bash
-   eval $(minikube docker-env)
-   docker build -f k8s/management-team/openclaw/Dockerfile -t openclaw-gateway:local k8s/management-team/openclaw
-   kubectl rollout restart deployment/openclaw -n ai-agents
-   ```
-2. Confirmar que `gh` existe no pod:
-   ```bash
-   kubectl exec -n ai-agents deploy/openclaw -c gateway -- which gh && gh auth status
-   ```
-   (Com `GITHUB_TOKEN`/`GH_TOKEN` no ambiente, `gh` usa o token automaticamente.)
-3. Pedir novamente ao DevOps (Slack) para criar um repositório (ex.: user-api) e conferir:
-   - Repo criado em https://github.com/clawdevsai?tab=repositories
-   - Conteúdo em `~/clawdevs-shared/repos/<nome-repo>` no host (com `make shared` ativo).
+```
+GraphQL: Although you appear to have the correct authorization credentials,
+the `clawdevs-ai` organization has enabled OAuth App access restrictions,
+meaning that data access to third-parties is limited.
+```
+
+Isso bloqueava **todas** as operações na org (criar repo, listar, atualizar) tanto via `gh` quanto via API REST (HTTP 403). A criação na conta pessoal `clawdevsai` funcionava normalmente.
+
+**Correção:** o owner da org removeu as restrições de OAuth apps:
+- **https://github.com/organizations/clawdevs-ai/settings/oauth_application_policy**
+- **"Remove restrictions"** → Policy: No restrictions.
+
+Após isso, `gh repo create clawdevs-ai/user-api` executou com sucesso e o repo foi criado.
+
+---
+
+## Estado atual (resolvido)
+
+| Item | Estado |
+|------|--------|
+| `gh` no pod | OK (`/usr/bin/gh`) |
+| Token / auth | OK (clawdevsai, scopes repo+workflow) |
+| `GITHUB_ORG` | `clawdevs-ai` (no secret e no pod) |
+| Exec no gateway | OK (security=full, ask=off por agente; CEO=deny) |
+| OAuth App policy da org | **No restrictions** |
+| Repo `clawdevs-ai/user-api` | **Criado** (private) |
+| TOOLS.md / soul-devops | Regras de verificação antes de afirmar sucesso |
+
+---
+
+## Como investigar (logs e K8s)
+
+O agente **DevOps** roda dentro do **gateway OpenClaw** (não é um pod separado). O deployment é `openclaw` no namespace `ai-agents`, container `gateway`.
+
+### Ver logs do gateway
+
+```bash
+kubectl logs -n ai-agents deploy/openclaw -c gateway -f
+kubectl logs -n ai-agents deploy/openclaw -c gateway --tail=200
+kubectl logs -n ai-agents deploy/openclaw -c gateway --tail=500 | grep -E 'exec|gh|repo create'
+```
+
+### Verificar ambiente no pod
+
+```bash
+kubectl exec -n ai-agents deploy/openclaw -c gateway -- sh -c 'which gh; echo GITHUB_ORG=$GITHUB_ORG; echo GITHUB_USER=$GITHUB_USER; gh auth status'
+```
+
+### Verificar workspace e repos
+
+```bash
+kubectl exec -n ai-agents deploy/openclaw -c gateway -- ls -la /workspace/repos/
+```
+
+### Teste rápido de criação
+
+```bash
+kubectl exec -n ai-agents deploy/openclaw -c gateway -- sh -c 'gh repo create $GITHUB_ORG/test-temp --private --clone=false 2>&1'
+```
+
+### Script de diagnóstico Slack
+
+```bash
+./scripts/ops/slack-devops-check.sh
+```
+
+---
 
 ## Referências
 
-- `k8s/management-team/openclaw/Dockerfile` — imagem do gateway (antes: sem `gh`).
-- `k8s/management-team/openclaw/workspace-devops-configmap.yaml` — TOOLS.md que manda usar `gh repo create`.
-- `docs/05-tools-and-skills/20-ferramenta-github-gh.md` — requisito de `gh` instalado e autenticado nos agentes.
-- `docs/08-technical-notes/workspace-compartilhado-repositorio-ceo.md` — path `/workspace/repos` e mount host.
+- `k8s/management-team/openclaw/configmap.yaml` — config OpenClaw (tools.exec por agente).
+- `k8s/management-team/openclaw/workspace-devops-configmap.yaml` — TOOLS.md + GITHUB-CONTEXT.md do DevOps.
+- `k8s/development-team/devops/soul/configmap.yaml` — SOUL do DevOps (regras de verificação).
+- `docs/05-tools-and-skills/github-org-clawdevs-ai.md` — dados da organização e OAuth restriction.
+- `docs/05-tools-and-skills/skills/github/SKILL.md` — skill github com fluxo de criação e tratamento de erros.
+- `docs/08-technical-notes/devops-nao-responde-slack.md` — checklist se o DevOps não responder no Slack.
+- `scripts/ops/slack-devops-check.sh` — diagnóstico de tokens e conta devops no cluster.
