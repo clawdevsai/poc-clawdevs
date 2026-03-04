@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-ux
+  namespace: ai-agents
+  labels:
+    team: development
+    agent: ux
+data:
+  agent-ux.yaml: |
+    - id: ux
+      name: "UX"
+      model: "ollama/llama3.2-vision:11b"
+      chatModel: "ollama/llama3.2-vision:11b"

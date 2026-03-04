@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-qa
+  namespace: ai-agents
+  labels:
+    team: development
+    agent: qa
+data:
+  agent-qa.yaml: |
+    - id: qa
+      name: "QA"
+      model: "ollama/llama3.1:8b"
+      chatModel: "ollama/llama3.1:8b"
+      # SOUL references will be handled by the gateway or pod mounting

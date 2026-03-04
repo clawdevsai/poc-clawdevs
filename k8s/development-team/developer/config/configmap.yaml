@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-developer
+  namespace: ai-agents
+  labels:
+    team: development
+    agent: developer
+data:
+  agent-developer.yaml: |
+    - id: developer
+      name: "Developer"
+      model: "ollama/qwen2.5-coder:14b"
+      chatModel: "ollama/qwen2.5-coder:7b"
