@@ -21,7 +21,7 @@ data:
 
     ## Fluxo: criar repositório no GitHub e deixar visível no host
 
-    1. **Criar no GitHub:** `gh repo create <owner>/<nome-repo> --private --description="..." --clone=false` (ou com --source e push depois).
+    1. **Criar no GitHub:** usar `gh repo create <owner>/<nome-repo> --private --description="..." --clone=false`. Se `gh` não existir ou falhar, criar via API: `curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/user/repos -d '{"name":"<nome-repo>","private":true,"description":"..."}'`.
     2. **Clonar no path correto:** `git clone https://x-access-token:$GITHUB_TOKEN@github.com/<owner>/<nome-repo>.git /tmp/<nome-repo> && mv /tmp/<nome-repo> /workspace/repos/<nome-repo>`.
     3. **Trabalhar sempre em `/workspace/repos/<nome-repo>`:** criar README, .gitignore, etc. dentro desse diretório.
     4. **Commit e push:** `cd /workspace/repos/<nome-repo> && git add -A && git status && git commit -m "Initial commit with structure" && git push -u origin main` (ou master).
