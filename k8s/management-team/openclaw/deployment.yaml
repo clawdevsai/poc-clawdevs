@@ -54,7 +54,7 @@ spec:
               cp /ceo-memory/working-buffer.md /workspace/ceo/memory/ 2>/dev/null
 
               # PO bootstrap files (padrão completo)
-              for f in AGENTS.md HEARTBEAT.md IDENTITY.md MEMORY.md SESSION-STATE.md TOOLS.md USER.md; do
+              for f in AGENTS.md HEARTBEAT.md IDENTITY.md MEMORY.md SESSION-STATE.md TOOLS.md USER.md SOUL.md; do
                 cp /po-memory/$f /workspace/po/ 2>/dev/null
               done
 
