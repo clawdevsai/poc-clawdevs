@@ -9,6 +9,6 @@ metadata:
 data:
   agent-cybersec.yaml: |
     - id: cybersec
-      name: "CyberSec"
+      name: "Jade"
       model: "ollama/ministral-3:14b-cloud"
       chatModel: "ollama/ministral-3:14b-cloud"

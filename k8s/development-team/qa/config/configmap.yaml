@@ -9,7 +9,7 @@ metadata:
 data:
   agent-qa.yaml: |
     - id: qa
-      name: "QA"
+      name: "Renata"
       model: "ollama/ministral-3:14b-cloud"
       chatModel: "ollama/ministral-3:14b-cloud"
       # SOUL references will be handled by the gateway or pod mounting

@@ -93,15 +93,15 @@ data:
           }
         },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ceo" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/po" },
-          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/devops" },
-          { "id": "architect", "name": "Architect", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/architect" },
-          { "id": "developer", "name": "Developer", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/developer" },
-          { "id": "qa", "name": "QA", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/qa" },
-          { "id": "cybersec", "name": "CyberSec", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/cybersec" },
-          { "id": "ux", "name": "UX", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ux" },
-          { "id": "dba", "name": "DBA", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/dba" }
+          { "id": "ceo", "name": "Rafael", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ceo" },
+          { "id": "po", "name": "Marina", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/po" },
+          { "id": "devops", "name": "Sérgio", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/devops" },
+          { "id": "architect", "name": "Vera", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/architect" },
+          { "id": "developer", "name": "Leo", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/developer" },
+          { "id": "qa", "name": "Renata", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/qa" },
+          { "id": "cybersec", "name": "Jade", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/cybersec" },
+          { "id": "ux", "name": "Luna", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ux" },
+          { "id": "dba", "name": "Dante", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/dba" }
         ]
       },
       "tools": {

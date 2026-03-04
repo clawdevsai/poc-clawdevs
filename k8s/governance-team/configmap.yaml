@@ -22,7 +22,7 @@ data:
       },
       "agents": {
         "list": [
-          { "id": "governance_proposer", "name": "Governance Proposer", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" }
+          { "id": "governance_proposer", "name": "Letícia", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" }
         ]
       }
     }

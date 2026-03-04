@@ -9,6 +9,6 @@ metadata:
 data:
   agent-devops.yaml: |
     - id: devops
-      name: "DevOps/SRE"
+      name: "Sérgio"
       model: "ollama/ministral-3:14b-cloud"
       chatModel: "ollama/ministral-3:14b-cloud"

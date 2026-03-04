@@ -9,6 +9,6 @@ metadata:
 data:
   agent-dba.yaml: |
     - id: dba
-      name: "DBA"
+      name: "Dante"
       model: "ollama/ministral-3:14b-cloud"
       chatModel: "ollama/ministral-3:14b-cloud"

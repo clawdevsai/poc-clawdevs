@@ -9,6 +9,6 @@ metadata:
 data:
   agent-architect.yaml: |
     - id: architect
-      name: "Architect"
+      name: "Vera"
       model: "ollama/ministral-3:14b-cloud"
       chatModel: "ollama/ministral-3:14b-cloud"

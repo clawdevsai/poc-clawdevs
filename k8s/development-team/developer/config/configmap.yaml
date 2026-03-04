@@ -9,6 +9,6 @@ metadata:
 data:
   agent-developer.yaml: |
     - id: developer
-      name: "Developer"
+      name: "Leo"
       model: "ollama/ministral-3:14b-cloud"
       chatModel: "ollama/ministral-3:14b-cloud"

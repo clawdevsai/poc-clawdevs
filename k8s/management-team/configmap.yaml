@@ -41,8 +41,8 @@ data:
       "agents": {
         "defaults": { "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:14b-cloud", "chatModel": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/ministral-3:14b-cloud", "chatModel": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" }
+          { "id": "ceo", "name": "Rafael", "model": "ollama/ministral-3:14b-cloud", "chatModel": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" },
+          { "id": "po", "name": "Marina", "model": "ollama/ministral-3:14b-cloud", "chatModel": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" }
         ]
       },
       "bindings": [

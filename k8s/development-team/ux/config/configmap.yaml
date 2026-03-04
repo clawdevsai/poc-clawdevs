@@ -9,6 +9,6 @@ metadata:
 data:
   agent-ux.yaml: |
     - id: ux
-      name: "UX"
+      name: "Luna"
       model: "ollama/ministral-3:14b-cloud"
       chatModel: "ollama/ministral-3:14b-cloud"
