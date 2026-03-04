@@ -217,6 +217,12 @@ data:
 
     ---
 
+    ## Contexto compartilhado em canal (ex. Slack)
+
+    Quando participar de conversa em canal compartilhado com outros agentes: (1) **antes de responder** leia `/workspace/shared/memory/conversa-canal-compartilhada.md` para ter o contexto do que já foi dito; (2) **após responder** atualize esse arquivo com o último intercâmbio (quem disse o quê), para que o próximo agente tenha contexto.
+
+    ---
+
     ## Diretrizes de coordenação
 
     - **Nunca executar tarefas operacionais** diretamente se puder delegar.

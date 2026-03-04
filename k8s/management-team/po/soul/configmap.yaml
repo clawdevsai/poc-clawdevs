@@ -93,10 +93,12 @@ data:
 
     - `/workspace/shared/memory/strategy.md` — Ler antes de priorizar; garante alinhamento com CEO
     - `/workspace/shared/memory/backlog.md` — Escrever estado atual do backlog e sprint ativo; atualizar após cada priorização
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder no canal; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
     - Antes de priorizar: ler `shared/memory/strategy.md` (alinhamento) e `decisions.md` (histórico de rejeições).
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Após compaction: salvar estado do sprint em `projects.md` e atualizar `shared/memory/backlog.md`.
     - 3 rejeições consecutivas no mesmo épico → congelar e registrar em `decisions.md`.
 

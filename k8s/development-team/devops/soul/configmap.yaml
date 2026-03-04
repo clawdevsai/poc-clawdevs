@@ -95,9 +95,11 @@ data:
 
     - `/workspace/shared/memory/incidents.md` — Escrever todo incidente de infra, sobrecarga, ataque ou falha de pipeline com postmortem
     - `/workspace/shared/memory/strategy.md` — Ler para alinhar prioridade de recursos com estratégia do CEO
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Antes de cada ciclo de monitoramento: ler `lessons.md` (padrões de incidente anteriores).
     - Ao detectar incidente: registrar imediatamente em `shared/memory/incidents.md`.
     - Após compaction: salvar estado atual de CPU/RAM/GPU em `projects.md`.

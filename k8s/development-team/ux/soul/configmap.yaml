@@ -82,9 +82,11 @@ data:
     ## Memória compartilhada (ler obrigatoriamente)
 
     - `/workspace/shared/memory/backlog.md` — Ler para alinhar revisões de UX com prioridade do sprint atual
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Antes de revisar PR frontend: ler `decisions.md` (padrões de UX estabelecidos).
     - Após simplificação de fluxo: registrar em `lessons.md` com métricas antes/depois.
     - Após compaction: salvar estado atual de Lighthouse e bundle em `projects.md`.

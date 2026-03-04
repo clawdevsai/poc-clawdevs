@@ -48,7 +48,7 @@ O **gatilho** que acorda cada agente pode vir de duas superfícies, no mesmo Ope
 
 | Superfície | Papel | Onde a “conversa” acontece |
 |------------|--------|-----------------------------|
-| **Slack / canal** | Gatilho para **conversa** (ex.: tema para análise, teste rápido com PO). O gateway recebe a mensagem e roteia para o agente certo. | **Canal ou thread** no Slack — todos leem e respondem no mesmo lugar (conversa compartilhada). Um agente por vez = regra na SOUL. |
+| **Slack / canal** | Gatilho para **conversa** (ex.: tema para análise, teste rápido com PO). O gateway recebe a mensagem e roteia para o agente certo. | **Canal ou thread** no Slack — todos leem e respondem no mesmo lugar (conversa compartilhada). **Contexto compartilhado:** cada agente lê e atualiza `/workspace/shared/memory/conversa-canal-compartilhada.md` (ler antes de responder; atualizar após responder com o último intercâmbio). Ver [contexto-conversa-canal-compartilhada.md](../../08-technical-notes/contexto-conversa-canal-compartilhada.md). Um agente por vez = regra na SOUL. |
 | **Redis Streams** | Gatilho para o **pipeline de trabalho** (estratégia → backlog → desenvolvimento → revisão). O gateway (ou o próprio agente) publica no stream; o worker do agente consome e executa. | **Stream + chaves de estado.** O “contexto compartilhado” pode ser o **working buffer** no Redis (TTL) e as chaves `project:v1:issue:{id}`. Um agente por vez = **uma mensagem consumida por vez** (consumer groups, slot único). |
 
 ### Fluxo Redis (resumo)
