@@ -9,7 +9,7 @@ MINIKUBE_MEMORY ?= 20g
 export K8S_DIR MINIKUBE_CPUS MINIKUBE_MEMORY
 
 .PHONY: help
-.PHONY: prepare up down up-all shared shared-ensure
+.PHONY: prepare up down up-all shared shared-ensure shared-unmount shared-restart
 .PHONY: openclaw-image up-management
 .PHONY: configmaps-pipeline configmaps-phase2 configmaps-orchestrator
 .PHONY: configmap-developer configmap-revisao-slot configmap-agent-slots configmap-gateway-adapter configmap-devops-worker configmap-audit-runner configmap-devops-compact configmap-acefalo
@@ -243,9 +243,21 @@ validate-finops-po:
 dashboard:
 	@$(SCRIPTS)/utils/dashboard.sh
 
-# Monta a pasta ~/clawdevs-shared no Minikube como /agent-shared (uid=0) para ver arquivos criados pelos agentes.
-shared:
+# Monta a pasta ~/clawdevs-shared no Minikube como /agent-shared (uid=0). Desmonta antes (mata processo existente) e monta de novo.
+shared: shared-unmount
+	@sleep 1
 	@$(SCRIPTS)/utils/shared.sh
+
+# Desmonta o workspace compartilhado (mata o processo minikube mount). Depois: make shared e, se o pod já estiver no ar, rollout restart.
+shared-unmount:
+	@$(SCRIPTS)/utils/shared-unmount.sh
+
+# Desmonta, remonta o shared e reinicia o deployment openclaw (evita I/O error em /workspace quando o mount 9P fica em estado ruim).
+shared-restart: shared-unmount
+	@sleep 2
+	@$(MAKE) shared
+	@echo "==> Reiniciando deployment openclaw para reconectar ao volume..."
+	@kubectl rollout restart deployment/openclaw -n ai-agents
 
 # Garante que o mount /agent-shared está ativo; se não estiver, executa make shared. Chamado internamente por make up.
 shared-ensure:
