@@ -18,6 +18,7 @@
 | [02-agentes.md](02-agentes.md) | Definição canônica dos 9 agentes: função, responsabilidades, conflitos |
 | [03-arquitetura.md](03-arquitetura.md) | Redis Streams, estado global, fluxo de eventos, GPU Lock |
 | [04-infraestrutura.md](04-infraestrutura.md) | K8s (65% hardware), Minikube, recursos, Docker multi-stage |
+| [02-infra/kubernetes-estrutura-e-apply.md](02-infra/kubernetes-estrutura-e-apply.md) | K8s: estrutura de pastas, ordem de apply, make up, workspace, pré-requisitos |
 | [openclaw-sub-agents-architecture.md](openclaw-sub-agents-architecture.md) | OpenClaw + sub-agents + K8s (pods, Redis, Ollama) |
 
 ### Segurança
@@ -41,6 +42,7 @@
 | [40-contingencia-cluster-acefalo.md](40-contingencia-cluster-acefalo.md) | Contingência cluster acéfalo (124): heartbeat, branch efêmera, retomada |
 | [operacoes-limite-gastos-provedor.md](operacoes-limite-gastos-provedor.md) | Limite de gastos com provedor de nuvem |
 | [31-prevencao-riscos-infra.md](31-prevencao-riscos-infra.md) | Prevenção e mitigação de riscos de infra |
+| [07-operations/orquestrador-automacao-cluster.md](07-operations/orquestrador-automacao-cluster.md) | Orquestrador (Fase 3): digest, timers cosméticos, autonomia, disjuntor, acéfalo, curador, Slack, aplicar |
 
 ### Configuração e setup
 | Doc | Descrição |

@@ -17,3 +17,7 @@ data:
   STREAM_ORCHESTRATOR_EVENTS: "orchestrator:events"
   ORCHESTRATOR_EVENTS_SLACK_GROUP: "slack"
   ORCHESTRATOR_EVENTS_SLACK_CONSUMER: "slack-consumer"
+  # Autonomia (017, 032–036); override via security-config se aplicado
+  DEGRADATION_THRESHOLD_PCT: "12.0"
+  ORCHESTRATOR_INTERVAL_SEC: "60"
+  STREAM_DIGEST: "digest:daily"

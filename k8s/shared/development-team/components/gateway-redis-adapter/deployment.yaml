@@ -1,5 +1,6 @@
 # Adapter HTTP para publicação em Redis (Fase 1 — 018). OpenClaw chama POST /publish.
-# Fase 2: token bucket para cmd:strategy, GET /check_egress (whitelist + reputação). Requer make gateway-redis-adapter-configmap.
+# Fase 2: token bucket para cmd:strategy, GET /check_egress (whitelist + reputação), pre-flight Summarize e max tokens em /publish-to-cloud. Requer make gateway-redis-adapter-configmap.
+# Config Fase 2: security-config (DEGRADATION_THRESHOLD_PCT, PHASE2_*, token bucket, egress); finops-config (max tokens, TTL).
 apiVersion: apps/v1
 kind: Deployment
 metadata:

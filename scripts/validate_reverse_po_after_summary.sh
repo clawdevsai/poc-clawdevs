@@ -20,4 +20,4 @@ if [[ ! -f "$CRITERIA_FILE" ]]; then
   exit 2
 fi
 
-exec python3 "$REPO_ROOT/app/validate_reverse_po.py" --summary "$SUMMARY_FILE" --criteria "$CRITERIA_FILE"
+exec python3 "$REPO_ROOT/app/features/validate_reverse_po.py" --summary "$SUMMARY_FILE" --criteria "$CRITERIA_FILE"

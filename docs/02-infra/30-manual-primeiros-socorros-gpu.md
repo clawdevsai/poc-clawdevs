@@ -16,7 +16,7 @@ nvidia-smi
 - **Se mostrar "Memory Leak" ou processos zumbis:** pods segurando VRAM → ir para **Fase 2**.
 - **Se responder normalmente:** anotar uso de VRAM/temperatura; considerar apenas limpeza de lock ou restart do pod Ollama (Fase 2).
 
-**Script de referência:** [scripts/first-aid-gpu.sh](../scripts/first-aid-gpu.sh) (opção `--phase 1`).
+**Script de referência:** [scripts/first-aid-gpu.sh](../../scripts/first-aid-gpu.sh) (opção `--phase 1`).
 
 ---
 
@@ -33,14 +33,14 @@ Sistema ainda responde; isolar e derrubar apenas o que causa o problema.
    ```bash
    kubectl exec -n ai-agents deploy/redis -- redis-cli DEL gpu_active_lock
    ```
-   Chave: `gpu_active_lock`. Script: [scripts/gpu_lock.py](../scripts/gpu_lock.py).
+   Chave: `gpu_active_lock`. Script: [app/features/gpu_lock.py](../../app/features/gpu_lock.py).
 
 3. **Reiniciar o Device Plugin da NVIDIA:**
    ```bash
    kubectl delete pod -n kube-system -l app=nvidia-device-plugin-daemonset
    ```
 
-**Script:** `./scripts/first-aid-gpu.sh --phase 2`
+**Script:** na raiz do repositório: `./scripts/first-aid-gpu.sh --phase 2`
 
 ---
 
@@ -65,7 +65,7 @@ Se `nvidia-smi` não responde ou a tela está instável: forçar o Linux a liber
    sudo modprobe -r nvidia_uvm && sudo modprobe nvidia_uvm
    ```
 
-**Script:** `./scripts/first-aid-gpu.sh --phase 3` (requer confirmação).
+**Script:** na raiz do repositório: `./scripts/first-aid-gpu.sh --phase 3` (requer confirmação).
 
 ---
 
@@ -89,4 +89,4 @@ Se o problema foi disco cheio ou RAM (Minikube Evicted):
 
 - [06-operacoes.md](06-operacoes.md) — Manual completo, prevenção, checkpoint 80°C, Redis idempotente.
 - [04-infraestrutura.md](04-infraestrutura.md) — GPU Lock, hard timeout.
-- [docs/scripts/verify-machine.md](scripts/verify-machine.md) — Máquina de referência.
+- [scripts/verify-machine.md](scripts/verify-machine.md) — Máquina de referência (na pasta docs/02-infra/scripts/).

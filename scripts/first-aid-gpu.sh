@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Manual de primeiros socorros GPU (Fase 3 — 030). Use quando recuperação automática não bastar.
 # Uso: ./scripts/first-aid-gpu.sh [--phase 1|2|3]   (sem --phase: interativo)
-# Ref: docs/30-manual-primeiros-socorros-gpu.md, docs/06-operacoes.md
+# Ref: docs/02-infra/30-manual-primeiros-socorros-gpu.md, docs/06-operacoes.md
 set -e
 NS="${NAMESPACE:-ai-agents}"
 STEP=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --step) STEP="$2"; shift 2 ;;
+    --step|--phase) STEP="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
@@ -22,9 +22,9 @@ run_phase1() {
   if timeout 5 nvidia-smi &>/dev/null; then
     nvidia-smi
     echo ""
-    echo "Se há Memory Leak ou zumbis, rode: $0 --step 2"
+    echo "Se há Memory Leak ou zumbis, rode: $0 --phase 2"
   else
-    echo "nvidia-smi travou. Rode: $0 --step 3 (reset driver)"
+    echo "nvidia-smi travou. Rode: $0 --phase 3 (reset driver)"
     return 2
   fi
 }
@@ -56,7 +56,7 @@ if [[ -n "$STEP" ]]; then
     1) run_phase1 ;;
     2) run_phase2 ;;
     3) run_phase3 ;;
-    *) echo "Uso: $0 --step 1|2|3"; exit 2 ;;
+    *) echo "Uso: $0 --phase 1|2|3"; exit 2 ;;
   esac
   exit 0
 fi

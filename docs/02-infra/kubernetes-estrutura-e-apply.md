@@ -36,10 +36,9 @@ for agent in architect developer qa cybersec ux dba devops; do
 done
 ```
 
-
 ## Workspace compartilhado (pasta no host)
 
-Para usar uma **pasta física na sua máquina** como workspace dos agentes (ver soul, memória, skills e repositórios clonados): [management-team/openclaw/README.md](management-team/openclaw/README.md) — passos do `minikube mount`, PV/PVC e estrutura da pasta.
+Para usar uma **pasta física na sua máquina** como workspace dos agentes (ver soul, memória, skills e repositórios clonados): [k8s/management-team/openclaw/README.md](../../k8s/management-team/openclaw/README.md) — passos do `minikube mount`, PV/PVC e estrutura da pasta.
 
 ## Pré-requisitos
 
@@ -50,6 +49,6 @@ Para usar uma **pasta física na sua máquina** como workspace dos agentes (ver 
 
 ## Referências
 
-- [docs/agents-devs/openclaw-first-triggers.md](../docs/agents-devs/openclaw-first-triggers.md) — papel dos triggers e ferramentas dos agentes
-- [docs/openclaw-sub-agents-architecture.md](../docs/openclaw-sub-agents-architecture.md)
-- [docs/38-redis-streams-estado-global.md](../docs/38-redis-streams-estado-global.md)
+- [openclaw-first-triggers.md](../03-agents/agents-devs/openclaw-first-triggers.md) — papel dos triggers e ferramentas dos agentes
+- [openclaw-sub-agents-architecture.md](../08-technical-notes/openclaw-sub-agents-architecture.md)
+- [38-redis-streams-estado-global.md](38-redis-streams-estado-global.md)
