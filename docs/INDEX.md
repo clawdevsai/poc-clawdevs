@@ -43,6 +43,9 @@
 | [operacoes-limite-gastos-provedor.md](operacoes-limite-gastos-provedor.md) | Limite de gastos com provedor de nuvem |
 | [31-prevencao-riscos-infra.md](31-prevencao-riscos-infra.md) | Prevenção e mitigação de riscos de infra |
 | [07-operations/orquestrador-automacao-cluster.md](07-operations/orquestrador-automacao-cluster.md) | Orquestrador (Fase 3): digest, timers cosméticos, autonomia, disjuntor, acéfalo, curador, Slack, aplicar |
+| [07-operations/war-room-dashboard.md](07-operations/war-room-dashboard.md) | War Room: conceito, fontes de dados (Redis/pods), uso pelo Diretor, mock em war-room-mock/ |
+| [07-operations/chaos-engineering-manual-falhas.md](07-operations/chaos-engineering-manual-falhas.md) | Chaos Engineering: cenários, manual de falhas, kill switch sob pressão |
+| [02-infra/balanceamento-dinamico-gpu-cpu.md](02-infra/balanceamento-dinamico-gpu-cpu.md) | Balanceamento dinâmico GPU/CPU, PriorityClasses (evict gracioso), roteamento hierárquico, LanceDB |
 
 ### Configuração e setup
 | Doc | Descrição |
@@ -141,4 +144,4 @@ Alguns números têm mais de um arquivo (ex.: 25, 27, 31, 42, 43); o nome comple
 | 31–36 | 31-prevencao-riscos-infra, 31-ollama-local • 32-ui-ux-pro-max, 33-opencode-controller, 34-mcp-github-publico, 35-governance-proposer, 36-auto-evolucao-clawdevs |
 | 37–44 | 37-deploy-fase0, 38-redis-streams, 39-consumer-groups, 40-contingencia-cluster-acefalo, 41-fase1-agentes, 42-slack-tokens-setup, 42-fluxo-e2e-operacao-2fa, 43-autonomia-nivel-4, 43-fluxo-slack-all-clawdevsai, 44-fase2-seguranca |
 
-Documentos sem número: `estrategia-uso-hardware-gpu-cpu.md`, `fluxo-completo-mermaid.md`, `openclaw-sub-agents-architecture.md`, `operacoes-limite-gastos-provedor.md`.
+Documentos sem número: `estrategia-uso-hardware-gpu-cpu.md`, `fluxo-completo-mermaid.md`, `openclaw-sub-agents-architecture.md`, `operacoes-limite-gastos-provedor.md`. Em **02-infra/**: `balanceamento-dinamico-gpu-cpu.md`. Em **07-operations/**: `war-room-dashboard.md`, `chaos-engineering-manual-falhas.md`.

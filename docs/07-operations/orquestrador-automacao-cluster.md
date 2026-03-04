@@ -10,6 +10,7 @@ Recursos do orquestrador: digest diário, timers cosméticos, loop de consenso e
 - **Timers cosméticos:** CronJob — `cosmetic_omission.py check-timers` e `write-qa-file` a cada 10 min.
 - **Loop de consenso:** lógica dentro de `orchestrator_autonomy.py` (emite `consensus_loop_requested`; pilot via `set_consensus_pilot_result.py`).
 - **Curador (merge de .learnings/):** CronJob — em sessão isolada (02:00 UTC), envia prompt de curadoria ao Architect para ler `/workspace/.learnings/`, consolidar e injetar em SOUL.md/AGENTS.md/TOOLS.md. Requer ConfigMaps `curator-env` e `curator-scripts`; imagem `openclaw-gateway:local`. Ref: [10-self-improvement-agentes.md](../03-agents/10-self-improvement-agentes.md).
+- **Auto-atualização ambiente (092):** CronJob `auto-update-env` — 04:00 UTC; atualiza runtime e skills instaladas (ex.: `npx skills update`); resumo em stdout (consultar com `kubectl logs job/auto-update-env-<suffix>`). ConfigMaps `auto-update-env` e `auto-update-scripts`. Ref: [21-auto-atualizacao-ambiente.md](21-auto-atualizacao-ambiente.md).
 
 ## Pré-requisitos
 
