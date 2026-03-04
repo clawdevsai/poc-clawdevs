@@ -59,7 +59,7 @@ Após o init e o uso pelos agentes, você verá em `~/clawdevs-shared` (ou o cam
 | **workspace/** | Repositórios clonados pelos agentes (ex.: clawdevs/docs, outros repos) |
 | **.ssh/** | Chave SSH para git (clone/push). **Não vem gerada** — coloque em `<pasta-host>/.ssh/` os arquivos `id_ed25519_github` e `id_ed25519_github.pub` (gere no host com `ssh-keygen` e registre o `.pub` no GitHub). Os agentes usam `GIT_SSH_COMMAND` apontando para `/workspace/.ssh/id_ed25519_github`. |
 
-Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) devem ir em **`/workspace`** dentro do pod; na sua máquina isso aparece em `<pasta-host>/workspace/`. Para git via SSH, use URL `git@github.com:owner/repo.git`; a chave deve estar em `/workspace/.ssh/` (host: `<pasta-host>/.ssh/`).
+Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) devem ir em **`/workspace`** dentro do pod; na sua máquina isso aparece em `<pasta-host>/repos/`. Para git via SSH, use URL `git@github.com:owner/repo.git`; a chave deve estar em `/workspace/.ssh/` (host: `<pasta-host>/.ssh/`).
 
 ### Observações
 
