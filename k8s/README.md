@@ -19,7 +19,7 @@ Recursos para rodar o ecossistema no cluster (Minikube ou outro). Arquitetura **
 
 ## Ordem de apply (recomendada)
 
-Use **`make up`** para subir o núcleo (namespace, Redis, Ollama, OpenClaw, phase2, orchestrator).
+Use **`make up`** para subir o núcleo (namespace, Redis, Ollama, OpenClaw, phase2, orchestrator). O `make up` inclui **init-memory**: cria a estrutura de memória por agente (`/workspace/{agent}/memory/`), memória compartilhada (`/workspace/shared/memory/`) e `.learnings/` no workspace. Se o Job init-memory falhar (ex.: PVC ainda não bound), rode **`make init-memory`** manualmente após o primeiro up.
 
 Para o pipeline completo (triggers que chamam o Gateway):
 

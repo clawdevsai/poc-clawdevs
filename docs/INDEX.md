@@ -1,6 +1,6 @@
-# Índice da documentação ClawDevs
+# Índice da documentação ClawDevs (sumário)
 
-Referência completa de todos os documentos, organizados por **tema** e por **arquivo**. Para visão geral e início rápido, use o [README.md](README.md).
+**Este arquivo é o sumário** da documentação: referência de todos os documentos por **tema** e por **arquivo**. Para um **resumo completo** do que é o ClawDevs AI e o que você consegue fazer com isso, use o [README.md](README.md).
 
 ---
 

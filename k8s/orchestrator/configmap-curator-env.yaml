@@ -1,0 +1,13 @@
+# Variáveis de ambiente para o CronJob curador (sessão isolada Architect).
+# OPENCLAW_GATEWAY_TOKEN pode ser injetado via Secret se o gateway exigir auth.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: curator-env
+  namespace: ai-agents
+  labels:
+    app: orchestrator
+    component: curator
+data:
+  OPENCLAW_GATEWAY_WS: "ws://openclaw.ai-agents.svc.cluster.local:18789"
+  OPENCLAW_ARCHITECT_SESSION_KEY: "agent:architect:main"

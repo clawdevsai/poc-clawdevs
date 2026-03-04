@@ -28,6 +28,10 @@ data:
         printf "# Projects -- %s\nFeatures, sprints e tarefas ativas.\n" "$AGENT" \
         > "$MEMORY_DIR/projects.md" && echo "  v projects.md" || echo "  - projects.md ja existe"
 
+      [ ! -f "$MEMORY_DIR/people.md" ] && \
+        printf "# People -- %s\nEquipe, contatos e stakeholders relevantes.\n" "$AGENT" \
+        > "$MEMORY_DIR/people.md" && echo "  v people.md" || echo "  - people.md ja existe"
+
       [ ! -f "$MEMORY_DIR/lessons.md" ] && \
         printf "# Lessons Learned -- %s\nAprendizados e erros identificados.\n" "$AGENT" \
         > "$MEMORY_DIR/lessons.md" && echo "  v lessons.md" || echo "  - lessons.md ja existe"
@@ -58,6 +62,24 @@ data:
     [ ! -f "$SHARED/incidents.md" ] && \
       printf "# Incidents e Postmortems -- ClawDevs AI (Shared)\nMantido por CyberSec e DevOps.\n" \
       > "$SHARED/incidents.md" && echo "  v incidents.md" || echo "  - incidents.md ja existe"
+
+    echo ""
+    echo "=== Inicializando .learnings/ (self-improvement) /workspace/.learnings/ ==="
+
+    LEARNINGS_DIR="$BASE/.learnings"
+    mkdir -p "$LEARNINGS_DIR"
+
+    [ ! -f "$LEARNINGS_DIR/LEARNINGS.md" ] && \
+      printf "# LEARNINGS -- ClawDevs AI (Self-Improvement)\nCorrecoes, lacunas de conhecimento, melhores praticas. Campos: Logged, Priority, Status, Area, Summary, Details, Suggested Action, Metadata.\n\n---\n\n" \
+      > "$LEARNINGS_DIR/LEARNINGS.md" && echo "  v LEARNINGS.md" || echo "  - LEARNINGS.md ja existe"
+
+    [ ! -f "$LEARNINGS_DIR/ERRORS.md" ] && \
+      printf "# ERRORS -- ClawDevs AI (Self-Improvement)\nFalhas de comando ou operacao. Campos: Summary, Error, Context, Suggested Fix, Metadata.\n\n---\n\n" \
+      > "$LEARNINGS_DIR/ERRORS.md" && echo "  v ERRORS.md" || echo "  - ERRORS.md ja existe"
+
+    [ ! -f "$LEARNINGS_DIR/FEATURE_REQUESTS.md" ] && \
+      printf "# FEATURE_REQUESTS -- ClawDevs AI (Self-Improvement)\nCapacidades solicitadas. Campos: Requested Capability, User Context, Complexity Estimate, Suggested Implementation, Metadata.\n\n---\n\n" \
+      > "$LEARNINGS_DIR/FEATURE_REQUESTS.md" && echo "  v FEATURE_REQUESTS.md" || echo "  - FEATURE_REQUESTS.md ja existe"
 
     echo ""
     echo "=== Inicializacao concluida ==="

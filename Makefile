@@ -48,7 +48,7 @@ help:
 	@echo "    make status             -> Mostra um resumo do que está rodando e se há travamentos."
 	@echo "    make status-pods        -> Mostra o 'diário de bordo' (logs) das IAs rodando agora."
 	@echo "    make reset-memory       -> Apaga a memória das IAs (útil para recomeçar projetos do zero)."
-	@echo "    make init-memory        -> Inicializa estrutura de memória (decisions/projects/lessons/pending) para todos os agentes e shared/memory/."
+	@echo "    make init-memory        -> Inicializa estrutura de memória (decisions/projects/lessons/pending + .learnings/). Já rodado no 'make up'; use manualmente se o Job falhar."
 	@echo "    make test-github-access -> Testa se as IAs conseguem ler arquivos no Github."
 	@echo "    make dashboard          -> Abre uma tela visual no seu navegador para ver o motor do sistema."
 	@echo "    make shared             -> Cria uma pasta compartilhada para você ver os arquivos que a IA cria."
@@ -151,6 +151,13 @@ up:
 		kubectl apply -f $(OPENCLAW_BUILD_DIR)/secret.yaml; \
 	fi
 	@kubectl rollout restart deployment/openclaw -n ai-agents --timeout=60s 2>/dev/null || true
+	@echo "==> Init-memory (estrutura memory/ + shared/memory/ + .learnings/)..."
+	@kubectl apply -f $(K8S_DIR)/management-team/openclaw/init-memory-configmap.yaml
+	@kubectl delete job init-memory-structure -n ai-agents --ignore-not-found=true
+	@kubectl apply -f $(K8S_DIR)/management-team/openclaw/init-memory-job.yaml
+	@kubectl wait --for=condition=complete job/init-memory-structure -n ai-agents --timeout=120s \
+		&& echo "  init-memory OK." \
+		|| (kubectl logs -n ai-agents -l component=init-memory --tail=20 2>/dev/null; echo "  AVISO: init-memory falhou; rode 'make init-memory' manualmente.")
 	@echo "==> Pipeline (ConfigMaps em paralelo + deployments)..."
 	@$(MAKE) -j4 configmap-po configmap-architect-draft configmap-developer configmap-revisao-slot configmap-devops-worker configmap-audit-runner configmap-gateway-adapter
 	@for dir in po architect-draft developer revisao-pos-dev devops-worker audit-runner gateway-redis-adapter; do \

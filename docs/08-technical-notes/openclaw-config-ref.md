@@ -28,6 +28,10 @@ O modelo de cada agente (CEO, PO, etc.) deve ser um dos listados em `models.prov
 
 Para que as sessões do CEO (e demais agentes) sobrevivam a restarts do deployment, o ConfigMap `openclaw-config` define `session.store: "/workspace/.openclaw-session-store/{agentId}/sessions/sessions.json"`. O path fica no PVC `openclaw-workspace-pvc` (montado em `/workspace`). O initContainer `workspace-init` no deployment cria o diretório `/workspace/.openclaw-session-store`. Ver [investigacao-openclaw-pod.md](investigacao-openclaw-pod.md) §6.
 
+## Compaction e memory flush (placeholder {agentId})
+
+O bloco `compaction.memoryFlush.prompt` no `openclaw-config` instrui o agente a gravar decisões, lições e bloqueios em arquivos de memória antes da compactação. O prompt usa o placeholder **`{agentId}`** no path (ex.: `/workspace/{agentId}/memory/`). O **runtime do OpenClaw** substitui `{agentId}` pelo id do agente da sessão atual (ex.: `ceo`, `po`, `architect`), da mesma forma que em `session.store`. Assim cada agente grava em seu próprio diretório (ex.: `/workspace/ceo/memory/`, `/workspace/developer/memory/`). Se em testes o path não for substituído, conferir na documentação oficial do OpenClaw (compaction / memory flush) e, se necessário, usar no prompt a instrução explícita: "escreva no diretório memory/ do seu workspace (ex.: /workspace/ceo/memory/ para CEO)".
+
 ## Editar SOUL / MEMORY / working-buffer
 
 Edite os arquivos nos ConfigMaps em **k8s/** (soul-management-agents, soul-development-agents, workspace-ceo-configmap) e aplique com `kubectl apply -f k8s/...`.

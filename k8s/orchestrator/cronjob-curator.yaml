@@ -1,0 +1,42 @@
+# CronJob: curadoria de .learnings/ em sessão isolada (Architect).
+# Lê /workspace/.learnings/, consolida e injeta em SOUL.md/AGENTS.md/TOOLS.md do workspace.
+# Requer: configmap-curator-env, configmap-curator-scripts, imagem openclaw-gateway:local.
+# Ref: docs/03-agents/10-self-improvement-agentes.md, docs/01-core/03-arquitetura.md
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: curator
+  namespace: ai-agents
+  labels:
+    app: orchestrator
+    component: curator
+spec:
+  schedule: "0 2 * * *"  # 02:00 UTC diário (janela isolada)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curator
+              image: openclaw-gateway:local
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - /scripts/curator-runner.sh
+              envFrom:
+                - configMapRef:
+                    name: curator-env
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: scripts
+              configMap:
+                name: curator-scripts
+                defaultMode: 0755
