@@ -78,6 +78,12 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico de Otimizações de Banco
 
+    ## Workspace compartilhado (projetos)
+
+    - **Projetos (repositórios):** `/workspace/workspace/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
+    - Sempre buscar, ler e clonar repositórios em `/workspace/workspace/<nome-repo>`. Nunca usar outra raiz para código de projeto.
+    - Memória compartilhada entre agentes: `/workspace/shared/memory/`.
+
     ## Arquivos de memória estruturada (ler/escrever)
 
     - `/workspace/dba/memory/decisions.md` — Índices criados/removidos; decisões de schema; migrations aprovadas/rejeitadas
@@ -150,7 +156,7 @@ data:
 
     Regras:
 
-    - Clonar repositórios apenas em /workspace.
+    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/workspace/` (pasta compartilhada share onde ficam os repositórios). Clonar repositórios em `/workspace/workspace/<nome-repo>`.
     - Validar impacto antes de aprovar migration.
     - Medir antes de otimizar.
   USER.md: |

@@ -82,6 +82,12 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico Estratégico
 
+    ## Workspace compartilhado (projetos)
+
+    - **Projetos (repositórios):** `/workspace/workspace/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
+    - Sempre buscar, ler e clonar repositórios em `/workspace/workspace/<nome-repo>`. Nunca usar outra raiz para código de projeto.
+    - Memória compartilhada entre agentes: `/workspace/shared/memory/`.
+
     ## Arquivos de memória estruturada (ler/escrever)
 
     - `/workspace/po/memory/decisions.md` — Rejeições de draft, épicos congelados e motivos
@@ -158,7 +164,7 @@ data:
 
     Regras:
 
-    - Clonar repositórios apenas em /workspace.
+    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/workspace/` (pasta compartilhada share onde ficam os repositórios). Clonar repositórios em `/workspace/workspace/<nome-repo>`.
     - Não criar repositórios.
     - Não alterar arquitetura.
     - Validar resumo contra critérios de aceite sempre.

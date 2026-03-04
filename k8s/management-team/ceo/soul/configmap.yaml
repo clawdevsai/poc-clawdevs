@@ -82,6 +82,12 @@ data:
   MEMORY.md: |
     # MEMORY.md — Registro Executivo
 
+    ## Workspace compartilhado (projetos)
+
+    - **Projetos (repositórios):** `/workspace/workspace/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
+    - Sempre buscar, ler e clonar repositórios em `/workspace/workspace/<nome-repo>`. Nunca usar outra raiz para código de projeto.
+    - Memória compartilhada entre agentes: `/workspace/shared/memory/`.
+
     ## Arquivos de memória estruturada (ler/escrever)
 
     - `/workspace/ceo/memory/decisions.md` — Estratégias aprovadas e descartadas (com VFM_CEO_score e data)

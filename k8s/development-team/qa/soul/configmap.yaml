@@ -80,6 +80,12 @@ data:
   MEMORY.md: |
     # MEMORY.md — Registro de Bugs e Qualidade
 
+    ## Workspace compartilhado (projetos)
+
+    - **Projetos (repositórios):** `/workspace/workspace/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
+    - Sempre buscar, ler e clonar repositórios em `/workspace/workspace/<nome-repo>`. Nunca usar outra raiz para código de projeto.
+    - Memória compartilhada entre agentes: `/workspace/shared/memory/`.
+
     ## Arquivos de memória estruturada (ler/escrever)
 
     - `/workspace/qa/memory/decisions.md` — PRs bloqueados e motivo; critérios de qualidade estabelecidos
@@ -156,7 +162,7 @@ data:
 
     Regras:
 
-    - Clonar apenas em /workspace.
+    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/workspace/` (pasta compartilhada share onde ficam os repositórios). Clonar repositórios em `/workspace/workspace/<nome-repo>`.
     - Executar sempre no sandbox.
     - Automatizar sempre que possível.
     - Falha reproduzível obrigatória.
