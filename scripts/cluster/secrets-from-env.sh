@@ -54,12 +54,17 @@ if [[ ${#ARGS[@]} -gt 0 ]]; then
   CREATED=1
 fi
 
-# --- clawdevs-github-secret (gh CLI / push-pull nos pods)
-if [[ -n "$GITHUB_TOKEN" || -n "$GH_TOKEN" ]]; then
+# --- clawdevs-github-secret (gh CLI / push-pull nos pods + SSH key para DevOps)
+if [[ -n "$GITHUB_TOKEN" || -n "$GH_TOKEN" || -n "$GITHUB_SSH_PRIVATE_KEY" ]]; then
   echo "==> Secret clawdevs-github-secret (a partir do .env)..."
-  kubectl create secret generic clawdevs-github-secret -n "$NS" \
-    --from-literal=GITHUB_TOKEN="${GITHUB_TOKEN:-$GH_TOKEN}" \
-    --from-literal=GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}" \
+  GARGS=()
+  [[ -n "$GITHUB_TOKEN" ]] && GARGS+=(--from-literal=GITHUB_TOKEN="${GITHUB_TOKEN:-$GH_TOKEN}")
+  [[ -n "$GH_TOKEN" ]]     && GARGS+=(--from-literal=GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}")
+  [[ -n "$GITHUB_USER" ]]  && GARGS+=(--from-literal=GITHUB_USER="$GITHUB_USER")
+  [[ -n "$GITHUB_ORG" ]]   && GARGS+=(--from-literal=GITHUB_ORG="$GITHUB_ORG")
+  # Chave SSH privada em base64 — montada no pod DevOps em /root/.ssh/
+  [[ -n "$GITHUB_SSH_PRIVATE_KEY" ]] && GARGS+=(--from-literal=GITHUB_SSH_PRIVATE_KEY="$GITHUB_SSH_PRIVATE_KEY")
+  kubectl create secret generic clawdevs-github-secret -n "$NS" "${GARGS[@]}" \
     --dry-run=client -o yaml | kubectl apply -f -
   CREATED=1
 fi

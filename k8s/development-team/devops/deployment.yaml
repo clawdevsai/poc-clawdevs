@@ -1,5 +1,7 @@
 # DevOps worker: consome event:devops (após merge), seta estado Deployed.
 # Requer ConfigMap devops-worker-scripts (devops_worker.py, gpu_lock.py, issue_state.py).
+# GitHub: SSH key montada via initContainer a partir do Secret clawdevs-github-secret;
+#         fallback HTTPS via GITHUB_TOKEN (também no Secret).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,6 +19,48 @@ spec:
       labels:
         app: devops-worker
     spec:
+      initContainers:
+        # Monta a chave SSH privada do Secret em /ssh-out/ com permissões corretas.
+        # O volume emptyDir compartilhado é depois montado em /root/.ssh do container principal.
+        - name: setup-ssh
+          image: alpine:3.19
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              mkdir -p /ssh-out
+              chmod 700 /ssh-out
+              if [ -n "$GITHUB_SSH_PRIVATE_KEY" ]; then
+                echo "$GITHUB_SSH_PRIVATE_KEY" | base64 -d > /ssh-out/id_ed25519_github
+                chmod 600 /ssh-out/id_ed25519_github
+              fi
+              cat > /ssh-out/config <<'SSHEOF'
+              Host github.com
+                HostName github.com
+                User git
+                IdentityFile /root/.ssh/id_ed25519_github
+                IdentitiesOnly yes
+                StrictHostKeyChecking no
+              SSHEOF
+              chmod 600 /ssh-out/config
+          env:
+            - name: GITHUB_SSH_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: clawdevs-github-secret
+                  key: GITHUB_SSH_PRIVATE_KEY
+                  optional: true
+          volumeMounts:
+            - name: ssh-setup
+              mountPath: /ssh-out
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "20m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
       containers:
         - name: worker
           image: python:3.12-slim
@@ -38,9 +82,15 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            # SSH para operações git (SSH primeiro; HTTPS com $GITHUB_TOKEN como fallback)
+            - name: GIT_SSH_COMMAND
+              value: "ssh -i /root/.ssh/id_ed25519_github -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
           volumeMounts:
             - name: scripts
               mountPath: /config
+              readOnly: true
+            - name: ssh-setup
+              mountPath: /root/.ssh
               readOnly: true
           resources:
             requests:
@@ -54,3 +104,6 @@ spec:
           configMap:
             name: devops-worker-scripts
             optional: true
+        # EmptyDir partilhado entre initContainer (setup-ssh) e container principal
+        - name: ssh-setup
+          emptyDir: {}
