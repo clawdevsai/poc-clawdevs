@@ -48,6 +48,17 @@ Para que repositórios clonados pelo CEO apareçam em **`~/clawdevs-shared/works
 
 Foi adicionada instrução no workspace do CEO (TOOLS.md / bootstrap) para sempre clonar repositórios em **`/workspace/workspace/<nome-repo>`**.
 
+## Por que dá "Input/output error" em `/workspace/` (validate-workspace)
+
+O `/workspace` no pod do OpenClaw vem do PVC `openclaw-shared-workspace-pvc`, que usa o PV com **hostPath: /agent-shared** no nó do Minikube. Esse path é preenchido pelo **minikube mount** (9P): `~/clawdevs-shared` no host é montado em `/agent-shared` dentro do Minikube.
+
+- **Causa do I/O error:** o mount 9P pode ficar indisponível ou em estado ruim (mount não estava ativo quando o pod subiu, processo de mount caiu, ou operações pesadas no 9P geram erro). Ao acessar `/workspace/`, o pod lê em `/agent-shared`; se o 9P não responder, o kernel devolve "Input/output error".
+- **Solução:** desmontar e remontar o shared e reiniciar o pod para ele reconectar ao volume:
+  1. `make shared-unmount` — encerra o processo `minikube mount` (agent-shared).
+  2. `make shared` — inicia de novo o mount.
+  3. `kubectl rollout restart deployment/openclaw -n ai-agents` — o pod remonta o volume e passa a enxergar o mount novo.
+  - Ou use `make shared-restart`, que faz os três passos.
+
 ## Referências
 
 - `k8s/management-team/openclaw/configmap.yaml`: `agents.list[].workspace` = `/workspace/ceo` para o CEO.
