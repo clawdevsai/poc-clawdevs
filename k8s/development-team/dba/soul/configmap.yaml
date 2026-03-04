@@ -89,9 +89,11 @@ data:
 
     - `/workspace/shared/memory/incidents.md` — Escrever deadlocks, lock escalations ou falhas de dados críticas com postmortem
     - `/workspace/shared/memory/architecture.md` — Ler para alinhar decisões de schema com ADRs do Architect
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Antes de aprovar migration: ler `decisions.md` (migrations anteriores) e `shared/memory/architecture.md`.
     - Ao detectar lock crítico ou falha de dados: registrar em `shared/memory/incidents.md`.
     - Após compaction: salvar estado das queries e índices críticos em `projects.md`.

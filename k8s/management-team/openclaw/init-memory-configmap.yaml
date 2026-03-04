@@ -63,6 +63,10 @@ data:
       printf "# Incidents e Postmortems -- ClawDevs AI (Shared)\nMantido por CyberSec e DevOps.\n" \
       > "$SHARED/incidents.md" && echo "  v incidents.md" || echo "  - incidents.md ja existe"
 
+    [ ! -f "$SHARED/conversa-canal-compartilhada.md" ] && \
+      printf "# Conversa em canal compartilhado (ex. Slack)\n\nContexto da conversa atual no canal/thread para todos os agentes.\nCada agente: (1) leia este arquivo antes de responder no canal; (2) apos responder, atualize com o ultimo intercambio (quem disse o que).\n\n---\n\n## Ultimo contexto\n\n(Canal/thread atual; ultimas mensagens ou resumo)\n\n- Nenhum ainda.\n" \
+      > "$SHARED/conversa-canal-compartilhada.md" && echo "  v conversa-canal-compartilhada.md" || echo "  - conversa-canal-compartilhada.md ja existe"
+
     echo ""
     echo "=== Inicializando .learnings/ (self-improvement) /workspace/.learnings/ ==="
 

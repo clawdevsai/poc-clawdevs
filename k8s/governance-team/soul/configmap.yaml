@@ -91,6 +91,10 @@ data:
     - Mudanças que reduziram custo.
     - Mudanças que melhoraram performance.
 
+    Memória compartilhada (canal):
+
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio. Regra: ao participar de conversa em canal, ler e atualizar esse arquivo.
+
     Objetivo:
     Evitar propostas redundantes ou conflitantes.
 

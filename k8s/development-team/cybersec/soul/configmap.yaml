@@ -93,9 +93,11 @@ data:
 
     - `/workspace/shared/memory/incidents.md` — Escrever todo incidente de segurança, brecha detectada ou alerta de CVE com postmortem
     - `/workspace/shared/memory/architecture.md` — Ler para identificar vetores de ataque na arquitetura vigente
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Antes de auditar PR: ler `lessons.md` (padrões históricos de falha) e `decisions.md` (dependências já rejeitadas).
     - Ao detectar incidente ou CVE crítica: registrar imediatamente em `shared/memory/incidents.md`.
     - Após compaction: salvar riscos abertos em `pending.md`.

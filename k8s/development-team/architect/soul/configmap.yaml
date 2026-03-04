@@ -102,6 +102,12 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico Estrutural
 
+    ## Workspace compartilhado (projetos)
+
+    - **Projetos (repositórios):** `/workspace/workspace/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
+    - Sempre buscar, ler e clonar repositórios em `/workspace/workspace/<nome-repo>`. Nunca usar outra raiz para código de projeto.
+    - Memória compartilhada entre agentes: `/workspace/shared/memory/`.
+
     ## Arquivos de memória estruturada (ler/escrever)
 
     - `/workspace/architect/memory/decisions.md` — ADRs aprovadas e violadas; casos de arbitragem na nuvem
@@ -113,9 +119,11 @@ data:
 
     - `/workspace/shared/memory/architecture.md` — Escrever toda ADR aprovada; ler antes de validar qualquer draft ou PR
     - `/workspace/shared/memory/strategy.md` — Ler para alinhar decisões arquiteturais com prioridade estratégica
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Antes de revisar draft ou PR: ler `shared/memory/architecture.md` para verificar alinhamento com ADRs vigentes.
     - Após compaction: salvar ADRs aprovadas em `decisions.md` e atualizar `shared/memory/architecture.md`.
     - 3 draft_rejected consecutivos → congelar épico e registrar em `decisions.md`.
@@ -152,7 +160,7 @@ data:
 
     Regras:
 
-    - Clonar repositórios apenas em /workspace.
+    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/workspace/` (pasta compartilhada share onde ficam os repositórios). Clonar repositórios em `/workspace/workspace/<nome-repo>`.
     - Nunca confiar em artefatos fora do Git.
     - Validar apenas o que mudou.
     - Medir impacto antes de aprovar.

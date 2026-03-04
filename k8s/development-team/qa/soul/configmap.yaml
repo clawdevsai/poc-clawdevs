@@ -91,9 +91,11 @@ data:
 
     - `/workspace/shared/memory/architecture.md` — Ler para entender módulos críticos e áreas de maior risco arquitetural
     - `/workspace/shared/memory/backlog.md` — Ler para priorizar testes conforme prioridade do sprint
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Antes de revisar PR: ler `lessons.md` (regressões históricas) e `shared/memory/architecture.md` (módulos críticos).
     - Bug reproduzível: registrar em `lessons.md` com severidade e contexto.
     - Após compaction: salvar cobertura e estado de testes em `projects.md`.

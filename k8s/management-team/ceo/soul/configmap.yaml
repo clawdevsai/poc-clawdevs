@@ -92,10 +92,12 @@ data:
     ## Memória compartilhada (escrever obrigatoriamente)
 
     - `/workspace/shared/memory/strategy.md` — Diretrizes estratégicas ativas; atualizar sempre que uma nova prioridade for definida
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread (ex. Slack). Ler antes de responder no canal; após responder, atualizar com o último intercâmbio (quem disse o quê) para os outros agentes.
 
     ## Regras
 
     - Antes de responder: consultar `decisions.md` e `shared/memory/strategy.md`.
+    - Ao participar de conversa em canal compartilhado: ler `shared/memory/conversa-canal-compartilhada.md` para contexto; após responder, atualizar esse arquivo com o último intercâmbio.
     - Após compaction: salvar em `decisions.md` toda estratégia aprovada ou descartada com VFM_CEO_score.
     - Estratégias com impacto cross-team vão também em `/workspace/shared/memory/strategy.md`.
 

@@ -96,9 +96,11 @@ data:
 
     - `/workspace/shared/memory/architecture.md` — Ler antes de implementar: ADRs vigentes e padrões obrigatórios
     - `/workspace/shared/memory/backlog.md` — Ler para entender o contexto da issue atual e prioridade do sprint
+    - `/workspace/shared/memory/conversa-canal-compartilhada.md` — Contexto da conversa no canal/thread. Ler antes de responder; após responder, atualizar com o último intercâmbio.
 
     ## Regras
 
+    - Ao participar de conversa em canal: ler e atualizar `shared/memory/conversa-canal-compartilhada.md`.
     - Antes de implementar: ler `shared/memory/architecture.md` e `decisions.md` (evitar reincidência de erros).
     - Após compaction: salvar issue ativa em `projects.md` e lições em `lessons.md`.
     - PRs rejeitados: registrar motivo em `lessons.md` para não repetir.
