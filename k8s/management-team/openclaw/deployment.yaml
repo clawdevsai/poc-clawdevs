@@ -53,6 +53,16 @@ spec:
               done
               cp /ceo-memory/working-buffer.md /workspace/ceo/memory/ 2>/dev/null
 
+              # PO bootstrap files (padrão completo)
+              for f in AGENTS.md HEARTBEAT.md IDENTITY.md MEMORY.md SESSION-STATE.md TOOLS.md USER.md; do
+                cp /po-memory/$f /workspace/po/ 2>/dev/null
+              done
+
+              # Architect bootstrap files (padrão completo)
+              for f in AGENTS.md HEARTBEAT.md IDENTITY.md MEMORY.md SESSION-STATE.md SOUL.md TOOLS.md USER.md; do
+                cp /architect-memory/$f /workspace/architect/ 2>/dev/null
+              done
+
               # Permissões
               for id in ceo po devops architect developer qa cybersec ux dba; do
                 chmod -R u+rwX /workspace/$id
@@ -68,6 +78,12 @@ spec:
               readOnly: true
             - name: workspace-ceo-configmap
               mountPath: /ceo-memory
+              readOnly: true
+            - name: workspace-po-configmap
+              mountPath: /po-memory
+              readOnly: true
+            - name: workspace-architect-configmap
+              mountPath: /architect-memory
               readOnly: true
       containers:
         - name: gateway
@@ -266,6 +282,14 @@ spec:
         - name: workspace-ceo-configmap
           configMap:
             name: workspace-ceo-configmap
+            optional: true
+        - name: workspace-po-configmap
+          configMap:
+            name: workspace-po-configmap
+            optional: true
+        - name: workspace-architect-configmap
+          configMap:
+            name: workspace-architect-configmap
             optional: true
         - name: workspace
           persistentVolumeClaim:
