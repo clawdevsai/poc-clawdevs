@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-devops
+  namespace: ai-agents
+  labels:
+    team: development
+    agent: devops
+data:
+  agent-devops.yaml: |
+    - id: devops
+      name: "DevOps/SRE"
+      model: "ollama/qwen2.5-coder:14b"
+      chatModel: "ollama/qwen2.5-coder:7b"

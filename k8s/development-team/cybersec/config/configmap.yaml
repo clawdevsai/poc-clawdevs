@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-cybersec
+  namespace: ai-agents
+  labels:
+    team: development
+    agent: cybersec
+data:
+  agent-cybersec.yaml: |
+    - id: cybersec
+      name: "CyberSec"
+      model: "ollama/llama3.1:8b"
+      chatModel: "ollama/llama3.1:8b"

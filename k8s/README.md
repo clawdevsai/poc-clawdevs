@@ -6,13 +6,12 @@ Recursos para rodar o ecossistema no cluster (Minikube ou outro). Arquitetura **
 
 | Pasta | Conteúdo |
 |-------|----------|
-| **namespace.yaml** | Namespace `ai-agents` |
-| **limits.yaml** | ResourceQuota e LimitRange (ex.: 65% hardware) |
-| **llm-providers-configmap.yaml** | Provedores LLM por agente (ollama_local, etc.) |
+| **shared/infra/** | Namespace, limites, llm-providers |
+| **shared/development-team/** | NetworkPolicy, segredos, componentes compartilhados (Audit, Gateway-adapter, PO) |
 | **redis/** | Redis (deployment, service), streams-configmap, job-init-streams |
 | **ollama/** | Ollama GPU (deployment, service, PVC) |
-| **management-team/** | OpenClaw (gateway), SOUL management, config; opcional deploy CEO/PO separado |
-| **development-team/** | Triggers do pipeline (PO, Architect-draft, Developer, Revisão-slot, DevOps, Audit) + gateway-redis-adapter |
+| **management-team/** | OpenClaw (gateway), SOUL management, config |
+| **development-team/** | Agentes individuais (Architect, Developer, QA, CyberSec, UX, DBA, DevOps) com suas SOULs e IDs separados |
 | **orchestrator/** | Consumer Slack (orchestrator:events), CronJobs (audit-queue, digest, cosmetic) |
 | **security/** | Fase 2: phase2-config, egress-whitelist, token rotation, url-sandbox, quarentena |
 | **governance-team/** | Governance Proposer (opcional) |
@@ -26,25 +25,17 @@ Para o pipeline completo (triggers que chamam o Gateway):
 
 ```bash
 make configmaps-pipeline
-kubectl apply -f k8s/development-team/configmap.yaml
-kubectl apply -f k8s/development-team/po/
-kubectl apply -f k8s/development-team/architect-draft/
-kubectl apply -f k8s/development-team/developer/
-kubectl apply -f k8s/development-team/revisao-pos-dev/
-kubectl apply -f k8s/development-team/devops-worker/
-kubectl apply -f k8s/development-team/audit-runner/
-kubectl apply -f k8s/development-team/gateway-redis-adapter/
-# Ajuste replicas conforme necessário (ex.: kubectl scale deployment po -n ai-agents --replicas=1)
-```
+# Aplica infra e shared
+kubectl apply -f k8s/shared/infra/
+kubectl apply -f k8s/shared/development-team/
+kubectl apply -f k8s/shared/development-team/components/
 
-Ou aplique tudo de uma vez (cada subpasta tem deployment + configmap-env):
-
-```bash
-make configmaps-pipeline
-for dir in po architect-draft developer revisao-pos-dev devops-worker audit-runner gateway-redis-adapter; do
-  kubectl apply -f k8s/development-team/$dir/
+# Aplica cada agente individualmente
+for agent in architect developer qa cybersec ux dba devops; do
+  kubectl apply -R -f k8s/development-team/$agent/
 done
 ```
+
 
 ## Workspace compartilhado (pasta no host)
 
