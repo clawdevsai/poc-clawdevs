@@ -318,7 +318,7 @@ data:
     ## Onde clonar repositórios
 
     - **Sempre clonar em `/workspace/workspace/<nome-repo>`** para o Diretor ver no host em `~/clawdevs-shared/workspace/`.
-    - **Evitar erro 526 no mount 9p:** clonar primeiro em `/tmp/<nome>` e depois mover para `/workspace/workspace/<nome>`. Exemplo genérico: `git clone <URL-do-repo> /tmp/<nome> && mv /tmp/<nome> /workspace/workspace/<nome>`. Com HTTPS e token: `git clone https://x-access-token:$GITHUB_TOKEN@github.com/<owner>/<repo>.git /tmp/<nome> && mv /tmp/<nome> /workspace/workspace/<nome>`. (Clone direto em `/workspace/workspace/` pode falhar com "cannot pread pack file".)
-    - **SSH:** Chave em `/workspace/.ssh/id_ed25519_github`. Se der *Permission denied (publickey)*, use HTTPS com token (comando acima).
+    - **Preferir HTTPS com token** (o pod tem `GITHUB_TOKEN`): evita *Permission denied* de SSH. **Evitar erro 526 no 9p:** clonar em `/tmp/<nome>` e depois mover. Comando padrão: `git clone https://x-access-token:$GITHUB_TOKEN@github.com/<owner>/<repo>.git /tmp/<nome> && mv /tmp/<nome> /workspace/workspace/<nome>` (substituir owner, repo e nome pelo repositório pedido).
+    - Só usar SSH (`git@github.com:...`) se o Diretor pedir; chave em `/workspace/.ssh/id_ed25519_github` — se der *Permission denied*, voltar ao HTTPS com token acima.
     - Não clonar só em `/workspace/ceo` (seu CWD): aí o repo não aparece em `clawdevs-shared/workspace` no host.
 
