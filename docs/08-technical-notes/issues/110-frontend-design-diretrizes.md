@@ -16,4 +16,8 @@ Interfaces distintas, design thinking, estética (tipografia, cor, motion, compo
 
 ## Referências
 
-- [23-frontend-design.md](../23-frontend-design.md)
+- [23-frontend-design.md](../../06-standards/23-frontend-design.md)
+
+## Verificação (Fase 10)
+
+- Diretrizes em [23-frontend-design.md](../../06-standards/23-frontend-design.md). Referência em SOUL: [Developer.md](../../03-agents/soul/Developer.md) e [UX.md](../../03-agents/soul/UX.md) aplicam 23 e 32 ao criar/revisar frontend.

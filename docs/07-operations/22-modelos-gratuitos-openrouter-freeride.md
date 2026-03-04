@@ -119,6 +119,14 @@ A execução de `freeride` e `openclaw gateway restart` deve ser feita por quem 
 
 ---
 
+## FreeRide e descoberta de skills no fluxo do PO
+
+- **FreeRide:** O PO pode **sugerir** ao Diretor reduzir custo com modelos gratuitos (ex.: "configurar IA gratuita para tarefas de prototipagem"); a decisão e a execução são do **Diretor** e do **DevOps** (após aprovação). O PO não executa `freeride` nem altera config; mantém o backlog alinhado a orçamento e prioridade. Quando o Diretor aprovar, o DevOps configura FreeRide conforme este doc e reinicia o gateway.
+- **Descoberta de skills:** Quando uma tarefa priorizada pelo PO exigir uma capacidade que pode ser coberta por uma **skill** (ex.: busca web, integração com API), o agente que pegar a tarefa usa [19-descoberta-instalacao-skills.md](19-descoberta-instalacao-skills.md): busca skills, apresenta opções ao Diretor e só instala após checklist e aprovação. O PO está ciente de que tarefas que dependem de skill nova podem ficar em "aguardando aprovação" até o Diretor aprovar a instalação; o backlog não perde a tarefa.
+- **Criação de skills:** Se não houver skill no ecossistema e a necessidade for recorrente, registrar em `.learnings/FEATURE_REQUESTS.md` e seguir [29-criacao-de-skills.md](29-criacao-de-skills.md); o PO pode priorizar a criação como tarefa quando o Diretor concordar.
+
+---
+
 ## Relação com a documentação
 
 - [07-configuracao-e-prompts.md](07-configuracao-e-prompts.md) — Causa raiz do custo (inchaço de contexto), pipeline de truncamento, perfis por agente; FreeRide é uma opção para uso de tier gratuito OpenRouter quando o Diretor optar por reduzir custo com modelos gratuitos.

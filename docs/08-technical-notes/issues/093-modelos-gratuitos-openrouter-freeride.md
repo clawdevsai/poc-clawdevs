@@ -19,4 +19,9 @@ Configurar OpenClaw para usar modelos gratuitos do OpenRouter (FreeRide): rankin
 
 ## Referências
 
-- [22-modelos-gratuitos-openrouter-freeride.md](../22-modelos-gratuitos-openrouter-freeride.md)
+- [22-modelos-gratuitos-openrouter-freeride.md](../../07-operations/22-modelos-gratuitos-openrouter-freeride.md)
+
+## Verificação (Fase 8)
+
+- Roteamento hierárquico (nuvem → GPU → CPU), hook de recuperação e estado no LanceDB: documentados em [22-modelos-gratuitos-openrouter-freeride.md](../../07-operations/22-modelos-gratuitos-openrouter-freeride.md).
+- FreeRide e descoberta de skills no fluxo do PO: seção "FreeRide e descoberta de skills no fluxo do PO" no doc 22.

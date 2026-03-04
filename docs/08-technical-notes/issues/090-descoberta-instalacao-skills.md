@@ -18,4 +18,10 @@ Buscar skills no ecossistema (Skills CLI, skills.sh); apresentar opções ao Dir
 
 ## Referências
 
-- [19-descoberta-instalacao-skills.md](../19-descoberta-instalacao-skills.md)
+- [19-descoberta-instalacao-skills.md](../../05-tools-and-skills/19-descoberta-instalacao-skills.md)
+
+## Verificação (Fase 8)
+
+- Fluxo buscar → apresentar → checklist → aprovação → instalar: documentado em [19-descoberta-instalacao-skills.md](../../05-tools-and-skills/19-descoberta-instalacao-skills.md) (§ Fluxo).
+- Integração com FEATURE_REQUESTS: doc 19 referencia registro em `.learnings/FEATURE_REQUESTS.md` e criação de skills ([29-criacao-de-skills.md](../../05-tools-and-skills/29-criacao-de-skills.md)); [10-self-improvement-agentes.md](../../03-agents/10-self-improvement-agentes.md) define quando registrar.
+- Referência em SOUL: todos os agentes em [soul/](../../03-agents/soul/) referenciam descoberta e instalação (19) e criação (29).

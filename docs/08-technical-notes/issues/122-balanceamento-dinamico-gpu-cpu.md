@@ -18,7 +18,11 @@ Evolução **adicional** ao GPU Lock de fundação: o **TTL dinâmico** (por pay
 
 ## Referências
 
-- [03-arquitetura.md](../03-arquitetura.md) (Evolução: balanceamento dinâmico GPU/CPU; roteamento hierárquico)
-- [04-infraestrutura.md](../04-infraestrutura.md)
-- [06-operacoes.md](../06-operacoes.md)
+- [03-arquitetura.md](../../01-core/03-arquitetura.md) (Evolução: balanceamento dinâmico GPU/CPU; roteamento hierárquico)
+- [04-infraestrutura.md](../../02-infra/04-infraestrutura.md)
+- [06-operacoes.md](../../07-operations/06-operacoes.md)
 - [093-modelos-gratuitos-openrouter-freeride.md](093-modelos-gratuitos-openrouter-freeride.md) (fallbacks hierárquicos, estado no LanceDB)
+
+## Verificação (Fase 11)
+
+- Balanceamento dinâmico, PriorityClasses, roteamento hierárquico e LanceDB: [balanceamento-dinamico-gpu-cpu.md](../../02-infra/balanceamento-dinamico-gpu-cpu.md) — tarefas leves em CPU (Phi-3), node selectors/taints, PriorityClasses (evict gracioso), § Roteamento hierárquico e estado no LanceDB (ref 093), § Como isso reduz dependência do manual 06-operacoes.

@@ -28,6 +28,9 @@ spec:
             - secretRef:
                 name: clawdevs-github-secret
                 optional: true
+            - secretRef:
+                name: clawdevs-maton-secret
+                optional: true
             - configMapRef:
                 name: developer-env
           env:

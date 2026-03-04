@@ -16,4 +16,10 @@ Busca neural (web, código GitHub/Stack Overflow, pesquisa de empresas) via MCP 
 
 ## Referências
 
-- [30-exa-web-search.md](../30-exa-web-search.md)
+- [30-exa-web-search.md](../../05-tools-and-skills/30-exa-web-search.md)
+
+## Verificação (Fase 9)
+
+- Setup MCP Exa: [30-exa-web-search.md](../../05-tools-and-skills/30-exa-web-search.md) (§ Setup mcporter). Ferramentas principais: § Ferramentas principais (web_search_exa, get_code_context_exa, company_research_exa).
+- Segurança e quem pode usar: § Segurança e Zero Trust, § Quem pode usar no doc 30.
+- Exa vs headless: § "Exa vs busca web headless (doc 24)" no doc 30.

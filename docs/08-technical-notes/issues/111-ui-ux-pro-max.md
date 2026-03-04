@@ -17,4 +17,8 @@ Triagem (plataforma, stack, objetivo), entregas estruturadas (conceito UI, fluxo
 
 ## Referências
 
-- [32-ui-ux-pro-max.md](../32-ui-ux-pro-max.md)
+- [32-ui-ux-pro-max.md](../../06-standards/32-ui-ux-pro-max.md)
+
+## Verificação (Fase 10)
+
+- Triagem, entregas estruturadas, design system em [32-ui-ux-pro-max.md](../../06-standards/32-ui-ux-pro-max.md). Integração com 23 e 02-agentes: Developer e UX referenciam 32 nos SOULs (ver issue 110).

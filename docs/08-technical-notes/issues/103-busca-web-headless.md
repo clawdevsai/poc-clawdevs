@@ -16,4 +16,10 @@ Pesquisa na web e extração de conteúdo de páginas em markdown sem browser. Q
 
 ## Referências
 
-- [24-busca-web-headless.md](../24-busca-web-headless.md)
+- [24-busca-web-headless.md](../../05-tools-and-skills/24-busca-web-headless.md)
+
+## Verificação (Fase 9)
+
+- Ferramenta/skill pesquisa web e extração em markdown: [24-busca-web-headless.md](../../05-tools-and-skills/24-busca-web-headless.md). Quando usar: § Quando usar (documentação, notícias, dados públicos).
+- Segurança: § Segurança e Zero Trust no doc 24 (URLs, SSRF, lista de permissões); alinhado a 14 e 05.
+- Quem pode usar: doc 24 § "Quem usa" / 02-agentes; agentes com permissão de internet (CEO, DevOps, CyberSec, etc.). Exa (doc 30) como implementação alternativa com "Exa vs headless" em 30.

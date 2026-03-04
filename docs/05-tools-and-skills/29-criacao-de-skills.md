@@ -96,6 +96,12 @@ Manter o corpo do SKILL.md essencial e sob ~500 linhas; conteúdo longo em arqui
 
 ---
 
+## Integração com .learnings/FEATURE_REQUESTS.md
+
+Quando uma capacidade solicitada pelo usuário não existir no ecossistema e a necessidade for **recorrente**, registrar em `.learnings/FEATURE_REQUESTS.md` conforme [10-self-improvement-agentes.md](10-self-improvement-agentes.md). Itens recorrentes em FEATURE_REQUESTS são candidatos a virar skill: seguir o processo de 6 passos deste documento e alinhar com o Diretor antes de criar. A descoberta de skills ([19-descoberta-instalacao-skills.md](19-descoberta-instalacao-skills.md)) deve ser tentada primeiro; só propor criação quando não houver skill disponível.
+
+---
+
 ## Quem pode usar
 
 | Agente   | Criar/editar skill | Propor ao Diretor | Publicar/instalar |

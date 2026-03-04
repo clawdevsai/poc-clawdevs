@@ -16,4 +16,10 @@ Manter runtime do orquestrador e todas as skills instaladas atualizadas via cron
 
 ## Referências
 
-- [21-auto-atualizacao-ambiente.md](../21-auto-atualizacao-ambiente.md)
+- [21-auto-atualizacao-ambiente.md](../../07-operations/21-auto-atualizacao-ambiente.md)
+
+## Verificação (Fase 8)
+
+- CronJob K8s: [cronjob-auto-update-env.yaml](../../../k8s/orchestrator/cronjob-auto-update-env.yaml) (schedule 04:00 UTC); ConfigMaps [configmap-auto-update-env.yaml](../../../k8s/orchestrator/configmap-auto-update-env.yaml), [configmap-auto-update-scripts.yaml](../../../k8s/orchestrator/configmap-auto-update-scripts.yaml).
+- Resumo: script emite resumo para stdout; Diretor consulta via `kubectl logs job/auto-update-env-<suffix>` ou integração ao digest.
+- Configuração: doc [21-auto-atualizacao-ambiente.md](../../07-operations/21-auto-atualizacao-ambiente.md) (§ Customização, Desabilitar).

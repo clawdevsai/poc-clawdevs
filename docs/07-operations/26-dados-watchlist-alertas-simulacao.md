@@ -93,6 +93,13 @@ Instalação de novas skills segue sempre o fluxo de [19-descoberta-instalacao-s
 
 ---
 
+## Skill vs API direta
+
+- **Implementar como skill** quando: (1) a capacidade for reutilizável (watchlist, alertas, digest, paper); (2) exigir estado local (arquivos, cron) ou múltiplos comandos; (3) o ecossistema tiver uma skill que já cumpra as categorias deste doc — usar descoberta ([19-descoberta-instalacao-skills.md](19-descoberta-instalacao-skills.md)) e instalar após aprovação.
+- **Chamar API direta** (GET, leitura) quando: (1) for uma única consulta pontual a API pública documentada; (2) não houver skill aprovada para o domínio; (3) a tarefa for one-off e o Diretor autorizar. Sempre validar URL e método (somente leitura); nunca expor credenciais no código.
+
+---
+
 ## Relação com a documentação
 
 - [19-descoberta-instalacao-skills.md](19-descoberta-instalacao-skills.md) — Descoberta e instalação de skills; categorias “dados, watchlist, alertas, simulação” podem ser buscadas e propostas aqui.

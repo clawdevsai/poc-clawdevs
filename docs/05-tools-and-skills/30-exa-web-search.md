@@ -114,6 +114,13 @@ Quando for necessário **navegar, clicar ou preencher formulários**, usar as fe
 
 ---
 
+## Exa vs busca web headless (doc 24)
+
+- **Usar Exa (este doc)** quando: mcporter/Exa MCP estiver configurado e a tarefa se beneficiar de busca neural, contexto de código (GitHub/Stack Overflow) ou pesquisa de empresas; suíte integrada e sem browser.
+- **Usar busca web headless genérica ([24-busca-web-headless.md](24-busca-web-headless.md))** quando: precisar de extração de página para markdown com outra skill/MCP; ou quando Exa não estiver aprovado/habilitado no ambiente. Ambos cobrem pesquisa e conteúdo externo; Exa adiciona código e empresas.
+
+---
+
 ## Relação com a documentação
 
 - [24-busca-web-headless.md](24-busca-web-headless.md) — Habilidades genéricas de busca web headless e extração; Exa é uma implementação concreta (via MCP).

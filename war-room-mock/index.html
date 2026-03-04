@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>War Room — ClawDevs</title>
+  <style>
+    :root { --idle: #94a3b8; --working: #38bdf8; --alerta: #f87171; --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; min-height: 100vh; }
+    h1 { font-size: 1.25rem; margin: 0 0 1rem 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; max-width: 720px; }
+    .card { background: var(--card); border-radius: 8px; padding: 0.75rem; border-left: 4px solid var(--idle); }
+    .card.working { border-left-color: var(--working); }
+    .card.alerta { border-left-color: var(--alerta); }
+    .card h2 { font-size: 0.875rem; margin: 0 0 0.25rem 0; font-weight: 600; }
+    .card .state { font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; }
+    .card .activity { font-size: 0.75rem; margin-top: 0.35rem; opacity: 0.85; }
+    .foot { margin-top: 1rem; font-size: 0.75rem; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <h1>War Room — ClawDevs (mock)</h1>
+  <p style="font-size: 0.875rem; margin-bottom: 1rem;">Visão dos 9 agentes: estado e atividade. Fonte de dados: Redis + pods (ver doc).</p>
+  <div class="grid" id="agents"></div>
+  <p class="foot">Mock estático. Ver docs/07-operations/war-room-dashboard.md para conceito, fontes de dados e uso pelo Diretor.</p>
+  <script>
+    const agents = [
+      { id: 'ceo', name: 'CEO', state: 'working', activity: 'Pesquisando tendências' },
+      { id: 'po', name: 'PO', state: 'idle', activity: 'Backlog priorizado' },
+      { id: 'devops', name: 'DevOps', state: 'idle', activity: '—' },
+      { id: 'architect', name: 'Architect', state: 'working', activity: 'Revisando PR #42' },
+      { id: 'developer', name: 'Developer', state: 'working', activity: 'Branch feature/123' },
+      { id: 'qa', name: 'QA', state: 'idle', activity: '—' },
+      { id: 'cybersec', name: 'CyberSec', state: 'alerta', activity: '2 alertas' },
+      { id: 'ux', name: 'UX', state: 'idle', activity: '—' },
+      { id: 'dba', name: 'DBA', state: 'idle', activity: '—' }
+    ];
+    const el = document.getElementById('agents');
+    agents.forEach(a => {
+      const div = document.createElement('div');
+      div.className = `card ${a.state}`;
+      div.innerHTML = `<h2>${a.name}</h2><span class="state">${a.state}</span><p class="activity">${a.activity}</p>`;
+      el.appendChild(div);
+    });
+  </script>
+</body>
+</html>

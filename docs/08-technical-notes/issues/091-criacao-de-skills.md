@@ -17,4 +17,11 @@ Quando não houver skill no ecossistema e a necessidade for recorrente, criar e 
 
 ## Referências
 
-- [29-criacao-de-skills.md](../29-criacao-de-skills.md)
+- [29-criacao-de-skills.md](../../05-tools-and-skills/29-criacao-de-skills.md)
+
+## Verificação (Fase 8)
+
+- Anatomia e processo em 6 passos: [29-criacao-de-skills.md](../../05-tools-and-skills/29-criacao-de-skills.md).
+- Integração com .learnings/FEATURE_REQUESTS.md: doc 29 tem seção "Integração com .learnings/FEATURE_REQUESTS.md" e relação com [10-self-improvement-agentes.md](../../03-agents/10-self-improvement-agentes.md).
+- Quem pode criar/publicar e guardrails: tabela "Quem pode usar" em 29 e referência a 19 (Zero Trust, aprovação).
+- Referência em SOUL: agentes em [soul/](../../03-agents/soul/) referenciam criação de skills (29) quando recorrente.

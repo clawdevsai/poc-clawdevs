@@ -62,6 +62,19 @@ providers:
 
 Documentação do canal Telegram: [OpenClaw – Telegram](https://docs.openclaw.ai/channels/telegram).
 
+## API Gateway (Maton)
+
+Para integração com 100+ APIs externas (Google Workspace, Slack, Notion, HubSpot, Stripe, etc.) com OAuth gerenciado pelo Maton:
+
+1. **Obter API Key:** em [maton.ai/settings](https://maton.ai/settings), copiar a API Key.
+2. **Criar Secret no cluster (nunca commitar a chave):**
+   ```bash
+   kubectl create secret generic clawdevs-maton-secret -n ai-agents \
+     --from-literal=MATON_API_KEY='sua_chave' \
+     --dry-run=client -o yaml | kubectl apply -f -
+   ```
+3. Os deployments do OpenClaw (CEO, PO), Developer e DevOps já referenciam opcionalmente `clawdevs-maton-secret`; se o Secret existir, a variável `MATON_API_KEY` estará disponível. Documentação completa: [25-api-gateway-integracao-apis.md](../05-tools-and-skills/25-api-gateway-integracao-apis.md).
+
 ## Instruções de uso
 
 1. Na raiz do repositório ClawDevs, usar [scripts/setup.sh](../../scripts/setup.sh) como `setup.sh` (ou copiar para `~/enxame/`).

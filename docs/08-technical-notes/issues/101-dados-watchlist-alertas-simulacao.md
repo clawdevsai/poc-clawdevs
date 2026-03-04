@@ -16,4 +16,9 @@ Consultas a APIs de dados (leitura), watchlist, alertas (threshold/cron), calend
 
 ## Referências
 
-- [26-dados-watchlist-alertas-simulacao.md](../26-dados-watchlist-alertas-simulacao.md)
+- [26-dados-watchlist-alertas-simulacao.md](../../07-operations/26-dados-watchlist-alertas-simulacao.md)
+
+## Verificação (Fase 9)
+
+- Categorias e uso por agente: [26-dados-watchlist-alertas-simulacao.md](../../07-operations/26-dados-watchlist-alertas-simulacao.md) (§ Visão geral, § Quem pode usar — CEO, PO, DevOps, outros).
+- Skill vs API direta: § "Skill vs API direta" no doc 26. Segurança: §1 (leitura apenas, validar URL), §2–6 (paths locais, sem credenciais).

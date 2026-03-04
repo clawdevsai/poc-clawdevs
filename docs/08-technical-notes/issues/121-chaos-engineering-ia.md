@@ -16,4 +16,10 @@ Cenários de estresse: Issue com requisitos contraditórios ou biblioteca obsole
 
 ## Referências
 
-- [01-visao-e-proposta.md](../01-visao-e-proposta.md) (Chaos Engineering)
+- [01-visao-e-proposta.md](../../01-core/01-visao-e-proposta.md) (Chaos Engineering)
+
+## Verificação (Fase 11)
+
+- Cenários e manual de falhas: [chaos-engineering-manual-falhas.md](../../07-operations/chaos-engineering-manual-falhas.md) — requisitos contraditórios, biblioteca obsoleta/vulnerável, injeção, bypass segurança, skill não aprovada, estouro orçamento.
+- Objetivo e processo: doc § Objetivo e § Processo (executar, registrar, ajustar prompts/guardrails).
+- Comportamento esperado (bloqueio, escalação, kill switch): § Comportamento esperado e referências a 27, 027, 05.
