@@ -38,7 +38,10 @@ As IAs (agentes) vão editar arquivos e clonar códigos automaticamente. É nece
 ```bash
 make shared
 ```
-> Isso criará a pasta `~/clawdevs-shared` e a deixará sincronizada com o interior do Minikube.
+> Isso criará a pasta `~/clawdevs-shared` e a deixará sincronizada com o interior do Minikube (mount 9P com `--uid=0 --gid=0`).
+>
+> **Se o OpenClaw já estiver rodando:** após (re)iniciar o mount (`make shared`), reinicie o deployment para o pod reconectar ao volume e evitar I/O error em `/workspace`:  
+> `kubectl rollout restart deployment/openclaw -n ai-agents`
 
 ### Passo 4: Subir Todo o Sistema (`make up`)
 Chegamos ao passo principal. Isso vai empacotar o cérebro das IAs, aplicar as redes do Redis, alocar o Ollama (aproveitando sua GPU) e ligar todas as "pessoas" do time (agentes/PODs).
@@ -62,6 +65,8 @@ Você não fará o `make prepare` todos os dias. No seu fluxo normal, os comando
 | **Zerar a memória das IAs** | `make reset-memory` | Esquece todas as conversas anteriores para os agentes iniciarem projetos limpos. |
 | **Meu PC aguenta a IA?** | `make verify` | Testa sua Placa de Vídeo (GPU) e CPU para garantir a estabilidade. |
 | **Erro no Github?** | `make test-github-access` | Valida as credenciais do seu `.env` contra o Github para ver se a IA pode baixar o código. |
+| **Reconectar workspace** | `kubectl rollout restart deployment/openclaw -n ai-agents` | Use após rodar `make shared` com o OpenClaw já no ar; evita I/O error em `/workspace` no pod. |
+| **Validar acesso ao workspace** | `make validate-workspace` | Confirma que `/workspace` está liberado e compartilhado para todos os agentes (CEO, PO, Developer, etc.). Lista `/workspace/` e `/workspace/workspace/`; sem I/O error = OK. |
 | **Dashboad Visual do K8s** | `make dashboard` | Abre o painel oficial do Kubernetes diretamente no seu navegador. |
 | **Parar e apagar tudo** | `make down` | Desliga todos os processos e zera o cluster. Útil quando algo corrompeu e você quer um início limpo. |
 
@@ -72,3 +77,4 @@ Você não fará o `make prepare` todos os dias. No seu fluxo normal, os comando
 1. **Nunca crie código se o OpenClaw já fizer:** Nosso sistema é baseado 100% no OpenClaw. Não reinvente a roda!
 2. **K8s Ecosystem:** Nenhuma persistência de dados de runtime fica no "host" (seu PC). Tudo vive no Minikube e usa PVCs e Redis.
 3. **Gratuito e Open Source:** Este projeto foca no uso estrito de Ollama e ferramentas abertas (sem OpenAI paga na infra principal).
+4. **Workspace dos agentes:** O diretório `/workspace` no pod é **compartilhado com acesso de leitura e escrita** para todos os agentes (CEO, PO, Developer, DevOps, QA, etc.). Qualquer agente pode ler e escrever em qualquer pasta sob `/workspace` (incluindo `/workspace/workspace/` para repositórios). Cada agente usa um subdir próprio (`/workspace/ceo`, `/workspace/po`, …). Para validar: `make validate-workspace`. Após (re)iniciar o mount (`make shared`), reinicie o deployment do OpenClaw para o pod reconectar ao volume.

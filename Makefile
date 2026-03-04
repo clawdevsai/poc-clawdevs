@@ -251,6 +251,10 @@ shared:
 shared-ensure:
 	@$(SCRIPTS)/utils/shared-ensure.sh
 
+# Valida que /workspace está acessível e compartilhado para todos os agentes no pod do OpenClaw (evita I/O error).
+validate-workspace:
+	@$(SCRIPTS)/utils/validate-workspace.sh
+
 # Dispara o job url-sandbox para analisar uma URL. Obrigatório: URL=https://exemplo.com make url-sandbox-run.
 url-sandbox-run:
 	@URL="$(URL)" $(SCRIPTS)/utils/url-sandbox-run.sh
