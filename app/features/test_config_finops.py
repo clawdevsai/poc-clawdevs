@@ -8,9 +8,12 @@ import os
 import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(SCRIPT_DIR)
+REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # repo root (parent of app/)
+APP_DIR = os.path.dirname(SCRIPT_DIR)  # app/
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 os.chdir(REPO_ROOT)
 
 
@@ -202,8 +205,8 @@ def test_gateway_apply_preflight_and_max_tokens():
 
 # --- developer_worker: finops integrado (assinaturas) ---
 def test_developer_worker_finops_import():
-    # Garantir que o worker importa finops e tem fallback
-    import developer_worker as dw
+    # Garantir que o worker importa finops e tem fallback (repo root no path para app.agents)
+    from app.agents import developer_worker as dw
     assert hasattr(dw, "should_stop_task")
     assert hasattr(dw, "increment_attempt")
     assert callable(dw.should_stop_task)

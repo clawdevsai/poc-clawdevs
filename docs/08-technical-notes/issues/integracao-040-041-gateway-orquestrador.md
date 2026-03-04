@@ -62,19 +62,19 @@ Referência para integrar os scripts e configs (perfis e truncamento/FinOps) no 
 
 ## 4. Validação reversa (PO)
 
-**Arquivo:** `scripts/validate_reverse_po.py`
+**Arquivo:** `app/features/validate_reverse_po.py` (uso via wrapper na raiz do repo).
 
 - **Quando:** Após **gerar um resumo** que substituirá o buffer (ex.: saída do pre-flight ou de um job de compactação), antes de aceitar esse resumo.
-- **Chamada:**
+- **Chamada (wrapper, a partir da raiz do repositório):**
 
   ```bash
-  python validate_reverse_po.py --summary /caminho/do/resumo.md --criteria /caminho/da/issue.md
+  ./scripts/validate_reverse_po_after_summary.sh /caminho/do/resumo.md /caminho/da/issue-com-criterios.md
   ```
 
-  Se **exit 1**: o resumo omitiu critérios; o PO deve **rejeitar** o truncamento (não substituir o buffer pelo resumo, ou solicitar novo resumo).
+  Se **exit 1**: o resumo omitiu critérios; **não substituir** o buffer pelo resumo (reestruturar o bloco ou refazer o resumo).
 
-- **Integração no pipeline:** Quem gera o resumo (ex.: job que chama preflight_summarize e grava em arquivo) deve, em seguida, chamar `validate_reverse_po` com o arquivo do resumo e o arquivo que contém o bloco `<!-- CRITERIOS_ACEITE -->`. Se o script retornar 1, não aplicar o resumo.
-- **Wrapper:** `scripts/validate_reverse_po_after_summary.sh SUMMARY_FILE CRITERIA_FILE` — repassa para `validate_reverse_po.py` e propaga o exit code (0 = OK, 1 = rejeitar truncamento).
+- **Passo explícito de pipeline:** Após gerar arquivo de resumo (ex.: saída de `preflight_summarize` gravada em arquivo, ou job de compactação que produz resumo), executar o comando acima. Se o script retornar 1, **não aplicar** o truncamento ao buffer. O arquivo de critérios deve conter o bloco `<!-- CRITERIOS_ACEITE -->` (ex.: `docs/03-agents/agents-devs/CRITERIOS_ACEITE-example.md`).
+- **Chamada direta (Python):** `python3 app/features/validate_reverse_po.py --summary <resumo.md> --criteria <issue.md>` — mesmo contrato de exit 0/1.
 
 Ref: `docs/soul/PO.md` (Validação reversa).
 

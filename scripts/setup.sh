@@ -105,7 +105,7 @@ fi
 echo ""
 echo "==> Configurando transcrição (faster-whisper)..."
 mkdir -p "$ENXAME_DIR/transcription" "$ENXAME_DIR/audio/transcriptions"
-cp "$REPO_ROOT/app/m4a_to_md.py" "$ENXAME_DIR/transcription/"
+cp "$REPO_ROOT/app/features/m4a_to_md.py" "$ENXAME_DIR/transcription/"
 python3 -m venv "$ENXAME_DIR/transcription/venv"
 "$ENXAME_DIR/transcription/venv/bin/pip" install -q faster-whisper tqdm
 chmod +x "$ENXAME_DIR/transcription/m4a_to_md.py"

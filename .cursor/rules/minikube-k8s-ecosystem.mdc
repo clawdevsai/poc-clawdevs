@@ -31,11 +31,11 @@ Todo o **ecossistema ClawDevs** roda **dentro do Kubernetes** (Minikube local). 
 1. **Novos serviços:** definir como Deployment/StatefulSet/Job/CronJob em `k8s/`, no namespace do projeto (ex.: `ai-agents`). Não assumir processos long-lived no host.
 2. **Estado e dados:** usar PVC, ConfigMaps e Secrets no cluster. Não depender de diretórios ou DB no host para runtime.
 3. **Limite 65%:** o cluster consome no máximo ~65% do hardware (CPU/RAM via `minikube start` e ResourceQuota). Manifests devem respeitar `limits.yaml` e namespace.
-4. **Ordem de apply:** seguir a ordem documentada em `k8s/README.md` (namespace → limits → redis → ollama → llm-providers → gateway/soul → demais).
+4. **Ordem de apply:** seguir a ordem documentada em [docs/02-infra/kubernetes-estrutura-e-apply.md](docs/02-infra/kubernetes-estrutura-e-apply.md) (namespace → limits → redis → ollama → llm-providers → gateway/soul → demais).
 5. **Node selectors:** agentes CPU-only (ex.: DevOps, UX) usam `nodeSelector: workload-type: cpu-only`; GPU fica para Ollama e agentes que precisam. Ver `k8s/limits.yaml` e docs.
 
 ## Referências
 
 - Infraestrutura e boundary: [docs/04-infraestrutura.md](docs/04-infraestrutura.md)
 - Objetivo e máquina de referência: [docs/00-objetivo-e-maquina-referencia.md](docs/00-objetivo-e-maquina-referencia.md)
-- Estrutura K8s e make up: [k8s/README.md](k8s/README.md)
+- Estrutura K8s e make up: [docs/02-infra/kubernetes-estrutura-e-apply.md](docs/02-infra/kubernetes-estrutura-e-apply.md)

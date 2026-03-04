@@ -25,7 +25,7 @@ Não há itens obrigatórios em aberto no escopo atual do repo.
 Se quiser validar que tudo funciona antes de dar por encerrado:
 
 1. **Checklist Fase 4** — [fase4-o-que-falta-finalizar.md](fase4-o-que-falta-finalizar.md) §4:
-   - **Script único:** `./scripts/run_validacao_fase4.sh` (roda test_config_finops + validate_reverse_po)
+   - **Script único:** `./scripts/run_validacao_finops_po.sh` (roda test_config_finops + validate_reverse_po)
    - `kubectl apply -f k8s/security/` (finops-config, agent-profiles)
    - Gateway sobe com envFrom finops-config
    - `POST /publish-to-cloud` retorna 200

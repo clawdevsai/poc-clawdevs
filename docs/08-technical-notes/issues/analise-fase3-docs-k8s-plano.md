@@ -51,7 +51,7 @@
 - **sandbox:** job-quarantine-pipeline, job-install-sandbox, seccomp.
 - **limits.yaml:** ResourceQuota/LimitRange (65%).
 
-Ordem de apply e referências ao Makefile e a `k8s/README.md` estão alinhadas. Fase 3 é suportada por: redis (streams + group disjuntor), orchestrator (Slack consumer, digest, cosmetic, consensus), security (phase2).
+Ordem de apply e referências ao Makefile e a [docs/02-infra/kubernetes-estrutura-e-apply.md](../../02-infra/kubernetes-estrutura-e-apply.md) estão alinhadas. Fase 3 é suportada por: redis (streams + group disjuntor), orchestrator (Slack consumer, digest, cosmetic, consensus), security (phase2).
 
 ### 2.2 Config (`config/`)
 
@@ -81,7 +81,7 @@ Scripts listados na validação Fase 3 existem e estão referenciados corretamen
 
 ### 2.4 Conclusão código
 
-- **k8s:** Estrutura e recursos (orchestrator, security, redis, development-team, management-team) estão alinhados com a Fase 3 e com `k8s/README.md`.
+- **k8s:** Estrutura e recursos (orchestrator, security, redis, development-team, management-team) estão alinhados com a Fase 3 e com [docs/02-infra/kubernetes-estrutura-e-apply.md](../../02-infra/kubernetes-estrutura-e-apply.md).
 - **config:** Focado em uso local do OpenClaw; suficiente para o escopo atual.
 - **scripts:** Todos os scripts referenciados em `validacao-fase3-completa.md` e em `docs/06-operacoes.md` existem e implementam o esperado (030, 031, 127, 017, 032–036).
 

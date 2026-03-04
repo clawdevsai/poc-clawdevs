@@ -47,7 +47,7 @@ Ref: [.cursor/plans/plano_clawdevs_fases_5ff4260b.plan.md](../../.cursor/plans/p
 
 - [ ] `kubectl apply -f k8s/security/` aplica sem erro (finops-config, agent-profiles).
 - [ ] `python3 scripts/test_config_finops.py` — todos os testes passam.
-- [ ] **Script único:** `./scripts/run_validacao_fase4.sh` — roda test_config_finops e validate_reverse_po (exit 0/1 conforme critérios).
+- [ ] **Script único:** `./scripts/run_validacao_finops_po.sh` — roda test_config_finops e validate_reverse_po (exit 0/1 conforme critérios).
 - [ ] Gateway-redis-adapter sobe com envFrom finops-config (e opcional nodeSelector cpu-only).
 - [ ] `POST /publish-to-cloud` com body válido retorna 200 e publica no Redis.
 - [ ] Validação reversa: `validate_reverse_po.py --summary X --criteria Y` → exit 0 quando resumo cobre critérios; exit 1 quando omite.

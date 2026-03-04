@@ -13,7 +13,7 @@ MINIKUBE_MEMORY ?= 20g
 .PHONY: configmap-rotation configmap-url-sandbox configmap-url-sandbox-trigger configmap-quarantine
 .PHONY: security-apply security-configmaps orchestrator-apply orchestrator-configmap
 .PHONY: configmap-kanban-api kanban-image kanban-apply kanban-url
-.PHONY: verify reset-memory init-memory test-github-access dashboard status status-pods
+.PHONY: verify reset-memory init-memory test-github-access validate-finops-po dashboard status status-pods
 
 # ------------------------------------------------------------------------------
 # Help
@@ -50,6 +50,7 @@ help:
 	@echo "    make reset-memory       -> Apaga a memória das IAs (útil para recomeçar projetos do zero)."
 	@echo "    make init-memory        -> Inicializa estrutura de memória (decisions/projects/lessons/pending + .learnings/). Já rodado no 'make up'; use manualmente se o Job falhar."
 	@echo "    make test-github-access -> Testa se as IAs conseguem ler arquivos no Github."
+	@echo "    make validate-finops-po -> Valida FinOps e validação reversa PO (test_config_finops + validate_reverse_po)."
 	@echo "    make dashboard          -> Abre uma tela visual no seu navegador para ver o motor do sistema."
 	@echo "    make shared             -> Cria uma pasta compartilhada para você ver os arquivos que a IA cria."
 
@@ -461,6 +462,10 @@ init-memory:
 # CONEXÃO COM GITHUB: Confirma se o sistema consegue acessar repósitórios sem problemas.
 test-github-access:
 	@$(CURDIR)/scripts/test_github_access.sh $(or $(MODE),all)
+
+# Valida FinOps e validação reversa PO (test_config_finops + validate_reverse_po).
+validate-finops-po:
+	@$(CURDIR)/scripts/run_validacao_finops_po.sh
 
 # TELA DE CONTROLE: Abre uma página web para visualizar graficamente todos os componentes do sistema.
 dashboard:
