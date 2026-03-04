@@ -84,7 +84,25 @@ Após a execução, envie um áudio em M4A para o seu bot do Telegram. O sistema
 
 Scripts shell do ClawDevs (setup, Redis init, validação, testes, primeiro-socorro GPU, secrets K8s) ficam em **scripts/** na raiz do repositório. Os **arquivos Python** ficam em **app/**.
 
-**Como rodar** (a partir da raiz do repositório): `./scripts/up-all.sh`, `./scripts/redis-streams-init.sh` (ou via job K8s); `make reset-memory` chama `scripts/reset_agent_memory.sh`.
+O **Makefile** na raiz apenas delega para scripts `.sh`; toda a lógica está nos subdiretórios de `scripts/`. Na raiz de `scripts/` ficam **setup.sh** e **wrappers** que delegam para o script correto (compatibilidade com documentação e comandos antigos).
+
+### Estrutura da pasta scripts
+
+| Pasta | Conteúdo |
+|-------|----------|
+| **cluster/** | Ciclo de vida: `prepare.sh`, `up.sh`, `down.sh`, `up-all.sh`, `secrets-from-env.sh`, `redis-streams-init.sh` |
+| **openclaw/** | OpenClaw: `image.sh`, `up-management.sh`, `ollama-ensure-cloud-auth.sh`, `ollama-signin.sh`, `k8s-openclaw-secret-from-env.sh`, `run-openclaw-telegram-slack-ollama.sh` |
+| **configmaps/** | ConfigMaps K8s: um script por ConfigMap + `pipeline.sh`, `phase2.sh` |
+| **security/** | Segurança: `configmaps.sh`, `apply.sh` |
+| **orchestrator/** | Orquestrador: `configmap.sh`, `apply.sh` |
+| **kanban/** | Kanban: `image.sh`, `apply.sh`, `url.sh` |
+| **utils/** | Utilitários (make + diagnóstico): `verify.sh`, `status.sh`, `status-pods.sh`, `reset-memory.sh`, `reset_agent_memory.sh`, `init-memory.sh`, `dashboard.sh`, `shared.sh`, `shared-ensure.sh`, `test-github-access.sh`, `test_github_access.sh`, `validate-finops-po.sh`, `run_validacao_finops_po.sh`, `url-sandbox-run.sh`, `url-sandbox-trigger-apply.sh` |
+| **ops/** | Operacionais e diagnóstico: `ciso_local_scan.sh`, `devops_compact_safe.sh`, `first-aid-gpu.sh`, `owasp-pre-commit.sh`, `slack-openclaw-check.sh`, `unblock-degradation.sh`, `validate_reverse_po_after_summary.sh`, `validate-token-rotation.sh`, `test_github_create_issue.sh`, `test_minikube_slot.sh` |
+| **transcription/** | Transcrição áudio → texto: `m4a_to_md.sh` |
+
+**Na raiz de scripts/:** **setup.sh** (setup “um clique”) e **wrappers** que delegam para `cluster/`, `openclaw/`, `utils/`, `ops/` ou `transcription/`, para que comandos como `./scripts/up-all.sh`, `./scripts/ollama-signin.sh`, `./scripts/slack-openclaw-check.sh`, `./scripts/m4a_to_md.sh` etc. continuem funcionando.
+
+**Como rodar:** (1) **Pelo Makefile (recomendado):** na raiz do repo: `make <target>` (ex.: `make up`, `make down`, `make help`). (2) **Direto:** `./scripts/cluster/up.sh`, `./scripts/utils/status.sh`, `./scripts/ops/slack-openclaw-check.sh` etc. (3) **Legado:** `./scripts/up-all.sh`, `./scripts/redis-streams-init.sh` — os wrappers na raiz redirecionam para os scripts nas subpastas.
 
 **ConfigMaps (Makefile):** O Makefile cria ConfigMaps a partir de `app/*.py` (pasta **app/**). Ex.: `make configmap-developer` usa `app/developer_worker.py`, `app/gpu_lock.py`, etc.
 
