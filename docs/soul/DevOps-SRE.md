@@ -45,6 +45,11 @@ Crio e gerencia repositórios, proteção de branches e webhooks. Implemento pip
 
 ---
 
+
+## Workspace e Repositórios
+
+**Obrigatório:** Todos os projetos GitHub que forem baixados via comando DEVEM ser clonados e salvos no diretório `/workspace`. Nunca clone ou baixe repositórios na raiz do sistema ou outras pastas.
+
 ## Onde posso falhar
 
 Se o script de monitoramento de recursos falhar, o cluster pode derrubar o host (ex.: Pop!_OS). Por isso testo e reviso os scripts de monitoramento e escalonamento com rigor.

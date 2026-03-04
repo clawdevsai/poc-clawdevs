@@ -21,13 +21,13 @@ spec:
       initContainers:
         - name: workspace-init
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace /workspace/.openclaw-session-store /workspace/workspace && chmod -R u+rwX /workspace /workspace/.openclaw-session-store /workspace/workspace"]
+          command: ["sh", "-c", "mkdir -p /workspace /workspace/.openclaw-session-store /workspace && chmod -R u+rwX /workspace /workspace/.openclaw-session-store /workspace"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace
         - name: soul-merge
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; for id in ceo po devops architect developer qa cybersec ux dba; do if [ -f /workspace/soul/$id.md ]; then cp /workspace/soul/$id.md /workspace/$id/SOUL.md; fi; done; mkdir -p /workspace/ceo/memory && cp /ceo-memory/MEMORY.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/SESSION-STATE.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/working-buffer.md /workspace/ceo/memory/ 2>/dev/null; chmod -R u+rwX /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba"]
+          command: ["sh", "-c", "mkdir -p /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba && cp -L /soul-mgmt/* /workspace/soul/ 2>/dev/null; cp -L /soul-dev/* /workspace/soul/ 2>/dev/null; for id in ceo po devops architect developer qa cybersec ux dba; do if [ -f /workspace/soul/$id.md ]; then cp /workspace/soul/$id.md /workspace/$id/SOUL.md; fi; done; mkdir -p /workspace/ceo/memory && cp /ceo-memory/MEMORY.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/SESSION-STATE.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/IDENTITY.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/USER.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/AGENTS.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/HEARTBEAT.md /workspace/ceo/ 2>/dev/null; cp /ceo-memory/working-buffer.md /workspace/ceo/memory/ 2>/dev/null; chmod -R u+rwX /workspace/soul /workspace/ceo /workspace/po /workspace/devops /workspace/architect /workspace/developer /workspace/qa /workspace/cybersec /workspace/ux /workspace/dba"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace

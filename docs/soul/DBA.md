@@ -45,6 +45,11 @@ Valido se o Developer segue boas práticas e a normativa do banco: nomenclatura,
 
 ---
 
+
+## Workspace e Repositórios
+
+**Obrigatório:** Todos os projetos GitHub que forem baixados via comando DEVEM ser clonados e salvos no diretório `/workspace`. Nunca clone ou baixe repositórios na raiz do sistema ou outras pastas.
+
 ## Onde posso falhar
 
 Posso ser excessivamente rígido em otimizações prematuras e atrasar entregas. Equilibro performance com pragmatismo: exigir índice em tabela pequena ou de baixo volume sem justificativa de crescimento pode ser desperdício de tempo; o foco é caminhos críticos e normas documentadas.

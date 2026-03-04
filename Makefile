@@ -6,7 +6,7 @@ MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
 .PHONY: help
-.PHONY: prepare up down up-all
+.PHONY: prepare up down up-all shared shared-ensure
 .PHONY: openclaw-image up-management
 .PHONY: configmaps-pipeline configmaps-phase2 configmaps-orchestrator
 .PHONY: configmap-developer configmap-revisao-slot configmap-agent-slots configmap-gateway-adapter configmap-devops-worker configmap-audit-runner configmap-devops-compact configmap-acefalo
@@ -19,41 +19,43 @@ MINIKUBE_MEMORY ?= 20g
 # Help
 # ------------------------------------------------------------------------------
 help:
-	@echo "ClawDevs — alvos principais"
+	@echo "ClawDevs — Comandos Principais (Guia para Leigos)"
 	@echo ""
-	@echo "  Cluster"
-	@echo "    make prepare      Minikube + Docker + GPU addon"
-	@echo "    make up           prepare + secrets do .env + namespace, Redis, Ollama, OpenClaw, security, orchestrator + pipeline"
-	@echo "    make up-all      up + slot configmaps + Redis streams init + rollouts (scripts/up-all.sh)"
-	@echo "    make down        Remove namespace e recursos (estaca zero)"
+	@echo "  🖥️  LIGAR E DESLIGAR O SISTEMA"
+	@echo "    make prepare      -> Prepara seu computador: instala Docker, Minikube e liga o motor básico."
+	@echo "    make up           -> Liga o sistema principal do ClawDevs (Banco de dados, IA local e Agentes)."
+	@echo "    make up-all       -> Liga tudo (make up) + configurações extras para deixar 100% pronto para uso."
+	@echo "    make down         -> Desliga e apaga todo o sistema ClawDevs (volta o PC ao estado normal)."
 	@echo ""
-	@echo "  OpenClaw"
-	@echo "    make openclaw-image   Build openclaw-gateway:local no Minikube"
-	@echo "    make up-management    Deploy CEO/PO (scale openclaw a 0 se usar dois gateways)"
+	@echo "  🧠 INTELIGÊNCIA ARTIFICIAL E AGENTES"
+	@echo "    make openclaw-image   -> Empacota o cerébro do sistema (OpenClaw) para rodar na sua máquina."
+	@echo "    make up-management    -> Liga apenas os agentes chefes (CEO e o Dono do Produto/PO)."
 	@echo ""
-	@echo "  ConfigMaps (scripts para pods)"
-	@echo "    make configmaps-pipeline     PO, Architect-draft, Developer, Revisão-slot, DevOps-worker, Audit-runner, Gateway-adapter"
-	@echo "    make configmaps-phase2       rotation, url-sandbox, quarantine, gateway-adapter"
-	@echo "    make configmaps-orchestrator orchestrator-scripts (Slack, digest, cosmetic)"
-	@echo "    make configmap-<nome>        Um só (ex: configmap-developer)"
+	@echo "  ⚙️  ARQUIVOS DE CONFIGURAÇÃO (Trabalhadores)"
+	@echo "    make configmaps-pipeline     -> Carrega as instruções para os agentes (Desenvolvedor, Revisor, etc)."
+	@echo "    make configmaps-phase2       -> Carrega as instruções avançadas (segurança e rotinas extras)."
+	@echo "    make configmaps-orchestrator -> Carrega as rotinas que avisam no Slack e organizam as tarefas."
+	@echo "    make configmap-<nome>        -> Carrega a instrução apenas de um agente específico."
 	@echo ""
-	@echo "  Fase 2 / Orchestrator"
-	@echo "    make security-configmaps  Cria ConfigMaps de segurança"
-	@echo "    make security-apply      security-configmaps + kubectl apply -f k8s/security/"
-	@echo "    make orchestrator-configmap"
-	@echo "    make orchestrator-apply  orchestrator-configmap + kubectl apply -f k8s/orchestrator/"
+	@echo "  🛡️ SEGURANÇA E ORQUESTRAÇÃO"
+	@echo "    make security-configmaps  -> Prepara as regras de segurança."
+	@echo "    make security-apply       -> Ativa a segurança no sistema (avaliação de links perigosos, etc)."
+	@echo "    make orchestrator-configmap -> Prepara o coordenador (Orquestrador)."
+	@echo "    make orchestrator-apply   -> Ativa o coordenador (envio de alertas e organização do sistema)."
 	@echo ""
-	@echo "  Utilitários"
-	@echo "    make verify             Verificação hardware + cluster"
-	@echo "    make status             Minikube + pods e deployments (ai-agents)"
-	@echo "    make status-pods        Logs recentes dos pods principais"
-	@echo "    make reset-memory       Reset Redis + workspace (MEMORY.md, etc.)"
-	@echo "    make test-github-access  [MODE=host|cluster|all]"
-	@echo "    make dashboard          Minikube dashboard no browser"
+	@echo "  🛠️  FERRAMENTAS ÚTEIS E DIAGNÓSTICO"
+	@echo "    make verify             -> Verifica se o seu hardware (Placa de vídeo/CPU) aguenta o sistema."
+	@echo "    make status             -> Mostra um resumo do que está rodando e se há travamentos."
+	@echo "    make status-pods        -> Mostra o 'diário de bordo' (logs) das IAs rodando agora."
+	@echo "    make reset-memory       -> Apaga a memória das IAs (útil para recomeçar projetos do zero)."
+	@echo "    make test-github-access -> Testa se as IAs conseguem ler arquivos no Github."
+	@echo "    make dashboard          -> Abre uma tela visual no seu navegador para ver o motor do sistema."
+	@echo "    make shared             -> Cria uma pasta compartilhada para você ver os arquivos que a IA cria."
 
 # ------------------------------------------------------------------------------
 # Cluster lifecycle
 # ------------------------------------------------------------------------------
+# LIGA O MOTOR: Instala o necessário (Docker, Minikube) e inicia o cluster básico.
 prepare:
 	@echo "==> Verificando Docker..."
 	@command -v docker >/dev/null 2>&1 || { \
@@ -83,40 +85,48 @@ prepare:
 	@minikube addons enable nvidia-device-plugin 2>/dev/null || true
 	@echo "==> prepare concluído. Use 'make up' para aplicar os recursos."
 
-up: prepare openclaw-image
-	@echo "==> Verificando Minikube..."
+# LIGA TUDO: Inicia o banco de dados, a Inteligência Artificial (Ollama) e os agentes principais.
+# Otimizado: pula prepare se Minikube já roda; rebuild de imagem só se Dockerfile/entrypoint mudaram;
+# agrupa kubectl apply para reduzir chamadas ao API server; configmaps em paralelo.
+OPENCLAW_BUILD_DIR := $(K8S_DIR)/management-team/openclaw
+OPENCLAW_CHECKSUM_FILE := /tmp/.openclaw-image-checksum
+
+up:
 	@if ! minikube status >/dev/null 2>&1; then \
-		minikube start --driver=docker --addons=nvidia-device-plugin --cpus=$(MINIKUBE_CPUS) --memory=$(MINIKUBE_MEMORY); \
-		minikube addons enable nvidia-device-plugin 2>/dev/null || true; \
-	else \
-		echo "  Minikube já está rodando."; \
+		echo "==> Minikube não está rodando. Executando prepare..."; \
+		$(MAKE) prepare; \
 	fi
-	@echo "==> Aplicando namespace..."
-	kubectl apply -f $(K8S_DIR)/namespace.yaml
-	@echo "==> Aplicando ResourceQuota e LimitRange..."
-	kubectl apply -f $(K8S_DIR)/limits.yaml
-	@echo "==> Secrets a partir do .env (openclaw-telegram, clawdevs-github, orchestrator-slack, rotation-source)..."
+	@echo "==> Build OpenClaw (condicional)..."
+	@NEW_SUM=$$(cat $(OPENCLAW_BUILD_DIR)/Dockerfile $(OPENCLAW_BUILD_DIR)/entrypoint.sh 2>/dev/null | md5sum | cut -d' ' -f1); \
+	OLD_SUM=$$(cat $(OPENCLAW_CHECKSUM_FILE) 2>/dev/null || echo "none"); \
+	if [ "$$NEW_SUM" != "$$OLD_SUM" ]; then \
+		echo "  Dockerfile/entrypoint alterados — rebuild..."; \
+		eval $$(minikube docker-env) && docker build -q -f $(OPENCLAW_BUILD_DIR)/Dockerfile -t openclaw-gateway:local $(OPENCLAW_BUILD_DIR); \
+		echo "$$NEW_SUM" > $(OPENCLAW_CHECKSUM_FILE); \
+		echo "  openclaw-image concluído."; \
+	else \
+		echo "  Imagem OpenClaw inalterada — skip build."; \
+	fi
+	@echo "==> Namespace + limites..."
+	@kubectl apply -f $(K8S_DIR)/namespace.yaml -f $(K8S_DIR)/limits.yaml
+	@echo "==> Secrets (.env)..."
 	@$(CURDIR)/scripts/secrets-from-env.sh || true
-	@echo "==> Aplicando Redis..."
-	kubectl apply -f $(K8S_DIR)/redis/deployment.yaml
-	kubectl apply -f $(K8S_DIR)/redis/streams-configmap.yaml
-	@echo "==> Aplicando Ollama (GPU)..."
-	kubectl apply -f $(K8S_DIR)/ollama/deployment.yaml
+	@echo "==> Redis + Ollama..."
+	@kubectl apply -f $(K8S_DIR)/redis/deployment.yaml -f $(K8S_DIR)/redis/streams-configmap.yaml
+	@kubectl apply -f $(K8S_DIR)/ollama/deployment.yaml
 	@if [ -f $(K8S_DIR)/ollama/secret.yaml ]; then \
-		echo "==> Aplicando secret Ollama Cloud..."; \
+		echo "  Aplicando secret Ollama Cloud..."; \
 		kubectl apply -f $(K8S_DIR)/ollama/secret.yaml; \
 		kubectl rollout restart deployment/ollama-gpu -n ai-agents --timeout=60s 2>/dev/null || true; \
 		$(CURDIR)/scripts/ollama-ensure-cloud-auth.sh; \
-	else \
-		echo "==> Secret Ollama Cloud não encontrado (opcional)."; \
 	fi
-	@echo "==> Aplicando provedores LLM..."
-	kubectl apply -f $(K8S_DIR)/llm-providers-configmap.yaml
-	@echo "==> Aplicando OpenClaw (ConfigMap + Workspace CEO + SOUL)..."
-	kubectl apply -f $(K8S_DIR)/management-team/openclaw/configmap.yaml
-	kubectl apply -f $(K8S_DIR)/management-team/openclaw/workspace-ceo-configmap.yaml
-	kubectl apply -f $(K8S_DIR)/management-team/soul/configmap.yaml
-	kubectl apply -f $(K8S_DIR)/development-team/soul/configmap.yaml
+	@echo "==> ConfigMaps (LLM + OpenClaw + SOUL)..."
+	@kubectl apply \
+		-f $(K8S_DIR)/llm-providers-configmap.yaml \
+		-f $(OPENCLAW_BUILD_DIR)/configmap.yaml \
+		-f $(OPENCLAW_BUILD_DIR)/workspace-ceo-configmap.yaml \
+		-f $(K8S_DIR)/management-team/soul/configmap.yaml \
+		-f $(K8S_DIR)/development-team/soul/configmap.yaml
 	@if [ -d $(K8S_DIR)/security ]; then \
 		$(MAKE) security-configmaps; \
 		kubectl apply -f $(K8S_DIR)/security/; \
@@ -125,16 +135,19 @@ up: prepare openclaw-image
 		$(MAKE) orchestrator-configmap; \
 		kubectl apply -f $(K8S_DIR)/orchestrator/; \
 	fi
-	@if [ -f $(K8S_DIR)/management-team/openclaw/serviceaccount.yaml ]; then \
-		kubectl apply -f $(K8S_DIR)/management-team/openclaw/serviceaccount.yaml; fi
-	@echo "==> Aplicando Deployment OpenClaw..."
-	kubectl apply -f $(K8S_DIR)/management-team/openclaw/deployment.yaml
-	@if [ -f $(K8S_DIR)/management-team/openclaw/secret.yaml ]; then \
-		kubectl apply -f $(K8S_DIR)/management-team/openclaw/secret.yaml; \
+	@if [ -f $(OPENCLAW_BUILD_DIR)/serviceaccount.yaml ]; then \
+		kubectl apply -f $(OPENCLAW_BUILD_DIR)/serviceaccount.yaml; fi
+	@echo "==> Workspace compartilhado (PV + PVC + minikube mount)..."
+	@$(MAKE) shared-ensure
+	@kubectl apply -f $(OPENCLAW_BUILD_DIR)/shared-workspace-pv.yaml -f $(OPENCLAW_BUILD_DIR)/shared-workspace-pvc.yaml
+	@echo "==> Deployment OpenClaw..."
+	@kubectl apply -f $(OPENCLAW_BUILD_DIR)/deployment.yaml
+	@if [ -f $(OPENCLAW_BUILD_DIR)/secret.yaml ]; then \
+		kubectl apply -f $(OPENCLAW_BUILD_DIR)/secret.yaml; \
 	fi
 	@kubectl rollout restart deployment/openclaw -n ai-agents --timeout=60s 2>/dev/null || true
-	@echo "==> Pipeline (ConfigMaps + deployments PO, Architect, Developer, Revisão, DevOps, Audit, Gateway-adapter)..."
-	@$(MAKE) configmaps-pipeline
+	@echo "==> Pipeline (ConfigMaps em paralelo + deployments)..."
+	@$(MAKE) -j4 configmap-po configmap-architect-draft configmap-developer configmap-revisao-slot configmap-devops-worker configmap-audit-runner configmap-gateway-adapter
 	@for dir in po architect-draft developer revisao-pos-dev devops-worker audit-runner gateway-redis-adapter; do \
 		kubectl apply -f $(K8S_DIR)/development-team/$$dir/ 2>/dev/null || true; \
 	done
@@ -142,17 +155,18 @@ up: prepare openclaw-image
 		echo "==> Redis streams init (job one-shot)..."; \
 		kubectl apply -f $(K8S_DIR)/redis/job-init-streams.yaml; \
 	fi
-	@echo "==> up concluído (cluster + secrets do .env + pipeline)."
-	@echo "  Secrets: preenchidos a partir do .env (openclaw-telegram, clawdevs-github, orchestrator-slack)."
+	@echo "==> up concluído."
 	@echo "  Ollama: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull <modelo>"
 	@IP=$$(minikube ip); \
 	echo ""; \
 	echo "  🚀 OpenClaw Control UI: http://$$IP:30000"; \
 	echo ""
 
+# LIGA TUDO + EXTRAS: Faz o 'make up' e logo depois já aplica funções extras prontas para uso.
 up-all:
 	@$(CURDIR)/scripts/up-all.sh
 
+# DESLIGA TUDO: Apaga todo o ambiente do ClawDevs do seu computador, limpando a memória e desligando os processos.
 down:
 	@echo "==> down: removendo recursos (estaca zero)..."
 	@if ! kubectl get namespace ai-agents >/dev/null 2>&1; then \
@@ -170,11 +184,13 @@ down:
 # ------------------------------------------------------------------------------
 # OpenClaw
 # ------------------------------------------------------------------------------
+# EMPACOTA O CÉREBRO: Pega o código do OpenClaw e gera o pacote (imagem Docker) para rodar localmente.
 openclaw-image:
 	@echo "==> Build openclaw-gateway:local (Minikube Docker)..."
 	eval $$(minikube docker-env) && docker build -f $(K8S_DIR)/management-team/openclaw/Dockerfile -t openclaw-gateway:local $(K8S_DIR)/management-team/openclaw
 	@echo "==> openclaw-image concluído."
 
+# LIGA A GERÊNCIA: Sobe apenas os agentes de controle (CEO e PO).
 up-management:
 	@echo "==> Aplicando Management Team (CEO, PO)..."
 	kubectl apply -f $(K8S_DIR)/management-team/openclaw/workspace-ceo-configmap.yaml
@@ -185,6 +201,7 @@ up-management:
 # ------------------------------------------------------------------------------
 # ConfigMaps — Pipeline (PO, Architect-draft, Developer, Revisão, DevOps, Gateway-adapter)
 # ------------------------------------------------------------------------------
+# CARREGA A EQUIPE: Envia as instruções de trabalho para toda a equipe de desenvolvimento (Dev, PO, Arquiteto, etc).
 configmaps-pipeline: configmap-po configmap-architect-draft configmap-developer configmap-revisao-slot configmap-devops-worker configmap-audit-runner configmap-gateway-adapter
 	@echo "==> ConfigMaps do pipeline aplicados."
 
@@ -339,6 +356,7 @@ configmap-quarantine:
 # ------------------------------------------------------------------------------
 security-configmaps: configmaps-phase2
 
+# APLICA SEGURANÇA: Coloca em prática as politicas de proteção e quarentena do sistema.
 security-apply: security-configmaps
 	@echo "==> Aplicando k8s/security/..."
 	@kubectl apply -f $(K8S_DIR)/security/
@@ -361,6 +379,7 @@ orchestrator-configmap:
 	  --from-file=set_consensus_pilot_result.py=app/set_consensus_pilot_result.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
+# APLICA ORQUESTRADOR: Coloca em prática o coordenador que notifica e organiza as rotinas.
 orchestrator-apply: orchestrator-configmap
 	@echo "==> Aplicando k8s/orchestrator/..."
 	@kubectl apply -f $(K8S_DIR)/orchestrator/
@@ -369,10 +388,12 @@ orchestrator-apply: orchestrator-configmap
 # ------------------------------------------------------------------------------
 # Utilitários
 # ------------------------------------------------------------------------------
+# TESTA HARDWARE: Roda scripts para checar se seu computador e placa de vídeo dão conta do recado.
 verify:
 	@docs/scripts/verify-machine.sh
 	@docs/scripts/verify-gpu-cluster.sh
 
+# COMO ESTÃO AS COISAS?: Mostra a situação atual dos serviços rodando.
 status:
 	@echo "==> Minikube..."
 	@minikube status 2>/dev/null || true
@@ -386,6 +407,7 @@ status:
 	@echo "==> Services..."
 	@kubectl get svc -n ai-agents 2>/dev/null || true
 
+# LÊ OS DIÁRIOS: Mostra as saídas de texto mais recentes dos agentes rodando no momento.
 status-pods:
 	@echo "==> Redis (tail 5)..."
 	@kubectl logs -n ai-agents deployment/redis --tail=5 2>/dev/null || true
@@ -402,15 +424,47 @@ status-pods:
 	@echo "==> Slack events consumer (tail 5)..."
 	@kubectl logs -n ai-agents deployment/slack-events-consumer --tail=5 2>/dev/null || true
 
+# AMNÉSIA: Apaga a memória dos agentes do sistema.
 reset-memory:
 	@$(CURDIR)/scripts/reset_agent_memory.sh
 
+# CONEXÃO COM GITHUB: Confirma se o sistema consegue acessar repósitórios sem problemas.
 test-github-access:
 	@$(CURDIR)/scripts/test_github_access.sh $(or $(MODE),all)
 
+# TELA DE CONTROLE: Abre uma página web para visualizar graficamente todos os componentes do sistema.
 dashboard:
 	@minikube addons enable dashboard 2>/dev/null || true
 	@minikube dashboard
+
+# PASTA COMPARTILHADA: Cria um acesso direto no seu PC para a pasta onde os agentes guardam arquivos.
+# Usa --uid=0 --gid=0 porque o container do OpenClaw roda como root; sem isso dá I/O error.
+shared:
+	@echo "==> Montando workspace compartilhado no Minikube (uid=0, gid=0)..."
+	@mkdir -p ~/clawdevs-shared
+	@for pid in $$(pgrep -x minikube 2>/dev/null); do \
+		if grep -q 'mount.*agent-shared' /proc/$$pid/cmdline 2>/dev/null; then \
+			kill $$pid 2>/dev/null || true; \
+		fi; \
+	done
+	@sleep 1
+	@nohup minikube mount ~/clawdevs-shared:/agent-shared --uid=0 --gid=0 > ~/minikube-mount.log 2>&1 &
+	@sleep 3
+	@if pgrep -x minikube > /dev/null 2>&1 && grep -q "Successfully mounted" ~/minikube-mount.log 2>/dev/null; then \
+		echo "==> Mount ativo (uid=0, gid=0). Logs em ~/minikube-mount.log"; \
+	else \
+		echo "ERRO: minikube mount não iniciou. Verifique ~/minikube-mount.log"; exit 1; \
+	fi
+
+# VERIFICA MOUNT: Garante que o minikube mount está rodando; se não, inicia automaticamente.
+# Chamado por 'make up' para evitar I/O errors no workspace.
+shared-ensure:
+	@if pgrep -x minikube > /dev/null 2>&1 && grep -q "Successfully mounted" ~/minikube-mount.log 2>/dev/null; then \
+		echo "  Mount /agent-shared já está ativo."; \
+	else \
+		echo "  Mount /agent-shared não encontrado. Iniciando..."; \
+		$(MAKE) shared; \
+	fi
 
 # ------------------------------------------------------------------------------
 # Aliases (compatibilidade com comandos antigos)

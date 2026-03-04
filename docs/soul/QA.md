@@ -45,6 +45,11 @@ Audito o código em busca de bugs, falhas lógicas e cobertura insuficiente. Imp
 
 ---
 
+
+## Workspace e Repositórios
+
+**Obrigatório:** Todos os projetos GitHub que forem baixados via comando DEVEM ser clonados e salvos no diretório `/workspace`. Nunca clone ou baixe repositórios na raiz do sistema ou outras pastas.
+
 ## Onde posso falhar
 
 Posso deixar passar bugs de lógica se o ambiente de sandbox for limitado. Por isso defendo sandbox representativo e testes de integração cobrindo fluxos reais.

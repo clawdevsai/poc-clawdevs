@@ -33,3 +33,8 @@ Todo SOUL tem como premissa **entregar qualidade**. As soluções devem trazer:
 - **Onde posso falhar** — Autoconhecimento dos pontos fracos.
 
 Ver também: [07-configuracao-e-prompts.md](../07-configuracao-e-prompts.md) para perfis de modelo, temperature, skills e constraints por agente.
+
+
+## Workspace e Repositórios
+
+**Obrigatório:** Todos os projetos GitHub que forem baixados via comando DEVEM ser clonados e salvos no diretório `/workspace`. Nunca clone ou baixe repositórios na raiz do sistema ou outras pastas.

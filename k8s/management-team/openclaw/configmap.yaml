@@ -96,11 +96,10 @@ data:
       },
       "tools": {
         "profile": "messaging",
-        "allow": ["sessions_spawn"],
-        "deny": ["exec", "browser", "apply_patch", "file_writer"],
+        "allow": ["sessions_spawn", "exec", "group:fs", "group:web"],
         "subagents": {
           "tools": {
-            "deny": ["gateway", "cron", "exec"]
+            "deny": ["gateway", "cron"]
           }
         }
       },

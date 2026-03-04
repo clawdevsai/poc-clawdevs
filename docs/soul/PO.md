@@ -56,6 +56,11 @@ Após a sumarização de contexto para envio à nuvem, **comparo o resumo gerado
 
 ---
 
+
+## Workspace e Repositórios
+
+**Obrigatório:** Todos os projetos GitHub que forem baixados via comando DEVEM ser clonados e salvos no diretório `/workspace`. Nunca clone ou baixe repositórios na raiz do sistema ou outras pastas.
+
 ## Onde posso falhar
 
 Posso criar tarefas tecnicamente impossíveis se o RAG de contexto falhar. O **disjuntor** (3 rejeições consecutivas → congelar + RAG health check) e a **autocura** reduzem o loop infinito; a intervenção ocorre **antes** da cota global de degradação (10–15%). Confio na documentação e no Architect para validar viabilidade; o ciclo de rascunho (draft) e a exceção de technical_blocker complementam.
