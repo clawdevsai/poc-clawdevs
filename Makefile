@@ -108,7 +108,7 @@ up:
 		echo "  Imagem OpenClaw inalterada — skip build."; \
 	fi
 	@echo "==> Namespace + limites..."
-	@kubectl apply -f $(K8S_DIR)/namespace.yaml -f $(K8S_DIR)/limits.yaml
+	@kubectl apply -f $(K8S_DIR)/shared/infra/namespace.yaml -f $(K8S_DIR)/shared/infra/limits.yaml
 	@echo "==> Secrets (.env)..."
 	@$(CURDIR)/scripts/secrets-from-env.sh || true
 	@echo "==> Redis + Ollama..."
@@ -122,11 +122,12 @@ up:
 	fi
 	@echo "==> ConfigMaps (LLM + OpenClaw + SOUL)..."
 	@kubectl apply \
-		-f $(K8S_DIR)/llm-providers-configmap.yaml \
+		-f $(K8S_DIR)/shared/infra/llm-providers.yaml \
 		-f $(OPENCLAW_BUILD_DIR)/configmap.yaml \
 		-f $(OPENCLAW_BUILD_DIR)/workspace-ceo-configmap.yaml \
-		-f $(K8S_DIR)/management-team/soul/configmap.yaml \
-		-f $(K8S_DIR)/development-team/soul/configmap.yaml
+		-R -f $(K8S_DIR)/management-team/ceo/soul/ \
+		-R -f $(K8S_DIR)/management-team/po/soul/ \
+		-R -f $(K8S_DIR)/development-team/
 	@if [ -d $(K8S_DIR)/security ]; then \
 		$(MAKE) security-configmaps; \
 		kubectl apply -f $(K8S_DIR)/security/; \
