@@ -70,6 +70,11 @@ spec:
                 cp /developer-memory/$f /workspace/developer/ 2>/dev/null
               done
 
+              # DevOps bootstrap (TOOLS.md com path obrigatório /workspace/repos para repos; nunca /workspace/devops)
+              for f in TOOLS.md; do
+                cp /devops-memory/$f /workspace/devops/ 2>/dev/null
+              done
+
               # Permissões: cada agente pode ler/escrever na sua pasta; pasta compartilhada (repos) acessível a todos
               for id in ceo po devops architect developer qa cybersec ux dba; do
                 chmod -R u+rwX /workspace/$id
@@ -96,6 +101,9 @@ spec:
               readOnly: true
             - name: workspace-developer-configmap
               mountPath: /developer-memory
+              readOnly: true
+            - name: workspace-devops-configmap
+              mountPath: /devops-memory
               readOnly: true
       containers:
         - name: gateway
@@ -327,6 +335,10 @@ spec:
         - name: workspace-developer-configmap
           configMap:
             name: workspace-developer-configmap
+            optional: true
+        - name: workspace-devops-configmap
+          configMap:
+            name: workspace-devops-configmap
             optional: true
         - name: workspace
           persistentVolumeClaim:

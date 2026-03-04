@@ -1,0 +1,38 @@
+# Workspace DevOps: templates e regras para /workspace/devops no gateway.
+# SOUL do DevOps vem de soul-devops (development-team). Aqui: TOOLS.md com path obrigatório para repos.
+# InitContainer soul-merge copia estes arquivos para /workspace/devops.
+# Regra crítica: criar/clonar repositórios SEMPRE em /workspace/repos/<nome-repo> (visível no host em ~/clawdevs-shared/repos/).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workspace-devops-configmap
+  namespace: ai-agents
+  labels:
+    app: openclaw
+data:
+  TOOLS.md: |
+    # TOOLS.md — DevOps: onde criar repositórios e como enviar ao GitHub
+
+    ## Caminho obrigatório para repositórios (NUNCA usar /workspace/devops)
+
+    - **Sempre criar e clonar repositórios em `/workspace/repos/<nome-repo>`.** Esse path é compartilhado e aparece no host do Diretor em `~/clawdevs-shared/repos/`.
+    - **Nunca** criar o projeto em `/workspace/devops` (seu CWD): aí o Diretor não vê em `~/clawdevs-shared/repos` e o repositório fica invisível fora do K8s.
+    - Para evitar erro 526 no mount 9P: clonar em `/tmp/<nome>` e depois mover: `git clone <url> /tmp/<nome> && mv /tmp/<nome> /workspace/repos/<nome>`.
+
+    ## Fluxo: criar repositório no GitHub e deixar visível no host
+
+    1. **Criar no GitHub:** `gh repo create <owner>/<nome-repo> --private --description="..." --clone=false` (ou com --source e push depois).
+    2. **Clonar no path correto:** `git clone https://x-access-token:$GITHUB_TOKEN@github.com/<owner>/<nome-repo>.git /tmp/<nome-repo> && mv /tmp/<nome-repo> /workspace/repos/<nome-repo>`.
+    3. **Trabalhar sempre em `/workspace/repos/<nome-repo>`:** criar README, .gitignore, etc. dentro desse diretório.
+    4. **Commit e push:** `cd /workspace/repos/<nome-repo> && git add -A && git status && git commit -m "Initial commit with structure" && git push -u origin main` (ou master).
+    5. **Sempre informar o usuário** do resultado (sucesso ou mensagem de erro do push). Se o push falhar, reportar o erro exato para o usuário poder corrigir.
+
+    ## Resumo
+
+    | Ação              | Path correto                  | Path proibido        |
+    |-------------------|--------------------------------|----------------------|
+    | Clonar novo repo  | `/workspace/repos/<nome-repo>` | `/workspace/devops/*`|
+    | Criar arquivos    | dentro de `/workspace/repos/<nome-repo>/` | em `/workspace/devops/` |
+    | git push          | executar de `/workspace/repos/<nome-repo>` | nunca de `/workspace/devops` |
+
+    O Diretor vê os repositórios em `~/clawdevs-shared/repos/` no host. O mount compartilhado (`make shared`) deve estar ativo para isso funcionar.

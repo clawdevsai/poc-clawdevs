@@ -55,11 +55,11 @@ Após o init e o uso pelos agentes, você verá em `~/clawdevs-shared` (ou o cam
 | Pasta | Conteúdo |
 |-------|----------|
 | **soul/** | SOUL de cada agente (ceo.md, po.md, developer.md, …) |
-| **ceo/**, **po/**, **devops/**, **architect/**, **developer/**, **qa/**, **cybersec/**, **ux/**, **dba/** | Cada um com SOUL.md, memory/, e arquivos que o OpenClaw criar (AGENTS.md, notas) |
-| **workspace/** | Repositórios clonados pelos agentes (ex.: clawdevs/docs, outros repos) |
+| **ceo/**, **po/**, **devops/**, **architect/**, **developer/**, **qa/**, **cybersec/**, **ux/**, **dba/** | Cada um com SOUL.md, memory/, e arquivos que o OpenClaw criar (AGENTS.md, TOOLS.md, notas) |
+| **repos/** | Repositórios criados/clonados pelos agentes (ex.: user-api, outros repos). **Obrigatório:** agentes devem usar `/workspace/repos/<nome-repo>` no pod para o Diretor ver em `<pasta-host>/repos/`. |
 | **.ssh/** | Chave SSH para git (clone/push). **Não vem gerada** — coloque em `<pasta-host>/.ssh/` os arquivos `id_ed25519_github` e `id_ed25519_github.pub` (gere no host com `ssh-keygen` e registre o `.pub` no GitHub). Os agentes usam `GIT_SSH_COMMAND` apontando para `/workspace/.ssh/id_ed25519_github`. |
 
-Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) devem ir em **`/workspace`** dentro do pod; na sua máquina isso aparece em `<pasta-host>/repos/`. Para git via SSH, use URL `git@github.com:owner/repo.git`; a chave deve estar em `/workspace/.ssh/` (host: `<pasta-host>/.ssh/`).
+Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) devem ir em **`/workspace/repos/<nome-repo>`** dentro do pod; na sua máquina isso aparece em `<pasta-host>/repos/`. Para git via SSH, use URL `git@github.com:owner/repo.git`; a chave deve estar em `/workspace/.ssh/` (host: `<pasta-host>/.ssh/`).
 
 ### Observações
 
@@ -67,3 +67,14 @@ Repositórios que os agentes clonarem (ex.: via git ou ferramenta de download) d
 - **Performance:** O mount 9P do Minikube pode ter lentidão em pastas com muitos arquivos (>600). **Clone git:** clonar em `/tmp` e depois `mv` para `/workspace/repos/<repo>` evita erro 526 ("cannot pread pack file") no 9p; manter `repos/<repo>/` com estrutura normal costuma ser aceitável após o clone.
 - **UID/GID:** O mount DEVE usar `--uid=0 --gid=0` (o container roda como root). O `make shared` já faz isso. Sem as flags corretas, o pod terá `EIO: i/o error` e o agente não responderá.
 - **Alternativa sem host:** Se não for usar pasta no host, use o PVC dinâmico original: em `deployment.yaml` troque `claimName` para `openclaw-workspace-pvc` e aplique `k8s/management-team/openclaw/pvc.yaml` em vez do PV/PVC compartilhado.
+
+### Troubleshooting: não vejo repositórios em ~/clawdevs-shared/repos
+
+1. **Mount ativo?** Rode `make shared` (ou `minikube mount ~/clawdevs-shared:/agent-shared --uid=0 --gid=0`) e confira se o processo está rodando. Sem o mount, o pod usa o PV do Minikube e o host não vê o conteúdo.
+2. **Agente usando o path certo?** O DevOps (e outros) devem criar/clonar **sempre** em `/workspace/repos/<nome-repo>`, nunca em `/workspace/devops` ou `/workspace/ceo`. O ConfigMap `workspace-devops-configmap` (TOOLS.md) reforça isso.
+3. **Reconectar o pod ao volume:** Se o mount foi iniciado depois do pod, faça `make shared-restart` para remontar e reiniciar o deployment.
+4. **Validar no pod:** `kubectl exec -n ai-agents deploy/openclaw -c gateway -- ls -la /workspace/repos/` — deve listar os repos criados pelos agentes.
+
+### Persistência de sessão (contexto da conversa)
+
+O estado das sessões do OpenClaw é gravado em `/workspace/.openclaw-session-store/{agentId}/sessions/sessions.json` dentro do volume compartilhado. Com o mount ativo (`make shared`), esse path fica em `~/clawdevs-shared/.openclaw-session-store/` no host. Assim, ao reiniciar o deployment ou o cluster, o contexto da conversa (ex.: Slack com o DevOps) é mantido, desde que o mesmo volume/mount esteja em uso.

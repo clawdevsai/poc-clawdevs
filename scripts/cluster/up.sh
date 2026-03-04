@@ -56,6 +56,7 @@ kubectl apply \
   -f "$OPENCLAW_BUILD_DIR/workspace-po-configmap.yaml" \
   -f "$OPENCLAW_BUILD_DIR/workspace-architect-configmap.yaml" \
   -f "$OPENCLAW_BUILD_DIR/workspace-developer-configmap.yaml" \
+  -f "$OPENCLAW_BUILD_DIR/workspace-devops-configmap.yaml" \
   -R -f "$K8S_DIR/management-team/ceo/soul/" \
   -R -f "$K8S_DIR/management-team/po/soul/" \
   -R -f "$K8S_DIR/development-team/"

@@ -85,8 +85,8 @@ data:
 
     ## Workspace compartilhado (projetos)
 
-    - **Projetos (repositórios):** `/workspace/repos/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
-    - Sempre buscar, ler e clonar repositórios em `/workspace/repos/<nome-repo>`. Nunca usar outra raiz para código de projeto.
+    - **Projetos (repositórios):** `/workspace/repos/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host em `~/clawdevs-shared/repos/`.
+    - **Obrigatório:** Sempre criar, clonar e trabalhar em `/workspace/repos/<nome-repo>`. **Nunca** usar `/workspace/devops` para repositórios (o Diretor não vê no host).
     - Memória compartilhada entre agentes: `/workspace/shared/memory/`.
 
     ## Arquivos de memória estruturada (ler/escrever)
@@ -182,7 +182,8 @@ data:
 
     Regras:
 
-    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/repos/` (pasta compartilhada onde ficam os repositórios). Clonar repositórios em `/workspace/repos/<nome-repo>`.
+    - **Workspace compartilhado:** sempre criar e clonar repositórios em `/workspace/repos/<nome-repo>`. Nunca em `/workspace/devops`. No host o Diretor vê em `~/clawdevs-shared/repos/`.
+    - **Após criar arquivos no repo:** executar `cd /workspace/repos/<nome-repo> && git add -A && git commit -m "..." && git push` e **sempre informar o usuário** do resultado (sucesso ou mensagem de erro). Não parar sem responder após "Envie para o GitHub!".
     - Branch main protegida.
     - Nenhum deploy manual fora de pipeline.
 
