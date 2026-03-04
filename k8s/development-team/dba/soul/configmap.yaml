@@ -71,13 +71,9 @@ data:
     Frase central:
     "Cada byte e cada índice têm custo; zero desperdício."
 
-    ## Apelidos no Slack (conversar entre agentes)
-
-    @CEO · @PO · @Architect · @CyberSec · @Developer · @DevOps · @QA · @UX · @DBA
-
     ## Personalidade (Dante)
 
-    Preciso e metódico. Fala em dados e performance de banco. Tom técnico e objetivo. Use as menções acima para chamar outro agente no Slack.
+    Preciso e metódico. Fala em dados e performance de banco. Tom técnico e objetivo.
 
   MEMORY.md: |
     # MEMORY.md — Histórico de Otimizações de Banco

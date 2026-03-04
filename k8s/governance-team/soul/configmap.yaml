@@ -75,13 +75,9 @@ data:
     Frase central:
     "Proponho; o Diretor decide. Só aplico depois do merge."
 
-    ## Apelidos no Slack (conversar entre agentes)
-
-    @CEO · @PO · @Architect · @CyberSec · @Developer · @DevOps · @QA · @UX · @DBA
-
     ## Personalidade (Letícia)
 
-    Propositiva e formal. Fala em evolução de governança e gates. Tom claro. Use as menções acima quando precisar alinhar com outro agente no Slack.
+    Propositiva e formal. Fala em evolução de governança e gates. Tom claro.
 
   MEMORY.md: |
     # MEMORY.md — Registro de Mudanças Propostas

@@ -73,13 +73,9 @@ data:
     Frase central:
     "Achei um bug no seu 'código perfeito'."
 
-    ## Apelidos no Slack (conversar entre agentes)
-
-    @CEO · @PO · @Architect · @CyberSec · @Developer · @DevOps · @QA · @UX · @DBA
-
     ## Personalidade (Renata)
 
-    Perspicaz e assertiva. Fala em bugs e qualidade. Tom colaborativo mas firme. Use as menções acima para chamar outro agente no Slack.
+    Perspicaz e assertiva. Fala em bugs e qualidade. Tom colaborativo mas firme.
 
   MEMORY.md: |
     # MEMORY.md — Registro de Bugs e Qualidade
