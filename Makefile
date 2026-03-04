@@ -208,76 +208,76 @@ configmaps-pipeline: configmap-po configmap-architect-draft configmap-developer 
 configmap-po:
 	@echo "==> ConfigMap po-scripts..."
 	@kubectl create configmap po-scripts -n ai-agents \
-	  --from-file=po_worker.py=app/po_worker.py \
-	  --from-file=gpu_lock.py=app/gpu_lock.py \
-	  --from-file=issue_state.py=app/issue_state.py \
-	  --from-file=openclaw_gateway_call.py=app/openclaw_gateway_call.py \
+	  --from-file=po_worker.py=app/agents/po_worker.py \
+	  --from-file=gpu_lock.py=app/features/gpu_lock.py \
+	  --from-file=issue_state.py=app/shared/issue_state.py \
+	  --from-file=openclaw_gateway_call.py=app/shared/openclaw_gateway_call.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-architect-draft:
 	@echo "==> ConfigMap architect-draft-scripts..."
 	@kubectl create configmap architect-draft-scripts -n ai-agents \
-	  --from-file=architect_draft_consumer.py=app/architect_draft_consumer.py \
-	  --from-file=gpu_lock.py=app/gpu_lock.py \
-	  --from-file=issue_state.py=app/issue_state.py \
-	  --from-file=openclaw_gateway_call.py=app/openclaw_gateway_call.py \
+	  --from-file=architect_draft_consumer.py=app/agents/architect_draft_consumer.py \
+	  --from-file=gpu_lock.py=app/features/gpu_lock.py \
+	  --from-file=issue_state.py=app/shared/issue_state.py \
+	  --from-file=openclaw_gateway_call.py=app/shared/openclaw_gateway_call.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-developer:
 	@echo "==> ConfigMap developer-scripts..."
 	@kubectl create configmap developer-scripts -n ai-agents \
-	  --from-file=developer_worker.py=app/developer_worker.py \
-	  --from-file=gpu_lock.py=app/gpu_lock.py \
-	  --from-file=openclaw_gateway_call.py=app/openclaw_gateway_call.py \
+	  --from-file=developer_worker.py=app/agents/developer_worker.py \
+	  --from-file=gpu_lock.py=app/features/gpu_lock.py \
+	  --from-file=openclaw_gateway_call.py=app/shared/openclaw_gateway_call.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-revisao-slot:
 	@echo "==> ConfigMap revisao-slot-scripts..."
 	@kubectl create configmap revisao-slot-scripts -n ai-agents \
-	  --from-file=slot_revisao_pos_dev.py=app/slot_revisao_pos_dev.py \
-	  --from-file=gpu_lock.py=app/gpu_lock.py \
-	  --from-file=openclaw_gateway_call.py=app/openclaw_gateway_call.py \
-	  --from-file=orchestration.py=app/orchestration.py \
-	  --from-file=architect_fallback.py=app/architect_fallback.py \
-	  --from-file=microadr_generate.py=app/microadr_generate.py \
-	  --from-file=acefalo_redis.py=app/acefalo_redis.py \
+	  --from-file=slot_revisao_pos_dev.py=app/agents/slot_revisao_pos_dev.py \
+	  --from-file=gpu_lock.py=app/features/gpu_lock.py \
+	  --from-file=openclaw_gateway_call.py=app/shared/openclaw_gateway_call.py \
+	  --from-file=orchestration.py=app/core/orchestration.py \
+	  --from-file=architect_fallback.py=app/core/architect_fallback.py \
+	  --from-file=microadr_generate.py=app/features/microadr_generate.py \
+	  --from-file=acefalo_redis.py=app/contingency/acefalo_redis.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-devops-worker:
 	@echo "==> ConfigMap devops-worker-scripts..."
 	@kubectl create configmap devops-worker-scripts -n ai-agents \
-	  --from-file=devops_worker.py=app/devops_worker.py \
-	  --from-file=gpu_lock.py=app/gpu_lock.py \
-	  --from-file=issue_state.py=app/issue_state.py \
-	  --from-file=openclaw_gateway_call.py=app/openclaw_gateway_call.py \
+	  --from-file=devops_worker.py=app/agents/devops_worker.py \
+	  --from-file=gpu_lock.py=app/features/gpu_lock.py \
+	  --from-file=issue_state.py=app/shared/issue_state.py \
+	  --from-file=openclaw_gateway_call.py=app/shared/openclaw_gateway_call.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-audit-runner:
 	@echo "==> ConfigMap audit-runner-scripts..."
 	@kubectl create configmap audit-runner-scripts -n ai-agents \
-	  --from-file=audit_runner.py=app/audit_runner.py \
-	  --from-file=gpu_lock.py=app/gpu_lock.py \
-	  --from-file=issue_state.py=app/issue_state.py \
-	  --from-file=openclaw_gateway_call.py=app/openclaw_gateway_call.py \
+	  --from-file=audit_runner.py=app/agents/audit_runner.py \
+	  --from-file=gpu_lock.py=app/features/gpu_lock.py \
+	  --from-file=issue_state.py=app/shared/issue_state.py \
+	  --from-file=openclaw_gateway_call.py=app/shared/openclaw_gateway_call.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-gateway-adapter:
 	@echo "==> ConfigMap gateway-redis-adapter-scripts..."
 	@kubectl create configmap gateway-redis-adapter-scripts -n ai-agents \
-	  --from-file=gateway_redis_adapter.py=app/gateway_redis_adapter.py \
-	  --from-file=gateway_token_bucket.py=app/gateway_token_bucket.py \
-	  --from-file=check_domain_reputation.py=app/check_domain_reputation.py \
-	  --from-file=truncate_payload_border.py=app/truncate_payload_border.py \
-	  --from-file=preflight_summarize.py=app/preflight_summarize.py \
+	  --from-file=gateway_redis_adapter.py=app/shared/gateway_redis_adapter.py \
+	  --from-file=gateway_token_bucket.py=app/shared/gateway_token_bucket.py \
+	  --from-file=check_domain_reputation.py=app/safety/check_domain_reputation.py \
+	  --from-file=truncate_payload_border.py=app/features/truncate_payload_border.py \
+	  --from-file=preflight_summarize.py=app/features/preflight_summarize.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-kanban-api:
 	@echo "==> ConfigMap kanban-api-scripts..."
 	@kubectl create configmap kanban-api-scripts -n ai-agents \
-	  --from-file=kanban_api.py=app/kanban_api.py \
-	  --from-file=issue_state.py=app/issue_state.py \
-	  --from-file=kanban_db.py=app/kanban_db.py \
-	  --from-file=kanban_event_publisher.py=app/kanban_event_publisher.py \
+	  --from-file=kanban_api.py=app/core/kanban_api.py \
+	  --from-file=issue_state.py=app/shared/issue_state.py \
+	  --from-file=kanban_db.py=app/core/kanban_db.py \
+	  --from-file=kanban_event_publisher.py=app/core/kanban_event_publisher.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 kanban-image:
@@ -298,17 +298,17 @@ kanban-url:
 configmap-devops-compact:
 	@echo "==> ConfigMap devops-compact-script..."
 	@kubectl create configmap devops-compact-script -n ai-agents \
-	  --from-file=compact_preserve_protected.py=app/compact_preserve_protected.py \
+	  --from-file=compact_preserve_protected.py=app/features/compact_preserve_protected.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-acefalo:
 	@echo "==> ConfigMap acefalo-scripts..."
 	@kubectl create configmap acefalo-scripts -n ai-agents \
-	  --from-file=acefalo_redis.py=app/acefalo_redis.py \
-	  --from-file=acefalo_contingency.py=app/acefalo_contingency.py \
-	  --from-file=acefalo_retomada.py=app/acefalo_retomada.py \
-	  --from-file=acefalo_heartbeat_writer.py=app/acefalo_heartbeat_writer.py \
-	  --from-file=acefalo_monitor.py=app/acefalo_monitor.py \
+	  --from-file=acefalo_redis.py=app/contingency/acefalo_redis.py \
+	  --from-file=acefalo_contingency.py=app/contingency/acefalo_contingency.py \
+	  --from-file=acefalo_retomada.py=app/contingency/acefalo_retomada.py \
+	  --from-file=acefalo_heartbeat_writer.py=app/contingency/acefalo_heartbeat_writer.py \
+	  --from-file=acefalo_monitor.py=app/contingency/acefalo_monitor.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 # Deprecated: pods architect/qa/cybersec/dba (014). Use revisao-pos-dev.
@@ -328,27 +328,27 @@ configmaps-phase2: configmap-rotation configmap-url-sandbox configmap-url-sandbo
 configmap-rotation:
 	@echo "==> ConfigMap rotation-scripts..."
 	@kubectl create configmap rotation-scripts -n ai-agents \
-	  --from-file=rotate_gateway_token.py=app/rotate_gateway_token.py \
+	  --from-file=rotate_gateway_token.py=app/safety/rotate_gateway_token.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-url-sandbox:
 	@echo "==> ConfigMap url-sandbox-scripts..."
 	@kubectl create configmap url-sandbox-scripts -n ai-agents \
-	  --from-file=url_sandbox_fetch.py=app/url_sandbox_fetch.py \
+	  --from-file=url_sandbox_fetch.py=app/safety/url_sandbox_fetch.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-url-sandbox-trigger:
 	@echo "==> ConfigMap url-sandbox-trigger-scripts..."
 	@kubectl create configmap url-sandbox-trigger-scripts -n ai-agents \
-	  --from-file=url_sandbox_trigger.py=app/url_sandbox_trigger.py \
+	  --from-file=url_sandbox_trigger.py=app/safety/url_sandbox_trigger.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 configmap-quarantine:
 	@echo "==> ConfigMap quarantine-pipeline-scripts..."
 	@kubectl create configmap quarantine-pipeline-scripts -n ai-agents \
-	  --from-file=quarantine_pipeline.py=app/quarantine_pipeline.py \
-	  --from-file=quarantine_entropy.py=app/quarantine_entropy.py \
-	  --from-file=trusted_package_verify.py=app/trusted_package_verify.py \
+	  --from-file=quarantine_pipeline.py=app/safety/quarantine_pipeline.py \
+	  --from-file=quarantine_entropy.py=app/safety/quarantine_entropy.py \
+	  --from-file=trusted_package_verify.py=app/safety/trusted_package_verify.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 # ------------------------------------------------------------------------------
@@ -370,13 +370,13 @@ configmaps-orchestrator: orchestrator-configmap
 orchestrator-configmap:
 	@echo "==> ConfigMap orchestrator-scripts..."
 	@kubectl create configmap orchestrator-scripts -n ai-agents \
-	  --from-file=orchestration.py=app/orchestration.py \
-	  --from-file=slack_notify.py=app/slack_notify.py \
-	  --from-file=consumer_orchestrator_events_slack.py=app/consumer_orchestrator_events_slack.py \
-	  --from-file=arbitrage_cloud.py=app/arbitrage_cloud.py \
-	  --from-file=digest_daily.py=app/digest_daily.py \
-	  --from-file=cosmetic_omission.py=app/cosmetic_omission.py \
-	  --from-file=set_consensus_pilot_result.py=app/set_consensus_pilot_result.py \
+	  --from-file=orchestration.py=app/core/orchestration.py \
+	  --from-file=slack_notify.py=app/shared/slack_notify.py \
+	  --from-file=consumer_orchestrator_events_slack.py=app/core/consumer_orchestrator_events_slack.py \
+	  --from-file=arbitrage_cloud.py=app/core/arbitrage_cloud.py \
+	  --from-file=digest_daily.py=app/features/digest_daily.py \
+	  --from-file=cosmetic_omission.py=app/features/cosmetic_omission.py \
+	  --from-file=set_consensus_pilot_result.py=app/features/set_consensus_pilot_result.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 
 # APLICA ORQUESTRADOR: Coloca em prática o coordenador que notifica e organiza as rotinas.
