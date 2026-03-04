@@ -142,7 +142,7 @@ data:
     - **Plataforma:** ClawDevs AI — time de agentes autônomos
     - **Stack:** OpenClaw v2026.3.2 + Ollama (GPU local) + Redis + K8s (Minikube)
     - **Idioma:** Português do Brasil (pt-BR)
-    - **Modelo padrão:** ollama/qwen3.5:cloud (Qwen 3.5 Cloud)
+    - **Modelo padrão:** ollama/ministral-3:14b-cloud (Ministral 3 14B Cloud)
     - **Sub-agents:** CEO delega via sessions_spawn; 8 agentes especializados
 
     ---
@@ -216,15 +216,6 @@ data:
     - **Garantir alinhamento estratégico** entre todos os sub-agents.
     - **Não interagir com Developer diretamente** — delegar via PO.
     - **Confiar no resultado anunciado** — não repetir a tarefa você mesmo após delegar.
-
-    ---
-
-    ## Discussão no Slack (canal #all-clawdevsai)
-
-    Quando quiser **conversar com o PO ou outro agente no mesmo canal/thread** (ex.: discutir um problema antes de executar):
-    - **Inclua a menção ao agente na sua mensagem** (ex.: *@PO preciso da sua visão sobre backlog para este tema*).
-    - O agente mencionado será acordado pelo Slack e responderá **nessa mesma thread** com a identidade dele (um agente por vez).
-    - Alternativa para tarefa em background: use `sessions_spawn`; o resultado será anunciado de volta na sua conversa (mesmo thread quando o canal suportar).
 
     ---
 

@@ -18,9 +18,16 @@
 
 ---
 
+## Por que o agente pode não “pegar” o contexto
+
+- **Sessão por conta:** Cada app (CEO, PO) tem sua própria sessão (`per-account-channel-peer`). Quando o PO é acordado por uma menção, a sessão do PO **não** contém as mensagens que o CEO escreveu na thread — a menos que o **adapter Slack** do OpenClaw envie o histórico da thread (replies) no evento.
+- **O que fazer:** (1) Garantir que cada app tenha escopo `channels:history` (e `groups:history` se usar grupos) e que o app esteja **no canal** #all-clawdevsai. (2) Verificar na documentação do OpenClaw ([Slack](https://docs.openclaw.ai/channels/slack)) se existe opção para incluir respostas da thread no contexto (ex.: thread context / include replies). (3) Instruir os agentes a pedir esclarecimento quando a mensagem recebida parecer incompleta — ver regra “Mensagem incompleta” em [interacao-agentes-mensageria.md](../03-agents/agents-devs/interacao-agentes-mensageria.md).
+
+---
+
 ## O que falta (checklist)
 
-### 1. App Slack do PO conectado ao gateway
+### 1. App Slack do PO (e dos outros agentes) conectado ao gateway
 
 - **Criar app do PO** em [api.slack.com/apps](https://api.slack.com/apps) (se ainda não existir).
 - **Preencher no `.env`** (a partir do `.env.example`):
@@ -28,20 +35,29 @@
   - `PO_SLACK_BOT_TOKEN` (OAuth — scopes de bot: chat:write, channels:read, etc.)
 - **Injetar no cluster:** `./scripts/k8s-openclaw-secret-from-env.sh` e `kubectl rollout restart deployment/openclaw -n ai-agents`.
 
-Sem isso, só o app do CEO recebe eventos; o PO nunca é “acordado” quando alguém menciona @PO.
+Sem isso, só o app do CEO recebe eventos; o PO nunca é acordado quando alguém menciona @PO. O mesmo vale para os outros agentes: cada um precisa do par de tokens (APP + BOT) no `.env` e no Secret do cluster. o PO nunca é “acordado” quando alguém menciona @PO.
 
-### 2. App do PO no canal #all-clawdevsai
+### 2. Escopos do Bot para contexto de thread
 
-- No Slack: canal **#all-clawdevsai** → Integrações → **Adicionar apps** → escolher o **app do PO**.
+Em cada app (api.slack.com → OAuth & Permissions → Scopes → Bot Token Scopes), incluir:
+
+- `channels:history` — para ler mensagens do canal (e, se o adapter usar, as replies da thread).
+- `groups:history` — se o canal for um grupo privado.
+
+Assim o gateway pode (conforme o adapter) enviar o histórico da thread quando um agente for acordado.
+
+### 3. App do PO (e dos outros) no canal #all-clawdevsai
+
+- No Slack: canal **#all-clawdevsai** → Integrações → **Adicionar apps** → escolher o **app do PO** (e dos outros agentes que forem falar no canal).
 - Assim, quando o CEO (ou o Diretor) escrever **@PO** na thread, o evento vai para o app do PO e o gateway roteia para o agente `po`.
 
-### 3. Comportamento do CEO (já incluído no AGENTS.md)
+### 4. Comportamento do CEO (já incluído no AGENTS.md)
 
 - O CEO deve **incluir a menção** quando quiser discutir com o PO no canal, por exemplo:
   - *“Temos este problema: [X]. @PO qual sua visão sobre o backlog para este tema?”*
 - A mensagem é publicada pelo app do CEO; o app do PO recebe a menção e o agente PO responde **na mesma thread** com a identidade do PO (Marina, conforme SOUL).
 
-### 4. SOUL do PO (e dos outros agentes)
+### 5. SOUL do PO (e dos outros agentes)
 
 - Garantir que a SOUL do PO (e de quem mais participar de conversas no canal) diga:
   - Responder **no mesmo canal/thread** onde a mensagem chegou (conversa compartilhada).

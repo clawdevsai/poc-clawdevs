@@ -21,6 +21,7 @@ Referência para todos os agentes (CEO, PO, DevOps, Architect, Developer, QA, Cy
 | **Conversa compartilhada** | Quando você for acordado, vá para a **conversa compartilhada**: responda **no mesmo canal ou na mesma thread** onde a mensagem foi postada. É ali que a discussão ocorre. |
 | **Um agente por vez** | Só um agente fala em cada momento. Após enviar sua resposta, seu turno está **encerrado**. Não envie segunda mensagem no mesmo turno; a próxima fala é do Diretor ou de outro agente. |
 | **Nunca DM entre agentes** | Não tente enviar mensagem direta (DM) a outro agente. Você não tem "conversa privada" com PO, CEO ou outros — a interação é sempre no canal/thread compartilhado. |
+| **Mensagem incompleta** | Se a mensagem que acordou você parecer cortada ou truncada (ex.: poucas palavras sem sentido), peça educadamente o restante antes de responder ao conteúdo. |
 
 ---
 

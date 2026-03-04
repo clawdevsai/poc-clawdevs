@@ -38,7 +38,7 @@ spec:
             # Ex.: "glm-5:cloud" ou "glm-5:cloud ministral-3:3b" (separados por espaço). Deixe vazio para usar só a lista dos agentes.
             # Apenas modelos locais (sem cloud auth). Para modelos cloud, configure OLLAMA_API_KEY no secret.
             - name: OLLAMA_PRELOAD_MODELS
-              value: "qwen3.5:cloud"
+              value: "ministral-3:14b-cloud"
             # GPU: se o cluster tiver nvidia-device-plugin e GPU disponível, descomente CUDA_VISIBLE_DEVICES e as linhas nvidia.com/gpu em resources abaixo.
             # - name: CUDA_VISIBLE_DEVICES
             #   value: "0"
@@ -59,7 +59,7 @@ spec:
               elif [ -f /config/openclaw.json ]; then
                 MODELS=$(grep -oE 'ollama/[^"]+' /config/openclaw.json | sed 's|ollama/||' | sort -u | tr '\n' ' ')
               else
-                MODELS="qwen3.5:cloud"
+                MODELS="ministral-3:14b-cloud"
               fi
               if [ -n "$MODELS" ]; then
                 for m in $MODELS; do echo "Preload: ollama pull $m"; ollama pull "$m" || true; done
