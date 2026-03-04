@@ -50,6 +50,8 @@ data:
           "allowFrom": ["*"],
           "dm": { "enabled": true, "groupEnabled": true },
           "groupPolicy": "open",
+          "streaming": "partial",
+          "ackReaction": "eyes",
           "channels": {
             "__SLACK_ALL_CLAWDEVSAI_CHANNEL_ID__": {}
           },
@@ -65,16 +67,17 @@ data:
             "api": "ollama",
             "apiKey": "__OLLAMA_API_KEY__",
             "models": [
+              { "id": "ministral-3:14b-cloud", "name": "Ministral 3 14B Cloud", "contextWindow": 128000, "maxTokens": 2048 },
+              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi-3 Mini", "contextWindow": 4000, "maxTokens": 1024 },
               { "id": "qwen3.5:cloud", "name": "Qwen 3.5 Cloud", "contextWindow": 128000, "maxTokens": 8192 },
-              { "id": "glm-5:cloud", "name": "GLM-5 Cloud", "contextWindow": 128000, "maxTokens": 4096 },
-              { "id": "stewyphoenix19/phi3-mini_v1:latest", "name": "Phi-3 Mini", "contextWindow": 4000, "maxTokens": 1024 }
+              { "id": "glm-5:cloud", "name": "GLM-5 Cloud", "contextWindow": 128000, "maxTokens": 4096 }
             ]
           }
         }
       },
       "agents": {
         "defaults": {
-          "model": { "primary": "ollama/qwen3.5:cloud" },
+          "model": { "primary": "ollama/ministral-3:14b-cloud" },
           "workspace": "/workspace/ceo",
           "memorySearch": {
             "sources": ["memory", "sessions"],
@@ -86,19 +89,19 @@ data:
             "maxSpawnDepth": 2,
             "maxConcurrent": 4,
             "runTimeoutSeconds": 600,
-            "model": "ollama/qwen3.5:cloud"
+            "model": "ollama/ministral-3:14b-cloud"
           }
         },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/ceo" },
-          { "id": "po", "name": "Product Owner", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/po" },
-          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/devops" },
-          { "id": "architect", "name": "Architect", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/architect" },
-          { "id": "developer", "name": "Developer", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/developer" },
-          { "id": "qa", "name": "QA", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/qa" },
-          { "id": "cybersec", "name": "CyberSec", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/cybersec" },
-          { "id": "ux", "name": "UX", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/ux" },
-          { "id": "dba", "name": "DBA", "model": "ollama/qwen3.5:cloud", "workspace": "/workspace/dba" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ceo" },
+          { "id": "po", "name": "Product Owner", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/po" },
+          { "id": "devops", "name": "DevOps/SRE", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/devops" },
+          { "id": "architect", "name": "Architect", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/architect" },
+          { "id": "developer", "name": "Developer", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/developer" },
+          { "id": "qa", "name": "QA", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/qa" },
+          { "id": "cybersec", "name": "CyberSec", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/cybersec" },
+          { "id": "ux", "name": "UX", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ux" },
+          { "id": "dba", "name": "DBA", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/dba" }
         ]
       },
       "tools": {

@@ -17,7 +17,7 @@ export K8S_DIR MINIKUBE_CPUS MINIKUBE_MEMORY
 .PHONY: configmap-po configmap-architect-draft configmap-kanban-api
 .PHONY: security-apply security-configmaps orchestrator-apply orchestrator-configmap
 .PHONY: kanban-image kanban-apply kanban-url
-.PHONY: verify reset-memory init-memory test-github-access validate-finops-po dashboard status status-pods
+.PHONY: verify reset-memory init-memory test-github-access validate-finops-po dashboard status status-pods ps
 .PHONY: url-sandbox-run url-sandbox-trigger-apply
 
 # ------------------------------------------------------------------------------
@@ -52,6 +52,7 @@ help:
 	@echo "    make verify             -> Verifica se o seu hardware (Placa de vídeo/CPU) aguenta o sistema."
 	@echo "    make status             -> Mostra um resumo do que está rodando e se há travamentos."
 	@echo "    make status-pods        -> Mostra o 'diário de bordo' (logs) das IAs rodando agora."
+	@echo "    make ps                 -> Valida consumo de hardware no K8s (ResourceQuota 65%, uso de nós e pods)."
 	@echo "    make reset-memory       -> Apaga a memória das IAs (útil para recomeçar projetos do zero)."
 	@echo "    make init-memory        -> Inicializa estrutura de memória (decisions/projects/lessons/pending + .learnings/)."
 	@echo "    make test-github-access -> Testa se as IAs conseguem ler arquivos no Github."
@@ -217,6 +218,10 @@ status:
 # Mostra as últimas linhas de log (tail) dos pods principais: Redis, OpenClaw, Ollama, Revisão pós-Dev, Slack consumer.
 status-pods:
 	@$(SCRIPTS)/utils/status-pods.sh
+
+# Valida consumo de hardware no K8s: ResourceQuota (limite 65%), uso real de nós e pods (requer metrics-server para top).
+ps:
+	@$(SCRIPTS)/utils/ps.sh
 
 # Apaga a memória dos agentes: remove chaves project:v1:* no Redis e reinicia o deployment openclaw para reaplicar workspace.
 reset-memory:

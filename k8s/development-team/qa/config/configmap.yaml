@@ -10,6 +10,6 @@ data:
   agent-qa.yaml: |
     - id: qa
       name: "QA"
-      model: "ollama/qwen3.5:cloud"
-      chatModel: "ollama/qwen3.5:cloud"
+      model: "ollama/ministral-3:14b-cloud"
+      chatModel: "ollama/ministral-3:14b-cloud"
       # SOUL references will be handled by the gateway or pod mounting

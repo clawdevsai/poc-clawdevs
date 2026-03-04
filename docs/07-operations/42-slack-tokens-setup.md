@@ -119,7 +119,7 @@ Para criar **um app por agente** (Developer, CEO, PO, QA, etc.) usando **From a 
 |-------|-----|
 | `display_information.name` | Nome do app no Slack (ex.: Developer, CEO, PO, QA). |
 | `bot_user.display_name` | Nome do bot nas conversas; use o mesmo do app. |
-| `oauth_config.scopes.bot` | Scopes mínimos: `chat:write`, `im:history`, `app_mentions:read`, `channels:history`, `groups:history`. |
+| `oauth_config.scopes.bot` | Scopes mínimos: `chat:write`, `im:history`, `app_mentions:read`, `channels:history`, `groups:history`. Para **streaming** (resposta aparecendo aos poucos e menos sensação de travado): adicione `assistant:write` e ative **Agents and AI Apps** nas configurações do app no Slack. |
 | `event_subscriptions.bot_events` | `app_mention` (menções em canal), `message.im` (DM). |
 | `socket_mode_enabled: true` | Obrigatório para o OpenClaw (Socket Mode). |
 
@@ -141,7 +141,8 @@ Para criar **um app por agente** (Developer, CEO, PO, QA, etc.) usando **From a 
                 "im:history",
                 "app_mentions:read",
                 "channels:history",
-                "groups:history"
+                "groups:history",
+                "assistant:write"
             ]
         }
     },
@@ -176,6 +177,8 @@ Para criar **um app por agente** (Developer, CEO, PO, QA, etc.) usando **From a 
 Na última etapa (Step 3 of 3) você vê o resumo: nome do app (ex.: ClawdevsAI), aba **OAuth** com os Bot Scopes (chat:write, channels:history, etc.). Clique em **Create** para finalizar.
 
 Em seguida, siga a [Ordem recomendada](#ordem-recomendada-após-criar-o-app) acima: **Socket Mode** → **Basic Information** (App-Level Tokens) → **Install App**. Coloque os dois tokens no `.env` ou no Secret do Kubernetes conforme a seção [Uso no projeto](#uso-no-projeto) abaixo.
+
+**Streaming (resposta aos poucos, menos sensação de travado):** Se o app tiver o scope `assistant:write`, ative **Agents and AI Apps** nas configurações do app no Slack (Features → Agents and AI Apps). Assim o OpenClaw pode enviar a resposta em streaming e a conversa parece mais fluida.
 
 ---
 
