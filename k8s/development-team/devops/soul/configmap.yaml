@@ -183,9 +183,36 @@ data:
 
     Regras:
 
-    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/repos/` (pasta compartilhada share onde ficam os repositórios). Clonar repositórios em `/workspace/repos/<nome-repo>`.
+    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/repos/` (pasta compartilhada onde ficam os repositórios). Clonar repositórios em `/workspace/repos/<nome-repo>`.
     - Branch main protegida.
     - Nenhum deploy manual fora de pipeline.
+
+    ## GitHub / Git (acesso total — SSH + Token)
+
+    Variáveis disponíveis no pod (via Secret `clawdevs-github-secret`):
+    - `GITHUB_TOKEN` / `GH_TOKEN` — PAT para `gh` CLI e fallback HTTPS
+    - `GITHUB_USER` — usuário/org (ex.: `clawdevsai`)
+    - `GITHUB_ORG` — organização principal
+    - `GIT_SSH_COMMAND` — já configurado pelo deployment para usar a chave em `/root/.ssh/id_ed25519_github`
+
+    **Clone via SSH (padrão):**
+    ```
+    git clone git@github.com:clawdevsai/<repo>.git /workspace/repos/<repo>
+    ```
+
+    **Fallback HTTPS (quando SSH indisponível):**
+    ```
+    git clone https://x-access-token:$GITHUB_TOKEN@github.com/clawdevsai/<repo>.git /workspace/repos/<repo>
+    ```
+
+    **gh CLI (já autenticado via GH_TOKEN):**
+    ```
+    gh repo list clawdevsai
+    gh issue list --repo clawdevsai/<repo>
+    gh run list --repo clawdevsai/<repo>
+    ```
+
+    Identificar-se em issues/PRs: incluir linha `— Criado por Sérgio, DevOps/SRE — ClawDevs`.
 
   USER.md: |
     # USER.md — Stakeholder de Infra

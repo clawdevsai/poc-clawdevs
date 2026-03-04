@@ -17,7 +17,7 @@ export K8S_DIR MINIKUBE_CPUS MINIKUBE_MEMORY
 .PHONY: configmap-po configmap-architect-draft configmap-kanban-api
 .PHONY: security-apply security-configmaps orchestrator-apply orchestrator-configmap
 .PHONY: kanban-image kanban-apply kanban-url
-.PHONY: verify reset-memory init-memory test-github-access validate-finops-po dashboard status status-pods ps
+.PHONY: verify reset-memory init-memory test-github-access validate-finops-po dashboard status status-pods ps secrets
 .PHONY: url-sandbox-run url-sandbox-trigger-apply
 
 # ------------------------------------------------------------------------------
@@ -56,6 +56,7 @@ help:
 	@echo "    make reset-memory       -> Apaga a memória das IAs (útil para recomeçar projetos do zero)."
 	@echo "    make init-memory        -> Inicializa estrutura de memória (decisions/projects/lessons/pending + .learnings/)."
 	@echo "    make test-github-access -> Testa se as IAs conseguem ler arquivos no Github."
+	@echo "    make secrets            -> Cria/atualiza todos os Secrets no cluster a partir do .env (GitHub, Slack, Telegram)."
 	@echo "    make validate-finops-po -> Valida FinOps e validação reversa PO (test_config_finops + validate_reverse_po)."
 	@echo "    make dashboard          -> Abre uma tela visual no seu navegador para ver o motor do sistema."
 	@echo "    make shared             -> Cria uma pasta compartilhada para você ver os arquivos que a IA cria."
@@ -234,6 +235,11 @@ init-memory:
 # Testa acesso ao GitHub: no host (.env) e/ou nos pods (secret clawdevs-github-secret). Use MODE=host|cluster|all (default: all).
 test-github-access:
 	@$(SCRIPTS)/utils/test-github-access.sh $(or $(MODE),all)
+
+# Cria/atualiza todos os Secrets no cluster (GitHub, Slack, Telegram) a partir do .env.
+# Equivalente a rodar: ./scripts/cluster/secrets-from-env.sh
+secrets:
+	@$(SCRIPTS)/cluster/secrets-from-env.sh
 
 # Roda a validação FinOps (test_config_finops) e a validação reversa PO (validate_reverse_po com critérios de aceite).
 validate-finops-po:

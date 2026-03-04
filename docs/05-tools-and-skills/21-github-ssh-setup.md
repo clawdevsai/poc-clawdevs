@@ -98,3 +98,52 @@ Se no pod aparecer `git@github.com: Permission denied (publickey)` ao clonar:
 
 - [20-ferramenta-github-gh.md](20-ferramenta-github-gh.md) — uso do `gh` e token para pods.
 - [GitHub: Connecting with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
+
+---
+
+## 9. Pod DevOps — acesso via Secret K8s (SSH + token)
+
+O pod `devops-worker` recebe acesso total ao GitHub através do Secret `clawdevs-github-secret`, que contém:
+
+| Chave | Conteúdo |
+|---|---|
+| `GITHUB_TOKEN` / `GH_TOKEN` | PAT para `gh` CLI e clone HTTPS |
+| `GITHUB_USER` | `clawdevsai` |
+| `GITHUB_ORG` | `clawdevsai` |
+| `GITHUB_SSH_PRIVATE_KEY` | Chave SSH privada em **base64** |
+
+O deployment inclui um `initContainer` (`setup-ssh`) que:
+1. Decodifica `GITHUB_SSH_PRIVATE_KEY` de base64 e grava em `/root/.ssh/id_ed25519_github` (chmod 600).
+2. Cria `/root/.ssh/config` apontando para essa chave.
+3. Copia os arquivos para um volume `emptyDir` compartilhado com o container principal.
+
+O container principal herda `GIT_SSH_COMMAND` já configurado. Os agentes DevOps usam:
+
+```bash
+# Padrão — SSH
+git clone git@github.com:clawdevsai/<repo>.git /workspace/repos/<repo>
+
+# Fallback — HTTPS com token
+git clone https://x-access-token:$GITHUB_TOKEN@github.com/clawdevsai/<repo>.git /workspace/repos/<repo>
+
+# gh CLI (autenticado via GH_TOKEN)
+gh repo list clawdevsai
+```
+
+### Gerar e registrar `GITHUB_SSH_PRIVATE_KEY` no `.env`
+
+```bash
+# 1. (Se ainda não tiver chave)
+ssh-keygen -t ed25519 -C "devops@clawdevs" -f ~/.ssh/id_ed25519_github -N ""
+
+# 2. Registrar a chave pública no GitHub
+#    Settings → SSH and GPG keys → New SSH key → cole o conteúdo abaixo:
+cat ~/.ssh/id_ed25519_github.pub
+
+# 3. Exportar a chave privada em base64 e colar no .env
+base64 -w0 ~/.ssh/id_ed25519_github
+# Colar o resultado em GITHUB_SSH_PRIVATE_KEY= no .env
+
+# 4. Atualizar o Secret no cluster
+./scripts/cluster/secrets-from-env.sh
+```
