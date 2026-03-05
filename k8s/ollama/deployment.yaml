@@ -38,7 +38,7 @@ spec:
             # Ex.: "glm-5:cloud" ou "glm-5:cloud ministral-3:3b" (separados por espaço). Deixe vazio para usar só a lista dos agentes.
             # Apenas modelos locais (sem cloud auth). Para modelos cloud, configure OLLAMA_API_KEY no secret.
             - name: OLLAMA_PRELOAD_MODELS
-              value: "ministral-3:14b-cloud"
+              value: ""
             # GPU: ativado automaticamente quando o Minikube é iniciado com --gpus=all
             # e o NVIDIA Container Toolkit está instalado. Descomente CUDA_VISIBLE_DEVICES se precisar fixar GPU.
             # - name: CUDA_VISIBLE_DEVICES
@@ -70,11 +70,9 @@ spec:
             requests:
               memory: "2Gi"
               cpu: "500m"
-              nvidia.com/gpu: "1"
             limits:
               memory: "8Gi"
               cpu: "2"
-              nvidia.com/gpu: "1"
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama

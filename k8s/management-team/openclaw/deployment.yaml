@@ -136,7 +136,11 @@ spec:
             - name: NODE_OPTIONS
               value: "--max-old-space-size=1024"
             - name: OLLAMA_API_KEY
-              value: "ollama-local"
+              valueFrom:
+                secretKeyRef:
+                  name: ollama-cloud
+                  key: OLLAMA_API_KEY
+                  optional: true
             - name: OLLAMA_HOST
               value: "http://ollama-service.ai-agents.svc.cluster.local:11434"
             # Identidade Master Git (ClawDevs)
