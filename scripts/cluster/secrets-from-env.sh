@@ -62,6 +62,7 @@ if [[ -n "$GITHUB_TOKEN" || -n "$GH_TOKEN" || -n "$GITHUB_SSH_PRIVATE_KEY" ]]; t
   [[ -n "$GH_TOKEN" ]]     && GARGS+=(--from-literal=GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}")
   [[ -n "$GITHUB_USER" ]]  && GARGS+=(--from-literal=GITHUB_USER="$GITHUB_USER")
   [[ -n "$GITHUB_ORG" ]]   && GARGS+=(--from-literal=GITHUB_ORG="$GITHUB_ORG")
+  [[ -n "$GITHUB_REPO" ]]  && GARGS+=(--from-literal=GITHUB_REPO="$GITHUB_REPO")
   # Chave SSH privada em base64 — montada no pod DevOps em /root/.ssh/
   [[ -n "$GITHUB_SSH_PRIVATE_KEY" ]] && GARGS+=(--from-literal=GITHUB_SSH_PRIVATE_KEY="$GITHUB_SSH_PRIVATE_KEY")
   # Nome da chave extraído do path no host
