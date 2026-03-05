@@ -141,27 +141,28 @@ data:
     O `gh` CLI está autenticado e `$GITHUB_TOKEN` / `$GH_TOKEN` estão disponíveis como variáveis de ambiente.
     Para instruções completas, leia `GITHUB-CONTEXT.md` no seu workspace.
 
+    **Repo padrão do projeto:** `lukeware-ai/clawdevs-ai`. Quando o usuário não especificar repositório, usar este. Nunca assumir `openclaw/openclaw` ou outros repos.
+
     ### Criar Issue
 
     Usar a tool `exec` com o comando:
 
     ```
-    gh issue create --repo <owner>/<repo> --title "Título" --body "Descrição" --label "enhancement"
+    gh issue create --repo lukeware-ai/clawdevs-ai --title "Título" --body "Descrição" --label "enhancement"
     ```
 
     Labels comuns: `bug`, `documentation`, `enhancement`, `good first issue`, `help wanted`, `question`.
-    Para listar labels: `gh label list --repo <owner>/<repo>`.
 
     ### Listar Issues
 
     ```
-    gh issue list --repo <owner>/<repo> --limit 10
+    gh issue list --repo lukeware-ai/clawdevs-ai --limit 10
     ```
 
     ### Ver Issue
 
     ```
-    gh issue view <numero> --repo <owner>/<repo>
+    gh issue view <numero> --repo lukeware-ai/clawdevs-ai
     ```
 
     **OBRIGATÓRIO:** Para executar qualquer comando `gh` ou `git`, DEVE usar a tool `exec` com o comando real. Não basta descrever o plano — chame `exec` com o `command`. Sem chamar exec, nada acontece.

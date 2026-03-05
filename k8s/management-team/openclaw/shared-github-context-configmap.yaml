@@ -10,7 +10,18 @@ data:
   GITHUB-CONTEXT.md: |
     # Contexto GitHub — acesso compartilhado para todos os agentes
 
-    ## Organização
+    ## Repositório principal do projeto
+
+    | Campo           | Valor |
+    |-----------------|--------|
+    | Repo principal  | `lukeware-ai/clawdevs-ai` |
+    | URL             | https://github.com/lukeware-ai/clawdevs-ai |
+    | Issues          | https://github.com/lukeware-ai/clawdevs-ai/issues |
+
+    **Quando o usuário mencionar "o projeto", "o repo", "as issues" sem especificar qual repositório, usar sempre `lukeware-ai/clawdevs-ai`.**
+    Este é o repositório principal do time ClawDevs. Nunca assumir outros repositórios (ex.: openclaw/openclaw) a menos que o usuário diga explicitamente.
+
+    ## Organização GitHub (para criar novos repos)
 
     | Campo        | Valor |
     |--------------|--------|
@@ -18,36 +29,38 @@ data:
     | URL perfil   | https://github.com/clawdevs-ai |
     | Variável env | `$GITHUB_ORG` = clawdevs-ai |
 
+    Novos repositórios são criados na organização `$GITHUB_ORG`. O repo principal (`lukeware-ai/clawdevs-ai`) fica sob a conta `lukeware-ai`.
+
     ## Autenticação
 
     | Campo        | Valor |
     |--------------|--------|
     | Login        | clawdevsai |
     | Token        | `$GITHUB_TOKEN` / `$GH_TOKEN` (já configurado como env var no pod) |
-    | Permissão    | Owner da organização clawdevs-ai — pode criar issues, repos, PRs |
+    | Permissão    | Owner — pode criar issues, repos, PRs |
 
     O `gh` CLI já está autenticado. Basta usar os comandos abaixo.
 
     ## Criar Issues
 
     ```bash
-    gh issue create --repo $GITHUB_ORG/<nome-repo> --title "Título" --body "Descrição" --label "enhancement"
+    gh issue create --repo lukeware-ai/clawdevs-ai --title "Título" --body "Descrição" --label "enhancement"
     ```
 
-    Labels disponíveis no repositório clawdevs-ai: `bug`, `documentation`, `duplicate`, `enhancement`, `good first issue`, `help wanted`, `invalid`, `question`, `wontfix`.
+    Labels disponíveis: `bug`, `documentation`, `duplicate`, `enhancement`, `good first issue`, `help wanted`, `invalid`, `question`, `wontfix`.
 
-    Para listar labels de qualquer repo: `gh label list --repo $GITHUB_ORG/<nome-repo>`.
+    Para listar labels: `gh label list --repo lukeware-ai/clawdevs-ai`.
 
     ## Listar Issues
 
     ```bash
-    gh issue list --repo $GITHUB_ORG/<nome-repo> --limit 10
+    gh issue list --repo lukeware-ai/clawdevs-ai --limit 10
     ```
 
     ## Ver uma Issue
 
     ```bash
-    gh issue view <numero> --repo $GITHUB_ORG/<nome-repo>
+    gh issue view <numero> --repo lukeware-ai/clawdevs-ai
     ```
 
     ## Criar repositório na organização
@@ -59,15 +72,16 @@ data:
     ## Clonar repositório (HTTPS com token — preferir sempre)
 
     ```bash
-    git clone https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_ORG/<nome-repo>.git /tmp/<nome-repo> && mv /tmp/<nome-repo> /workspace/repos/<nome-repo>
+    git clone https://x-access-token:$GITHUB_TOKEN@github.com/<owner>/<repo>.git /tmp/<nome-repo> && mv /tmp/<nome-repo> /workspace/repos/<nome-repo>
     ```
 
     Clonar em `/tmp` primeiro e depois mover para `/workspace/repos/` evita erro 526 do 9p.
 
     ## Regras
 
+    - **Repo padrão:** `lukeware-ai/clawdevs-ai`. Quando o usuário não especificar repositório, usar este.
     - **Sempre usar `exec`** para executar comandos `gh` ou `git`. Não basta descrever o plano — chamar a tool `exec` com o comando real.
-    - **Organização:** repositórios e issues são criados na organização `$GITHUB_ORG` (clawdevs-ai), nunca na conta pessoal.
+    - **Organização:** novos repositórios são criados na organização `$GITHUB_ORG` (clawdevs-ai).
     - **Path de repos:** sempre usar `/workspace/repos/<nome-repo>` dentro do pod (aparece em `~/clawdevs-shared/repos/` no host).
   TOOLS-GITHUB-SECTION.md: |
 
@@ -78,27 +92,28 @@ data:
     O `gh` CLI está autenticado e `$GITHUB_TOKEN` / `$GH_TOKEN` estão disponíveis como variáveis de ambiente.
     Para instruções completas, leia `GITHUB-CONTEXT.md` no seu workspace.
 
+    **Repo padrão do projeto:** `lukeware-ai/clawdevs-ai`. Quando o usuário não especificar repositório, usar este. Nunca assumir `openclaw/openclaw` ou outros repos.
+
     ### Criar Issue
 
     Usar a tool `exec` com o comando:
 
     ```
-    gh issue create --repo <owner>/<repo> --title "Título" --body "Descrição" --label "enhancement"
+    gh issue create --repo lukeware-ai/clawdevs-ai --title "Título" --body "Descrição" --label "enhancement"
     ```
 
     Labels comuns: `bug`, `documentation`, `enhancement`, `good first issue`, `help wanted`, `question`.
-    Para listar labels: `gh label list --repo <owner>/<repo>`.
 
     ### Listar Issues
 
     ```
-    gh issue list --repo <owner>/<repo> --limit 10
+    gh issue list --repo lukeware-ai/clawdevs-ai --limit 10
     ```
 
     ### Ver Issue
 
     ```
-    gh issue view <numero> --repo <owner>/<repo>
+    gh issue view <numero> --repo lukeware-ai/clawdevs-ai
     ```
 
     **OBRIGATÓRIO:** Para executar qualquer comando `gh` ou `git`, DEVE usar a tool `exec` com o comando real. Não basta descrever o plano — chame `exec` com o `command`. Sem chamar exec, nada acontece.
