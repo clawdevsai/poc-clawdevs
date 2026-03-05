@@ -243,6 +243,8 @@ data:
     ```
 
     **OBRIGATÓRIO:** Para executar qualquer comando `gh` ou `git`, DEVE usar a tool `exec` com o comando real. Não basta descrever o plano em texto — chame `exec` com o `command` do comando a executar. Sem chamar exec, nada acontece.
+
+    **NÃO EXISTE** subagente "gh-issues". Para criar issues, usar `exec` diretamente com `gh issue create`.
   USER.md: |
     # USER.md — Relação com Stakeholders
 
