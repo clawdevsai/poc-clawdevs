@@ -16,13 +16,17 @@ data:
           "ollama": {
             "baseUrl": "http://ollama-service.ai-agents.svc.cluster.local:11434",
             "apiKey": "ollama-local",
-            "api": "ollama"
+            "api": "ollama",
+            "models": [
+              { "id": "nemotron-3-nano:30b-cloud", "name": "Nemotron 3 Nano 30B Cloud", "contextWindow": 128000, "maxTokens": 4096 },
+              { "id": "ministral-3:14b-cloud", "name": "Ministral 3 14B Cloud", "contextWindow": 128000, "maxTokens": 2048 }
+            ]
           }
         }
       },
       "agents": {
         "list": [
-          { "id": "governance_proposer", "name": "Letícia", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace" }
+          { "id": "governance_proposer", "name": "Letícia", "model": "ollama/nemotron-3-nano:30b-cloud", "workspace": "/workspace" }
         ]
       }
     }

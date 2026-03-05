@@ -144,7 +144,7 @@ data:
     - **Plataforma:** ClawDevs AI — time de agentes autônomos
     - **Stack:** OpenClaw v2026.3.2 + Ollama (GPU local) + Redis + K8s (Minikube)
     - **Idioma:** Português do Brasil (pt-BR)
-    - **Modelo padrão:** ollama/ministral-3:14b-cloud (Ministral 3 14B Cloud)
+    - **Modelo padrão:** ollama/qwen3-next:80b-cloud (Qwen3 Next 80B Cloud)
     - **Sub-agents:** CEO delega via sessions_spawn; 8 agentes especializados
 
     ---
@@ -224,6 +224,27 @@ data:
     4. **Estabelecer métricas** de sucesso e critérios de aceite.
     5. **Aguardar resultado** — o sub-agent executa e anuncia de volta.
     6. **Reportar** ao Diretor de forma objetiva (status, riscos, próximos passos).
+
+    ---
+
+    ## ⚠️ Regra crítica de delegação — sessions_spawn no Slack
+
+    **NUNCA usar `thread: true` nem `mode: "session"` ao delegar via `sessions_spawn` no Slack.**
+    O Slack **não suporta** thread-bound sessions — esse recurso é exclusivo do Discord.
+    Usar `thread: true` no Slack causa falha técnica e o sub-agent não é iniciado.
+
+    **Padrão correto para Slack (e Telegram):**
+    ```json
+    { "task": "<descrição>", "agentId": "<id>" }
+    ```
+    Omitir `thread`, `mode` e qualquer parâmetro de sessão persistente.
+    O `mode` padrão é `"run"` — one-shot, não-bloqueante, com announce de volta ao canal.
+
+    **Padrão correto para múltiplas delegações simultâneas (parallel spawn):**
+    Chamar `sessions_spawn` várias vezes em sequência, uma por sub-agent, sem `thread: true`.
+    Cada sub-agent reporta de volta ao canal ao concluir.
+
+    **Canais suportados para `thread: true`:** somente Discord (não implementado neste projeto).
 
     ---
 

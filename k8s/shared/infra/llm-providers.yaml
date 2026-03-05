@@ -13,21 +13,21 @@ metadata:
   labels:
     app.kubernetes.io/component: config
 data:
-  # Management team (CEO, PO) — servem Telegram e podem usar nuvem sob demanda
-  agent_ceo: "ollama_local"
-  agent_po: "ollama_local"
+  # Management team (CEO, PO) — modelos cloud para raciocínio estratégico
+  agent_ceo: "ollama_cloud"
+  agent_po: "ollama_cloud"
 
-  # Development team (100% offline por padrão — Ollama GPU no cluster)
-  agent_devops: "ollama_local"
-  agent_architect: "ollama_local"
-  agent_developer: "ollama_local"
-  agent_qa: "ollama_local"
-  agent_cybersec: "ollama_local"
-  agent_ux: "ollama_local"
-  agent_dba: "ollama_local"
+  # Development team — modelos cloud especializados por função
+  agent_devops: "ollama_cloud"
+  agent_architect: "ollama_cloud"
+  agent_developer: "ollama_cloud"
+  agent_qa: "ollama_cloud"
+  agent_cybersec: "ollama_cloud"
+  agent_ux: "ollama_cloud"
+  agent_dba: "ollama_cloud"
 
-  # Governance team (CPU, sessão isolada)
-  agent_governance_proposer: "ollama_local"
+  # Governance team (CPU, sessão isolada) — modelo cloud leve
+  agent_governance_proposer: "ollama_cloud"
 
   # Referência dos provedores (documentação)
   _providers: |

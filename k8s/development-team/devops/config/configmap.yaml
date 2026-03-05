@@ -10,5 +10,5 @@ data:
   agent-devops.yaml: |
     - id: devops
       name: "Sérgio"
-      model: "ollama/ministral-3:14b-cloud"
-      chatModel: "ollama/ministral-3:14b-cloud"
+      model: "ollama/devstral-2:123b-cloud"
+      chatModel: "ollama/devstral-2:123b-cloud"
