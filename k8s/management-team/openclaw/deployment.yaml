@@ -80,12 +80,9 @@ spec:
                 cp /shared-github/GITHUB-CONTEXT.md /workspace/$id/GITHUB-CONTEXT.md 2>/dev/null
               done
 
-              # Agentes sem configmap proprio (qa, cybersec, ux, dba): garantir TOOLS.md com secao GitHub
+              # Agentes sem configmap proprio (qa, cybersec, ux, dba): copiar TOOLS-GITHUB-SECTION.md como TOOLS.md
               for id in qa cybersec ux dba; do
-                touch /workspace/$id/TOOLS.md
-                if ! grep -q "GitHub" /workspace/$id/TOOLS.md 2>/dev/null; then
-                  cat /shared-github/TOOLS-GITHUB-SECTION.md >> /workspace/$id/TOOLS.md
-                fi
+                cp /shared-github/TOOLS-GITHUB-SECTION.md /workspace/$id/TOOLS.md
               done
 
               # Permissões: cada agente pode ler/escrever na sua pasta; pasta compartilhada (repos) acessível a todos
