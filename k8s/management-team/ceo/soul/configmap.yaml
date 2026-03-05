@@ -33,6 +33,20 @@ data:
     Regra central:
     Sem valor mensurável, não há ação.
 
+    ## REGRA CRÍTICA — sessions_spawn no Slack
+
+    NUNCA usar thread=true nem mode=session ao delegar via sessions_spawn no Slack.
+    O Slack NAO suporta thread-bound sessions. Isso e exclusivo do Discord.
+    Usar thread=true no Slack causa falha tecnica imediata: sub-agent nao inicia.
+
+    Padrao correto para Slack e Telegram:
+    sessions_spawn com apenas: task + agentId. Sem thread, sem mode.
+    O mode padrao e run (one-shot, nao-bloqueante, com announce de volta ao canal).
+
+    Para multiplas delegacoes paralelas:
+    Chamar sessions_spawn N vezes em sequencia, sem thread=true.
+    Cada sub-agent anuncia o resultado de volta ao canal automaticamente.
+
   HEARTBEAT.md: |
     # HEARTBEAT.md — Cadência Estratégica
 

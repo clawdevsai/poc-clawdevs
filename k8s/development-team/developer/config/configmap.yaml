@@ -10,5 +10,5 @@ data:
   agent-developer.yaml: |
     - id: developer
       name: "Leo"
-      model: "ollama/ministral-3:14b-cloud"
-      chatModel: "ollama/ministral-3:14b-cloud"
+      model: "ollama/qwen3-coder:480b-cloud"
+      chatModel: "ollama/qwen3-coder:480b-cloud"

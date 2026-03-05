@@ -10,5 +10,5 @@ data:
   agent-architect.yaml: |
     - id: architect
       name: "Vera"
-      model: "ollama/ministral-3:14b-cloud"
-      chatModel: "ollama/ministral-3:14b-cloud"
+      model: "ollama/devstral-2:123b-cloud"
+      chatModel: "ollama/devstral-2:123b-cloud"
