@@ -1,81 +1,185 @@
-# ClawDevsAI - Guia de Início Rápido para Desenvolvedores 🚀
+# ClawDevs AI — Time de Desenvolvimento com Custo Zero 🚀
 
-Bem-vindo ao **ClawDevsAI**! Este repositório contém todo o ecossistema K8s de agentes geridos pelo OpenClaw e suportado por LLMs locais (Ollama).
+> **Qualquer empresa pode ter um time completo de desenvolvimento de IA, com custo praticamente zero, rodando 100% local com alta performance.**
 
-Este guia possui **exatamente o que você precisa saber** e a **ordem correta dos comandos** para rodar o projeto na sua máquina local a partir do zero.
-
----
-
-## 📋 Como Funciona a Arquitetura Básica?
-
-Antes de rodar os comandos, é importante saber que **tudo roda dentro do Kubernetes** (`minikube`). Não rodamos nada solto na máquina!
-- **Orquestração:** OpenClaw Gateway.
-- **LLM (Cérebro):** Ollama rodando nativamente no cluster (com suporte a GPU).
-- **Memória / Estado:** Redis gerencia filas (streams) e sessões.
-- **Agentes:** CEO, PO, Developer, DevOps, Revisão, etc., como PODs que conversam entre si.
+O Diretor interage com os agentes via **Slack** e **Telegram**. Tudo roda dentro do **Kubernetes** (Minikube) com **Ollama** para inferência local — sem dependência de APIs pagas.
 
 ---
 
-## 💻 Passo a Passo: Subindo o Ambiente (Na Ordem Certa)
+## 🤖 Time de Agentes
 
-Siga os passos exatamente nesta ordem para garantir que a instalação seja bem sucedida.
+| Agente | Função |
+|--------|--------|
+| 👔 **CEO** | Orquestrador — rotas decisões e coordena o time |
+| 📋 **PO** | Product Owner — quebra requisitos em issues |
+| 🏛️ **Arquiteto** | Revisão técnica e decisões de arquitetura |
+| 💻 **Developer** | Implementação de código |
+| 🎨 **UX** | Design de interfaces |
+| 🔬 **QA** | Testes e validação de qualidade |
+| ⚙️ **DevOps** | Infraestrutura e CI/CD |
+| 🛡️ **CyberSec** | Segurança e análise de vulnerabilidades |
+| 🗄️ **DBA** | Banco de dados e migrations |
 
-### Passo 1: Configurar Variáveis de Ambiente
-O sistema depende de chaves para acessar o GitHub e o Telegram/Slack.
-1. Crie um arquivo chamado `.env` na raiz deste projeto.
-2. Adicione os tokens de acessos necessários (peça o `.env` base para sua equipe).
-   - O sistema precisa desses segredos para rodar scripts como o de puxar/enviar código, orquestração e alertas.
+---
 
-### Passo 2: Preparar a sua Máquina (`make prepare`)
-Este comando checa o que você já tem na máquina e instala os requisitos invisíveis (Docker, Minikube, Kubectl), além de criar e ligar o cluster onde a mágica acontece.
+## 🏗️ Arquitetura
+
+```
+Diretor (Slack / Telegram)
+          ↓
+    OpenClaw Gateway
+          ↓
+  Redis Streams (orquestração)
+          ↓
+┌─────────────────────────────────────────┐
+│  Kubernetes (Minikube)                  │
+│  CEO → PO → Architect → Developer      │
+│       ↓           ↓          ↓         │
+│     DevOps        QA        DBA         │
+│       ↓           ↓        UX           │
+│              CyberSec                   │
+└─────────────────────────────────────────┘
+          ↓
+    Ollama (LLM local — DeepSeek-R1 / Qwen2.5)
+          ↓
+    /workspace (código gerado e revisado)
+```
+
+**Mission Control** (painel web) permite ao Diretor monitorar agentes, tarefas e custos de tokens.
+
+---
+
+## 💻 Início Rápido
+
+### Pré-requisitos
+- Linux com GPU (recomendado) ou CPU
+- Docker instalado
+- 16 GB RAM mínimo (32 GB recomendado para DeepSeek-R1 14B)
+
+### 1. Configurar variáveis de ambiente
+```bash
+cp .env.example .env
+# Preencha: TELEGRAM_BOT_TOKEN, OPENCLAW_SLACK_APP_TOKEN, GITHUB_TOKEN, GITHUB_REPO
+```
+
+### 2. Preparar a máquina
 ```bash
 make prepare
+# Instala: Docker, Minikube, Kubectl. Pode pedir sudo.
 ```
-> **Aviso:** Ele pode pedir sua senha (`sudo`) para instalar ferramentas. Caso ele instale o Docker, você pode ter que sair e entrar (logoff/login) na sua conta de usuário no PC para o Linux reconhecer a permissão do Docker.
 
-### Passo 3: Criar a Pasta Compartilhada (`make shared`)
-As IAs (agentes) vão editar arquivos e clonar códigos automaticamente. É necessário montar uma pasta na sua máquina para você ler os resultados localmente.
+### 3. Montar workspace compartilhado
 ```bash
 make shared
+# Cria ~/clawdevs-shared, sincronizado com /workspace dentro do K8s
 ```
-> Isso criará a pasta `~/clawdevs-shared` e a deixará sincronizada com o interior do Minikube (mount 9P com `--uid=0 --gid=0`).
->
-> **Se o OpenClaw já estiver rodando:** após (re)iniciar o mount (`make shared`), reinicie o deployment para o pod reconectar ao volume e evitar I/O error em `/workspace`:  
-> `kubectl rollout restart deployment/openclaw -n ai-agents`
 
-### Passo 4: Subir Todo o Sistema (`make up`)
-Chegamos ao passo principal. Isso vai empacotar o cérebro das IAs, aplicar as redes do Redis, alocar o Ollama (aproveitando sua GPU) e ligar todas as "pessoas" do time (agentes/PODs).
+### 4. Subir o sistema completo
 ```bash
 make up
+# Liga: Redis, Ollama, OpenClaw, todos os agentes
+# Ao final imprime a URL do Mission Control
 ```
-> **Nota:** Esse processo pode demorar um pouco na primeira vez, pois ele fará o download de imagens de containers e preparará todo o ecossistema. No final do processo, ele imprimirá uma URL com a cara do painel de controle! (Algo como `http://<IP_DO_MINIKUBE>:30000`).
->
-> **Alternativa:** Se precisar já aplicar todas as regras de segurança adicionais e ferramentas avançadas junto, você pode usar `make up-all`.
 
 ---
 
-## 🛠️ Controle do Dia a Dia (Comandos Frequentes)
+## 🛠️ Comandos do Dia a Dia
 
-Você não fará o `make prepare` todos os dias. No seu fluxo normal, os comandos mais úteis que você vai utilizar são:
-
-| O que você quer fazer? | Comando | Descrição |
-| :--- | :--- | :--- |
-| **Como estão os Agentes?** | `make status` | Mostra se os processos e serviços subiram corretamente dentro do Kubernetes. |
-| **O que eles estão falando?** | `make status-pods` | Mostra os *logs* (diários de bordo) em tempo real do Ollama, Redis, OpenClaw, etc. |
-| **Zerar a memória das IAs** | `make reset-memory` | Esquece todas as conversas anteriores para os agentes iniciarem projetos limpos. |
-| **Meu PC aguenta a IA?** | `make verify` | Testa sua Placa de Vídeo (GPU) e CPU para garantir a estabilidade. |
-| **Erro no Github?** | `make test-github-access` | Valida as credenciais do seu `.env` contra o Github para ver se a IA pode baixar o código. |
-| **Reconectar workspace** | `kubectl rollout restart deployment/openclaw -n ai-agents` | Use após rodar `make shared` com o OpenClaw já no ar; evita I/O error em `/workspace` no pod. |
-| **Desmontar e remontar workspace (I/O error)** | `make shared-restart` | Desmonta o mount 9P, remonta e reinicia o pod OpenClaw. Use quando `make validate-workspace` falhar com "Input/output error". |
-| **Validar acesso ao workspace** | `make validate-workspace` | Confirma que `/workspace` está liberado e compartilhado para todos os agentes (CEO, PO, Developer, etc.). Lista `/workspace/` e `/workspace/repos/`; sem I/O error = OK. |
-| **Dashboad Visual do K8s** | `make dashboard` | Abre o painel oficial do Kubernetes diretamente no seu navegador. |
-| **Parar e apagar tudo** | `make down` | Desliga todos os processos e zera o cluster. Útil quando algo corrompeu e você quer um início limpo. |
+| Comando | O que faz |
+|---------|-----------|
+| `make status` | Status dos pods e serviços |
+| `make status-pods` | Logs em tempo real |
+| `make reset-memory` | Limpa memória dos agentes (novo projeto) |
+| `make verify` | Testa GPU/CPU |
+| `make dashboard` | Abre Kubernetes Dashboard no browser |
+| `make down` | Desliga tudo |
 
 ---
 
-## ⚠️ Boas Práticas (Regras de Ouro do ClawDevs)
+## 🎛️ Mission Control (Painel do Diretor)
 
-1. **Nunca crie código se o OpenClaw já fizer:** Nosso sistema é baseado 100% no OpenClaw. Não reinvente a roda!
-2. **K8s Ecosystem:** Nenhuma persistência de dados de runtime fica no "host" (seu PC). Tudo vive no Minikube e usa PVCs e Redis.
-3. **Gratuito e Open Source:** Este projeto foca no uso estrito de Ollama e ferramentas abertas (sem OpenAI paga na infra principal).
-4. **Workspace dos agentes:** O diretório `/workspace` no pod é **compartilhado com acesso de leitura e escrita** para todos os agentes (CEO, PO, Developer, DevOps, QA, etc.). Qualquer agente pode ler e escrever em qualquer pasta sob `/workspace` (incluindo `/workspace/repos/` para repositórios). Cada agente usa um subdir próprio (`/workspace/ceo`, `/workspace/po`, …). Para validar: `make validate-workspace`. Após (re)iniciar o mount (`make shared`), reinicie o deployment do OpenClaw para o pod reconectar ao volume.
+Acesse via URL impressa pelo `make up` (ex.: `http://<IP_MINIKUBE>:30000`).
+
+O painel oferece:
+- **Dashboard**: saúde dos 9 agentes em tempo real
+- **Central de Missões**: Kanban (Backlog → Em Andamento → Em Revisão → QA → Concluído)
+- **FinOps / Tokens**: custo estimado por agente e teto diário
+- **Intervenção**: reatribuir, pausar, cancelar ou elevar tarefas sem escrever código
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+poc-clawdevs/
+├── app/                    # Python: agentes, orquestração, segurança
+│   ├── agents/             # Implementação de cada agente
+│   ├── core/               # Orquestrador, Kanban API, strikes
+│   ├── features/           # FinOps, RAG, GPU lock, digest, etc.
+│   ├── safety/             # CyberSec: prompt injection, quarentena
+│   ├── shared/             # Utilitários compartilhados (redis_client, ollama, etc.)
+│   └── contingency/        # Heartbeat e contingência para cluster sem cabeça
+├── mission-control/        # Dashboard Next.js (substitui kanban-ui)
+├── k8s/                    # Manifests Kubernetes (deployments, configmaps, secrets)
+│   ├── development-team/   # Pods do time de desenvolvimento
+│   ├── management-team/    # CEO, PO
+│   ├── orchestrator/       # Orquestrador
+│   ├── security/           # CyberSec, token rotation
+│   └── shared/             # Redis, Ollama, Namespace
+├── scripts/                # Automação organizada por contexto
+│   ├── cluster/            # up, down, prepare, redis-streams-init
+│   ├── configmaps/         # Scripts para cada ConfigMap de agente
+│   ├── openclaw/           # Scripts do OpenClaw gateway
+│   ├── ops/                # Operações: CISO scan, GPU, debug
+│   ├── transcription/      # m4a → md para notas de voz
+│   └── utils/              # Utilitários do Diretor
+├── docs/                   # Documentação técnica detalhada
+├── tests/                  # Testes automatizados (pytest)
+├── avatar/                 # Imagens dos agentes
+├── requirements.txt        # Dependências Python
+└── Makefile                # Entry point de todos os comandos
+```
+
+---
+
+## 📖 Documentação Técnica
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| `docs/01-core/` | Visão, proposta, agentes, arquitetura |
+| `docs/02-infra/` | K8s, Ollama, Redis, contingência |
+| `docs/03-agents/` | Comportamento, memória, protocolos A2A |
+
+---
+
+## ⚙️ Stack
+
+| Componente | Tecnologia | Licença |
+|------------|------------|---------|
+| Gateway | OpenClaw | MIT |
+| LLM local | Ollama + DeepSeek-R1 14B / Qwen2.5 14B | MIT / Apache |
+| Orquestração | Redis Streams | BSD |
+| Infraestrutura | Kubernetes (Minikube) | Apache |
+| Dashboard | Next.js + Tailwind | MIT |
+| Backend Kanban | Flask + SQLite | MIT |
+| Segurança | OWASP, prompt injection detector | MIT |
+
+---
+
+## 🔒 Segurança
+
+- **Zero dados na nuvem**: todo o processamento é local
+- **Quarentena de URLs**: sandbox para URLs externas antes de executar código
+- **Rotação de tokens**: troca automática de credenciais OpenClaw
+- **SAST**: análise de entropia e pacotes maliciosos antes de instalar dependências
+- **LGPD/GDPR**: nenhum dado sai da máquina
+
+---
+
+## 📜 Licença
+
+MIT — veja [LICENSE](LICENSE)
+
+---
+
+> *"O Diretor nunca precisa tocar em uma linha de código."*
