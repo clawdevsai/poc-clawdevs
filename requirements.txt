@@ -1,0 +1,21 @@
+# ClawDevs AI — Dependências Python
+# Gerado: 2026-03-06
+# Uso: pip install -r requirements.txt
+
+# --- Infraestrutura / Mensageria ---
+redis>=5.0.0
+
+# --- API Backend (Kanban / Mission Control) ---
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# --- HTTP (Ollama, OpenClaw gateway) ---
+# urllib3 já incluso no Python stdlib, mas requests é útil para scripts
+requests>=2.31.0
+
+# --- Utilitários ---
+python-dotenv>=1.0.0
+
+# --- Qualidade de código (dev) ---
+pytest>=7.4.0
+pytest-cov>=4.1.0
