@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Envio de mensagens para Slack (Fase 3 — alertas e consumidores).
+Envio de mensagens para Slack (alertas e consumidores).
 Suporta: Incoming Webhook (SLACK_WEBHOOK_URL) ou API chat.postMessage (SLACK_BOT_TOKEN + canal).
 Uso: slack_notify.py "Texto da mensagem"   ou   python -c "from slack_notify import send_slack; send_slack('...')"
 Ref: docs/06-operacoes.md (alertas imediatos), docs/42-slack-tokens-setup.md

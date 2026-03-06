@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pipeline de quarentena automatizado (Fase 2 — 128 evolução).
+Pipeline de quarentena automatizado (128 evolução).
 Ordem: (1) opcional matriz de confiança para pacotes listados; (2) SAST semgrep; (3) entropia contextual.
 Exit 0 = passou; 1 = falhou; 2 = uso.
 Ref: docs/44-fase2-seguranca-automacao.md § 2.2, docs/21-quarentena-disco-pipeline.md

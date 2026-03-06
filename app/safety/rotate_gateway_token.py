@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Rotação/sincronização de tokens do Gateway (Fase 2 — 025 evolução).
+Rotação/sincronização de tokens do Gateway (025 evolução).
 Lê token/chat_id de uma "fonte" (env ou Secret openclaw-telegram-rotation-source)
 e atualiza o Secret openclaw-telegram usado pelo deployment. Opcional: rollout restart.
 Uso: em CronJob a cada 2–3 min; ou manual após atualizar a fonte.

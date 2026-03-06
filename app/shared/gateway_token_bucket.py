@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Token bucket para eventos de estratégia e degradação por eficiência (Fase 2 — 126).
+Token bucket para eventos de estratégia e degradação por eficiência (126).
 O Gateway/orquestrador chama este script (ou importa) para decidir se permite publicar
 em cmd:strategy ou se deve rotear CEO para modelo local.
 Ref: docs/07-configuracao-e-prompts.md, docs/issues/126-token-bucket-degradacao-eficiencia.md
@@ -20,7 +20,7 @@ KEY_STRATEGY_COUNT = os.environ.get("KEY_STRATEGY_COUNT", "gateway:strategy_even
 KEY_CEO_IDEAS = os.environ.get("KEY_CEO_IDEAS", "gateway:ceo_ideas_count")
 KEY_PO_APPROVED = os.environ.get("KEY_PO_APPROVED", "gateway:po_approved_count")
 WINDOW_SEC = int(os.environ.get("TOKEN_BUCKET_WINDOW_SEC", "3600"))  # janela em segundos (1 h)
-# Acelerador preditivo (Fase 2 evolução): rotear CEO para local se diff/tarefa atual for grande
+# Acelerador preditivo (evolução): rotear CEO para local se diff/tarefa atual for grande
 KEY_PREDICTIVE_DIFF_LINES = os.environ.get("KEY_PREDICTIVE_DIFF_LINES", "gateway:predictive_diff_lines")
 PREDICTIVE_LOCAL_THRESHOLD = int(os.environ.get("PREDICTIVE_LOCAL_THRESHOLD_DIFF_LINES", "0"))  # 0 = desligado
 

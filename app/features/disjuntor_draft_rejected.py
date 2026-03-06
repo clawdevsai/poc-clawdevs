@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Disjuntor draft_rejected (Fase 3 — 127). Rastreia rejeições por épico no Redis;
+Disjuntor draft_rejected (127). Rastreia rejeições por épico no Redis;
 ao atingir 3 consecutivas na mesma épico: congela, executa RAG health check, descongela.
 Ref: docs/issues/127-disjuntor-draft-rejected-rag-health-check.md, docs/38-redis-streams-estado-global.md
 """

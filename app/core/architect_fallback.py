@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fase 3 — 032: Fallback Architect no 2º strike (openclaw-first).
+032: Fallback Architect no 2º strike (openclaw-first).
 Envia ao agente Architect no OpenClaw prompt de compromisso: gerar código/patch que tornaria o PR aprovável.
 O Architect (no Gateway) grava resultado em Redis (project:v1:issue:{id}:architect_fallback_patch) via ferramentas.
 Ref: docs/issues/032-five-strikes-fallback-arbitragem.md, .cursor/rules/openclaw-first.mdc

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Consumidor do stream orchestrator:events — envia cada evento ao Slack (Fase 3).
+Consumidor do stream orchestrator:events — envia cada evento ao Slack ().
 Executar como processo contínuo (Deployment no cluster) ou em foreground.
 Requer: REDIS_*, ORCHESTRATOR_SLACK_* (ou SLACK_* no cluster via Secret orchestrator-slack).
 Ref: docs/06-operacoes.md, STREAM_ORCHESTRATOR_EVENTS.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Publica um evento em um Redis Stream (Fase 1 — 018). Uso: testes manuais ou E2E.
+# Publica um evento em um Redis Stream (018). Uso: testes manuais ou E2E.
 # truncamento-finops: truncamento na borda — payloads grandes são truncados antes de enfileirar.
 # Ex.: python publish_event_redis.py cmd:strategy directive="Priorizar 2FA" source=ceo
 #      python publish_event_redis.py task:backlog issue_id=42 priority=1

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Matriz de confiança: verificação de pacote por nome@versão e hash (Fase 2 — 128 evolução).
+Matriz de confiança: verificação de pacote por nome@versão e hash (128 evolução).
 Se o pacote estiver na whitelist e o hash coincidir, dispensar entropia restritiva no pipeline de quarentena.
 Ref: docs/44-fase2-seguranca-automacao.md § 2.2, docs/issues/128-sast-entropia-quarentena.md
 """

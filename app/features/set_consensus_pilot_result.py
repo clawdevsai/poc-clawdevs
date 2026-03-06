@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Define o resultado do pilot do loop de consenso (Fase 3 — 034).
+Define o resultado do pilot do loop de consenso (034).
 Chamado pelo subfluxo QA+Architect após testar ajuste em uma tarefa.
 Uso: set_consensus_pilot_result.py success | fail
 Ref: docs/06-operacoes.md (Loop de consenso automatizado)

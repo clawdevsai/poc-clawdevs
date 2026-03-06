@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validação determinística de reputação de domínio (Fase 2 — 024).
+Validação determinística de reputação de domínio (024).
 Antes de liberar egress para um domínio (mesmo na whitelist), consultar API de reputação
 (ex.: VirusTotal); rejeitar se domínio recém-registrado ou má reputação.
 Ref: docs/05-seguranca-e-etica.md, docs/issues/024-skills-terceiros-checklist-egress.md

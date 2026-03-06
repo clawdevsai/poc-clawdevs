@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sandbox para fetch de URL desconhecida (Fase 2 — 020 evolução).
+Sandbox para fetch de URL desconhecida (020 evolução).
 Roda com timeout; grava resultado em arquivo; opcionalmente publica resumo no stream digest.
 Uso: em Job com rede restrita (só essa URL ou whitelist). Variáveis: URL_SANDBOX_TARGET, OUTPUT_PATH, REDIS_*.
 Ref: docs/issues/020-zero-trust-fluxo-classificacao.md (sandbox URL/API)

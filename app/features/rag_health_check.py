@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RAG health check determinístico (Fase 3 — 127). Sem LLM.
+RAG health check determinístico (127). Sem LLM.
 (1) Datas de indexação dos docs usados pelo PO vs último commit na main.
 (2) Estrutura de pastas da épico no disco.
 (3) Se houver conflito → forçar atualização da memória local do orquestrador.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analisador de entropia com consciência contextual (Fase 2 — 128).
+"""Analisador de entropia com consciência contextual (128).
 Arquivos na whitelist de extensões (.map, .wasm, .min.js, etc.) têm tolerância alta;
 arquivos .sh ou texto esperado com entropia alta falham (possível ofuscação).
 """

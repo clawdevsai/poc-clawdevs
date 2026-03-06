@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Five strikes por issue (Fase 3 — 032).
+Five strikes por issue (032).
 Contagem em Redis; ao 2º strike emite evento trigger_architect_fallback;
 ao 5º strike incrementa orçamento de degradação e emite issue_back_to_po (ou trigger_arbitrage).
 Uso: strikes.py increment <issue_id> | get <issue_id> | reset <issue_id>

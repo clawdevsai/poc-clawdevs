@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Aprovação por omissão apenas cosmética (Fase 3 — 033).
+Aprovação por omissão apenas cosmética (033).
 Regra determinística por extensão de arquivo; timer 6 h; MEMORY.md e lista QA (035).
 Uso:
   cosmetic_omission.py is-cosmetic <file1> [file2 ...]

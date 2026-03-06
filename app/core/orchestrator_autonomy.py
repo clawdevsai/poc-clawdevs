@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Orquestrador autonomia — Autonomia nível 4: five strikes, orçamento de degradação,
-loop de consenso (pré-freio), digest (Fase 3).
+loop de consenso (pré-freio), digest ().
 Ao atingir 10–15% na rota de fuga: primeiro emite evento de loop de consenso (QA+Architect);
 só aciona freio de mão se o pilot falhar ou não houver resultado no timeout.
 Ref: docs/06-operacoes.md, docs/issues/034.
@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-# Importar chaves e helpers Fase 3 (strikes, consenso, digest)
+# Importar chaves e helpers (strikes, consenso, digest)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from orchestration import (
     get_redis,
@@ -38,7 +38,7 @@ DEGRADATION_REPORT_DIR = os.environ.get("DEGRADATION_REPORT_DIR", "docs/agents-d
 
 
 def write_degradation_report(five: int, omission: int, sprint_total: int, pct: float) -> None:
-    """Gera relatório em Markdown para o Diretor (Fase 3 — 017)."""
+    """Gera relatório em Markdown para o Diretor (017)."""
     report_dir = Path(DEGRADATION_REPORT_DIR)
     report_dir.mkdir(parents=True, exist_ok=True)
     date_str = datetime.utcnow().strftime("%Y-%m-%d")
@@ -108,7 +108,7 @@ def run_once(r) -> None:
             write_degradation_report(five, omission, sprint_total, pct)
         except Exception as e:
             print(f"[orchestrator] Falha ao escrever relatório de degradação: {e}", file=sys.stderr)
-        # Alerta imediato via Slack (Fase 3)
+        # Alerta imediato via Slack ()
         try:
             import subprocess
             msg = (

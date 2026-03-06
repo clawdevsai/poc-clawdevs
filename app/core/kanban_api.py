@@ -386,3 +386,148 @@ def health():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, threaded=True)
+
+
+# ── Mission Control: Agent Status & Token Monitoring ─────────────────────────
+
+AGENTS = ["ceo", "po", "architect", "developer", "ux", "qa", "devops", "cybersec", "dba"]
+AGENT_HEARTBEAT_TTL_SEC = int(os.environ.get("AGENT_HEARTBEAT_TTL_SEC", "300"))  # 5 min
+
+
+@app.route("/api/agents", methods=["GET"])
+def get_agents():
+    """
+    Retorna status de saúde de todos os agentes do time.
+    Um agente é considerado 'active' se teve heartbeat nos últimos AGENT_HEARTBEAT_TTL_SEC.
+    """
+    result = []
+    now = time.time()
+    for agent in AGENTS:
+        hb_key = f"{KEY_PREFIX}:agent:{agent}:heartbeat"
+        task_key = f"{KEY_PREFIX}:agent:{agent}:current_task"
+        token_key = f"{KEY_PREFIX}:agent:{agent}:tokens_total"
+
+        last_hb_raw = r.get(hb_key)
+        last_hb = float(last_hb_raw) if last_hb_raw else None
+        current_task = r.get(task_key) or ""
+        tokens_total = int(r.get(token_key) or 0)
+
+        if last_hb and (now - last_hb) <= AGENT_HEARTBEAT_TTL_SEC:
+            status = "active"
+        elif last_hb:
+            status = "idle"
+        else:
+            status = "offline"
+
+        result.append({
+            "id": agent,
+            "status": status,
+            "last_heartbeat": last_hb,
+            "current_task": current_task,
+            "tokens_total": tokens_total,
+        })
+
+    return jsonify(result)
+
+
+@app.route("/api/agents/<agent_id>/heartbeat", methods=["POST"])
+def agent_heartbeat(agent_id):
+    """Agentes chamam este endpoint periodicamente para sinalizar que estão vivos."""
+    if agent_id not in AGENTS:
+        return jsonify({"error": "Unknown agent"}), 400
+    body = request.get_json(force=True, silent=True) or {}
+    task = (body.get("task") or "").strip()
+
+    r.set(f"{KEY_PREFIX}:agent:{agent_id}:heartbeat", str(time.time()))
+    if task:
+        r.set(f"{KEY_PREFIX}:agent:{agent_id}:current_task", task, ex=AGENT_HEARTBEAT_TTL_SEC)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/tokens", methods=["GET"])
+def get_token_usage():
+    """
+    Retorna uso de tokens por agente (acumulado e histórico).
+    Estrutura: { "by_agent": {...}, "total": N, "daily_cap": N }
+    """
+    daily_cap = float(os.environ.get("FINOPS_DAILY_CAP", "5.0"))
+    by_agent = {}
+    total = 0
+
+    for agent in AGENTS:
+        token_key = f"{KEY_PREFIX}:agent:{agent}:tokens_total"
+        cost_key = f"{KEY_PREFIX}:agent:{agent}:cost_usd"
+        tokens = int(r.get(token_key) or 0)
+        cost = float(r.get(cost_key) or 0.0)
+        by_agent[agent] = {"tokens": tokens, "cost_usd": round(cost, 4)}
+        total += tokens
+
+    return jsonify({
+        "by_agent": by_agent,
+        "total_tokens": total,
+        "daily_cap_usd": daily_cap,
+    })
+
+
+@app.route("/api/tokens/<agent_id>", methods=["POST"])
+def record_token_usage(agent_id):
+    """Agentes registram uso de tokens após cada chamada ao Ollama."""
+    if agent_id not in AGENTS:
+        return jsonify({"error": "Unknown agent"}), 400
+    body = request.get_json(force=True, silent=True) or {}
+    tokens = int(body.get("tokens", 0))
+    cost_usd = float(body.get("cost_usd", 0.0))
+
+    token_key = f"{KEY_PREFIX}:agent:{agent_id}:tokens_total"
+    cost_key = f"{KEY_PREFIX}:agent:{agent_id}:cost_usd"
+    r.incrbyfloat(cost_key, cost_usd)
+    r.incrby(token_key, tokens)
+
+    return jsonify({"ok": True})
+
+
+@app.route("/api/interventions", methods=["GET"])
+def get_interventions():
+    """Histórico de intervenções do Diretor."""
+    limit = request.args.get("limit", 20, type=int)
+    items = kanban_db.get_recent_activities(limit)
+    director_items = [a for a in items if a.get("agent") == "director"]
+    return jsonify(director_items)
+
+
+@app.route("/api/interventions", methods=["POST"])
+def post_intervention():
+    """
+    Diretor intervém em uma tarefa: reassign, pause, cancel, prioritize.
+    POST JSON: { "issue_id": "...", "action": "reassign", "target_agent": "qa", "note": "..." }
+    """
+    body = request.get_json(force=True, silent=True) or {}
+    issue_id = (body.get("issue_id") or "").strip()
+    action = (body.get("action") or "").strip()
+    target_agent = (body.get("target_agent") or "").strip()
+    note = (body.get("note") or "").strip()
+
+    if not issue_id or not action:
+        return jsonify({"error": "Missing 'issue_id' or 'action'"}), 400
+
+    # Publica evento de intervenção no stream
+    try:
+        r.xadd(STREAM_KANBAN_EVENTS, {
+            "type": "director_intervention",
+            "issue_id": issue_id,
+            "action": action,
+            "target_agent": target_agent,
+            "note": note,
+            "ts": str(int(time.time() * 1000)),
+        })
+    except Exception:
+        pass
+
+    message = f"Intervention on #{issue_id}: {action}"
+    if target_agent:
+        message += f" → {target_agent}"
+    if note:
+        message += f" ({note})"
+
+    kanban_db.add_activity("director", message)
+    return jsonify({"ok": True, "issue_id": issue_id, "action": action})

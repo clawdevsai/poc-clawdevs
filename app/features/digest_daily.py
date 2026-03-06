@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Digest diário (Fase 3 — 036).
+Digest diário (036).
 Lê eventos do stream digest:daily (últimas 24h ou desde última execução),
 gera Markdown em docs/agents-devs/digest-YYYY-MM-DD.md.
 Opcional: envia para Telegram se TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID estiverem definidos.

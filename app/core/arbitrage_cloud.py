@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fase 3 — 032: Arbitragem na nuvem no 5º strike.
+032: Arbitragem na nuvem no 5º strike.
 Empacota contexto da issue (Redis) e envia para modelo superior (OpenRouter ou Gemini).
 Se sucesso: grava solução em Redis (project:v1:issue:{id}:cloud_arbitrage_solution).
 Se falha: não altera fluxo (issue já foi emitida issue_back_to_po).

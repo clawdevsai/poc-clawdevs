@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Adapter HTTP para publicação em Redis Streams (Fase 1 — 018).
-Fase 2: token bucket para cmd:strategy, check_egress para whitelist + reputação.
+Adapter HTTP para publicação em Redis Streams (018).
+: token bucket para cmd:strategy, check_egress para whitelist + reputação.
 Ref: docs/38-redis-streams-estado-global.md, docs/44-fase2-seguranca-automacao.md
 """
 import json
@@ -31,7 +31,7 @@ except ImportError:
     print("Instale flask: pip install flask", file=sys.stderr)
     sys.exit(1)
 
-# Fase 2 — token bucket (opcional se script não estiver montado)
+# token bucket (opcional se script não estiver montado)
 try:
     from gateway_token_bucket import (
         check_token_bucket,
@@ -41,7 +41,7 @@ try:
 except ImportError:
     check_token_bucket = record_strategy_event = should_degrade_ceo_to_local = None
 
-# Fase 2 — reputação de domínio (opcional)
+# reputação de domínio (opcional)
 try:
     from check_domain_reputation import check_reputation as _check_reputation
 except ImportError:
@@ -197,7 +197,7 @@ def health():
 def publish():
     """
     POST JSON: { "stream": "cmd:strategy" | "task:backlog" | ..., "data": { ... } }
-    Para cmd:strategy: aplica token bucket (Fase 2) se PHASE2_TOKEN_BUCKET_ENABLED=1.
+    Para cmd:strategy: aplica token bucket () se PHASE2_TOKEN_BUCKET_ENABLED=1.
     """
     try:
         body = request.get_json(force=True, silent=True) or {}
@@ -212,7 +212,7 @@ def publish():
     if not data or not isinstance(data, dict):
         return jsonify({"error": "Missing or invalid 'data' (object)"}), 400
 
-    # Fase 2 — token bucket para cmd:strategy
+    # token bucket para cmd:strategy
     if stream == "cmd:strategy" and PHASE2_TOKEN_BUCKET_ENABLED and check_token_bucket is not None:
         if not check_token_bucket(r):
             return (
@@ -235,7 +235,7 @@ def publish():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    # Fase 2 — registrar evento após publicar em cmd:strategy
+    # registrar evento após publicar em cmd:strategy
     if stream == "cmd:strategy" and PHASE2_TOKEN_BUCKET_ENABLED and record_strategy_event is not None:
         try:
             record_strategy_event(r)
@@ -311,7 +311,7 @@ def publish_to_cloud():
 @app.route("/check_egress", methods=["GET"])
 def check_egress():
     """
-    Fase 2 — Zero Trust egress. GET ?domain=example.com
+    Zero Trust egress. GET ?domain=example.com
     Verifica whitelist (ALLOWED_DOMAINS) e opcionalmente reputação (check_domain_reputation).
     Retorna 200 { "allow": true } ou 403 { "allow": false, "reason": "..." }.
     """
