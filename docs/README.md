@@ -1,53 +1,218 @@
-# ClawDevs AI — Resumo
+# ClawDevs AI — Documentação Técnica e Estratégica
+> **Objetivo:** Funcionar como índice principal e ponto de entrada para toda a documentação do projeto.
+> **Público-alvo:** Todos (PO, Scrum Master, Devs, Stakeholders)
+> **Ação Esperada:** Utilize este arquivo para navegar rapidamente entre os documentos por contexto.
 
-**ClawDevs AI** (ou **ClawDevs**) é um **ecossistema de agentes de IA** que funciona como um **time de desenvolvimento de software autônomo** na sua máquina — **24 por 7**. A ideia central: **qualquer um pode ter seu ClawDevs**: um time de nove agentes (CEO, PO, Architect, Developer, QA, DevOps, CyberSec, UX, DBA) orquestrados em **Kubernetes**, com estado em **Redis**, inferência local em **Ollama** e interface via **OpenClaw** (Telegram, Slack, voz). Tudo roda **dentro do cluster**, com limite de **65% do hardware**, em stack **open source e custo zero** para o núcleo.
-
-**Criador do projeto:** **Diego Silva Morais**.
-
----
-
-## O que é o ClawDevs AI
-
-- **Time de agentes:** Nove agentes de IA com papéis definidos (estratégia, produto, arquitetura, código, testes, segurança, UX, dados, infra) que colaboram como um time real: backlog, issues, PRs, revisões, merge, deploy.
-- **Na sua máquina:** O ambiente inteiro (pods, Redis, Ollama, OpenClaw, volumes) roda no **Kubernetes** (Minikube local). Quem tiver **máquina equivalente à de referência** (CPU, GPU, RAM, disco documentados) pode replicar o ClawDevs e ter o time na própria máquina.
-- **Qualquer projeto, qualquer linguagem:** O ClawDevs não está preso a uma stack ou linguagem; o Diretor (humano) define o projeto e as prioridades; o time desenvolve em qualquer domínio e linguagem.
-- **Autonomia nível 4:** O **CEO** é o único ponto de contato com o Diretor; a maior parte das decisões (bugs, UI, otimizações, cronograma) é autônoma ou notificada por digest; o humano é acionado só em decisões estratégicas, orçamento, segurança crítica ou impasses que exijam desempate.
-- **Auto-evolução:** O repositório pode ser o **próprio ClawDevs** (#self_evolution): os agentes melhoram o projeto entre si; **início e parada** dessa tarefa são **exclusivos do Diretor** (ex.: via Telegram).
+**v2.0 | Atualizado em:** 06 de março de 2026
+**Status:** 🟢 Em execução
 
 ---
 
-## O que você consegue fazer com o ClawDevs AI
+## Visão do projeto
 
-- **Ter um time de dev sempre disponível:** Acionar o time por chat ou voz (Telegram/Slack), pedir pesquisa, backlog, arquitetura, implementação, testes, revisão de segurança e UX, sem depender de horário ou fila externa.
-- **Desenvolver e manter qualquer projeto:** Do protótipo ao produto: o PO prioriza o backlog, o Architect governa a base de código, o Developer implementa (com OpenCode), QA e CyberSec revisam, DevOps cuida de CI/CD e infra; o CEO consolida e reporta ao Diretor.
-- **Controlar custo e risco:** Inferência local (Ollama) no cluster reduz custo de API; uso de nuvem (OpenRouter, etc.) é opcional e com **limite de gastos**. Segurança (Zero Trust, OWASP, CISO, kill switch por temperatura) está na base do desenho.
-- **Replicar o ambiente:** Com a **máquina de referência** (specs e comandos de verificação na documentação), qualquer pessoa pode subir o mesmo ambiente e operar o ClawDevs de forma sustentável.
-- **Evoluir o próprio ClawDevs:** No modo #self_evolution, o Diretor inicia/para a tarefa e o time melhora regras, SOUL, skills e configs via PR em repositório dedicado, com aprovação humana.
+> **"Qualquer pessoa, empresa ou desenvolvedor deve poder ter seu próprio time de agentes de IA trabalhando 24/7 — com custo próximo de zero, rodando no próprio hardware, sem depender de nuvem."**
+
+O **ClawDevs AI** é um ecossistema de agentes autônomos de desenvolvimento de software orquestrado em Kubernetes local, com inferência via Ollama e interface conversacional pelo OpenClaw (Telegram, Slack, voz). O time é composto por agentes com papéis bem definidos — CEO, PO, Architect, Developer, QA — que colaboram como um time real: backlog, issues, PRs, revisões, merge e deploy.
+
+```mermaid
+graph LR
+    DIR["👤 Diego\nDiretor"]
+    OC["OpenClaw\nGateway"]
+    TIME["Time de Agentes\nCEO · PO · Arch · Dev · QA"]
+    INFRA["Infraestrutura\nOllama · OpenRouter"]
+
+    DIR -->|"Telegram / Slack"| OC --> TIME --> INFRA
+    TIME -->|"daily report"| DIR
+
+    style DIR fill:#4A90D9,stroke:#2563EB,color:#fff
+    style OC fill:#7C3AED,stroke:#5B21B6,color:#fff
+    style TIME fill:#059669,stroke:#047857,color:#fff
+    style INFRA fill:#D97706,stroke:#B45309,color:#fff
+```
 
 ---
 
-## Stack e princípios
+## Índice da documentação
 
-- **Kubernetes (Minikube)** — orquestração dos agentes e serviços.
-- **OpenClaw** — gateway, orquestrador e interface (voz/chat); configuração e workspace no K8s.
-- **Ollama** — inferência local no cluster; provedores em nuvem opcionais (OpenRouter, etc.) quando aprovado.
-- **Redis** — estado global, filas (Streams), GPU Lock, kill switch.
-- **OpenCode** — geração de código no agente Developer.
+A documentação foi reestruturada para máxima clareza ágil, dividida em quatro contextos principais:
 
-**Prioridades (não negociáveis):** (1) **Cibersegurança** — Zero Trust, defesa em profundidade, sem trocar segurança por custo ou velocidade. (2) **Custo baixíssimo** — cluster em ~65% do hardware; APIs em nuvem com freio de gastos. (3) **Alta performance** — produtividade sem colapso de recursos; controles de segurança eficientes (CPU, whitelist, análise estática).
+### 📦 Produto e Negócio (Foco: PO)
+| Arquivo | Descrição |
+|---|---|
+| [README.md](./README.md) | **Este arquivo** ← entrada. |
+| [01-produto-visao-projeto.md](./01-produto-visao-projeto.md) | Visão macro, arquitetura de alto nível e fluxos base. |
+| [02-produto-backlog-mvp.md](./02-produto-backlog-mvp.md) | MVP e roadmap detalhado para priorização. |
+| [03-produto-interface-diretor.md](./03-produto-interface-diretor.md) | Especificação da UI/Dashboard e métricas. |
 
-**Regra do projeto:** Open source, custo zero no núcleo, alta performance; máximo uso do OpenClaw (config, bindings, session, memory, tools) — código novo só quando não houver solução no OpenClaw.
+### 🔄 Processos e Scrum (Foco: SM e Devs)
+| Arquivo | Descrição |
+|---|---|
+| [04-processo-roadmap-entregas.md](./04-processo-roadmap-entregas.md) | Cronograma de releases e sprints. |
+| [05-processo-fluxo-trabalho.md](./05-processo-fluxo-trabalho.md) | Fluxos de trabalho, DoD, e CI/CD. |
+| [06-processo-politicas-engenharia.md](./06-processo-politicas-engenharia.md) | Acordos de trabalho do time e qualidade de código. |
+| [07-processo-riscos-seguranca.md](./07-processo-riscos-seguranca.md) | Gestão de riscos, bloqueios e segurança. |
+
+### ⚙️ Técnico e Arquitetura (Foco: Devs/Architect)
+| Arquivo | Descrição |
+|---|---|
+| [08-tecnico-setup-local.md](./08-tecnico-setup-local.md) | Guia prático de setup do ambiente de desenvolvimento. |
+| [09-tecnico-arquitetura-adrs.md](./09-tecnico-arquitetura-adrs.md) | Stack técnica oficial e histórico de ADRs. |
+| [10-tecnico-infraestrutura-k8s.md](./10-tecnico-infraestrutura-k8s.md) | Topologia Kubernetes, ingress, pods e redes. |
+| [11-tecnico-gateway-openclaw.md](./11-tecnico-gateway-openclaw.md) | Configurações, deploy e regras do OpenClaw. |
+| [12-tecnico-inferencia-llm.md](./12-tecnico-inferencia-llm.md) | Integração com Ollama (local) e fallback (OpenRouter). |
+| [13-tecnico-integracoes-externas.md](./13-tecnico-integracoes-externas.md) | Contratos de API e integrações com o mundo extra-cluster. |
+| [14-tecnico-performance-escalabilidade.md](./14-tecnico-performance-escalabilidade.md) | Estratégias de HPA, filas, concorrência e resiliência. |
+
+### 🤖 Agentes AI e Simulação (Foco: Todos)
+| Arquivo | Descrição |
+|---|---|
+| [15-agentes-identidade-soul.md](./15-agentes-identidade-soul.md) | Definição de perfis, skills e restrições de cada agente. |
+| [16-agentes-protocolo-a2a.md](./16-agentes-protocolo-a2a.md) | Como os agentes se comunicam (A2A) e dividem memória. |
+| [17-agentes-simulacao-cenarios.md](./17-agentes-simulacao-cenarios.md) | Simulação end-to-end do time resolvendo tarefas reais. |
+| [18-estrategico-visao-futuro.md](./18-estrategico-visao-futuro.md) | Visão de longo prazo, evolução e expansão do ecossistema. |
 
 ---
 
-## Para onde ir a partir daqui
+## Escopo do MVP v1.0
 
-| Se você quer… | Onde ir |
-|---------------|--------|
-| **Sumário completo** (todos os docs por tema e por arquivo) | [INDEX.md](INDEX.md) |
-| Objetivo, stack e máquina de referência | Doc 00 (objetivo e máquina) no INDEX |
-| Visão, agentes e autonomia nível 4 | Doc 01 (visão e proposta) no INDEX |
-| Configurar e rodar (setup) | Doc 09 (setup e scripts) no INDEX |
-| Revisões pós-crítica e termos-chave | [revisoes-analistas-e-termos.md](07-operations/revisoes-analistas-e-termos.md) |
+```mermaid
+graph LR
+    subgraph IN["✅ Dentro do escopo — v1.0"]
+        I1["Cluster Kubernetes local\n(Minikube + namespaces isolados)"]
+        I2["Ollama como pod\nqwen2.5-coder:14b · qwen2.5:14b"]
+        I3["5 agentes core\nCEO · PO · Architect · Dev · QA"]
+        I4["OpenClaw + Telegram\ncomandos via hashtag"]
+        I5["Orquestrador central\nA2A interno"]
+        I6["Armazenamento local\nK8s PVC para código e memória"]
+        I7["SOUL por agente\nidentidade · constraints · inference"]
+        I8["Modo self_evolution\nPR com aprovação humana"]
+        I9["Documentação replicável\nguia < 4h do zero ao time"]
+    end
 
-**Terminologia rápida:** **Diretor** = humano decisor. **ClawDevs** = ecossistema (enxame de 9 agentes no K8s com OpenClaw). **OpenClaw** = orquestrador e interface. **Ollama** = inferência local. **OpenCode** = geração de código no Developer. Mais termos: ver revisões e INDEX.
+    subgraph OUT["🔜 Fases futuras"]
+        O1["Agentes: CyberSec · DBA · UX\n(fase 2)"]
+        O2["Interface de voz"]
+        O3["Dashboard visual do time"]
+        O4["Marketplace de SOULs"]
+        O5["ClawDevs Cloud\ntier gerenciado"]
+    end
+```
+
+---
+
+## Roadmap — 3 meses
+
+```mermaid
+gantt
+    title ClawDevs AI — Roadmap Q2 2026
+    dateFormat  YYYY-MM-DD
+    section Mês 1 — Fundação
+        Hardware validado + Minikube base  :done, s1, 2026-03-06, 1w
+        Ollama + modelos instalados        :s2, 2026-03-13, 1w
+        SOUL Developer + PO + OpenClaw     :s3, 2026-03-20, 1w
+        Primeiro PR gerado por agente      :milestone, m1, 2026-03-31, 1d
+    section Mês 2 — Expansão
+        SOULs Architect + QA + CEO         :s5, 2026-04-06, 1w
+        Orquestrador + A2A                 :s6, 2026-04-13, 1w
+        Sistema de arquivos local          :s7, 2026-04-20, 1w
+        Projeto piloto end-to-end          :milestone, m2, 2026-04-30, 1d
+    section Mês 3 — Polimento
+        Self-evolution + segurança         :s9, 2026-05-04, 2w
+        Documentação pública + benchmark   :s11, 2026-05-18, 1w
+        v1.0 Release público               :milestone, m3, 2026-05-31, 1d
+```
+
+### Marco 1 — Fundação (31/03)
+Conseguir pedir ao time via Telegram para criar um projeto simples do zero, receber o primeiro PR e fazer merge — sem intervenção humana no código.
+
+### Marco 2 — Time completo (30/04)
+5 agentes colaborando via A2A, CEO reportando status consolidado ao Diretor diariamente, projeto real desenvolvido end-to-end.
+
+### Marco 3 — v1.0 pública (31/05)
+Pessoa externa clona o repositório, segue o guia e tem o ClawDevs funcionando na própria máquina em menos de 4 horas.
+
+---
+
+## Primícias — Ordem de prioridade absoluta
+
+```mermaid
+graph TD
+    P1["🔒 1 — CIBERSEGURANÇA\nZero Trust · OWASP\nNenhum atalho por prazo ou custo"]
+    P2["💰 2 — CUSTO ZERO NO NÚCLEO\nOllama local · MIT/Apache · self-hosted\nCloud: opcional com teto definido"]
+    P3["⚡ 3 — PERFORMANCE SUSTENTÁVEL\nCPU whitelist · kill switch GPU\nAnálise estática antes de todo merge"]
+
+    P1 -->|"precede sempre"| P2 -->|"precede sempre"| P3
+
+    style P1 fill:#DC262622,stroke:#DC2626,color:#DC2626
+    style P2 fill:#D9770622,stroke:#D97706,color:#D97706
+    style P3 fill:#05966922,stroke:#059669,color:#059669
+```
+
+---
+
+## Recursos necessários
+
+### Hardware de referência
+
+| Componente | Spec mínima | Por quê |
+|---|---|---|
+| CPU | 8 cores (i7 / Ryzen 7) | Paralelismo entre pods |
+| RAM | 32 GB DDR4/DDR5 | Ollama + K8s + 5 agentes |
+| GPU (opcional) | NVIDIA RTX 3060 12 GB VRAM | Aceleração de inferência |
+| Disco | 500 GB NVMe SSD | Modelos (~27 GB) + dados |
+| SO | Ubuntu 22.04 LTS / macOS 14+ | Compatibilidade Minikube |
+
+### Custo estimado de operação
+
+```mermaid
+pie title Custo mensal estimado (R$)
+    "Energia elétrica (~120)" : 120
+    "OpenRouter fallback, se usado (~150)" : 150
+    "Software (tudo $0)" : 0
+```
+
+| Item | Custo/mês |
+|---|---|
+| Infraestrutura core (software) | R$ 0 |
+| Energia elétrica | R$ 80 – 150 |
+| OpenRouter com uso moderado | R$ 0 – 200 |
+| **Total realista** | **< R$ 350/mês** |
+
+---
+
+## Definição de sucesso — v1.0
+
+```mermaid
+graph LR
+    S1["✅ Time de 5 agentes desenvolve\nprojeto real end-to-end\nsem intervenção humana no código"]
+    S2["✅ Custo do núcleo\ncomprovadamente próximo de zero\n(energia excluída)"]
+    S3["✅ Pessoa externa replica\no ambiente em < 4 horas\nseguindo só a documentação"]
+    S4["✅ Self_evolution gerou\n≥ 3 melhorias reais\nvia PR aprovado pelo Diretor"]
+    S5["✅ Zero incidentes de segurança\nna auditoria do Mês 3"]
+    S6["✅ Repositório público\ncom primeiras estrelas\ne contribuições externas"]
+```
+
+---
+
+## Próximos passos imediatos
+
+| # | Ação | Prazo |
+|---|---|---|
+| 1 | Validar spec de hardware da máquina de desenvolvimento | Hoje |
+| 2 | Criar repositório base com estrutura de pastas e README | Hoje |
+| 3 | Instalar e validar Minikube + kubectl | Até 08/03 |
+| 4 | Benchmark Ollama — definir modelo base (qwen2.5-coder:14b vs. 7b) | Até 08/03 |
+| 5 | Escrever SOUL v1 do Developer | Até 10/03 |
+
+---
+
+## Histórico de revisões
+
+| Versão | Data | Alteração |
+|---|---|---|
+| v1.0 | 06/03/2026 | Documento inicial (plano-execucao-v1.md) |
+| v1.1 | 06/03/2026 | Reorganizado como README da série · Mermaid · links atualizados |
+
+---
+
+*ClawDevs AI — Feito por builders, para builders. Open source no núcleo, soberano na infraestrutura.*
