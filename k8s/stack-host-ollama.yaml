@@ -28,6 +28,9 @@ data:
   OPENCLAW_MODEL_QA_FALLBACK: nemotron-3-nano:30b-cloud
   OPENCLAW_MODEL_DEVOPS_PRIMARY: devstral-small-2:24b-cloud
   OPENCLAW_MODEL_DEVOPS_FALLBACK: rnj-1:8b-cloud
+  OPENCLAW_QA_SESSION_KEY: agent:qa:main
+  QA_GROUP: clawdevs
+  QA_STREAM: code:ready
   OPENCLAW_REQUIRED: "true"
   OPENCLAW_GATEWAY_WS: ws://openclaw-gateway:18789
   OPENCLAW_GATEWAY_TOKEN: local-dev-token
@@ -309,6 +312,30 @@ spec:
           image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.agents.devops_worker"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qa-worker
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qa-worker
+  template:
+    metadata:
+      labels:
+        app: qa-worker
+    spec:
+      containers:
+        - name: qa-worker
+          image: clawdevs-ai:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.agents.qa_worker"]
           envFrom:
             - configMapRef:
                 name: clawdevs-config

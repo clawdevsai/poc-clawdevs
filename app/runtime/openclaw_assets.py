@@ -36,6 +36,12 @@ ROLE_CONFIGS: dict[str, OpenClawRoleConfig] = {
         skills=("code_delivery", "implementation_planning", "test_execution", "redis_streams"),
         output_schema="developer",
     ),
+    "QA": OpenClawRoleConfig(
+        profile="qa",
+        rules=("core", "engineering", "release_integrity"),
+        skills=("test_execution", "architecture_review", "deploy_validation", "redis_streams"),
+        output_schema="qa",
+    ),
     "DevOps": OpenClawRoleConfig(
         profile="devops",
         rules=("core", "release_integrity"),

@@ -170,6 +170,7 @@ logs:
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/po-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/architect-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/developer-worker --tail=100
+	@$(KUBECTL) logs -n $(NAMESPACE) deployment/qa-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/devops-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/openclaw-gateway --tail=100

@@ -28,6 +28,9 @@ data:
   OPENCLAW_MODEL_QA_FALLBACK: nemotron-3-nano:30b-cloud
   OPENCLAW_MODEL_DEVOPS_PRIMARY: devstral-small-2:24b-cloud
   OPENCLAW_MODEL_DEVOPS_FALLBACK: rnj-1:8b-cloud
+  OPENCLAW_QA_SESSION_KEY: agent:qa:main
+  QA_GROUP: clawdevs
+  QA_STREAM: code:ready
   OPENCLAW_REQUIRED: "true"
   OPENCLAW_GATEWAY_WS: ws://openclaw-gateway:18789
   OPENCLAW_GATEWAY_TOKEN: local-dev-token
@@ -164,7 +167,7 @@ spec:
               openclaw config set gateway.auth.mode token
               openclaw config set gateway.auth.token "$OPENCLAW_GATEWAY_TOKEN"
               openclaw config set models.providers.ollama '{"baseUrl":"http://ollama:11434","models":[]}'
-              openclaw config set agents.defaults.model.primary "ollama/qwen2.5-coder:32b"
+              openclaw config set agents.defaults.model.primary "ollama/qwen3-next:80b-cloud"
               openclaw config set gateway.controlUi.allowInsecureAuth true
               openclaw config set gateway.controlUi.dangerouslyDisableDeviceAuth true
               openclaw config set gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback true
@@ -308,6 +311,30 @@ spec:
           image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.agents.devops_worker"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qa-worker
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qa-worker
+  template:
+    metadata:
+      labels:
+        app: qa-worker
+    spec:
+      containers:
+        - name: qa-worker
+          image: clawdevs-ai:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.agents.qa_worker"]
           envFrom:
             - configMapRef:
                 name: clawdevs-config

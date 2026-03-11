@@ -5,7 +5,7 @@ Repositorio reduzido para o nucleo operacional da nova arquitetura.
 ## Fluxo ativo
 
 ```text
-cmd:strategy -> PO -> draft.2.issue -> Architect -> task:backlog -> Developer -> event:devops -> DevOps
+cmd:strategy -> PO -> draft.2.issue -> Architect -> task:backlog -> Developer -> code:ready -> QA -> event:devops -> DevOps
 ```
 
 ## Estado atual
