@@ -157,15 +157,6 @@ spec:
                 configMapKeyRef:
                   name: clawdevs-config
                   key: MODEL_MODE
-          resources:
-            requests:
-              cpu: "250m"
-              memory: "512Mi"
-              nvidia.com/gpu: "1"
-            limits:
-              cpu: "1"
-              memory: "2Gi"
-              nvidia.com/gpu: "1"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -286,3 +277,4 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+
