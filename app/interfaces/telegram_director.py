@@ -16,7 +16,12 @@ TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID") or "").strip()
 STREAM_CMD_STRATEGY = os.getenv("STREAM_CMD_STRATEGY", "cmd:strategy")
 STATE_KEY_OFFSET = os.getenv("TELEGRAM_OFFSET_KEY", "telegram:director:last_update_id")
 OLLAMA_BASE_URL = (os.getenv("OLLAMA_BASE_URL") or os.getenv("OLLAMA_HOST") or "http://ollama:11434").rstrip("/")
-OLLAMA_MODEL = (os.getenv("OLLAMA_MODEL") or "qwen2.5-coder:32b").strip()
+OLLAMA_MODEL = (
+    os.getenv("OPENCLAW_MODEL_CEO_PRIMARY")
+    or os.getenv("OPENCLAW_MODEL_CEO")
+    or os.getenv("OLLAMA_MODEL")
+    or "qwen3.5:397b-cloud"
+).strip()
 
 
 def _telegram_request(method: str, payload: dict) -> dict:
@@ -36,6 +41,14 @@ def send_message(chat_id: str, text: str) -> None:
         _telegram_request("sendMessage", {"chat_id": chat_id, "text": text})
     except Exception as error:
         print(f"[telegram] erro ao responder chat {chat_id}: {error}")
+
+
+def ensure_polling_mode() -> None:
+    """Force getUpdates mode (disable webhook) to prevent transport conflicts."""
+    try:
+        _telegram_request("deleteWebhook", {"drop_pending_updates": False})
+    except Exception as error:
+        print(f"[telegram] aviso: nao foi possivel limpar webhook: {error}")
 
 
 def generate_ceo_reply(instruction: str) -> str | None:
@@ -151,6 +164,7 @@ def main() -> int:
             time.sleep(60)
 
     redis_client = get_redis_with_retry()
+    ensure_polling_mode()
     last_update_id = int(redis_client.get(STATE_KEY_OFFSET) or 0)
     next_offset = last_update_id + 1 if last_update_id > 0 else 0
 
@@ -168,6 +182,15 @@ def main() -> int:
                     next_offset = update_id + 1
                     redis_client.set(STATE_KEY_OFFSET, str(update_id))
                 handle_message(redis_client, update)
+        except urllib.error.HTTPError as error:
+            if error.code == 409:
+                print(
+                    "[telegram] conflito 409 no getUpdates: outro polling ativo "
+                    "com o mesmo bot token."
+                )
+            else:
+                print(f"[telegram] erro HTTP: {error}")
+            time.sleep(5)
         except urllib.error.URLError as error:
             print(f"[telegram] erro de rede: {error}")
             time.sleep(5)

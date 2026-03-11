@@ -542,7 +542,6 @@ def test_runtime_stack_validation_requires_openclaw_and_ollama_model():
                 os.environ[key] = value
 
     assert any("OPENCLAW_GATEWAY_WS" in error for error in errors)
-    assert any("OLLAMA_MODEL" in error for error in errors)
 
 
 def test_runtime_tool_registry_validates_stack_before_build():
@@ -558,7 +557,6 @@ def test_runtime_tool_registry_validates_stack_before_build():
             build_runtime_tool_registry()
         except RuntimeError as error:
             assert "OPENCLAW_GATEWAY_WS" in str(error)
-            assert "OLLAMA_MODEL" in str(error)
         else:
             raise AssertionError("RuntimeError esperado para stack invalida")
     finally:

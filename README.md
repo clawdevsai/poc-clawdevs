@@ -75,9 +75,24 @@ Pre-requisitos no host:
 ```bash
 OPENCLAW_GATEWAY_WS=ws://openclaw-gateway:18789
 MODEL_PROVIDER=ollama
-MODEL_MODE=local
+MODEL_MODE=cloud
 OLLAMA_BASE_URL=http://ollama:11434
-OLLAMA_MODEL=qwen2.5-coder:32b
+OLLAMA_MODEL=qwen3-next:80b-cloud
+```
+
+Roteamento por papel (primary/fallback) suportado via env:
+
+```bash
+OPENCLAW_MODEL_CEO_PRIMARY=qwen3.5:397b-cloud
+OPENCLAW_MODEL_CEO_FALLBACK=qwen3-next:80b-cloud
+OPENCLAW_MODEL_PO_PRIMARY=qwen3-next:80b-cloud
+OPENCLAW_MODEL_PO_FALLBACK=ministral-3:14b-cloud
+OPENCLAW_MODEL_ARCHITECT_DRAFT_PRIMARY=devstral-2:123b-cloud
+OPENCLAW_MODEL_ARCHITECT_DRAFT_FALLBACK=qwen3.5:397b-cloud
+OPENCLAW_MODEL_DEVELOPER_PRIMARY=qwen3-coder:480b-cloud
+OPENCLAW_MODEL_DEVELOPER_FALLBACK=qwen3-coder-next:cloud
+OPENCLAW_MODEL_DEVOPS_PRIMARY=devstral-small-2:24b-cloud
+OPENCLAW_MODEL_DEVOPS_FALLBACK=rnj-1:8b-cloud
 ```
 
 ## Comandos

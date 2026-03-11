@@ -4,7 +4,7 @@ KUBECTL ?= kubectl
 DOCKER ?= docker
 IMAGE ?= clawdevs-ai:latest
 NAMESPACE ?= clawdevs-ai
-OLLAMA_MODEL ?= qwen2.5-coder:32b
+OLLAMA_MODEL ?= qwen3-next:80b-cloud
 OLLAMA_POD_SELECTOR ?= app=ollama
 OPENCLAW_GATEWAY_IMAGE ?= ghcr.io/openclaw/openclaw:latest
 TELEGRAM_BOT_TOKEN ?=

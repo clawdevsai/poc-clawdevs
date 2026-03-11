@@ -6,7 +6,7 @@ from typing import Any
 
 from app.runtime.logging import log_event
 from app.runtime.model_provider import load_runtime_stack_config, validate_runtime_stack
-from app.runtime.openclaw_session import resolve_openclaw_session_config
+from app.runtime.openclaw_session import resolve_openclaw_session_config_for_role
 from app.runtime.tool_registry import ToolRegistry
 from app.runtime.openclaw_client import TOOL_OPENCLAW_SESSIONS_SEND, send_to_session
 from app.shared.issue_state import STATE_DEPLOYED, STATE_READY, STATE_REFINAMENTO, set_issue_state
@@ -149,7 +149,11 @@ def build_runtime_session_sender(registry: ToolRegistry, *, role_name: str, sess
     stack = getattr(registry, "default_session_config", None)
     session_config = None
     if stack is not None:
-        session_config = resolve_openclaw_session_config(session_key, stack)
+        session_config = resolve_openclaw_session_config_for_role(
+            session_key=session_key,
+            stack=stack,
+            role_name=role_name,
+        )
     from app.runtime.tool_registry import build_session_sender
 
     return build_session_sender(registry, role_name=role_name, session_config=session_config)

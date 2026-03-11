@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import replace
 from typing import Callable
 
 from .agent_runtime import GatewayOutput
@@ -51,13 +52,25 @@ def build_session_sender(
     session_config: OpenClawSessionConfig | None = None,
 ) -> Callable[[str, str, int], tuple[bool, GatewayOutput]]:
     def sender(session_key: str, message: str, timeout_sec: int) -> tuple[bool, GatewayOutput]:
-        return registry.execute(
+        ok, output = registry.execute(
             "openclaw.sessions.send",
             role_name=role_name,
             session_key=session_key,
             message=message,
             timeout_sec=timeout_sec,
             session_config=session_config,
+        )
+        fallback_model = (getattr(session_config, "fallback_model", "") or "").strip() if session_config else ""
+        if ok or not fallback_model:
+            return ok, output
+        fallback_config = replace(session_config, model=fallback_model, fallback_model="")
+        return registry.execute(
+            "openclaw.sessions.send",
+            role_name=role_name,
+            session_key=session_key,
+            message=message,
+            timeout_sec=timeout_sec,
+            session_config=fallback_config,
         )
 
     sender.role_name = role_name  # type: ignore[attr-defined]
