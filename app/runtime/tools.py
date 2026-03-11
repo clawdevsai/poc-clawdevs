@@ -109,7 +109,7 @@ def build_runtime_tool_registry() -> ToolRegistry:
     registry.register(
         TOOL_OPENCLAW_SESSIONS_SEND,
         send_to_session,
-        allowed_roles=("PO", "Architect-draft", "Developer", "DevOps"),
+        allowed_roles=("PO", "Architect-draft", "Developer", "QA", "DevOps"),
     )
     registry.register(
         TOOL_PUBLISH_BACKLOG,
@@ -129,7 +129,7 @@ def build_runtime_tool_registry() -> ToolRegistry:
     registry.register(
         TOOL_PUBLISH_DEPLOY_EVENT,
         publish_deploy_event,
-        allowed_roles=("DevOps",),
+        allowed_roles=("QA", "DevOps"),
     )
     registry.default_session_config = stack  # type: ignore[attr-defined]
     log_event(
