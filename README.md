@@ -61,6 +61,7 @@ A stack Kubernetes foi preparada para GPU:
 - `openclaw-gateway` em CPU (gateway chama Ollama via rede)
 - `minikube` inicializado com `--gpus all`
 - addon `nvidia-device-plugin` habilitado no `make up`
+- fallback sem CDI: `make up-host-ollama` (Ollama no host, cluster sem pod Ollama)
 
 Pre-requisitos no host:
 
@@ -85,8 +86,15 @@ OLLAMA_MODEL=qwen2.5-coder:32b
 make test
 make check-runtime-stack
 make up
+make up-host-ollama
 make status
 make down
+```
+
+No modo host (`make up-host-ollama`), voce pode sobrescrever a imagem do Gateway:
+
+```bash
+make up-host-ollama OPENCLAW_GATEWAY_IMAGE=ghcr.io/openclawai/openclaw-gateway:latest
 ```
 
 Se `make` nao estiver instalado no ambiente local, use fallback direto:
