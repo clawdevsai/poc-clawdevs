@@ -35,16 +35,9 @@ app/
 tests/
   test_runtime.py
   test_orchestration.py
+k8s/
+  stack.yaml
 ```
-
-## Modulos principais
-
-- `app/runtime/`: contrato publico do runtime, envelope, budgets, logging, tool registry, cliente OpenClaw e configuracao de provider
-- `app/openclaw/`: assets de profiles, rules e skills por papel
-- `app/agents/`: implementacoes de PO, Architect, Developer e DevOps
-- `app/core/orchestration.py`: governanca, degradacao, consenso e emissao de eventos
-- `app/shared/`: Redis e estado de issue
-- `tests/`: cobertura do runtime e da governanca
 
 ## Stack de inferencia
 
@@ -60,22 +53,30 @@ Contexto do agente no OpenClaw:
 profile + rules + skills + allowed tools + output schema + instruction
 ```
 
-O runtime monta esse pacote automaticamente por papel antes do dispatch para o Gateway.
+## GPU (RTX 3060 Ti + Minikube)
 
-Padrao operacional:
+A stack Kubernetes foi preparada para GPU:
 
-- `OpenClaw` e obrigatorio como gateway de execucao dos agentes
-- `Ollama` e o provider de modelo esperado
-- `MODEL_MODE=cloud` representa o uso de Ollama em endpoint remoto
+- `ollama` com `resources.requests/limits.nvidia.com/gpu: 1`
+- `openclaw-gateway` com `resources.requests/limits.nvidia.com/gpu: 1`
+- `minikube` inicializado com `--gpus all`
+- addon `nvidia-device-plugin` habilitado no `make up`
 
-Variaveis minimas:
+Pre-requisitos no host:
+
+- driver NVIDIA instalado
+- Docker Desktop com suporte a GPU
+- NVIDIA Container Toolkit funcional no host Docker
+- Minikube e kubectl instalados
+
+## Variaveis minimas
 
 ```bash
-OPENCLAW_GATEWAY_WS=ws://host:18789
+OPENCLAW_GATEWAY_WS=ws://openclaw-gateway:18789
 MODEL_PROVIDER=ollama
-MODEL_MODE=cloud
-OLLAMA_BASE_URL=https://seu-endpoint-ollama
-OLLAMA_MODEL=seu-modelo
+MODEL_MODE=local
+OLLAMA_BASE_URL=http://ollama:11434
+OLLAMA_MODEL=qwen2.5-coder:32b
 ```
 
 ## Comandos
@@ -83,17 +84,20 @@ OLLAMA_MODEL=seu-modelo
 ```bash
 make test
 make check-runtime-stack
-python -m app.agents.po_worker
-python -m app.agents.architect_worker
-python -m app.agents.developer_worker
-python -m app.agents.devops_worker
+make up
+make status
+make down
 ```
 
-Se `make` nao estiver instalado no ambiente local, use o fallback direto:
+Se `make` nao estiver instalado no ambiente local, use fallback direto:
 
 ```bash
-python -m pytest -q
-python -m app.runtime.check_stack
+minikube start --driver=docker --gpus all
+minikube addons enable nvidia-device-plugin
+minikube image build -t clawdevs-ai:latest .
+kubectl apply -f k8s/stack.yaml
+kubectl get pods -n clawdevs-ai
+kubectl get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia.com/gpu
 ```
 
 ## Escopo removido
@@ -101,7 +105,6 @@ python -m app.runtime.check_stack
 Foram excluidos da repo:
 
 - UI paralela
-- manifests Kubernetes
 - scripts operacionais antigos
 - safety stack periferica
 - kanban legado
