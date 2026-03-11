@@ -19,6 +19,9 @@ data:
   OPENCLAW_REQUIRED: "true"
   OPENCLAW_GATEWAY_WS: ws://openclaw-gateway:18789
   OPENCLAW_GATEWAY_TOKEN: local-dev-token
+  OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: "1"
+  TELEGRAM_BOT_TOKEN: ""
+  TELEGRAM_CHAT_ID: ""
 ---
 apiVersion: v1
 kind: Service
@@ -145,8 +148,13 @@ spec:
           args:
             - |
               set -e
+              openclaw config set gateway.mode local
+              openclaw config set gateway.auth.mode token
+              openclaw config set gateway.auth.token "$OPENCLAW_GATEWAY_TOKEN"
               openclaw config set models.providers.ollama '{"baseUrl":"http://ollama:11434","models":[]}'
               openclaw config set agents.defaults.model.primary "ollama/qwen2.5-coder:32b"
+              openclaw config set gateway.controlUi.allowInsecureAuth true
+              openclaw config set gateway.controlUi.dangerouslyDisableDeviceAuth true
               openclaw config set gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback true
               exec openclaw gateway run --allow-unconfigured --auth token --token "$OPENCLAW_GATEWAY_TOKEN" --bind lan --port 18789
           ports:
@@ -288,6 +296,30 @@ spec:
           image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.agents.devops_worker"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-director
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegram-director
+  template:
+    metadata:
+      labels:
+        app: telegram-director
+    spec:
+      containers:
+        - name: telegram-director
+          image: clawdevs-ai:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.interfaces.telegram_director"]
           envFrom:
             - configMapRef:
                 name: clawdevs-config

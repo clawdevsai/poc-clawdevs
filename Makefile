@@ -7,12 +7,14 @@ NAMESPACE ?= clawdevs-ai
 OLLAMA_MODEL ?= qwen2.5-coder:32b
 OLLAMA_POD_SELECTOR ?= app=ollama
 OPENCLAW_GATEWAY_IMAGE ?= ghcr.io/openclaw/openclaw:latest
+TELEGRAM_BOT_TOKEN ?=
+TELEGRAM_CHAT_ID ?=
 GPU_WAIT_TIMEOUT ?= 120
 MINIKUBE_WAIT ?= all
 MINIKUBE_WAIT_TIMEOUT ?= 10m
 MINIKUBE_GPU_REQUEST ?= all
 
-.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull cluster-reset cluster-reset-hard
+.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull telegram-enable telegram-disable telegram-logs cluster-reset cluster-reset-hard
 
 help:
 	@echo "make test      - executa a suite"
@@ -30,6 +32,9 @@ help:
 	@echo "make cluster-reset-hard - purge total de profiles minikube + recriacao GPU"
 	@echo "make status    - status dos pods no Minikube"
 	@echo "make logs      - logs dos deployments principais"
+	@echo "make telegram-enable TELEGRAM_BOT_TOKEN=<token> TELEGRAM_CHAT_ID=<chat_id>"
+	@echo "make telegram-disable - desabilita bridge Telegram"
+	@echo "make telegram-logs - logs da bridge Telegram"
 	@echo "make gpu-host-check - valida GPU no Docker host (nvidia-smi)"
 	@echo "make gpu-cdi-check - valida suporte CDI no Docker host"
 	@echo "make gpu-cdi-help - abre checklist de setup CDI"
@@ -166,6 +171,7 @@ logs:
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/architect-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/developer-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/devops-worker --tail=100
+	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/openclaw-gateway --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/ollama --tail=100
 
@@ -175,6 +181,20 @@ gpu-smoke:
 ollama-pull:
 	@$(KUBECTL) get pods -n $(NAMESPACE) -l $(OLLAMA_POD_SELECTOR)
 	@$(KUBECTL) exec -n $(NAMESPACE) deployment/ollama -- ollama pull $(OLLAMA_MODEL)
+
+telegram-enable:
+	@powershell -NoProfile -Command "if ([string]::IsNullOrWhiteSpace('$(TELEGRAM_BOT_TOKEN)')) { Write-Host 'ERRO: informe TELEGRAM_BOT_TOKEN'; exit 1 }"
+	@$(KUBECTL) set env deployment/telegram-director -n $(NAMESPACE) TELEGRAM_BOT_TOKEN="$(TELEGRAM_BOT_TOKEN)" TELEGRAM_CHAT_ID="$(TELEGRAM_CHAT_ID)"
+	@$(KUBECTL) rollout restart deployment/telegram-director -n $(NAMESPACE)
+	@$(KUBECTL) rollout status deployment/telegram-director -n $(NAMESPACE) --timeout=180s
+
+telegram-disable:
+	@$(KUBECTL) set env deployment/telegram-director -n $(NAMESPACE) TELEGRAM_BOT_TOKEN="" TELEGRAM_CHAT_ID=""
+	@$(KUBECTL) rollout restart deployment/telegram-director -n $(NAMESPACE)
+	@$(KUBECTL) rollout status deployment/telegram-director -n $(NAMESPACE) --timeout=180s
+
+telegram-logs:
+	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=200 -f
 
 clean:
 	@cmd /c "for /d /r %d in (__pycache__) do @if exist \"%d\" rd /s /q \"%d\"" || true

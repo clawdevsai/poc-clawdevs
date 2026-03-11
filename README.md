@@ -94,7 +94,7 @@ make down
 No modo host (`make up-host-ollama`), voce pode sobrescrever a imagem do Gateway:
 
 ```bash
-make up-host-ollama OPENCLAW_GATEWAY_IMAGE=ghcr.io/openclawai/openclaw-gateway:latest
+make up-host-ollama OPENCLAW_GATEWAY_IMAGE=ghcr.io/openclaw/openclaw:latest
 ```
 
 Se `make` nao estiver instalado no ambiente local, use fallback direto:
@@ -107,6 +107,20 @@ kubectl apply -f k8s/stack.yaml
 kubectl get pods -n clawdevs-ai
 kubectl get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia.com/gpu
 ```
+
+## Telegram -> CEO
+
+O deployment `telegram-director` recebe mensagens do Telegram e publica no stream `cmd:strategy` (entrada do fluxo CEO/PO).
+
+Configure:
+
+```bash
+kubectl -n clawdevs-ai patch configmap clawdevs-config --type merge -p "{\"data\":{\"TELEGRAM_BOT_TOKEN\":\"<BOT_TOKEN>\",\"TELEGRAM_CHAT_ID\":\"<CHAT_ID>\"}}"
+kubectl -n clawdevs-ai rollout restart deployment/telegram-director
+kubectl -n clawdevs-ai logs deployment/telegram-director -f
+```
+
+Envie uma mensagem para o bot no chat configurado. O worker PO vai consumir via `cmd:strategy`.
 
 ## Escopo removido
 
