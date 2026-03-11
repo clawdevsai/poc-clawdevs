@@ -11,6 +11,26 @@ from app.shared.redis_client import get_redis
 
 KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
 
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or not str(raw).strip():
+        return default
+    try:
+        return int(str(raw).strip())
+    except (ValueError, TypeError):
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None or not str(raw).strip():
+        return default
+    try:
+        return float(str(raw).strip())
+    except (ValueError, TypeError):
+        return default
+
 # --- Strikes (032) ---
 def strike_key(issue_id: str) -> str:
     return f"{KEY_PREFIX}:issue:{issue_id}:strikes"
@@ -25,7 +45,7 @@ KEY_OMISSION_COUNT = f"{KEY_PREFIX}:orchestrator:omission_cosmetic_count"
 KEY_SPRINT_TASKS = f"{KEY_PREFIX}:orchestrator:sprint_task_count"
 KEY_PAUSE_DEGRADATION = "orchestration:pause_degradation"
 KEY_INVALID_OUTPUT_COUNT = f"{KEY_PREFIX}:orchestrator:invalid_output_count"
-INVALID_OUTPUT_THRESHOLD = int(os.environ.get("INVALID_OUTPUT_THRESHOLD", "3"))
+INVALID_OUTPUT_THRESHOLD = _env_int("INVALID_OUTPUT_THRESHOLD", 3)
 
 # --- Loop de consenso (034) ---
 KEY_CONSENSUS_IN_PROGRESS = f"{KEY_PREFIX}:orchestrator:consensus_loop_in_progress"
@@ -33,7 +53,7 @@ KEY_CONSENSUS_PILOT_RESULT = f"{KEY_PREFIX}:orchestrator:consensus_pilot_result"
 KEY_CONSENSUS_PROPOSAL = f"{KEY_PREFIX}:orchestrator:consensus_proposal"  # texto da proposta QA+Architect
 
 # --- Cosmético (033): timer 6h ---
-COSMETIC_TIMER_HOURS = float(os.environ.get("COSMETIC_TIMER_HOURS", "6"))
+COSMETIC_TIMER_HOURS = _env_float("COSMETIC_TIMER_HOURS", 6.0)
 COSMETIC_EXTENSIONS = frozenset(
     os.environ.get("COSMETIC_EXTENSIONS", ".css,.scss,.less,.md,.html,.htm,.svg,.json").lower().split(",")
 )
@@ -57,9 +77,9 @@ DEGRADATION_REPORT_DIR = os.environ.get("DEGRADATION_REPORT_DIR", "docs")
 MEMORY_MD_PATH = os.environ.get("MEMORY_MD_PATH", "docs/MEMORY.md")
 AREAS_QA_AUDIT_PATH = os.environ.get("AREAS_QA_AUDIT_PATH", "docs/areas-for-qa-audit.md")
 
-DEGRADATION_THRESHOLD_PCT = float(os.environ.get("DEGRADATION_THRESHOLD_PCT", "12.0"))
-CONSENSUS_LOOP_TIMEOUT_SEC = int(os.environ.get("CONSENSUS_LOOP_TIMEOUT_SEC", "3600"))
-INTERVAL_SEC = int(os.environ.get("ORCHESTRATOR_INTERVAL_SEC", "60"))
+DEGRADATION_THRESHOLD_PCT = _env_float("DEGRADATION_THRESHOLD_PCT", 12.0)
+CONSENSUS_LOOP_TIMEOUT_SEC = _env_int("CONSENSUS_LOOP_TIMEOUT_SEC", 3600)
+INTERVAL_SEC = _env_int("ORCHESTRATOR_INTERVAL_SEC", 60)
 
 
 def get_int(r, key: str, default: int = 0) -> int:
