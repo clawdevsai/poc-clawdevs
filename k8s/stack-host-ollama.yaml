@@ -97,11 +97,9 @@ spec:
             requests:
               cpu: "500m"
               memory: "2Gi"
-              nvidia.com/gpu: "1"
             limits:
               cpu: "2"
               memory: "8Gi"
-              nvidia.com/gpu: "1"
           volumeMounts:
             - name: ollama-models
               mountPath: /root/.ollama
@@ -153,7 +151,10 @@ spec:
             - containerPort: 18789
           env:
             - name: OLLAMA_BASE_URL
-              value: http://ollama:11434
+              valueFrom:
+                configMapKeyRef:
+                  name: clawdevs-config
+                  key: OLLAMA_BASE_URL
             - name: OLLAMA_MODEL
               valueFrom:
                 configMapKeyRef:
@@ -291,4 +292,3 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
-

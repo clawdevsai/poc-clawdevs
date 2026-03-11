@@ -245,6 +245,7 @@ def run_stream_worker(
         consumer_group=agent.consumer_group,
         consumer_name=agent.consumer_name,
     )
+    _ensure_consumer_group(redis_client, agent)
     while True:
         try:
             reply = redis_client.xreadgroup(
@@ -255,6 +256,17 @@ def run_stream_worker(
                 count=1,
             )
         except Exception as error:
+            if "NOGROUP" in str(error):
+                try:
+                    _ensure_consumer_group(redis_client, agent)
+                except Exception as ensure_error:
+                    log_error(
+                        "runtime.consumer_group_recreate_error",
+                        role=agent.role_name,
+                        stream=agent.stream_name,
+                        consumer_group=agent.consumer_group,
+                        error=str(ensure_error),
+                    )
             log_error(
                 "runtime.xreadgroup_error",
                 role=agent.role_name,
@@ -303,3 +315,23 @@ def run_stream_worker(
                         error=str(error),
                     )
                     agent.on_error(redis_client, ctx, error)
+
+
+def _ensure_consumer_group(redis_client: RedisClient, agent: StreamAgent) -> None:
+    try:
+        redis_client.xgroup_create(
+            name=agent.stream_name,
+            groupname=agent.consumer_group,
+            id="0",
+            mkstream=True,
+        )
+        log_event(
+            "runtime.consumer_group_created",
+            role=agent.role_name,
+            stream=agent.stream_name,
+            consumer_group=agent.consumer_group,
+        )
+    except Exception as error:
+        if "BUSYGROUP" in str(error):
+            return
+        raise
