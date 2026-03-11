@@ -21,6 +21,7 @@ STREAM_EVENT_DEVOPS = os.getenv("STREAM_EVENT_DEVOPS", "event:devops")
 STATE_KEY_OFFSET = os.getenv("TELEGRAM_OFFSET_KEY", "telegram:director:last_update_id")
 STATE_KEY_PENDING_PREFIX = os.getenv("TELEGRAM_PENDING_KEY_PREFIX", "telegram:director:pending_start")
 OLLAMA_BASE_URL = (os.getenv("OLLAMA_BASE_URL") or os.getenv("OLLAMA_HOST") or "http://ollama:11434").rstrip("/")
+OLLAMA_CLOUD_BASE_URL = (os.getenv("OLLAMA_CLOUD_BASE_URL") or "https://ollama.com").rstrip("/")
 OLLAMA_MODEL = (
     os.getenv("OPENCLAW_MODEL_CEO_PRIMARY")
     or os.getenv("OPENCLAW_MODEL_CEO")
@@ -28,6 +29,7 @@ OLLAMA_MODEL = (
     or "qwen3.5:397b-cloud"
 ).strip()
 CEO_LOCAL_FALLBACK_MODEL = (os.getenv("OPENCLAW_MODEL_CEO_LOCAL_FALLBACK") or "qwen2.5:3b").strip()
+OLLAMA_API_KEY = (os.getenv("OLLAMA_API_KEY") or "").strip()
 KEY_PREFIX = (os.getenv("KEY_PREFIX_PROJECT") or "project:v1").strip()
 GITHUB_REPO = (os.getenv("GITHUB_REPO") or os.getenv("GH_REPO") or "").strip()
 GITHUB_TOKEN = (os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN") or "").strip()
@@ -119,6 +121,9 @@ def ensure_polling_mode() -> None:
 
 
 def generate_ceo_reply(instruction: str) -> str | None:
+    def to_cloud_model_name(model_name: str) -> str:
+        return model_name[:-6] if model_name.endswith("-cloud") else model_name
+
     def list_available_models() -> list[str]:
         try:
             with urllib.request.urlopen(f"{OLLAMA_BASE_URL}/api/tags", timeout=10) as response:
@@ -184,6 +189,52 @@ def generate_ceo_reply(instruction: str) -> str | None:
                 continue
 
     print(f"[telegram] falha ao gerar resposta CEO via Ollama: {last_error}")
+
+    if OLLAMA_API_KEY:
+        cloud_seen: set[str] = set()
+        for model_name in model_candidates:
+            cloud_model = to_cloud_model_name(model_name)
+            if cloud_model in cloud_seen:
+                continue
+            cloud_seen.add(cloud_model)
+            chat_payload = {
+                "model": cloud_model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Você é o CEO técnico do ClawDevs AI. Responda em português, "
+                            "de forma objetiva, com foco em estratégia de produto e execução."
+                        ),
+                    },
+                    {"role": "user", "content": instruction},
+                ],
+                "stream": False,
+            }
+            body = json.dumps(chat_payload).encode("utf-8")
+            request = urllib.request.Request(
+                f"{OLLAMA_CLOUD_BASE_URL}/api/chat",
+                data=body,
+                method="POST",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {OLLAMA_API_KEY}",
+                },
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=90) as response:
+                    raw = response.read().decode("utf-8")
+                parsed = json.loads(raw)
+                message = parsed.get("message") or {}
+                content = (message.get("content") or "").strip()
+                if content:
+                    print("[telegram] CEO usando Ollama Cloud via API key.")
+                    return content
+            except Exception as error:
+                last_error = error
+                continue
+
+        print(f"[telegram] falha ao gerar resposta CEO via Ollama Cloud: {last_error}")
     return None
 
 
