@@ -127,6 +127,12 @@ kubectl get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.
 
 O deployment `telegram-director` recebe mensagens do Telegram e publica no stream `cmd:strategy` (entrada do fluxo CEO/PO).
 
+Comandos suportados no chat:
+
+- `/status`: retorna status estruturado (tarefas por estado, fluxo PO/QA/DevOps, PRs GitHub)
+- `iniciar desenvolvimento <demanda>`: enfileira demanda no pipeline de agentes
+- `/pesquisar <tema>`: CEO responde com contexto web best-effort + plano objetivo
+
 Configure:
 
 ```bash

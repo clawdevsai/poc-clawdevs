@@ -8,12 +8,16 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 
 from app.shared.redis_client import get_redis_with_retry
 
 TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
 TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID") or "").strip()
 STREAM_CMD_STRATEGY = os.getenv("STREAM_CMD_STRATEGY", "cmd:strategy")
+STREAM_DRAFT_ISSUE = os.getenv("STREAM_DRAFT_ISSUE", "draft.2.issue")
+STREAM_CODE_READY = os.getenv("QA_STREAM", "code:ready")
+STREAM_EVENT_DEVOPS = os.getenv("STREAM_EVENT_DEVOPS", "event:devops")
 STATE_KEY_OFFSET = os.getenv("TELEGRAM_OFFSET_KEY", "telegram:director:last_update_id")
 OLLAMA_BASE_URL = (os.getenv("OLLAMA_BASE_URL") or os.getenv("OLLAMA_HOST") or "http://ollama:11434").rstrip("/")
 OLLAMA_MODEL = (
@@ -22,6 +26,48 @@ OLLAMA_MODEL = (
     or os.getenv("OLLAMA_MODEL")
     or "qwen3.5:397b-cloud"
 ).strip()
+CEO_LOCAL_FALLBACK_MODEL = (os.getenv("OPENCLAW_MODEL_CEO_LOCAL_FALLBACK") or "qwen2.5:3b").strip()
+KEY_PREFIX = (os.getenv("KEY_PREFIX_PROJECT") or "project:v1").strip()
+GITHUB_REPO = (os.getenv("GITHUB_REPO") or os.getenv("GH_REPO") or "").strip()
+GITHUB_TOKEN = (os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN") or "").strip()
+ENABLE_WEB_SEARCH = (os.getenv("TELEGRAM_ENABLE_WEB_SEARCH") or "1").strip().lower() in {"1", "true", "yes", "on"}
+MAX_MESSAGE_CHARS = 3800
+
+STATE_BACKLOG = "Backlog"
+STATE_REFINAMENTO = "Refinamento"
+STATE_READY = "Ready"
+STATE_IN_PROGRESS = "InProgress"
+STATE_DEPLOYED = "Deployed"
+STATE_DONE = "Done"
+
+STATUS_KEYWORDS = (
+    "/status",
+    "status",
+    "andamento",
+    "progresso",
+    "como está",
+    "como esta",
+    "o que falta",
+    "quantas tarefas",
+    "quantos prs",
+)
+START_KEYWORDS = (
+    "/iniciar",
+    "iniciar desenvolvimento",
+    "começar desenvolvimento",
+    "comecar desenvolvimento",
+    "start development",
+)
+SEARCH_HINTS = (
+    "/pesquisar",
+    "pesquise",
+    "buscar na internet",
+    "busque na internet",
+    "dados atuais",
+    "últimas notícias",
+    "ultimas noticias",
+    "latest",
+)
 
 
 def _telegram_request(method: str, payload: dict) -> dict:
@@ -38,7 +84,8 @@ def _telegram_request(method: str, payload: dict) -> dict:
 
 def send_message(chat_id: str, text: str) -> None:
     try:
-        _telegram_request("sendMessage", {"chat_id": chat_id, "text": text})
+        safe_text = text if len(text) <= MAX_MESSAGE_CHARS else (text[: (MAX_MESSAGE_CHARS - 20)] + "\n\n[resposta truncada]")
+        _telegram_request("sendMessage", {"chat_id": chat_id, "text": safe_text})
     except Exception as error:
         print(f"[telegram] erro ao responder chat {chat_id}: {error}")
 
@@ -52,53 +99,240 @@ def ensure_polling_mode() -> None:
 
 
 def generate_ceo_reply(instruction: str) -> str | None:
-    chat_payload = {
-        "model": OLLAMA_MODEL,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Você é o CEO técnico do ClawDevs AI. Responda em português, "
-                    "de forma objetiva, com foco em estratégia de produto e execução."
-                ),
-            },
-            {"role": "user", "content": instruction},
-        ],
-        "stream": False,
-    }
-    endpoints: list[tuple[str, dict]] = [
-        ("/api/chat", chat_payload),
-        ("/v1/chat/completions", chat_payload),
-    ]
-    last_error: Exception | None = None
-
-    for endpoint, payload in endpoints:
-        body = json.dumps(payload).encode("utf-8")
-        request = urllib.request.Request(
-            f"{OLLAMA_BASE_URL}{endpoint}",
-            data=body,
-            method="POST",
-            headers={"Content-Type": "application/json"},
-        )
+    def list_available_models() -> list[str]:
         try:
-            with urllib.request.urlopen(request, timeout=90) as response:
-                raw = response.read().decode("utf-8")
-            parsed = json.loads(raw)
-            if endpoint == "/api/chat":
-                message = parsed.get("message") or {}
-                content = (message.get("content") or "").strip()
-            else:
-                choices = parsed.get("choices") or []
-                message = (choices[0] or {}).get("message") if choices else {}
-                content = (message or {}).get("content", "").strip()
-            if content:
-                return content
-        except Exception as error:
-            last_error = error
-            continue
+            with urllib.request.urlopen(f"{OLLAMA_BASE_URL}/api/tags", timeout=10) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            models = payload.get("models") or []
+            names = [str(m.get("name") or "").strip() for m in models if isinstance(m, dict)]
+            return [name for name in names if name]
+        except Exception:
+            return []
+
+    available_models = list_available_models()
+    model_candidates = [OLLAMA_MODEL]
+    if CEO_LOCAL_FALLBACK_MODEL and CEO_LOCAL_FALLBACK_MODEL not in model_candidates:
+        model_candidates.append(CEO_LOCAL_FALLBACK_MODEL)
+    if available_models and all(candidate not in available_models for candidate in model_candidates):
+        model_candidates.insert(0, available_models[0])
+
+    last_error: Exception | None = None
+    for model_name in model_candidates:
+        chat_payload = {
+            "model": model_name,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "Você é o CEO técnico do ClawDevs AI. Responda em português, "
+                        "de forma objetiva, com foco em estratégia de produto e execução."
+                    ),
+                },
+                {"role": "user", "content": instruction},
+            ],
+            "stream": False,
+        }
+        endpoints: list[tuple[str, dict]] = [
+            ("/api/chat", chat_payload),
+            ("/v1/chat/completions", chat_payload),
+        ]
+        for endpoint, payload in endpoints:
+            body = json.dumps(payload).encode("utf-8")
+            request = urllib.request.Request(
+                f"{OLLAMA_BASE_URL}{endpoint}",
+                data=body,
+                method="POST",
+                headers={"Content-Type": "application/json"},
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=90) as response:
+                    raw = response.read().decode("utf-8")
+                parsed = json.loads(raw)
+                if endpoint == "/api/chat":
+                    message = parsed.get("message") or {}
+                    content = (message.get("content") or "").strip()
+                else:
+                    choices = parsed.get("choices") or []
+                    message = (choices[0] or {}).get("message") if choices else {}
+                    content = (message or {}).get("content", "").strip()
+                if content:
+                    if model_name != OLLAMA_MODEL:
+                        print(f"[telegram] CEO fallback de modelo aplicado: {OLLAMA_MODEL} -> {model_name}")
+                    return content
+            except Exception as error:
+                last_error = error
+                continue
 
     print(f"[telegram] falha ao gerar resposta CEO via Ollama: {last_error}")
     return None
+
+
+def _to_int(value, default: int = 0) -> int:
+    try:
+        if value is None:
+            return default
+        if isinstance(value, bytes):
+            value = value.decode("utf-8", errors="replace")
+        return int(str(value).strip())
+    except (ValueError, TypeError):
+        return default
+
+
+def _xlen(redis_client, stream_name: str) -> int:
+    try:
+        return _to_int(redis_client.xlen(stream_name), 0)
+    except Exception:
+        return 0
+
+
+def fetch_github_pr_stats() -> tuple[int | None, int | None, str]:
+    if not GITHUB_REPO:
+        return None, None, "GITHUB_REPO não configurado"
+
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/pulls?state=all&per_page=100"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "clawdevs-telegram-director",
+    }
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+
+    request = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        if not isinstance(data, list):
+            return None, None, "resposta inesperada da API do GitHub"
+        total = len(data)
+        opened = sum(1 for pr in data if str(pr.get("state", "")).lower() == "open")
+        return opened, total, "ok"
+    except Exception as error:
+        return None, None, f"falha GitHub API: {error}"
+
+
+def collect_progress(redis_client) -> dict:
+    states = {
+        STATE_BACKLOG: 0,
+        STATE_REFINAMENTO: 0,
+        STATE_READY: 0,
+        STATE_IN_PROGRESS: 0,
+        STATE_DEPLOYED: 0,
+        STATE_DONE: 0,
+    }
+    total_issues = 0
+    pattern = f"{KEY_PREFIX}:issue:*:state"
+    try:
+        for raw_key in redis_client.scan_iter(match=pattern):
+            key = raw_key.decode("utf-8", errors="replace") if isinstance(raw_key, bytes) else str(raw_key)
+            issue_id = key.replace(f"{KEY_PREFIX}:issue:", "").replace(":state", "")
+            if not issue_id:
+                continue
+            total_issues += 1
+            raw_state = redis_client.get(key)
+            state = raw_state.decode("utf-8", errors="replace") if isinstance(raw_state, bytes) else str(raw_state or "")
+            if state in states:
+                states[state] += 1
+    except Exception:
+        pass
+
+    prs_open, prs_total, prs_note = fetch_github_pr_stats()
+
+    return {
+        "timestamp_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
+        "issues_total": total_issues,
+        "states": states,
+        "po_tasks_created_total": _xlen(redis_client, STREAM_DRAFT_ISSUE),
+        "code_ready_total": _xlen(redis_client, STREAM_CODE_READY),
+        "devops_events_total": _xlen(redis_client, STREAM_EVENT_DEVOPS),
+        "commands_received_total": _xlen(redis_client, STREAM_CMD_STRATEGY),
+        "prs_open": prs_open,
+        "prs_total": prs_total,
+        "prs_note": prs_note,
+    }
+
+
+def format_progress_message(progress: dict) -> str:
+    states = progress["states"]
+    prs_open = progress["prs_open"]
+    prs_total = progress["prs_total"]
+    prs_line = f"{prs_open} abertos / {prs_total} total" if prs_open is not None and prs_total is not None else f"indisponível ({progress['prs_note']})"
+
+    return (
+        "📊 Status do Projeto (CEO)\n\n"
+        f"Atualizado em: {progress['timestamp_utc']}\n\n"
+        "1) Execução de tarefas\n"
+        f"- Issues totais: {progress['issues_total']}\n"
+        f"- Backlog: {states[STATE_BACKLOG]}\n"
+        f"- Refinamento: {states[STATE_REFINAMENTO]}\n"
+        f"- Ready: {states[STATE_READY]}\n"
+        f"- Em desenvolvimento: {states[STATE_IN_PROGRESS]}\n"
+        f"- Deployed: {states[STATE_DEPLOYED]}\n"
+        f"- Done: {states[STATE_DONE]}\n\n"
+        "2) Pipeline de agentes\n"
+        f"- Tarefas criadas pelo PO (draft.2.issue): {progress['po_tasks_created_total']}\n"
+        f"- Entregas para QA (code:ready): {progress['code_ready_total']}\n"
+        f"- Eventos para DevOps (event:devops): {progress['devops_events_total']}\n"
+        f"- Demandas recebidas no CEO (cmd:strategy): {progress['commands_received_total']}\n\n"
+        "3) Git / PRs\n"
+        f"- PRs: {prs_line}\n"
+    )
+
+
+def _extract_search_results(payload: dict, limit: int = 5) -> list[tuple[str, str]]:
+    out: list[tuple[str, str]] = []
+    for topic in payload.get("RelatedTopics", []) or []:
+        if isinstance(topic, dict) and topic.get("Text") and topic.get("FirstURL"):
+            out.append((str(topic["Text"]), str(topic["FirstURL"])))
+        for sub in topic.get("Topics", []) if isinstance(topic, dict) else []:
+            if isinstance(sub, dict) and sub.get("Text") and sub.get("FirstURL"):
+                out.append((str(sub["Text"]), str(sub["FirstURL"])))
+        if len(out) >= limit:
+            break
+    return out[:limit]
+
+
+def run_web_search(query: str) -> str:
+    if not ENABLE_WEB_SEARCH:
+        return "Pesquisa web desabilitada por configuração."
+    url = "https://api.duckduckgo.com/?" + urllib.parse.urlencode(
+        {"q": query, "format": "json", "no_redirect": "1", "no_html": "1", "skip_disambig": "1"}
+    )
+    request = urllib.request.Request(url, method="GET", headers={"User-Agent": "clawdevs-telegram-director"})
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        abstract = str(payload.get("AbstractText") or "").strip()
+        abstract_url = str(payload.get("AbstractURL") or "").strip()
+        rows = _extract_search_results(payload, limit=5)
+        parts = []
+        if abstract:
+            if abstract_url:
+                parts.append(f"- Resumo: {abstract} ({abstract_url})")
+            else:
+                parts.append(f"- Resumo: {abstract}")
+        if rows:
+            parts.append("- Fontes:")
+            parts.extend(f"  - {text} ({url})" for text, url in rows)
+        if not parts:
+            return "Sem resultados relevantes de busca web para esta consulta."
+        return "\n".join(parts)
+    except Exception as error:
+        return f"Falha na busca web: {error}"
+
+
+def should_show_status(text: str) -> bool:
+    lowered = text.lower().strip()
+    return any(keyword in lowered for keyword in STATUS_KEYWORDS)
+
+
+def is_start_command(text: str) -> bool:
+    lowered = text.lower().strip()
+    return any(keyword in lowered for keyword in START_KEYWORDS)
+
+
+def should_search_web(text: str) -> bool:
+    lowered = text.lower().strip()
+    return any(keyword in lowered for keyword in SEARCH_HINTS)
 
 
 def get_updates(offset: int) -> list[dict]:
@@ -134,27 +368,68 @@ def handle_message(redis_client, update: dict) -> None:
     if text in {"/start", "/help"}:
         send_message(
             chat_id,
-            "Envie uma diretriz estratégica em texto. "
-            "Ela será publicada no fluxo CEO/PO.",
+            "Comandos disponíveis:\n"
+            "- /status: status estruturado do projeto\n"
+            "- iniciar desenvolvimento <demanda>: inicia pipeline com agentes\n"
+            "- /pesquisar <tema>: CEO responde com contexto web + estratégia\n\n"
+            "Também aceito mensagens livres para o CEO.",
         )
         return
 
-    issue_id = normalize_issue_id(update_id)
-    payload = {
-        "issue_id": issue_id,
-        "directive": text,
-        "source": "telegram",
-        "event_name": "cmd.strategy.telegram",
-        "chat_id": chat_id,
-        "update_id": str(update_id),
-    }
-    redis_client.xadd(STREAM_CMD_STRATEGY, payload, maxlen=5000, approximate=True)
-    ceo_reply = generate_ceo_reply(text)
+    if should_show_status(text):
+        progress = collect_progress(redis_client)
+        send_message(chat_id, format_progress_message(progress))
+        return
+
+    wants_start = is_start_command(text)
+    issue_id = normalize_issue_id(update_id) if wants_start else None
+
+    if wants_start:
+        payload = {
+            "issue_id": issue_id,
+            "directive": f"[START_DEVELOPMENT]\n{text}",
+            "source": "telegram",
+            "event_name": "cmd.strategy.start_development",
+            "chat_id": chat_id,
+            "update_id": str(update_id),
+        }
+        redis_client.xadd(STREAM_CMD_STRATEGY, payload, maxlen=5000, approximate=True)
+
+    research = ""
+    if should_search_web(text):
+        research = run_web_search(text)
+
+    progress = collect_progress(redis_client)
+    status_context = format_progress_message(progress)
+    ceo_prompt = (
+        f"Solicitação do diretor:\n{text}\n\n"
+        "Você deve responder em formato estruturado com:\n"
+        "1) Entendimento da demanda\n"
+        "2) Plano objetivo\n"
+        "3) Status atual do projeto\n"
+        "4) Próximos passos\n\n"
+        f"Status atual interno:\n{status_context}\n\n"
+    )
+    if research:
+        ceo_prompt += f"Contexto web (best-effort):\n{research}\n\n"
+
+    ceo_reply = generate_ceo_reply(ceo_prompt)
     if ceo_reply:
-        send_message(chat_id, f"CEO:\n{ceo_reply}\n\n(ref: {issue_id})")
+        if wants_start:
+            send_message(
+                chat_id,
+                "✅ Desenvolvimento iniciado no pipeline de agentes.\n\n"
+                f"Ref: {issue_id}\n\nCEO:\n{ceo_reply}",
+            )
+        else:
+            send_message(chat_id, f"CEO:\n{ceo_reply}")
     else:
-        send_message(chat_id, f"Diretriz recebida e enfileirada ({issue_id}).")
-    print(f"[telegram] publicado em {STREAM_CMD_STRATEGY}: {issue_id}")
+        if wants_start:
+            send_message(chat_id, f"✅ Desenvolvimento iniciado e enfileirado ({issue_id}).")
+        else:
+            send_message(chat_id, "CEO indisponível no momento para resposta completa. Tente novamente.")
+    if wants_start and issue_id:
+        print(f"[telegram] publicado em {STREAM_CMD_STRATEGY}: {issue_id}")
 
 
 def main() -> int:

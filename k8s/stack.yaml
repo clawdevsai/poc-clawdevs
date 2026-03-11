@@ -35,6 +35,10 @@ data:
   OPENCLAW_GATEWAY_WS: ws://openclaw-gateway:18789
   OPENCLAW_GATEWAY_TOKEN: local-dev-token
   OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: "1"
+  GITHUB_REPO: ""
+  GH_REPO: ""
+  GITHUB_TOKEN: ""
+  TELEGRAM_ENABLE_WEB_SEARCH: "1"
   TELEGRAM_BOT_TOKEN: ""
   TELEGRAM_CHAT_ID: ""
 ---
@@ -157,7 +161,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: ghcr.io/openclaw/openclaw:latest
+          image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-lc"]
           args:
