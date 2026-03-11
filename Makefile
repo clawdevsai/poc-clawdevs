@@ -3,6 +3,8 @@ MINIKUBE ?= minikube
 KUBECTL ?= kubectl
 DOCKER ?= docker
 IMAGE ?= clawdevs-ai:latest
+DIRECTOR_IMAGE ?= director-console:latest
+DIRECTOR_CONSOLE_DIR ?= director-console
 NAMESPACE ?= clawdevs-ai
 OLLAMA_MODEL ?= qwen3-next:80b-cloud
 OLLAMA_POD_SELECTOR ?= app=ollama
@@ -52,6 +54,7 @@ help:
 	@echo "make gh-token-sync - alias para make env-sync"
 	@echo "make gh-auth-check - valida autenticacao do gh CLI em todos os deployments"
 	@echo "OPENCLAW_GATEWAY_IMAGE=<img> pode sobrescrever imagem do gateway"
+	@echo "DIRECTOR_IMAGE=<img> pode sobrescrever imagem do director-console"
 	@echo "make clean     - remove caches Python"
 
 test:
@@ -114,9 +117,11 @@ gpu-debug:
 
 image-build:
 	@$(MINIKUBE) image build -t $(IMAGE) .
+	@$(MINIKUBE) image build -t $(DIRECTOR_IMAGE) $(DIRECTOR_CONSOLE_DIR)
 
 deploy:
 	@$(KUBECTL) apply -f k8s/stack.yaml
+	@$(KUBECTL) set image deployment/director-console director-console=$(DIRECTOR_IMAGE) -n $(NAMESPACE)
 	@$(MAKE) env-sync
 	@powershell -NoProfile -Command "if ('$(OLLAMA_AUTO_PULL)' -eq '1') { & $(MAKE) ollama-pull-all } else { Write-Host 'OLLAMA_AUTO_PULL=0, pulando bootstrap de modelos' }"
 	@$(KUBECTL) get pods -n $(NAMESPACE)
@@ -124,6 +129,7 @@ deploy:
 deploy-host:
 	@$(KUBECTL) delete deploy/ollama svc/ollama -n $(NAMESPACE) --ignore-not-found=true
 	@$(KUBECTL) apply -f k8s/stack-host-ollama.yaml
+	@$(KUBECTL) set image deployment/director-console director-console=$(DIRECTOR_IMAGE) -n $(NAMESPACE)
 	@$(MAKE) env-sync
 	@powershell -NoProfile -Command "if ('$(OLLAMA_AUTO_PULL)' -eq '1') { & $(MAKE) ollama-pull-all } else { Write-Host 'OLLAMA_AUTO_PULL=0, pulando bootstrap de modelos' }"
 	@$(KUBECTL) set image deployment/openclaw-gateway gateway=$(OPENCLAW_GATEWAY_IMAGE) -n $(NAMESPACE)

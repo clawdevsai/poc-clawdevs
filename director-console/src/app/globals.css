@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #040914;
+  --panel: rgba(10, 20, 35, 0.74);
+  --panel-strong: rgba(12, 24, 42, 0.94);
+  --line: rgba(135, 184, 255, 0.16);
+  --text: #e9f2ff;
+  --muted: #9bb0cf;
+  --accent: #59d7ff;
+  --accent-2: #8dffc3;
+  --warning: #ffd166;
+}
+
+html,
+body {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(82, 209, 255, 0.16), transparent 26%),
+    radial-gradient(circle at top right, rgba(137, 255, 182, 0.12), transparent 18%),
+    linear-gradient(180deg, #07111f 0%, #050913 100%);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-ui), "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.panel-strong {
+  background: var(--panel-strong);
+}

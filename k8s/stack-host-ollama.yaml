@@ -12,6 +12,13 @@ data:
   REDIS_HOST: redis
   REDIS_PORT: "6379"
   KEY_PREFIX_PROJECT: project:v1
+  STREAM_CMD_STRATEGY: cmd:strategy
+  STREAM_DRAFT_ISSUE: draft.2.issue
+  QA_STREAM: code:ready
+  STREAM_EVENT_DEVOPS: event:devops
+  STREAM_ORCHESTRATOR_EVENTS: orchestrator:events
+  TELEGRAM_PENDING_KEY_PREFIX: telegram:director:pending_start
+  DIRECTOR_PENDING_KEY_PREFIX: director-console:pending_start
   MODEL_PROVIDER: ollama
   MODEL_MODE: cloud
   OLLAMA_BASE_URL: http://ollama:11434
@@ -404,6 +411,51 @@ spec:
           image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.interfaces.telegram_director"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: director-console
+  namespace: clawdevs-ai
+spec:
+  selector:
+    app: director-console
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: director-console
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: director-console
+  template:
+    metadata:
+      labels:
+        app: director-console
+    spec:
+      containers:
+        - name: director-console
+          image: director-console:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: PORT
+              value: "3000"
           envFrom:
             - configMapRef:
                 name: clawdevs-config
