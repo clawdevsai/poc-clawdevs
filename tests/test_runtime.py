@@ -6,12 +6,15 @@ from app.runtime import (
     RunContext,
     ToolRegistry,
     build_session_sender,
+    build_runtime_tool_registry,
     extract_issue_id,
     increment_attempt,
+    load_runtime_stack_config,
     log_event,
     payload_to_dict,
     process_stream_message,
     should_stop_task,
+    validate_runtime_stack,
 )
 from app.agents.base import AgentSettings, BaseRoleAgent
 from app.agents.architect_agent import ArchitectDraftAgent
@@ -19,6 +22,7 @@ from app.agents.developer_agent import DeveloperAgent
 from app.agents.devops_agent import DevOpsAgent
 import io
 from contextlib import redirect_stdout
+import os
 
 
 class FakeRedis:
@@ -298,6 +302,65 @@ def test_tool_registry_dispatches_session_sender():
     assert ok is True
     assert output == {"queued": True}
     assert calls == [("agent:po:test", "ship it", 3)]
+
+
+def test_runtime_stack_defaults_to_openclaw_plus_ollama():
+    previous = {key: os.environ.get(key) for key in ("OPENCLAW_REQUIRED", "MODEL_PROVIDER", "MODEL_MODE")}
+    for key in previous:
+        os.environ.pop(key, None)
+
+    try:
+        config = load_runtime_stack_config()
+    finally:
+        for key, value in previous.items():
+            if value is not None:
+                os.environ[key] = value
+
+    assert config.openclaw_required is True
+    assert config.model_provider == "ollama"
+    assert config.model_mode == "cloud"
+    assert config.stack_label == "openclaw+ollama"
+
+
+def test_runtime_stack_validation_requires_openclaw_and_ollama_model():
+    previous = {
+        key: os.environ.get(key)
+        for key in ("OPENCLAW_GATEWAY_WS", "MODEL_PROVIDER", "MODEL_MODE", "OLLAMA_BASE_URL", "OLLAMA_MODEL")
+    }
+    for key in previous:
+        os.environ.pop(key, None)
+
+    try:
+        errors = validate_runtime_stack()
+    finally:
+        for key, value in previous.items():
+            if value is not None:
+                os.environ[key] = value
+
+    assert any("OPENCLAW_GATEWAY_WS" in error for error in errors)
+    assert any("OLLAMA_MODEL" in error for error in errors)
+
+
+def test_runtime_tool_registry_validates_stack_before_build():
+    previous = {
+        key: os.environ.get(key)
+        for key in ("OPENCLAW_GATEWAY_WS", "MODEL_PROVIDER", "MODEL_MODE", "OLLAMA_BASE_URL", "OLLAMA_MODEL")
+    }
+    for key in previous:
+        os.environ.pop(key, None)
+
+    try:
+        try:
+            build_runtime_tool_registry()
+        except RuntimeError as error:
+            assert "OPENCLAW_GATEWAY_WS" in str(error)
+            assert "OLLAMA_MODEL" in str(error)
+        else:
+            raise AssertionError("RuntimeError esperado para stack invalida")
+    finally:
+        for key, value in previous.items():
+            if value is not None:
+                os.environ[key] = value
 
 
 def test_log_event_writes_json_line():

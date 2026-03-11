@@ -4,6 +4,7 @@ from .agent_runtime import AgentResult, GatewayOutput, PreparedRun, RedisClient,
 from .event_envelope import EventEnvelope, RESERVED_EVENT_FIELDS
 from .finops import increment_attempt, should_stop_task
 from .logging import log_error, log_event
+from .model_provider import RuntimeStackConfig, load_runtime_stack_config, validate_runtime_stack
 from .openclaw_client import TOOL_OPENCLAW_SESSIONS_SEND, gateway_call, send_to_session
 from .policies import ExecutionPolicy
 from .run_context import RunContext, extract_issue_id
@@ -23,6 +24,9 @@ __all__ = [
     "should_stop_task",
     "log_error",
     "log_event",
+    "RuntimeStackConfig",
+    "load_runtime_stack_config",
+    "validate_runtime_stack",
     "TOOL_OPENCLAW_SESSIONS_SEND",
     "gateway_call",
     "send_to_session",

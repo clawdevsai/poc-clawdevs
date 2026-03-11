@@ -18,6 +18,7 @@ O nucleo ativo ja possui:
 - envelope padrao de evento com `run_id`, `trace_id`, `attempt` e budget
 - budgets de execucao com enforcement no loop do runtime
 - `ToolRegistry` minimo para envio ao OpenClaw
+- stack explicita `OpenClaw + Ollama`
 - governanca centralizada em um unico modulo
 - logs estruturados em JSON
 - resultados de agente com `status_code` e `event_name`
@@ -37,11 +38,35 @@ tests/
 
 ## Modulos principais
 
-- `app/runtime/`: contrato publico do runtime, envelope, budgets, logging, tool registry e cliente OpenClaw
+- `app/runtime/`: contrato publico do runtime, envelope, budgets, logging, tool registry, cliente OpenClaw e configuracao de provider
 - `app/agents/`: implementacoes de PO, Architect, Developer e DevOps
 - `app/core/orchestration.py`: governanca, degradacao, consenso e emissao de eventos
 - `app/shared/`: Redis e estado de issue
 - `tests/`: cobertura do runtime e da governanca
+
+## Stack de inferencia
+
+O runtime atual assume explicitamente esta stack:
+
+```text
+Workers -> OpenClaw Gateway -> Ollama
+```
+
+Padrao operacional:
+
+- `OpenClaw` e obrigatorio como gateway de execucao dos agentes
+- `Ollama` e o provider de modelo esperado
+- `MODEL_MODE=cloud` representa o uso de Ollama em endpoint remoto
+
+Variaveis minimas:
+
+```bash
+OPENCLAW_GATEWAY_WS=ws://host:18789
+MODEL_PROVIDER=ollama
+MODEL_MODE=cloud
+OLLAMA_BASE_URL=https://seu-endpoint-ollama
+OLLAMA_MODEL=seu-modelo
+```
 
 ## Comandos
 

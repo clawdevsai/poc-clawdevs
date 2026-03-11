@@ -11,6 +11,7 @@ O estado atual consolidado e:
 - o envelope de evento ja padroniza `type`, `issue_id`, `run_id`, `trace_id`, `attempt` e `budget_started_at`
 - `RunContext`, `ExecutionPolicy`, `AgentResult` e `ToolRegistry` ja existem
 - o cliente OpenClaw foi movido para o runtime
+- a stack `OpenClaw + Ollama` agora e parte explicita da configuracao do runtime
 - a governanca foi consolidada em `app/core/orchestration.py`
 - o runtime ja aplica budget de tentativa e tempo antes do dispatch
 - o requeue preserva o envelope e incrementa `attempt`
@@ -44,6 +45,7 @@ Os arquivos abaixo concentram o nucleo operacional atual:
 - `app/agents/developer_worker.py`
 - `app/agents/devops_worker.py`
 - `app/runtime/openclaw_client.py`
+- `app/runtime/model_provider.py`
 - `app/shared/issue_state.py`
 - `app/shared/redis_client.py`
 
