@@ -1,8 +1,0 @@
-# Namespace para o ecossistema ClawDevs (agentes, Redis, Ollama, OpenClaw).
-# Limite 65% do hardware é aplicado via ResourceQuota em limits.yaml.
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ai-agents
-  labels:
-    app.kubernetes.io/name: clawdevs

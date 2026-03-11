@@ -1,13 +1,20 @@
-# App — Python (`.py`)
+# App
 
-Scripts Python do ClawDevs: workers (PO, Architect, Developer, DevOps, Revisão), gateway adapter, orquestrador, segurança, FinOps.
+Codigo Python do ClawDevs AI.
 
-Os **scripts shell** ficam na pasta **`scripts/`**.
+## Nucleo vivo
 
-## ConfigMaps (Makefile)
+- `agents/`: papeis do fluxo principal e wrappers de execucao
+- `runtime/`: loop compartilhado, contexto, budgets, logging e tools
+- `core/`: governanca e degradacao
+- `shared/`: Redis e estado de issue
 
-O Makefile cria ConfigMaps a partir daqui para os pods. Ex.: `make configmap-developer` usa `app/developer_worker.py`, `app/gpu_lock.py`, etc.
+## Fluxo principal atual
 
-## Dependência (GPU Lock)
+```text
+cmd:strategy -> PO -> draft.2.issue -> Architect -> task:backlog -> Developer -> event:devops -> DevOps
+```
 
-`app/requirements-gpu-lock.txt` — usar nos agentes que importam `gpu_lock` (`pip install -r app/requirements-gpu-lock.txt` ou `pip install redis`).
+## Observacao
+
+O repositorio foi reduzido para o fluxo principal. A evolucao daqui em diante deve priorizar runtime, workflow e dominio, sem reintroduzir subsistemas perifericos.

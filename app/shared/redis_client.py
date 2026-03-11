@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
-"""
-Singleton Redis client compartilhado entre todos os módulos ClawDevs.
-
-Centraliza a configuração de conexão e elimina a duplicação de get_redis()
-que existia em 7+ módulos (orchestration.py, acefalo_redis.py, disjuntor_draft_rejected.py,
-gpu_lock.py, gateway_token_bucket.py, working_buffer_ttl.py, redis_buffer_writer.py).
-
-Uso:
-    from shared.redis_client import get_redis, get_redis_with_retry
-
-Variáveis de ambiente:
-    REDIS_HOST       — padrão: 127.0.0.1
-    REDIS_PORT       — padrão: 6379
-    REDIS_PASSWORD   — padrão: None
-"""
+"""Cliente Redis compartilhado do runtime principal."""
 import os
 import time
 import sys

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""
-Chaves e helpers: five strikes por issue, aprovação por omissão cosmética,
-orçamento de degradação, loop de consenso, QA auditor.
-Ref: docs/06-operacoes.md, docs/issues/032–036.
-"""
+"""Modulo unico de governanca do runtime principal."""
 import os
 import time
+from datetime import datetime
 from pathlib import Path
+
+from app.runtime import EventEnvelope, log_error, log_event
+from app.shared.redis_client import get_redis
 
 KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
 
@@ -50,22 +50,13 @@ STREAM_ORCHESTRATOR_EVENTS = os.environ.get("STREAM_ORCHESTRATOR_EVENTS", "orche
 STREAM_DIGEST = os.environ.get("STREAM_DIGEST", "digest:daily")
 
 # --- Paths ---
-DEGRADATION_REPORT_DIR = os.environ.get("DEGRADATION_REPORT_DIR", "docs/agents-devs")
-MEMORY_MD_PATH = os.environ.get("MEMORY_MD_PATH", "docs/agents-devs/MEMORY.md")
-AREAS_QA_AUDIT_PATH = os.environ.get("AREAS_QA_AUDIT_PATH", "docs/agents-devs/areas-for-qa-audit.md")
+DEGRADATION_REPORT_DIR = os.environ.get("DEGRADATION_REPORT_DIR", "docs")
+MEMORY_MD_PATH = os.environ.get("MEMORY_MD_PATH", "docs/MEMORY.md")
+AREAS_QA_AUDIT_PATH = os.environ.get("AREAS_QA_AUDIT_PATH", "docs/areas-for-qa-audit.md")
 
-
-def get_redis():
-    try:
-        import redis
-        return redis.Redis(
-            host=os.environ.get("REDIS_HOST", "127.0.0.1"),
-            port=int(os.environ.get("REDIS_PORT", "6379")),
-            password=os.environ.get("REDIS_PASSWORD") or None,
-            decode_responses=True,
-        )
-    except ImportError:
-        raise RuntimeError("Instale redis: pip install redis")
+DEGRADATION_THRESHOLD_PCT = float(os.environ.get("DEGRADATION_THRESHOLD_PCT", "12.0"))
+CONSENSUS_LOOP_TIMEOUT_SEC = int(os.environ.get("CONSENSUS_LOOP_TIMEOUT_SEC", "3600"))
+INTERVAL_SEC = int(os.environ.get("ORCHESTRATOR_INTERVAL_SEC", "60"))
 
 
 def get_int(r, key: str, default: int = 0) -> int:
@@ -189,7 +180,6 @@ def record_omission_cosmetic(r, issue_id: str, files: list[str], decision: str =
 def _append_memory_md(issue_id: str, files: list[str], decision: str) -> None:
     path = Path(MEMORY_MD_PATH)
     path.parent.mkdir(parents=True, exist_ok=True)
-    from datetime import datetime
     line = f"- **{datetime.utcnow().isoformat()}Z** — issue `{issue_id}` — aprovação por omissão cosmética — decisão: {decision} — arquivos: {', '.join(files)}\n"
     with open(path, "a", encoding="utf-8") as f:
         f.write(line)
@@ -198,7 +188,6 @@ def _append_memory_md(issue_id: str, files: list[str], decision: str) -> None:
 def add_to_qa_audit(r, issue_id: str, files: list[str]) -> None:
     """Adiciona issue à lista de auditoria QA (Redis SET + detalhe em HASH)."""
     r.sadd(KEY_QA_AUDIT_ISSUES, issue_id)
-    from datetime import datetime
     r.hset(qa_audit_detail_key(issue_id), mapping={
         "files": "\n".join(files),
         "date": datetime.utcnow().strftime("%Y-%m-%d"),
@@ -239,15 +228,171 @@ def write_areas_qa_audit_file(r, path: str | None = None) -> None:
 # --- Eventos no stream (para 2º strike, 5º strike, consensus_loop) ---
 def emit_event(r, event_type: str, **fields) -> str | None:
     try:
-        payload = {"type": event_type, **{k: str(v) for k, v in fields.items()}}
-        return r.xadd(STREAM_ORCHESTRATOR_EVENTS, payload)
+        envelope = EventEnvelope.from_payload(
+            {
+                "type": event_type,
+                "status_code": fields.get("status_code") or event_type,
+                "event_name": fields.get("event_name") or f"orchestration.{event_type}",
+                **fields,
+            }
+        )
+        log_event(
+            "orchestration.event_emitted",
+            stream=STREAM_ORCHESTRATOR_EVENTS,
+            event_type=event_type,
+            status_code=envelope.payload.get("status_code"),
+            event_name=envelope.payload.get("event_name"),
+            run_id=envelope.run_id,
+            trace_id=envelope.trace_id,
+            issue_id=envelope.issue_id,
+            attempt=envelope.attempt,
+        )
+        return r.xadd(STREAM_ORCHESTRATOR_EVENTS, envelope.to_payload())
     except Exception:
         return None
 
 
 def emit_digest(r, event_type: str, **fields) -> str | None:
     try:
-        payload = {"type": event_type, **{k: str(v) for k, v in fields.items()}}
-        return r.xadd(STREAM_DIGEST, payload)
+        envelope = EventEnvelope.from_payload(
+            {
+                "type": event_type,
+                "status_code": fields.get("status_code") or event_type,
+                "event_name": fields.get("event_name") or f"orchestration.{event_type}",
+                **fields,
+            }
+        )
+        log_event(
+            "orchestration.digest_emitted",
+            stream=STREAM_DIGEST,
+            event_type=event_type,
+            status_code=envelope.payload.get("status_code"),
+            event_name=envelope.payload.get("event_name"),
+            run_id=envelope.run_id,
+            trace_id=envelope.trace_id,
+            issue_id=envelope.issue_id,
+            attempt=envelope.attempt,
+        )
+        return r.xadd(STREAM_DIGEST, envelope.to_payload())
     except Exception:
         return None
+
+
+def write_degradation_report(five: int, omission: int, sprint_total: int, pct: float) -> Path:
+    report_dir = Path(DEGRADATION_REPORT_DIR)
+    report_dir.mkdir(parents=True, exist_ok=True)
+    date_str = datetime.utcnow().strftime("%Y-%m-%d")
+    report_path = report_dir / f"degradation-report-{date_str}.md"
+    body = f"""# Relatorio de degradacao - {date_str}
+
+Esteira pausada por orcamento de degradacao.
+
+- tarefas na rota de fuga: {five + omission}
+- total de tarefas do sprint: {sprint_total}
+- percentual na rota de fuga: {pct:.1f}%
+- quinto strike: {five}
+- aprovacao por omissao cosmetica: {omission}
+"""
+    report_path.write_text(body, encoding="utf-8")
+    return report_path
+
+
+def _consensus_timed_out(r) -> bool:
+    started = r.get(f"{KEY_CONSENSUS_IN_PROGRESS}:started_at")
+    if not started:
+        return True
+    try:
+        return (time.time() - float(started)) >= CONSENSUS_LOOP_TIMEOUT_SEC
+    except (ValueError, TypeError):
+        return True
+
+
+def run_degradation_cycle(r) -> str:
+    five = get_int(r, KEY_FIVE_STRIKES)
+    omission = get_int(r, KEY_OMISSION_COUNT)
+    sprint_total = get_int(r, KEY_SPRINT_TASKS, default=1)
+    if sprint_total <= 0:
+        return "idle"
+
+    route_fuge = five + omission
+    pct = 100.0 * route_fuge / sprint_total
+    log_event(
+        "orchestration.degradation_evaluated",
+        five_strikes=five,
+        omission_count=omission,
+        sprint_total=sprint_total,
+        degradation_pct=round(pct, 2),
+    )
+
+    if pct < DEGRADATION_THRESHOLD_PCT:
+        r.delete(KEY_PAUSE_DEGRADATION)
+        return "healthy"
+
+    consensus_in_progress = r.get(KEY_CONSENSUS_IN_PROGRESS)
+    pilot_result = (r.get(KEY_CONSENSUS_PILOT_RESULT) or "").strip().lower()
+
+    if pilot_result == "success":
+        r.delete(KEY_CONSENSUS_IN_PROGRESS)
+        r.delete(KEY_CONSENSUS_PILOT_RESULT)
+        r.delete(KEY_PAUSE_DEGRADATION)
+        emit_digest(r, "consensus_pilot_success", pct=str(round(pct, 1)))
+        return "consensus_success"
+
+    if pilot_result == "fail" or (consensus_in_progress and _consensus_timed_out(r)):
+        r.delete(KEY_CONSENSUS_IN_PROGRESS)
+        r.delete(KEY_CONSENSUS_PILOT_RESULT)
+        r.set(KEY_PAUSE_DEGRADATION, "1", ex=86400)
+        emit_digest(
+            r,
+            "degradation_threshold",
+            pct=str(round(pct, 1)),
+            five_strikes=str(five),
+            omission_cosmetic=str(omission),
+            sprint_tasks=str(sprint_total),
+        )
+        write_degradation_report(five, omission, sprint_total, pct)
+        return "paused"
+
+    if not consensus_in_progress:
+        r.set(KEY_CONSENSUS_IN_PROGRESS, "1", ex=CONSENSUS_LOOP_TIMEOUT_SEC)
+        r.set(f"{KEY_CONSENSUS_IN_PROGRESS}:started_at", str(time.time()), ex=CONSENSUS_LOOP_TIMEOUT_SEC)
+        emit_digest(
+            r,
+            "consensus_loop_requested",
+            pct=str(round(pct, 1)),
+            five_strikes=str(five),
+            omission_cosmetic=str(omission),
+            sprint_tasks=str(sprint_total),
+        )
+        emit_event(
+            r,
+            "consensus_loop_requested",
+            pct=str(round(pct, 1)),
+            five_strikes=str(five),
+            omission_cosmetic=str(omission),
+            sprint_tasks=str(sprint_total),
+        )
+        return "consensus_requested"
+
+    return "waiting_consensus"
+
+
+def main() -> None:
+    redis_client = get_redis()
+    print(f"[orchestration] threshold={DEGRADATION_THRESHOLD_PCT}% interval={INTERVAL_SEC}s")
+    log_event(
+        "orchestration.worker_started",
+        threshold_pct=DEGRADATION_THRESHOLD_PCT,
+        interval_sec=INTERVAL_SEC,
+    )
+    while True:
+        try:
+            run_degradation_cycle(redis_client)
+        except Exception as error:
+            log_error("orchestration.loop_error", error=str(error))
+            print(f"[orchestration] Erro: {error}")
+        time.sleep(INTERVAL_SEC)
+
+
+if __name__ == "__main__":
+    main()

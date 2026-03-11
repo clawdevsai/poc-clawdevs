@@ -1,13 +1,76 @@
-# ClawDevs — não commitar credenciais
+# ==============================================================================
+# ClawDevs AI — Política de Versionamento
+# ==============================================================================
+
+# --- SEGURANÇA E CONFIGURAÇÕES ---
 .env
-__pycache__/
-*.pyc
 *.env
 !*.env.example
-k8s/management-team/openclaw/secret.yaml
-k8s/ollama/secret.yaml
-.venv
-*.txt
+# Ignora arquivos de segredo de K8s (específicos e genéricos)
+*secret.yaml
+!*secret.yaml.example
+k8s/**/secret.yaml
+.ssh/
+
+# --- PYTHON (Backend & Agentes) ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- NODE.JS / FRONTEND (Mission Control & Kanban UI) ---
+# Ignora dependências e builds de todos os subdiretórios
+node_modules/
+.next/
+out/
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# --- LOGS E MONITORAMENTO ---
 logs/
-# Workspace compartilhado (pasta física no host; pode ficar no repo)
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- INFRA E OPERAÇÕES ---
+# Pasta de montagem de volume (Minikube mount)
 agent-shared/
+# Arquivos temporários de sistema
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- OBSERVAÇÕES ---
+# Mantemos requirements.txt e AUDIT_REPORT.md pois são essenciais para o projeto.
+# Removi o *.txt genérico para permitir novos arquivos de documentação ou infra.

@@ -1,9 +1,0 @@
-# Worker que dispara o Job url-sandbox no cluster em horário agendado (Cron).
-# Secrets: wrangler secret put TRIGGER_ENDPOINT, URL_SANDBOX_TARGET, TRIGGER_SECRET
-name = "url-sandbox-cron"
-main = "index.js"
-compatibility_date = "2024-08-01"
-
-[triggers]
-# Diário às 18:00 UTC
-crons = ["0 18 * * *"]
