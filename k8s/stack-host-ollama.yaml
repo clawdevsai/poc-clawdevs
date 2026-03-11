@@ -38,6 +38,7 @@ data:
   GITHUB_REPO: ""
   GH_REPO: ""
   GITHUB_TOKEN: ""
+  GH_TOKEN: ""
   TELEGRAM_ENABLE_WEB_SEARCH: "1"
   TELEGRAM_BOT_TOKEN: ""
   TELEGRAM_CHAT_ID: ""
@@ -159,7 +160,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: ghcr.io/openclaw/openclaw:latest
+          image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-lc"]
           args:
@@ -199,6 +200,16 @@ spec:
                 configMapKeyRef:
                   name: clawdevs-config
                   key: OPENCLAW_GATEWAY_TOKEN
+            - name: GITHUB_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: clawdevs-config
+                  key: GITHUB_TOKEN
+            - name: GH_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: clawdevs-config
+                  key: GH_TOKEN
 ---
 apiVersion: apps/v1
 kind: Deployment

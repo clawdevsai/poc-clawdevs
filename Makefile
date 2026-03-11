@@ -6,7 +6,7 @@ IMAGE ?= clawdevs-ai:latest
 NAMESPACE ?= clawdevs-ai
 OLLAMA_MODEL ?= qwen3-next:80b-cloud
 OLLAMA_POD_SELECTOR ?= app=ollama
-OPENCLAW_GATEWAY_IMAGE ?= ghcr.io/openclaw/openclaw:latest
+OPENCLAW_GATEWAY_IMAGE ?= clawdevs-ai:latest
 TELEGRAM_BOT_TOKEN ?=
 TELEGRAM_CHAT_ID ?=
 GPU_WAIT_TIMEOUT ?= 120
@@ -14,7 +14,7 @@ MINIKUBE_WAIT ?= all
 MINIKUBE_WAIT_TIMEOUT ?= 10m
 MINIKUBE_GPU_REQUEST ?= all
 
-.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull telegram-enable telegram-disable telegram-logs cluster-reset cluster-reset-hard
+.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull telegram-enable telegram-disable telegram-logs gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard
 
 help:
 	@echo "make test      - executa a suite"
@@ -42,6 +42,9 @@ help:
 	@echo "make gpu-debug - diagnostico rapido de GPU no cluster"
 	@echo "make gpu-smoke - valida GPU no cluster (nvidia-smi)"
 	@echo "make ollama-pull OLLAMA_MODEL=<modelo> - baixa modelo no pod Ollama"
+	@echo "make gh-check - valida gh CLI em gateway e todos os agentes"
+	@echo "make gh-token-sync - sincroniza .env -> configmap (inclui GITHUB_TOKEN/GH_TOKEN) e reinicia deployments"
+	@echo "make gh-auth-check - valida autenticacao do gh CLI em todos os deployments"
 	@echo "OPENCLAW_GATEWAY_IMAGE=<img> pode sobrescrever imagem do gateway"
 	@echo "make clean     - remove caches Python"
 
@@ -196,6 +199,31 @@ telegram-disable:
 
 telegram-logs:
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=200 -f
+
+gh-check:
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/openclaw-gateway -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/orchestration -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/po-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/developer-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/qa-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/devops-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- gh --version
+
+gh-token-sync:
+	@$(KUBECTL) -n $(NAMESPACE) create configmap clawdevs-config --from-env-file=.env --dry-run=client -o yaml | $(KUBECTL) apply -f -
+	@$(KUBECTL) -n $(NAMESPACE) rollout restart deployment
+	@$(KUBECTL) -n $(NAMESPACE) get pods
+
+gh-auth-check:
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/openclaw-gateway -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/orchestration -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/po-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/developer-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/qa-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/devops-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- sh -lc "gh api user --jq .login"
 
 clean:
 	@cmd /c "for /d /r %d in (__pycache__) do @if exist \"%d\" rd /s /q \"%d\"" || true

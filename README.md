@@ -47,6 +47,8 @@ O runtime atual assume explicitamente esta stack:
 Workers -> OpenClaw Gateway -> Ollama
 ```
 
+Todos os pods de agentes e gateway usam imagem com `gh` CLI instalada (`gh --version`).
+
 Contexto do agente no OpenClaw:
 
 ```text
@@ -104,6 +106,9 @@ make up
 make up-host-ollama
 make status
 make down
+make gh-check
+make gh-token-sync
+make gh-auth-check
 ```
 
 No modo host (`make up-host-ollama`), voce pode sobrescrever a imagem do Gateway:
