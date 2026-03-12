@@ -24,6 +24,8 @@ Este documento valida o que ja esta pronto no sistema multiagente `clawdevs-ai` 
 - Redis Streams: `cmd:strategy`, `draft.2.issue`, `task:backlog`, `code:ready`, `pr:review`, `event:devops`, `orchestrator:events`
 - Dashboard operacional: `http://localhost:3000/`
 - GitHub API (leitura de PRs no dashboard e no Telegram)
+- GitHub Webhook de `pull_request` para sincronizacao em tempo real de estado
+- Health/metrics do webhook expostos em `/healthz` e `/metrics`
 
 ## Validacao do Fluxo Desejado (1..17)
 
@@ -36,7 +38,7 @@ Este documento valida o que ja esta pronto no sistema multiagente `clawdevs-ai` 
 | 5. Architect gera tasks/issues por User Story | **Implementado** | Architect-draft aprova/rejeita e publica backlog |
 | 6. Issues em repo + dashboard simultaneamente | **Parcial** | Dashboard ve estado no Redis; criacao no issue tracker depende da execucao do PO/skills no OpenClaw e configuracao GitHub |
 | 7. Developer inicia desenvolvimento | **Implementado** | Consumo de `task:backlog` |
-| 8. Developer so inicia nova task apos merge da anterior | **Implementado (v1)** | Gate por `project:v1:developer:{id}:active_issue` e `project:v1:issue:{id}:pr_merged` no `DeveloperAgent` |
+| 8. Developer so inicia nova task apos merge da anterior | **Implementado (v2)** | Gate por issue ativa + validacao de merge via GitHub API (`repo/pr`) quando a flag interna ainda nao foi atualizada |
 | 9. Developer cria PR | **Parcial** | Processo esperado no agente, sem enforce hard no backend |
 | 10. PR aciona QA/DevOps/Architect/DBA/CyberSec | **Parcial** | QA, DBA e CyberSec foram ligados ao stream `pr:review`; Architect-review atua no escalonamento e DevOps segue no pos-merge |
 | 11. Agentes revisam e comentam | **Implementado (v2)** | QA/DBA/CyberSec revisam em `pr:review`, consenso fecha rodada e publica comentarios na PR quando `GITHUB_TOKEN`/`repo`/`pr` estao configurados |
@@ -44,7 +46,7 @@ Este documento valida o que ja esta pronto no sistema multiagente `clawdevs-ai` 
 | 13. Nova rodada apos update de PR | **Implementado (v1)** | Cada novo `publish_code_ready` incrementa rodada em `project:v1:issue:{id}:pr_review_round` |
 | 14. Limite de 5 rodadas | **Implementado (v1)** | Acima de 5 emite `architect_final_decision_required` em `orchestrator:events` |
 | 15. Apos 5 rodadas Architect decide merge | **Parcial** | Escalada para `Architect-review` foi implementada; merge automatico ainda depende da acao do agente |
-| 16. Architect libera proxima task apos merge | **Implementado (v1)** | `publish_deploy_event` marca merge e libera lock de issue ativa por developer |
+| 16. Architect libera proxima task apos merge | **Implementado (v2)** | Gate libera por flag interna e tambem por validacao de merge na GitHub API; webhook atualiza estado em tempo real |
 | 17. Architect prioriza ordem de tasks | **Parcial** | Prioridade no payload existe, mas sem fila priorizada forte e politicas de ordenacao centralizadas por Architect |
 
 ## Ajustes aplicados nesta revisao
@@ -54,9 +56,9 @@ Este documento valida o que ja esta pronto no sistema multiagente `clawdevs-ai` 
 
 ## Proxima evolucao recomendada (prioridade alta)
 
-1. Consolidar status final de PR no merge gate
-- Comentarios de reviewers e consenso na PR ja estao implementados.
-- Proximo passo: validar estado `merged` via GitHub API antes da liberacao final de proxima task.
+1. Consolidar merge final com estado operacional
+- Gate do Developer ja valida `merged` na GitHub API.
+- Proximo passo: sincronizar de forma continua os estados `InReview/Deployed/Done` com webhook de PR merge.
 
 2. Adicionar agentes de revisao faltantes
 - Novos papeis: `Architect-review`, `DBA`, `CyberSec`.

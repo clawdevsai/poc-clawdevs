@@ -19,6 +19,10 @@ data:
   QA_REVIEW_STREAM: pr:review
   STREAM_EVENT_DEVOPS: event:devops
   STREAM_ORCHESTRATOR_EVENTS: orchestrator:events
+  GITHUB_WEBHOOK_HOST: 0.0.0.0
+  GITHUB_WEBHOOK_PORT: "8081"
+  GITHUB_WEBHOOK_PATH: /webhook/github
+  WEBHOOK_INTERNAL_URL: http://github-webhook:8081
   TELEGRAM_PENDING_KEY_PREFIX: telegram:director:pending_start
   DIRECTOR_PENDING_KEY_PREFIX: director-console:pending_start
   MODEL_PROVIDER: ollama
@@ -494,6 +498,59 @@ spec:
           image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.interfaces.telegram_director"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: github-webhook
+  namespace: clawdevs-ai
+spec:
+  selector:
+    app: github-webhook
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-webhook
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-webhook
+  template:
+    metadata:
+      labels:
+        app: github-webhook
+    spec:
+      containers:
+        - name: github-webhook
+          image: clawdevs-ai:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.interfaces.github_webhook"]
+          ports:
+            - containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 20
           envFrom:
             - configMapRef:
                 name: clawdevs-config

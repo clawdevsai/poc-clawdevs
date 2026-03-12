@@ -37,6 +37,19 @@ def _pr_merged_key(issue_id: str) -> str:
     return f"{KEY_PREFIX}:issue:{issue_id}:pr_merged"
 
 
+def _pr_number_key(issue_id: str) -> str:
+    return f"{KEY_PREFIX}:issue:{issue_id}:pr_number"
+
+
+def _issue_repo_key(issue_id: str) -> str:
+    return f"{KEY_PREFIX}:issue:{issue_id}:repo"
+
+
+def _repo_pr_issue_key(repo: str, pr: str) -> str:
+    safe_repo = repo.replace("/", "__")
+    return f"{KEY_PREFIX}:repo:{safe_repo}:pr:{pr}:issue_id"
+
+
 def _issue_active_developer_key(issue_id: str) -> str:
     return f"{KEY_PREFIX}:issue:{issue_id}:active_developer"
 
@@ -120,6 +133,12 @@ def publish_code_ready(
 
     set_issue_state(redis_client, issue_id, STATE_IN_REVIEW)
     redis_client.set(_pr_merged_key(issue_id), "0")
+    if pr:
+        redis_client.set(_pr_number_key(issue_id), str(pr))
+        if repo:
+            redis_client.set(_repo_pr_issue_key(str(repo), str(pr)), issue_id)
+    if repo:
+        redis_client.set(_issue_repo_key(issue_id), str(repo))
     payload = {
         "issue_id": issue_id,
         "branch": branch,
@@ -153,6 +172,12 @@ def publish_deploy_event(
 
     set_issue_state(redis_client, issue_id, STATE_DEPLOYED)
     redis_client.set(_pr_merged_key(issue_id), "1")
+    if pr:
+        redis_client.set(_pr_number_key(issue_id), str(pr))
+        if repo:
+            redis_client.set(_repo_pr_issue_key(str(repo), str(pr)), issue_id)
+    if repo:
+        redis_client.set(_issue_repo_key(issue_id), str(repo))
     redis_client.delete(_pr_review_round_key(issue_id))
     active_developer = redis_client.get(_issue_active_developer_key(issue_id))
     if isinstance(active_developer, bytes):

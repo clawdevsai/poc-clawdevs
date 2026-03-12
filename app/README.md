@@ -18,3 +18,7 @@ cmd:strategy -> PO -> draft.2.issue -> Architect -> task:backlog -> Developer ->
 ## Observacao
 
 O repositorio foi reduzido para o fluxo principal. A evolucao daqui em diante deve priorizar runtime, workflow e dominio, sem reintroduzir subsistemas perifericos.
+
+## Interface GitHub Webhook
+
+Existe uma interface adicional em `app/interfaces/github_webhook.py` para eventos `pull_request`, usada para sincronizar `InReview` e merge em tempo real com o gate do Developer.

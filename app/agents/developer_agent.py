@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 
 from app.agents.base import AgentSettings, BaseRoleAgent
+from app.core.github_prs import check_pr_merged_status
 from app.core.orchestration import emit_event
 from app.runtime import (
     AgentResult,
@@ -44,6 +45,12 @@ class DeveloperAgent(BaseRoleAgent):
     def _pr_merged_key(self, issue_id: str) -> str:
         return f"{KEY_PREFIX}:issue:{issue_id}:pr_merged"
 
+    def _pr_number_key(self, issue_id: str) -> str:
+        return f"{KEY_PREFIX}:issue:{issue_id}:pr_number"
+
+    def _issue_repo_key(self, issue_id: str) -> str:
+        return f"{KEY_PREFIX}:issue:{issue_id}:repo"
+
     def _developer_id(self) -> str:
         return os.getenv("POD_NAME", os.getenv("HOSTNAME", "developer"))
 
@@ -57,7 +64,21 @@ class DeveloperAgent(BaseRoleAgent):
         raw = redis_client.get(self._pr_merged_key(issue_id))
         if isinstance(raw, bytes):
             raw = raw.decode("utf-8", errors="replace")
-        return str(raw or "").strip() in {"1", "true", "True", "merged"}
+        if str(raw or "").strip() in {"1", "true", "True", "merged"}:
+            return True
+
+        raw_pr = redis_client.get(self._pr_number_key(issue_id))
+        raw_repo = redis_client.get(self._issue_repo_key(issue_id))
+        if isinstance(raw_pr, bytes):
+            raw_pr = raw_pr.decode("utf-8", errors="replace")
+        if isinstance(raw_repo, bytes):
+            raw_repo = raw_repo.decode("utf-8", errors="replace")
+        pr = str(raw_pr or "").strip()
+        repo = str(raw_repo or os.getenv("GITHUB_REPO", "")).strip()
+        merged = check_pr_merged_status(redis_client, issue_id=issue_id, repo=repo, pr=pr)
+        if merged:
+            redis_client.set(self._pr_merged_key(issue_id), "1")
+        return merged
 
     def _active_issue(self, redis_client, developer_id: str) -> str:
         raw = redis_client.get(self._active_issue_key(developer_id))

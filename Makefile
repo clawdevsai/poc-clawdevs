@@ -200,6 +200,7 @@ logs:
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/architect-review-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/devops-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=100
+	@$(KUBECTL) logs -n $(NAMESPACE) deployment/github-webhook --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/openclaw-gateway --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/ollama --tail=100
 
@@ -244,7 +245,7 @@ gh-check:
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- gh --version
 
 env-sync:
-	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$all=Get-Content $$envPath; $$secretPatterns='^(GITHUB_TOKEN|TELEGRAM_BOT_TOKEN|OPENCLAW_GATEWAY_TOKEN|REDIS_PASSWORD|OLLAMA_API_KEY)='; $$secret=$$all | Where-Object { $$_ -match $$secretPatterns }; $$config=$$all | Where-Object { $$_ -notmatch $$secretPatterns }; Set-Content -Path '.env.configmap.tmp' -Value $$config -Encoding Ascii; Set-Content -Path '.env.secret.tmp' -Value $$secret -Encoding Ascii"
+	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$all=Get-Content $$envPath; $$secretPatterns='^(GITHUB_TOKEN|GITHUB_WEBHOOK_SECRET|GITHUB_WEBHOOK_ADMIN_TOKEN|TELEGRAM_BOT_TOKEN|OPENCLAW_GATEWAY_TOKEN|REDIS_PASSWORD|OLLAMA_API_KEY)='; $$secret=$$all | Where-Object { $$_ -match $$secretPatterns }; $$config=$$all | Where-Object { $$_ -notmatch $$secretPatterns }; Set-Content -Path '.env.configmap.tmp' -Value $$config -Encoding Ascii; Set-Content -Path '.env.secret.tmp' -Value $$secret -Encoding Ascii"
 	@$(KUBECTL) -n $(NAMESPACE) create configmap clawdevs-config --from-env-file=.env.configmap.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
 	@$(KUBECTL) -n $(NAMESPACE) create secret generic clawdevs-secrets --from-env-file=.env.secret.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
 	@powershell -NoProfile -Command "Remove-Item '.env.configmap.tmp','.env.secret.tmp' -Force -ErrorAction SilentlyContinue"

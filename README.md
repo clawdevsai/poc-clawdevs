@@ -171,6 +171,10 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 GITHUB_REPO=org/repo    # repositorio a ser consultado (issues/PRs)
 GITHUB_TOKEN=<token>
+WEBHOOK_SPIKE_DELTA=3
+WEBHOOK_SPIKE_PER_MIN=2
+WEBHOOK_INTERNAL_URL=http://github-webhook:8081
+GITHUB_WEBHOOK_ADMIN_TOKEN=<admin_token>
 ```
 
 As variaveis de stream (`STREAM_CMD_STRATEGY`, `STREAM_DRAFT_ISSUE`, `QA_STREAM`, `STREAM_EVENT_DEVOPS`) e `KEY_PREFIX_PROJECT` devem bater com o runtime; o exemplo em `.env.local.example` ja esta alinhado.
@@ -228,6 +232,23 @@ kubectl -n clawdevs-ai logs deployment/telegram-director -f
 ```
 
 Envie uma mensagem para o bot no chat configurado. O worker PO vai consumir via `cmd:strategy`.
+
+## GitHub Webhook -> Runtime
+
+O deployment `github-webhook` recebe eventos `pull_request` e sincroniza estado no runtime.
+
+Endpoint:
+
+- `POST /webhook/github` (service `github-webhook:8081`)
+- valida assinatura `X-Hub-Signature-256` quando `GITHUB_WEBHOOK_SECRET` estiver definido
+- `GET /healthz` para health check
+- `GET /metrics` para contadores operacionais (recebidos, processados, duplicados, assinatura invalida, etc.)
+- `POST /metrics/reset` para zerar contadores (requer header `X-Webhook-Admin-Token` com `GITHUB_WEBHOOK_ADMIN_TOKEN`)
+
+Efeitos:
+
+- `opened/reopened/synchronize` -> `InReview`
+- `closed` com `merged=true` -> marca `pr_merged=1`, libera gate do Developer e publica `event:devops`
 
 ## Escopo removido
 
