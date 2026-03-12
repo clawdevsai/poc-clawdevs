@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 
 from app.agents.base import AgentSettings, BaseRoleAgent
+from app.runtime.openclaw_output import normalize_openclaw_output
+from app.runtime.tools import publish_backlog, publish_draft_rejected
 from app.runtime import AgentResult, ExecutionPolicy, PreparedRun, RunContext
 
 KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
@@ -59,10 +61,45 @@ Especificacao (Redis project:v1:issue:{issue_id}):
 """
 
     def on_success(self, redis_client, ctx: RunContext, send_output: dict | str) -> AgentResult:
+        normalized = normalize_openclaw_output(send_output)
+        status = str((normalized.get("status") if isinstance(normalized, dict) else "") or "").strip().lower()
+        decision = str((normalized.get("decision") if isinstance(normalized, dict) else "") or "").strip().lower()
+        next_action = str((normalized.get("next_action") if isinstance(normalized, dict) else "") or "").strip().lower()
+        title = str(ctx.event.get("title") or "")
+        summary = str(ctx.event.get("summary") or "")
+        priority = str(ctx.event.get("priority") or "1")
+        reason = str((normalized.get("decision") if isinstance(normalized, dict) else "") or "").strip()
+
+        rejected = next_action == "draft_rejected" or status == "rejected" or decision.startswith("reject")
+        if rejected:
+            publish_draft_rejected(
+                redis_client=redis_client,
+                issue_id=ctx.issue_id or "",
+                reason=reason or "rejected_by_architect",
+                title=title,
+            )
+            return AgentResult(
+                status="forwarded",
+                status_code="architect_rejected_to_refinamento",
+                event_name="architect.rejected_to_refinamento",
+                summary=(
+                    f"[{self.role_name}] XACK {self.stream_name} {ctx.message_id} "
+                    "(issue enviada para draft_rejected)"
+                ),
+                metadata={"run_id": ctx.run_id, "next_action": "draft_rejected"},
+            )
+
+        publish_backlog(
+            redis_client=redis_client,
+            issue_id=ctx.issue_id or "",
+            title=title,
+            summary=summary,
+            priority=priority,
+        )
         return AgentResult(
             status="forwarded",
-            status_code="forwarded",
-            event_name="architect.forwarded",
-            summary=f"[{self.role_name}] XACK {self.stream_name} {ctx.message_id} (enviado ao agente Arquiteto)",
-            metadata={"run_id": ctx.run_id},
+            status_code="architect_approved_to_backlog",
+            event_name="architect.approved_to_backlog",
+            summary=f"[{self.role_name}] XACK {self.stream_name} {ctx.message_id} (issue enviada para task:backlog)",
+            metadata={"run_id": ctx.run_id, "next_action": "task:backlog"},
         )
