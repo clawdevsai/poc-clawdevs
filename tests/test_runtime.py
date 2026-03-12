@@ -53,6 +53,7 @@ from app.interfaces.github_webhook import (
     reset_metrics,
     verify_signature,
 )
+from app.runtime.stream_worker import _claim_pending_messages
 import io
 from contextlib import redirect_stdout
 import os
@@ -245,6 +246,43 @@ def test_process_stream_message_acks_when_sender_succeeds():
     assert result.status_code == "forwarded"
     assert result.event_name == "fake.forwarded"
     assert redis_client.acks == [("cmd:strategy", "clawdevs", "1-0")]
+
+
+def test_claim_pending_messages_normalizes_xautoclaim_output():
+    class FakeRedisAutoClaim:
+        def xautoclaim(self, _stream, _group, _consumer, _idle, start_id, count):
+            assert start_id == "0-0"
+            assert count == 10
+            return ("1-0", [(b"1-1", {b"issue_id": b"DIR-1"})], [])
+
+    agent = FakeAgent()
+    next_start, messages = _claim_pending_messages(
+        FakeRedisAutoClaim(),
+        agent,
+        start_id="0-0",
+        min_idle_ms=30000,
+        count=10,
+    )
+
+    assert next_start == "1-0"
+    assert messages == [("1-1", {b"issue_id": b"DIR-1"})]
+
+
+def test_claim_pending_messages_handles_missing_xautoclaim():
+    class FakeRedisNoAutoClaim:
+        pass
+
+    agent = FakeAgent()
+    next_start, messages = _claim_pending_messages(
+        FakeRedisNoAutoClaim(),
+        agent,
+        start_id="0-0",
+        min_idle_ms=30000,
+        count=10,
+    )
+
+    assert next_start == "0-0"
+    assert messages == []
 
 
 def test_process_stream_message_rejects_invalid_prepare_contract():

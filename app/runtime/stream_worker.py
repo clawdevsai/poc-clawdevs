@@ -2,6 +2,7 @@
 """Loop generico para workers baseados em Redis Streams."""
 from __future__ import annotations
 
+import os
 import sys
 import time
 from typing import Any, Callable
@@ -13,6 +14,8 @@ from .openclaw_output import inspect_openclaw_output
 from .run_context import RunContext
 
 Sender = Callable[[str, str, int], tuple[bool, GatewayOutput]]
+PENDING_MIN_IDLE_MS = max(0, int(os.getenv("STREAM_PENDING_MIN_IDLE_MS", "30000")))
+PENDING_CLAIM_COUNT = max(1, int(os.getenv("STREAM_PENDING_CLAIM_COUNT", "10")))
 
 
 def payload_to_dict(data: Any) -> dict[str, Any]:
@@ -246,7 +249,49 @@ def run_stream_worker(
         consumer_name=agent.consumer_name,
     )
     _ensure_consumer_group(redis_client, agent)
+    pending_start_id = "0-0"
     while True:
+        pending_start_id, pending_messages = _claim_pending_messages(
+            redis_client,
+            agent,
+            start_id=pending_start_id,
+            min_idle_ms=PENDING_MIN_IDLE_MS,
+            count=PENDING_CLAIM_COUNT,
+        )
+        if pending_messages:
+            for normalized_id, raw_data in pending_messages:
+                try:
+                    process_stream_message(
+                        redis_client,
+                        agent,
+                        sender,
+                        agent.stream_name,
+                        normalized_id,
+                        raw_data,
+                    )
+                except Exception as error:
+                    ctx = None
+                    try:
+                        ctx = RunContext.from_message(
+                            stream_name=agent.stream_name,
+                            message_id=normalized_id,
+                            event=payload_to_dict(raw_data or {}),
+                            policy=agent.policy,
+                        )
+                    except Exception:
+                        pass
+                    log_error(
+                        "runtime.pending_message_error",
+                        role=agent.role_name,
+                        stream=agent.stream_name,
+                        message_id=normalized_id,
+                        run_id=ctx.run_id if ctx else None,
+                        trace_id=ctx.trace_id if ctx else None,
+                        issue_id=ctx.issue_id if ctx else None,
+                        error=str(error),
+                    )
+                    agent.on_error(redis_client, ctx, error)
+            continue
         try:
             reply = redis_client.xreadgroup(
                 agent.consumer_group,
@@ -315,6 +360,56 @@ def run_stream_worker(
                         error=str(error),
                     )
                     agent.on_error(redis_client, ctx, error)
+
+
+def _claim_pending_messages(
+    redis_client: RedisClient,
+    agent: StreamAgent,
+    *,
+    start_id: str,
+    min_idle_ms: int,
+    count: int,
+) -> tuple[str, list[tuple[str, Any]]]:
+    if min_idle_ms <= 0 or count <= 0:
+        return start_id, []
+    try:
+        claim_result = redis_client.xautoclaim(
+            agent.stream_name,
+            agent.consumer_group,
+            agent.consumer_name,
+            min_idle_ms,
+            start_id=start_id,
+            count=count,
+        )
+    except AttributeError:
+        return start_id, []
+    except Exception as error:
+        message = str(error).lower()
+        if "unknown command" in message or "xautoclaim" in message:
+            return start_id, []
+        log_error(
+            "runtime.xautoclaim_error",
+            role=agent.role_name,
+            stream=agent.stream_name,
+            consumer_group=agent.consumer_group,
+            consumer_name=agent.consumer_name,
+            error=str(error),
+        )
+        return start_id, []
+
+    if not claim_result:
+        return start_id, []
+
+    next_start = claim_result[0] if len(claim_result) > 0 else start_id
+    raw_messages = claim_result[1] if len(claim_result) > 1 else []
+    normalized_next = (
+        next_start.decode("utf-8", errors="replace") if isinstance(next_start, bytes) else str(next_start or start_id)
+    )
+    normalized_messages: list[tuple[str, Any]] = []
+    for message_id, raw_data in raw_messages or []:
+        normalized_id = message_id.decode("utf-8", errors="replace") if isinstance(message_id, bytes) else str(message_id)
+        normalized_messages.append((normalized_id, raw_data))
+    return normalized_next, normalized_messages
 
 
 def _ensure_consumer_group(redis_client: RedisClient, agent: StreamAgent) -> None:
