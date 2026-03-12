@@ -68,6 +68,18 @@ ROLE_CONFIGS: dict[str, OpenClawRoleConfig] = {
     ),
 }
 
+COMMON_TEMPLATE_ORDER: tuple[str, ...] = (
+    "AGENTS.default",
+    "AGENTS",
+    "BOOT",
+    "BOOTSTRAP",
+    "HEARTBEAT",
+    "IDENTITY",
+    "SOUL",
+    "TOOLS",
+    "USER",
+)
+
 
 def _read_asset(kind: str, name: str) -> str:
     path = ASSETS_ROOT / kind / f"{name}.md"
@@ -83,6 +95,21 @@ def _read_soul(profile: str) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
+def _read_identity(profile: str) -> str:
+    return _read_asset("identities", profile)
+
+
+def _read_tools_contract(profile: str) -> str:
+    return _read_asset("tools", profile)
+
+
+def _read_template(name: str) -> str:
+    path = ASSETS_ROOT / "templates" / f"{name}.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
 def get_role_openclaw_config(role_name: str) -> OpenClawRoleConfig | None:
     return ROLE_CONFIGS.get(role_name)
 
@@ -93,9 +120,23 @@ def render_openclaw_context(role_name: str, allowed_tools: tuple[str, ...] = ())
         return ""
 
     parts = [f"OpenClaw role profile: {config.profile}"]
+
+    template_blocks = []
+    for template_name in COMMON_TEMPLATE_ORDER:
+        template_text = _read_template(template_name)
+        if template_text:
+            template_blocks.append(f"[template:{template_name.lower()}]\n{template_text}")
+    if template_blocks:
+        parts.append("\n".join(template_blocks))
+
     profile_text = _read_asset("profiles", config.profile)
     if profile_text:
         parts.append(profile_text)
+
+    identity_text = _read_identity(config.profile)
+    if identity_text:
+        parts.append(f"[identity:{config.profile}]\n{identity_text}")
+
     soul_text = _read_soul(config.profile)
     if soul_text:
         parts.append(f"[soul:{config.profile}]\n{soul_text}")
@@ -120,6 +161,10 @@ def render_openclaw_context(role_name: str, allowed_tools: tuple[str, ...] = ())
         tool_lines = ["Allowed runtime tools:"]
         tool_lines.extend(f"- {tool_name}" for tool_name in allowed_tools)
         parts.append("\n".join(tool_lines))
+
+    tools_contract = _read_tools_contract(config.profile)
+    if tools_contract:
+        parts.append(f"[tools:{config.profile}]\n{tools_contract}")
 
     output_schema_text = _read_asset("output_schemas", config.output_schema)
     if output_schema_text:

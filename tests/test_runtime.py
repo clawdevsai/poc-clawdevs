@@ -733,6 +733,12 @@ def test_render_openclaw_message_includes_profile_rules_and_skills():
     )
 
     assert "OpenClaw role profile: developer" in message
+    assert "[template:agents.default]" in message
+    assert "[template:boot]" in message
+    assert "[template:heartbeat]" in message
+    assert "[template:user]" in message
+    assert "[identity:developer]" in message
+    assert "[tools:developer]" in message
     assert "[rule:core]" in message
     assert "[rule:change_safety]" in message
     assert "[skill:code_delivery]" in message

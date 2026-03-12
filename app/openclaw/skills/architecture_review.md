@@ -1,5 +1,14 @@
-Skill architecture_review.
+---
+name: architecture-review
+description: "Evaluate technical viability, coupling, and risk before implementation. Use for Architect, QA, DBA, and CyberSec review phases."
+---
 
-Use esta skill para:
-- validar estrutura tecnica da solucao
-- identificar risco, acoplamento e simplificacao possivel
+# Architecture Review Skill
+
+Assess whether proposed implementation is safe and maintainable.
+
+Checklist:
+- Validate boundaries, contracts, and ownership.
+- Flag coupling, hidden dependencies, and migration risk.
+- Prefer simpler alternatives when equivalent in value.
+- Return explicit approve or reject rationale.
