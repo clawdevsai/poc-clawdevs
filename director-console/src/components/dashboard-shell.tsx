@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActivityFeed } from "@/components/activity-feed";
 import { AgentTimeline } from "@/components/agent-timeline";
@@ -20,6 +20,28 @@ type MenuId = "overview" | "operations" | "activity" | "approvals" | "issues";
 
 type DashboardShellProps = {
   initialData: DashboardData;
+};
+
+type WebhookSnapshot = {
+  at: number;
+  received: number;
+  processed: number;
+  duplicates: number;
+  invalidSignature: number;
+};
+
+type WebhookLiveStats = {
+  minutes: number;
+  receivedPerMin: number;
+  processedPerMin: number;
+  duplicatesPerMin: number;
+  invalidSignaturePerMin: number;
+  duplicateDelta: number;
+  invalidSignatureDelta: number;
+  abruptDuplicateSpike: boolean;
+  abruptInvalidSignatureSpike: boolean;
+  spikeDeltaThreshold: number;
+  spikePerMinuteThreshold: number;
 };
 
 const MENU_GROUPS: Array<{ title: string; items: Array<{ id: MenuId; label: string }> }> = [
@@ -49,11 +71,15 @@ function formatPrs(open: number | null, total: number | null, note: string) {
 
 export function DashboardShell({ initialData }: DashboardShellProps) {
   const [data, setData] = useState(initialData);
+  const webhookPreviousRef = useRef<WebhookSnapshot | null>(null);
+  const [webhookLive, setWebhookLive] = useState<WebhookLiveStats | null>(null);
   const [activeMenu, setActiveMenu] = useState<MenuId>("overview");
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const [refreshSeconds, setRefreshSeconds] = useState(60);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [isResettingWebhookMetrics, setIsResettingWebhookMetrics] = useState(false);
+  const [webhookMetricsMessage, setWebhookMetricsMessage] = useState<string | null>(null);
 
   const refreshDashboard = useCallback(async () => {
     setIsRefreshing(true);
@@ -84,6 +110,50 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
     return () => clearInterval(timer);
   }, [autoRefreshEnabled, refreshSeconds, refreshDashboard]);
 
+  useEffect(() => {
+    const currentAt = Date.parse(data.overview.generatedAt);
+    const current: WebhookSnapshot = {
+      at: Number.isFinite(currentAt) ? currentAt : Date.now(),
+      received: data.overview.webhook.received,
+      processed: data.overview.webhook.processed,
+      duplicates: data.overview.webhook.duplicates,
+      invalidSignature: data.overview.webhook.invalidSignature
+    };
+
+    const previous = webhookPreviousRef.current;
+    if (!previous) {
+      webhookPreviousRef.current = current;
+      return;
+    }
+
+    const elapsedMinutes = Math.max((current.at - previous.at) / 60000, 0.0001);
+    const receivedDelta = Math.max(0, current.received - previous.received);
+    const processedDelta = Math.max(0, current.processed - previous.processed);
+    const duplicateDelta = Math.max(0, current.duplicates - previous.duplicates);
+    const invalidSignatureDelta = Math.max(0, current.invalidSignature - previous.invalidSignature);
+
+    const duplicatesPerMin = duplicateDelta / elapsedMinutes;
+    const invalidSignaturePerMin = invalidSignatureDelta / elapsedMinutes;
+    const spikeDeltaThreshold = Math.max(1, data.overview.webhook.spikeDeltaThreshold);
+    const spikePerMinuteThreshold = Math.max(0.1, data.overview.webhook.spikePerMinuteThreshold);
+
+    setWebhookLive({
+      minutes: elapsedMinutes,
+      receivedPerMin: receivedDelta / elapsedMinutes,
+      processedPerMin: processedDelta / elapsedMinutes,
+      duplicatesPerMin,
+      invalidSignaturePerMin,
+      duplicateDelta,
+      invalidSignatureDelta,
+      abruptDuplicateSpike: duplicateDelta >= spikeDeltaThreshold || duplicatesPerMin >= spikePerMinuteThreshold,
+      abruptInvalidSignatureSpike:
+        invalidSignatureDelta >= spikeDeltaThreshold || invalidSignaturePerMin >= spikePerMinuteThreshold,
+      spikeDeltaThreshold,
+      spikePerMinuteThreshold
+    });
+    webhookPreviousRef.current = current;
+  }, [data.overview.generatedAt, data.overview.webhook]);
+
   const headerDescription = useMemo(() => {
     if (activeMenu === "overview") {
       return "Visao consolidada do runtime com foco em capacidade e saude operacional.";
@@ -99,6 +169,36 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
     }
     return "Estado persistido das issues com strikes e invalid output por item.";
   }, [activeMenu]);
+
+  const resetWebhookMetrics = useCallback(async () => {
+    const confirmed = window.confirm(
+      "Tem certeza que deseja resetar as métricas do webhook? Esta ação zera os contadores operacionais."
+    );
+    if (!confirmed) {
+      return;
+    }
+    setIsResettingWebhookMetrics(true);
+    setWebhookMetricsMessage(null);
+    try {
+      const response = await fetch("/api/webhook-metrics", {
+        method: "POST",
+        cache: "no-store"
+      });
+      const payload = (await response.json()) as { error?: string; status?: string };
+      if (!response.ok) {
+        setWebhookMetricsMessage(`Falha no reset: ${payload.error ?? "webhook_metrics_reset_failed"}`);
+        return;
+      }
+      setWebhookMetricsMessage("Métricas do webhook resetadas com sucesso.");
+      await refreshDashboard();
+    } catch (error) {
+      setWebhookMetricsMessage(
+        `Falha no reset: ${error instanceof Error ? error.message : "webhook_metrics_reset_error"}`
+      );
+    } finally {
+      setIsResettingWebhookMetrics(false);
+    }
+  }, [refreshDashboard]);
 
   return (
     <main className="mx-auto min-h-screen max-w-[1400px] px-4 py-6 md:px-6">
@@ -214,6 +314,102 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                     {formatPrs(data.overview.prs.open, data.overview.prs.total, data.overview.prs.note)}
                   </span>
                 </div>
+              </section>
+
+              <section className="panel panel-strong rounded-3xl p-6">
+                <div className="mb-5">
+                  <h3 className="text-xl font-semibold text-white">Webhook GitHub</h3>
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    Saude de ingestao de eventos pull_request em tempo real.
+                  </p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <StatCard label="Recebidos" value={data.overview.webhook.received} />
+                  <StatCard label="Processados" value={data.overview.webhook.processed} tone="success" />
+                  <StatCard label="Duplicados" value={data.overview.webhook.duplicates} tone="warning" />
+                  <StatCard
+                    label="Rejeitados (assinatura)"
+                    value={data.overview.webhook.invalidSignature}
+                    tone="warning"
+                  />
+                </div>
+                <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <StatCard label="Invalid JSON" value={data.overview.webhook.invalidJson} tone="warning" />
+                  <StatCard label="Ignored Events" value={data.overview.webhook.ignoredEvents} />
+                  <StatCard label="PRs em review" value={data.overview.webhook.inReview} tone="accent" />
+                  <StatCard label="PRs mergeadas" value={data.overview.webhook.merged} tone="success" />
+                </div>
+                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-xs text-[var(--muted)]">
+                  last_delivery_id: <span className="text-white">{data.overview.webhook.lastDeliveryId || "n/a"}</span>{" "}
+                  | last_event: <span className="text-white">{data.overview.webhook.lastEvent || "n/a"}</span> |
+                  last_result: <span className="text-white">{data.overview.webhook.lastResult || "n/a"}</span>
+                </div>
+              </section>
+
+              <section className="panel panel-strong rounded-3xl p-6">
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">Webhook Live</h3>
+                    <p className="mt-1 text-sm text-[var(--muted)]">
+                      Taxa por minuto desde a ultima leitura e alerta de subida abrupta.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {webhookLive?.abruptDuplicateSpike || webhookLive?.abruptInvalidSignatureSpike ? (
+                      <span className="rounded-full border border-rose-300/70 bg-rose-400/20 px-3 py-1 text-xs font-semibold text-rose-200">
+                        ALERTA DE ANOMALIA
+                      </span>
+                    ) : (
+                      <span className="rounded-full border border-emerald-300/40 bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-200">
+                        Estavel
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void resetWebhookMetrics()}
+                      disabled={isResettingWebhookMetrics}
+                      className="rounded-full border border-amber-300/50 px-3 py-1 text-xs font-semibold text-amber-100 transition hover:bg-amber-300/15 disabled:opacity-60"
+                    >
+                      {isResettingWebhookMetrics ? "Resetando..." : "Reset métricas"}
+                    </button>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <StatCard
+                    label="Recebidos/min"
+                    value={webhookLive ? webhookLive.receivedPerMin.toFixed(2) : "0.00"}
+                    tone="accent"
+                  />
+                  <StatCard
+                    label="Processados/min"
+                    value={webhookLive ? webhookLive.processedPerMin.toFixed(2) : "0.00"}
+                    tone="success"
+                  />
+                  <StatCard
+                    label="Duplicados/min"
+                    value={webhookLive ? webhookLive.duplicatesPerMin.toFixed(2) : "0.00"}
+                    tone={webhookLive?.abruptDuplicateSpike ? "warning" : "default"}
+                  />
+                  <StatCard
+                    label="Invalid sig/min"
+                    value={webhookLive ? webhookLive.invalidSignaturePerMin.toFixed(2) : "0.00"}
+                    tone={webhookLive?.abruptInvalidSignatureSpike ? "warning" : "default"}
+                  />
+                </div>
+                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-xs text-[var(--muted)]">
+                  janela_min: <span className="text-white">{webhookLive ? webhookLive.minutes.toFixed(2) : "n/a"}</span>{" "}
+                  | delta_duplicates: <span className="text-white">{webhookLive?.duplicateDelta ?? 0}</span> |
+                  delta_invalid_signature:{" "}
+                  <span className="text-white">{webhookLive?.invalidSignatureDelta ?? 0}</span> | threshold_delta:{" "}
+                  <span className="text-white">{webhookLive?.spikeDeltaThreshold ?? data.overview.webhook.spikeDeltaThreshold}</span>{" "}
+                  | threshold_per_min:{" "}
+                  <span className="text-white">
+                    {webhookLive?.spikePerMinuteThreshold ?? data.overview.webhook.spikePerMinuteThreshold}
+                  </span>
+                </div>
+                {webhookMetricsMessage ? (
+                  <p className="mt-3 text-xs text-[var(--muted)]">{webhookMetricsMessage}</p>
+                ) : null}
               </section>
             </div>
           ) : null}

@@ -42,10 +42,19 @@ from app.agents.dba_agent import DBAAgent
 from app.agents.cybersec_agent import CyberSecAgent
 from app.agents.qa_agent import QAAgent
 from app.core.github_reviews import publish_consensus_comment, publish_role_review_comment
+from app.core.github_prs import check_pr_merged_status
 from app.core.review_consensus import finalize_round_if_ready, record_review_decision
+from app.interfaces.github_webhook import (
+    collect_metrics,
+    is_reset_authorized,
+    process_pull_request_event,
+    reset_metrics,
+    verify_signature,
+)
 import io
 from contextlib import redirect_stdout
 import os
+from unittest.mock import patch
 from app.shared.issue_state import STATE_DEPLOYED, STATE_IN_REVIEW, STATE_READY, STATE_REFINAMENTO
 
 
@@ -426,6 +435,8 @@ def test_publish_code_ready_emits_pr_review_with_round_control():
     assert output["state"] == STATE_IN_REVIEW
     assert redis_client.store["project:v1:issue:88:state"] == STATE_IN_REVIEW
     assert redis_client.store["project:v1:issue:88:pr_review_round"] == "1"
+    assert redis_client.store["project:v1:issue:88:pr_number"] == "123"
+    assert redis_client.store["project:v1:issue:88:repo"] == "org/repo"
     assert redis_client.added[0] == (
         "code:ready",
         {"issue_id": "88", "branch": "feat/login", "repo": "org/repo", "pr": "123", "round": "1"},
@@ -910,6 +921,32 @@ def test_developer_agent_blocks_new_issue_until_previous_merge():
     assert redis_client.acks == [("task:backlog", "clawdevs", "3-1")]
 
 
+def test_developer_agent_allows_next_issue_when_previous_merge_confirmed_by_github():
+    redis_client = FakeRedis()
+    agent = DeveloperAgent()
+    developer_id = os.getenv("POD_NAME", os.getenv("HOSTNAME", "developer"))
+    redis_client.store[f"project:v1:developer:{developer_id}:active_issue"] = "41"
+    redis_client.store["project:v1:issue:41:pr_merged"] = "0"
+    redis_client.store["project:v1:issue:41:pr_number"] = "441"
+    redis_client.store["project:v1:issue:41:repo"] = "org/repo"
+
+    with patch("app.agents.developer_agent.check_pr_merged_status", return_value=True):
+        result = process_stream_message(
+            redis_client,
+            agent,
+            lambda session_key, message, timeout_sec: (True, {"queued": True}),
+            "task:backlog",
+            "3-2",
+            {"issue_id": "42", "priority": "1"},
+        )
+
+    assert result.status == "forwarded"
+    assert result.status_code == "forwarded"
+    assert redis_client.store["project:v1:issue:41:pr_merged"] == "1"
+    assert redis_client.store[f"project:v1:developer:{developer_id}:active_issue"] == "42"
+    assert redis_client.acks == [("task:backlog", "clawdevs", "3-2")]
+
+
 def test_developer_agent_acks_when_finops_stops_task():
     redis_client = FakeRedis()
     agent = DeveloperAgent()
@@ -1138,3 +1175,128 @@ def test_publish_consensus_comment_uses_request_fn_and_sets_posted_state():
             os.environ.pop("GITHUB_TOKEN", None)
         else:
             os.environ["GITHUB_TOKEN"] = previous_token
+
+
+def test_check_pr_merged_status_uses_request_fn_and_cache():
+    redis_client = FakeRedis()
+    calls = []
+
+    def fake_request(url, headers):
+        calls.append((url, headers))
+        return {"merged": True}
+
+    previous_token = os.environ.get("GITHUB_TOKEN")
+    os.environ["GITHUB_TOKEN"] = "token-x"
+    try:
+        first = check_pr_merged_status(
+            redis_client,
+            issue_id="701",
+            repo="org/repo",
+            pr="91",
+            request_fn=fake_request,
+        )
+        second = check_pr_merged_status(
+            redis_client,
+            issue_id="701",
+            repo="org/repo",
+            pr="91",
+            request_fn=fake_request,
+        )
+    finally:
+        if previous_token is None:
+            os.environ.pop("GITHUB_TOKEN", None)
+        else:
+            os.environ["GITHUB_TOKEN"] = previous_token
+
+    assert first is True
+    assert second is True
+    assert len(calls) == 1
+    assert redis_client.store["project:v1:issue:701:github_pr_merged_cache"] == "1"
+
+
+def test_github_webhook_sets_in_review_on_pr_synchronize():
+    redis_client = FakeRedis()
+    redis_client.store["project:v1:repo:org__repo:pr:77:issue_id"] = "TG-77"
+
+    result = process_pull_request_event(
+        redis_client,
+        {
+            "action": "synchronize",
+            "number": 77,
+            "repository": {"full_name": "org/repo"},
+            "pull_request": {"number": 77},
+        },
+    )
+
+    assert result["status"] == "ok"
+    assert result["transition"] == "in_review"
+    assert redis_client.store["project:v1:issue:TG-77:state"] == "InReview"
+    assert redis_client.store["project:v1:github:webhook:metric:in_review_total"] == "1"
+    assert redis_client.added[-1][0] == "orchestrator:events"
+    assert redis_client.added[-1][1]["type"] == "github_pr_in_review"
+
+
+def test_github_webhook_marks_merged_and_emits_devops_event():
+    redis_client = FakeRedis()
+    redis_client.store["project:v1:repo:org__repo:pr:99:issue_id"] = "TG-99"
+    redis_client.store["project:v1:issue:TG-99:active_developer"] = "developer-1"
+    redis_client.store["project:v1:developer:developer-1:active_issue"] = "TG-99"
+
+    result = process_pull_request_event(
+        redis_client,
+        {
+            "action": "closed",
+            "number": 99,
+            "repository": {"full_name": "org/repo"},
+            "pull_request": {
+                "number": 99,
+                "merged": True,
+                "base": {"ref": "main"},
+            },
+        },
+    )
+
+    assert result["status"] == "ok"
+    assert result["transition"] == "merged"
+    assert redis_client.store["project:v1:issue:TG-99:pr_merged"] == "1"
+    assert redis_client.store["project:v1:issue:TG-99:state"] == "Deployed"
+    assert redis_client.store["project:v1:github:webhook:metric:merged_total"] == "1"
+    assert "project:v1:developer:developer-1:active_issue" in redis_client.deleted
+    assert "project:v1:issue:TG-99:active_developer" in redis_client.deleted
+    assert redis_client.added[0][0] == "event:devops"
+    assert redis_client.added[0][1]["reason"] == "github_webhook_pr_merged"
+    assert redis_client.added[1][0] == "orchestrator:events"
+    assert redis_client.added[1][1]["type"] == "github_pr_merged"
+
+
+def test_github_webhook_signature_validation():
+    body = b'{"action":"opened"}'
+    secret = "abc123"
+    import hmac
+    import hashlib
+
+    digest = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+    assert verify_signature(body, f"sha256={digest}", secret) is True
+    assert verify_signature(body, "sha256=invalid", secret) is False
+
+
+def test_github_webhook_collect_metrics_reads_defaults():
+    redis_client = FakeRedis()
+    metrics = collect_metrics(redis_client)
+    assert metrics["received_total"] == ""
+    assert metrics["processed_total"] == ""
+
+
+def test_github_webhook_reset_metrics_clears_counters():
+    redis_client = FakeRedis()
+    redis_client.store["project:v1:github:webhook:metric:received_total"] = "10"
+    redis_client.store["project:v1:github:webhook:metric:last_result"] = "ok"
+    reset_metrics(redis_client)
+    assert redis_client.store.get("project:v1:github:webhook:metric:received_total") is None
+    assert redis_client.store.get("project:v1:github:webhook:metric:last_result") is None
+
+
+def test_github_webhook_reset_authorization_requires_matching_token():
+    assert is_reset_authorized("", "secret-x") is False
+    assert is_reset_authorized("wrong", "secret-x") is False
+    assert is_reset_authorized("secret-x", "secret-x") is True
