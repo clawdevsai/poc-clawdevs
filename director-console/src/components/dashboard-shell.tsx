@@ -204,6 +204,7 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                 <div className="grid gap-4 md:grid-cols-2">
                   <StatCard label="cmd:strategy" value={data.overview.streams.strategy} />
                   <StatCard label="draft.2.issue" value={data.overview.streams.draftIssue} />
+                  <StatCard label="pr:review" value={data.overview.streams.prReview} />
                   <StatCard label="code:ready" value={data.overview.streams.codeReady} />
                   <StatCard label="event:devops" value={data.overview.streams.devopsEvents} />
                 </div>

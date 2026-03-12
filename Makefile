@@ -195,6 +195,9 @@ logs:
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/architect-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/developer-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/qa-worker --tail=100
+	@$(KUBECTL) logs -n $(NAMESPACE) deployment/dba-worker --tail=100
+	@$(KUBECTL) logs -n $(NAMESPACE) deployment/cybersec-worker --tail=100
+	@$(KUBECTL) logs -n $(NAMESPACE) deployment/architect-review-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/devops-worker --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=100
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/openclaw-gateway --tail=100
@@ -234,6 +237,9 @@ gh-check:
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-worker -- gh --version
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/developer-worker -- gh --version
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/qa-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/dba-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/cybersec-worker -- gh --version
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-review-worker -- gh --version
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/devops-worker -- gh --version
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- gh --version
 
@@ -254,6 +260,9 @@ gh-auth-check:
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-worker -- sh -lc "gh api user --jq .login"
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/developer-worker -- sh -lc "gh api user --jq .login"
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/qa-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/dba-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/cybersec-worker -- sh -lc "gh api user --jq .login"
+	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-review-worker -- sh -lc "gh api user --jq .login"
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/devops-worker -- sh -lc "gh api user --jq .login"
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- sh -lc "gh api user --jq .login"
 

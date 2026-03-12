@@ -12,7 +12,7 @@ Codigo Python do ClawDevs AI.
 ## Fluxo principal atual
 
 ```text
-cmd:strategy -> PO -> draft.2.issue -> Architect -> task:backlog -> Developer -> event:devops -> DevOps
+cmd:strategy -> PO -> draft.2.issue -> Architect -> task:backlog -> Developer -> code:ready -> pr:review -> QA + DBA + CyberSec -> consenso (approve => event:devops | blocked => task:backlog) -> (>=6 rounds => Architect-review) -> DevOps
 ```
 
 ## Observacao

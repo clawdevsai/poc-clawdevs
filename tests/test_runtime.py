@@ -10,6 +10,7 @@ from app.runtime import (
     TOOL_PUBLISH_CODE_READY,
     TOOL_PUBLISH_DEPLOY_EVENT,
     TOOL_PUBLISH_DRAFT_REJECTED,
+    TOOL_PUBLISH_PR_REVIEW,
     build_session_sender,
     build_runtime_tool_registry,
     extract_issue_id,
@@ -34,12 +35,18 @@ from app.runtime import (
 from app.runtime.check_stack import main as check_stack_main
 from app.agents.base import AgentSettings, BaseRoleAgent
 from app.agents.architect_agent import ArchitectDraftAgent
+from app.agents.architect_review_agent import ArchitectReviewAgent
 from app.agents.developer_agent import DeveloperAgent
 from app.agents.devops_agent import DevOpsAgent
+from app.agents.dba_agent import DBAAgent
+from app.agents.cybersec_agent import CyberSecAgent
+from app.agents.qa_agent import QAAgent
+from app.core.github_reviews import publish_consensus_comment, publish_role_review_comment
+from app.core.review_consensus import finalize_round_if_ready, record_review_decision
 import io
 from contextlib import redirect_stdout
 import os
-from app.shared.issue_state import STATE_DEPLOYED, STATE_READY, STATE_REFINAMENTO
+from app.shared.issue_state import STATE_DEPLOYED, STATE_IN_REVIEW, STATE_READY, STATE_REFINAMENTO
 
 
 class FakeRedis:
@@ -402,7 +409,7 @@ def test_publish_draft_rejected_sets_refinamento():
     )
 
 
-def test_publish_code_ready_emits_code_ready_stream():
+def test_publish_code_ready_emits_pr_review_with_round_control():
     redis_client = FakeRedis()
 
     ok, output = publish_code_ready(
@@ -410,18 +417,49 @@ def test_publish_code_ready_emits_code_ready_stream():
         issue_id="88",
         branch="feat/login",
         repo="org/repo",
+        pr="123",
     )
 
     assert ok is True
-    assert output["stream"] == "code:ready"
-    assert redis_client.added[-1] == (
+    assert output["stream"] == "pr:review"
+    assert output["round"] == "1"
+    assert output["state"] == STATE_IN_REVIEW
+    assert redis_client.store["project:v1:issue:88:state"] == STATE_IN_REVIEW
+    assert redis_client.store["project:v1:issue:88:pr_review_round"] == "1"
+    assert redis_client.added[0] == (
         "code:ready",
-        {"issue_id": "88", "branch": "feat/login", "repo": "org/repo"},
+        {"issue_id": "88", "branch": "feat/login", "repo": "org/repo", "pr": "123", "round": "1"},
     )
+    assert redis_client.added[1] == (
+        "pr:review",
+        {"issue_id": "88", "branch": "feat/login", "repo": "org/repo", "pr": "123", "round": "1"},
+    )
+
+
+def test_publish_code_ready_escalates_after_round_limit():
+    redis_client = FakeRedis()
+
+    for _ in range(6):
+        ok, output = publish_code_ready(
+            redis_client=redis_client,
+            issue_id="99",
+            branch="feat/limits",
+            repo="org/repo",
+            pr="999",
+        )
+
+    assert ok is True
+    assert output["status"] == "escalated"
+    assert output["round"] == "6"
+    assert redis_client.store["project:v1:issue:99:pr_review_round"] == "6"
+    assert redis_client.added[-1][0] == "orchestrator:events"
+    assert redis_client.added[-1][1]["type"] == "architect_final_decision_required"
 
 
 def test_publish_deploy_event_sets_deployed_and_emits_feature_complete():
     redis_client = FakeRedis()
+    redis_client.store["project:v1:issue:90:active_developer"] = "developer-1"
+    redis_client.store["project:v1:developer:developer-1:active_issue"] = "90"
 
     ok, output = publish_deploy_event(
         redis_client=redis_client,
@@ -434,6 +472,10 @@ def test_publish_deploy_event_sets_deployed_and_emits_feature_complete():
     assert ok is True
     assert output["state"] == STATE_DEPLOYED
     assert redis_client.store["project:v1:issue:90:state"] == STATE_DEPLOYED
+    assert redis_client.store["project:v1:issue:90:pr_merged"] == "1"
+    assert "project:v1:issue:90:pr_review_round" in redis_client.deleted
+    assert "project:v1:developer:developer-1:active_issue" in redis_client.deleted
+    assert "project:v1:issue:90:active_developer" in redis_client.deleted
     assert redis_client.added[0] == (
         "event:devops",
         {"issue_id": "90", "branch": "main", "repo": "org/repo", "pr": "123"},
@@ -465,6 +507,7 @@ def test_runtime_tool_registry_registers_role_tools():
     assert TOOL_PUBLISH_BACKLOG in registry._tools
     assert TOOL_PUBLISH_DRAFT_REJECTED in registry._tools
     assert TOOL_PUBLISH_CODE_READY in registry._tools
+    assert TOOL_PUBLISH_PR_REVIEW in registry._tools
     assert TOOL_PUBLISH_DEPLOY_EVENT in registry._tools
     assert registry.default_session_config.model_provider == "ollama"
 
@@ -615,6 +658,22 @@ def test_openclaw_role_assets_are_bound_for_developer():
     assert config.output_schema == "developer"
 
 
+def test_openclaw_role_assets_are_bound_for_new_review_roles():
+    dba = get_role_openclaw_config("DBA")
+    cybersec = get_role_openclaw_config("CyberSec")
+    architect_review = get_role_openclaw_config("Architect-review")
+
+    assert dba is not None
+    assert dba.profile == "dba"
+    assert dba.output_schema == "dba"
+    assert cybersec is not None
+    assert cybersec.profile == "cybersec"
+    assert cybersec.output_schema == "cybersec"
+    assert architect_review is not None
+    assert architect_review.profile == "architect_review"
+    assert architect_review.output_schema == "architect_review"
+
+
 def test_render_openclaw_message_includes_profile_rules_and_skills():
     message = render_openclaw_message(
         "Developer",
@@ -715,10 +774,82 @@ def test_architect_agent_acks_without_sending_when_issue_missing():
     assert redis_client.acks == [("draft.2.issue", "clawdevs", "2-0")]
 
 
+def test_qa_agent_consumes_pr_review_stream_by_default():
+    previous_qa_review = os.environ.get("QA_REVIEW_STREAM")
+    previous_pr_review = os.environ.get("STREAM_PR_REVIEW")
+    os.environ.pop("QA_REVIEW_STREAM", None)
+    os.environ.pop("STREAM_PR_REVIEW", None)
+    try:
+        agent = QAAgent()
+    finally:
+        if previous_qa_review is None:
+            os.environ.pop("QA_REVIEW_STREAM", None)
+        else:
+            os.environ["QA_REVIEW_STREAM"] = previous_qa_review
+        if previous_pr_review is None:
+            os.environ.pop("STREAM_PR_REVIEW", None)
+        else:
+            os.environ["STREAM_PR_REVIEW"] = previous_pr_review
+    assert agent.stream_name == "pr:review"
+
+
+def test_dba_and_cybersec_agents_consume_pr_review_stream():
+    dba = DBAAgent()
+    cybersec = CyberSecAgent()
+    assert dba.stream_name == "pr:review"
+    assert cybersec.stream_name == "pr:review"
+
+
+def test_architect_review_ignores_non_escalation_events():
+    redis_client = FakeRedis()
+    agent = ArchitectReviewAgent()
+
+    def sender(session_key, message, timeout_sec):
+        raise AssertionError("sender should not be called")
+
+    result = process_stream_message(
+        redis_client,
+        agent,
+        sender,
+        "orchestrator:events",
+        "2-2",
+        {"type": "feature_complete", "issue_id": "11"},
+    )
+
+    assert result.status == "ignored"
+    assert result.status_code == "ignored_non_final_decision_event"
+    assert result.event_name == "architect_review.ignored_non_final_decision_event"
+    assert redis_client.acks == [("orchestrator:events", "clawdevs-architect-review", "2-2")]
+
+
+def test_architect_review_processes_escalation_event():
+    redis_client = FakeRedis()
+    agent = ArchitectReviewAgent()
+
+    def sender(session_key, message, timeout_sec):
+        assert session_key == "agent:architect_review:main"
+        assert "issue_id: 12" in message
+        assert "round: 6" in message
+        return True, {"queued": True}
+
+    result = process_stream_message(
+        redis_client,
+        agent,
+        sender,
+        "orchestrator:events",
+        "2-3",
+        {"type": "architect_final_decision_required", "issue_id": "12", "round": "6", "max_rounds": "5"},
+    )
+
+    assert result.status == "forwarded"
+    assert result.status_code == "forwarded"
+    assert result.event_name == "architect_review.forwarded"
+    assert redis_client.acks == [("orchestrator:events", "clawdevs-architect-review", "2-3")]
+
+
 def test_developer_agent_requeues_when_lock_is_busy():
     redis_client = FakeRedis()
     agent = DeveloperAgent()
-    lock_key = f"{agent.stream_name}:noop"
     redis_client.store[f"project:v1:issue:42:dev_lock"] = "other-agent"
 
     def sender(session_key, message, timeout_sec):
@@ -747,6 +878,36 @@ def test_developer_agent_requeues_when_lock_is_busy():
     assert payload["trace_id"]
     assert payload["budget_started_at"]
     assert redis_client.acks == [("task:backlog", "clawdevs", "3-0")]
+
+
+def test_developer_agent_blocks_new_issue_until_previous_merge():
+    redis_client = FakeRedis()
+    agent = DeveloperAgent()
+    developer_id = os.getenv("POD_NAME", os.getenv("HOSTNAME", "developer"))
+    redis_client.store[f"project:v1:developer:{developer_id}:active_issue"] = "41"
+    redis_client.store["project:v1:issue:41:pr_merged"] = "0"
+
+    def sender(session_key, message, timeout_sec):
+        raise AssertionError("sender should not be called")
+
+    result = process_stream_message(
+        redis_client,
+        agent,
+        sender,
+        "task:backlog",
+        "3-1",
+        {"issue_id": "42", "priority": "1"},
+    )
+
+    assert result.status == "blocked"
+    assert result.status_code == "blocked_waiting_merge"
+    assert result.event_name == "developer.blocked_waiting_merge"
+    assert len(redis_client.added) == 1
+    stream_name, payload = redis_client.added[0]
+    assert stream_name == "task:backlog"
+    assert payload["issue_id"] == "42"
+    assert payload["attempt"] == "2"
+    assert redis_client.acks == [("task:backlog", "clawdevs", "3-1")]
 
 
 def test_developer_agent_acks_when_finops_stops_task():
@@ -807,3 +968,173 @@ def test_runtime_finops_counts_and_stops():
     assert stop is False
     stop, reason = should_stop_task("123", 999, 0.1)
     assert stop is True
+
+
+def test_review_consensus_pending_until_all_roles_submit():
+    redis_client = FakeRedis()
+    record_review_decision(
+        redis_client,
+        issue_id="501",
+        review_round="1",
+        role="QA",
+        send_output={"status": "approved", "summary": "qa ok"},
+        repo="",
+        pr="",
+    )
+
+    status = finalize_round_if_ready(
+        redis_client,
+        issue_id="501",
+        review_round="1",
+        branch="feat/x",
+        repo="org/repo",
+        pr="501",
+    )
+
+    assert status == "pending"
+    assert redis_client.added == []
+
+
+def test_review_consensus_approved_publishes_event_devops_once():
+    redis_client = FakeRedis()
+    for role in ("QA", "DBA", "CyberSec"):
+        record_review_decision(
+            redis_client,
+            issue_id="502",
+            review_round="2",
+            role=role,
+            send_output={"status": "approved", "summary": f"{role} ok"},
+            repo="",
+            pr="",
+        )
+
+    status = finalize_round_if_ready(
+        redis_client,
+        issue_id="502",
+        review_round="2",
+        branch="feat/y",
+        repo="org/repo",
+        pr="502",
+    )
+    assert status == "approved"
+    assert redis_client.added[0][0] == "event:devops"
+    assert redis_client.added[0][1]["issue_id"] == "502"
+    assert redis_client.added[1][0] == "orchestrator:events"
+    assert redis_client.added[1][1]["type"] == "review_consensus_approved"
+
+    second = finalize_round_if_ready(
+        redis_client,
+        issue_id="502",
+        review_round="2",
+        branch="feat/y",
+        repo="org/repo",
+        pr="502",
+    )
+    assert second == "already_finalized"
+    assert len(redis_client.added) == 2
+
+
+def test_review_consensus_blocked_returns_issue_to_backlog():
+    redis_client = FakeRedis()
+    record_review_decision(
+        redis_client,
+        issue_id="503",
+        review_round="3",
+        role="QA",
+        send_output={"status": "approved", "summary": "qa ok"},
+        repo="",
+        pr="",
+    )
+    record_review_decision(
+        redis_client,
+        issue_id="503",
+        review_round="3",
+        role="DBA",
+        send_output={"status": "blocked", "summary": "missing index"},
+        repo="",
+        pr="",
+    )
+    record_review_decision(
+        redis_client,
+        issue_id="503",
+        review_round="3",
+        role="CyberSec",
+        send_output={"status": "approved", "summary": "sec ok"},
+        repo="",
+        pr="",
+    )
+
+    status = finalize_round_if_ready(
+        redis_client,
+        issue_id="503",
+        review_round="3",
+        branch="feat/z",
+        repo="org/repo",
+        pr="503",
+    )
+    assert status == "blocked"
+    assert redis_client.store["project:v1:issue:503:state"] == "Backlog"
+    assert redis_client.added[0][0] == "task:backlog"
+    assert redis_client.added[0][1]["reason"] == "review_blocked"
+    assert redis_client.added[1][0] == "orchestrator:events"
+    assert redis_client.added[1][1]["type"] == "review_consensus_blocked"
+
+
+def test_publish_role_review_comment_is_idempotent_when_not_configured():
+    redis_client = FakeRedis()
+    first = publish_role_review_comment(
+        redis_client,
+        issue_id="601",
+        review_round="1",
+        role="QA",
+        decision="approved",
+        summary="ok",
+        repo="",
+        pr="601",
+    )
+    second = publish_role_review_comment(
+        redis_client,
+        issue_id="601",
+        review_round="1",
+        role="QA",
+        decision="approved",
+        summary="ok",
+        repo="",
+        pr="601",
+    )
+    assert first == "skipped_not_configured"
+    assert second == "skipped_not_configured"
+
+
+def test_publish_consensus_comment_uses_request_fn_and_sets_posted_state():
+    redis_client = FakeRedis()
+    calls = []
+
+    def fake_request(url, headers, body):
+        calls.append((url, headers, body))
+
+    previous_token = os.environ.get("GITHUB_TOKEN")
+    os.environ["GITHUB_TOKEN"] = "token-x"
+    try:
+        result = publish_consensus_comment(
+            redis_client,
+            issue_id="602",
+            review_round="2",
+            repo="org/repo",
+            pr="77",
+            outcome="approved",
+            decisions_by_role={
+                "QA": {"decision": "approved", "summary": "qa ok"},
+                "DBA": {"decision": "approved", "summary": "dba ok"},
+                "CyberSec": {"decision": "approved", "summary": "sec ok"},
+            },
+            request_fn=fake_request,
+        )
+        assert result == "posted"
+        assert len(calls) == 1
+        assert calls[0][0].endswith("/repos/org/repo/issues/77/comments")
+    finally:
+        if previous_token is None:
+            os.environ.pop("GITHUB_TOKEN", None)
+        else:
+            os.environ["GITHUB_TOKEN"] = previous_token

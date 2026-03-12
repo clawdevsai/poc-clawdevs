@@ -14,7 +14,9 @@ data:
   KEY_PREFIX_PROJECT: project:v1
   STREAM_CMD_STRATEGY: cmd:strategy
   STREAM_DRAFT_ISSUE: draft.2.issue
+  STREAM_PR_REVIEW: pr:review
   QA_STREAM: code:ready
+  QA_REVIEW_STREAM: pr:review
   STREAM_EVENT_DEVOPS: event:devops
   STREAM_ORCHESTRATOR_EVENTS: orchestrator:events
   TELEGRAM_PENDING_KEY_PREFIX: telegram:director:pending_start
@@ -36,7 +38,13 @@ data:
   OPENCLAW_MODEL_DEVOPS_PRIMARY: devstral-small-2:24b-cloud
   OPENCLAW_MODEL_DEVOPS_FALLBACK: rnj-1:8b-cloud
   OPENCLAW_QA_SESSION_KEY: agent:qa:main
+  OPENCLAW_DBA_SESSION_KEY: agent:dba:main
+  OPENCLAW_CYBERSEC_SESSION_KEY: agent:cybersec:main
+  OPENCLAW_ARCHITECT_REVIEW_SESSION_KEY: agent:architect_review:main
   QA_GROUP: clawdevs
+  DBA_GROUP: clawdevs-dba
+  CYBERSEC_GROUP: clawdevs-cybersec
+  ARCHITECT_REVIEW_GROUP: clawdevs-architect-review
   QA_STREAM: code:ready
   OPENCLAW_REQUIRED: "true"
   OPENCLAW_GATEWAY_WS: ws://openclaw-gateway:18789
@@ -190,7 +198,7 @@ spec:
               set -e
               npm i -g openclaw@latest --force || true
               openclaw doctor || true
-              openclaw config set gateway.mode local
+              openclaw config set gateway.mode remote
               openclaw config set gateway.auth.mode token
               openclaw config set gateway.auth.token "$OPENCLAW_GATEWAY_TOKEN"
               openclaw config set models.providers.ollama '{"baseUrl":"http://ollama:11434","models":[]}'
@@ -382,6 +390,84 @@ spec:
           image: clawdevs-ai:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.agents.qa_worker"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dba-worker
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dba-worker
+  template:
+    metadata:
+      labels:
+        app: dba-worker
+    spec:
+      containers:
+        - name: dba-worker
+          image: clawdevs-ai:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.agents.dba_worker"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cybersec-worker
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cybersec-worker
+  template:
+    metadata:
+      labels:
+        app: cybersec-worker
+    spec:
+      containers:
+        - name: cybersec-worker
+          image: clawdevs-ai:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.agents.cybersec_worker"]
+          envFrom:
+            - configMapRef:
+                name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: architect-review-worker
+  namespace: clawdevs-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: architect-review-worker
+  template:
+    metadata:
+      labels:
+        app: architect-review-worker
+    spec:
+      containers:
+        - name: architect-review-worker
+          image: clawdevs-ai:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.agents.architect_review_worker"]
           envFrom:
             - configMapRef:
                 name: clawdevs-config

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Implementacao do papel QA sobre o runtime compartilhado."""
+"""Implementacao do papel DBA sobre o runtime compartilhado."""
 from __future__ import annotations
 
 import os
@@ -9,15 +9,15 @@ from app.core.review_consensus import finalize_round_if_ready, record_review_dec
 from app.runtime import AgentResult, ExecutionPolicy, RunContext
 
 
-class QAAgent(BaseRoleAgent):
+class DBAAgent(BaseRoleAgent):
     def __init__(self) -> None:
         self.settings = AgentSettings(
-            role_name="QA",
-            stream_name=os.getenv("QA_REVIEW_STREAM", os.getenv("STREAM_PR_REVIEW", "pr:review")),
-            consumer_group=os.getenv("QA_GROUP", "clawdevs"),
-            consumer_name=os.getenv("POD_NAME", os.getenv("HOSTNAME", "qa-1")),
-            session_key=os.getenv("OPENCLAW_QA_SESSION_KEY", "agent:qa:main"),
-            policy=ExecutionPolicy.from_env("QA", default_block_ms=5000, default_timeout_sec=30),
+            role_name="DBA",
+            stream_name=os.getenv("DBA_REVIEW_STREAM", os.getenv("STREAM_PR_REVIEW", "pr:review")),
+            consumer_group=os.getenv("DBA_GROUP", "clawdevs-dba"),
+            consumer_name=os.getenv("POD_NAME", os.getenv("HOSTNAME", "dba-1")),
+            session_key=os.getenv("OPENCLAW_DBA_SESSION_KEY", "agent:dba:main"),
+            policy=ExecutionPolicy.from_env("DBA", default_block_ms=5000, default_timeout_sec=30),
         )
 
     def build_instruction(self, redis_client, ctx: RunContext) -> str:
@@ -26,10 +26,9 @@ class QAAgent(BaseRoleAgent):
         repo = str(ctx.event.get("repo") or os.getenv("GITHUB_REPO", "")).strip()
         pr = str(ctx.event.get("pr") or "").strip()
         review_round = str(ctx.event.get("round") or "").strip()
-        return f"""Evento de PR review. Acao QA: revisar a mudanca, validar criterios de aceite e executar checks essenciais.
+        return f"""Evento de PR review. Acao DBA: avaliar impacto em schema, query, migracao e risco de dados.
 
-Se aprovado, registrar decisao de QA e manter trilha clara para merge.
-Se bloqueado, retornar decisao de bloqueio com razao objetiva.
+Se houver risco relevante, bloquear com justificativa objetiva e acao corretiva.
 
 issue_id: {issue_id}
 branch: {branch}
@@ -65,7 +64,7 @@ round: {review_round}
         return AgentResult(
             status="forwarded",
             status_code="forwarded",
-            event_name="qa.forwarded",
-            summary=f"[{self.role_name}] XACK {self.stream_name} {ctx.message_id} (enviado ao agente QA)",
+            event_name="dba.forwarded",
+            summary=f"[{self.role_name}] XACK {self.stream_name} {ctx.message_id} (enviado ao agente DBA)",
             metadata={"run_id": ctx.run_id},
         )

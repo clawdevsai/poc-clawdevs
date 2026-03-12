@@ -2,6 +2,7 @@
 """Bootstrap do conjunto minimo de ferramentas do runtime."""
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from app.runtime.logging import log_event
@@ -9,12 +10,39 @@ from app.runtime.model_provider import load_runtime_stack_config, validate_runti
 from app.runtime.openclaw_session import resolve_openclaw_session_config_for_role
 from app.runtime.tool_registry import ToolRegistry
 from app.runtime.openclaw_client import TOOL_OPENCLAW_SESSIONS_SEND, send_to_session
-from app.shared.issue_state import STATE_DEPLOYED, STATE_READY, STATE_REFINAMENTO, set_issue_state
+from app.shared.issue_state import (
+    STATE_DEPLOYED,
+    STATE_IN_REVIEW,
+    STATE_READY,
+    STATE_REFINAMENTO,
+    set_issue_state,
+)
 
 TOOL_PUBLISH_BACKLOG = "redis.publish_backlog"
 TOOL_PUBLISH_DRAFT_REJECTED = "redis.publish_draft_rejected"
 TOOL_PUBLISH_CODE_READY = "redis.publish_code_ready"
 TOOL_PUBLISH_DEPLOY_EVENT = "redis.publish_deploy_event"
+TOOL_PUBLISH_PR_REVIEW = "redis.publish_pr_review"
+
+KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
+STREAM_PR_REVIEW = os.environ.get("STREAM_PR_REVIEW", "pr:review")
+MAX_PR_REVIEW_ROUNDS = int(os.environ.get("MAX_PR_REVIEW_ROUNDS", "5"))
+
+
+def _pr_review_round_key(issue_id: str) -> str:
+    return f"{KEY_PREFIX}:issue:{issue_id}:pr_review_round"
+
+
+def _pr_merged_key(issue_id: str) -> str:
+    return f"{KEY_PREFIX}:issue:{issue_id}:pr_merged"
+
+
+def _issue_active_developer_key(issue_id: str) -> str:
+    return f"{KEY_PREFIX}:issue:{issue_id}:active_developer"
+
+
+def _developer_active_issue_key(developer_id: str) -> str:
+    return f"{KEY_PREFIX}:developer:{developer_id}:active_issue"
 
 
 def publish_backlog(
@@ -59,14 +87,58 @@ def publish_code_ready(
     issue_id: str,
     branch: str,
     repo: str = "",
+    pr: str = "",
 ) -> tuple[bool, dict[str, str]]:
+    from app.core.orchestration import emit_event
+
+    round_key = _pr_review_round_key(issue_id)
+    review_round = int(redis_client.incr(round_key))
+    if review_round > MAX_PR_REVIEW_ROUNDS:
+        emit_event(
+            redis_client,
+            "architect_final_decision_required",
+            issue_id=issue_id,
+            pr=pr,
+            branch=branch,
+            repo=repo,
+            round=review_round,
+            max_rounds=MAX_PR_REVIEW_ROUNDS,
+            reason="max_pr_review_rounds_reached",
+            status_code="architect_final_decision_required",
+            event_name="orchestration.architect_final_decision_required",
+        )
+        return (
+            True,
+            {
+                "stream": STREAM_PR_REVIEW,
+                "issue_id": issue_id,
+                "branch": branch,
+                "status": "escalated",
+                "round": str(review_round),
+            },
+        )
+
+    set_issue_state(redis_client, issue_id, STATE_IN_REVIEW)
+    redis_client.set(_pr_merged_key(issue_id), "0")
     payload = {
         "issue_id": issue_id,
         "branch": branch,
         "repo": repo,
+        "pr": pr,
+        "round": str(review_round),
     }
     redis_client.xadd("code:ready", payload)
-    return True, {"stream": "code:ready", "issue_id": issue_id, "branch": branch}
+    redis_client.xadd(STREAM_PR_REVIEW, payload)
+    return (
+        True,
+        {
+            "stream": STREAM_PR_REVIEW,
+            "issue_id": issue_id,
+            "branch": branch,
+            "state": STATE_IN_REVIEW,
+            "round": str(review_round),
+        },
+    )
 
 
 def publish_deploy_event(
@@ -80,6 +152,15 @@ def publish_deploy_event(
     from app.core.orchestration import emit_event
 
     set_issue_state(redis_client, issue_id, STATE_DEPLOYED)
+    redis_client.set(_pr_merged_key(issue_id), "1")
+    redis_client.delete(_pr_review_round_key(issue_id))
+    active_developer = redis_client.get(_issue_active_developer_key(issue_id))
+    if isinstance(active_developer, bytes):
+        active_developer = active_developer.decode("utf-8", errors="replace")
+    active_developer = str(active_developer or "").strip()
+    if active_developer:
+        redis_client.delete(_developer_active_issue_key(active_developer))
+    redis_client.delete(_issue_active_developer_key(issue_id))
     payload = {
         "issue_id": issue_id,
         "branch": branch,
@@ -109,7 +190,16 @@ def build_runtime_tool_registry() -> ToolRegistry:
     registry.register(
         TOOL_OPENCLAW_SESSIONS_SEND,
         send_to_session,
-        allowed_roles=("PO", "Architect-draft", "Developer", "QA", "DevOps"),
+        allowed_roles=(
+            "PO",
+            "Architect-draft",
+            "Architect-review",
+            "Developer",
+            "QA",
+            "DBA",
+            "CyberSec",
+            "DevOps",
+        ),
     )
     registry.register(
         TOOL_PUBLISH_BACKLOG,
@@ -127,9 +217,14 @@ def build_runtime_tool_registry() -> ToolRegistry:
         allowed_roles=("Developer",),
     )
     registry.register(
+        TOOL_PUBLISH_PR_REVIEW,
+        publish_code_ready,
+        allowed_roles=("Developer",),
+    )
+    registry.register(
         TOOL_PUBLISH_DEPLOY_EVENT,
         publish_deploy_event,
-        allowed_roles=("QA", "DevOps"),
+        allowed_roles=("QA", "DBA", "CyberSec", "Architect-review", "DevOps"),
     )
     registry.default_session_config = stack  # type: ignore[attr-defined]
     log_event(
@@ -139,6 +234,7 @@ def build_runtime_tool_registry() -> ToolRegistry:
             TOOL_PUBLISH_BACKLOG,
             TOOL_PUBLISH_DRAFT_REJECTED,
             TOOL_PUBLISH_CODE_READY,
+            TOOL_PUBLISH_PR_REVIEW,
             TOOL_PUBLISH_DEPLOY_EVENT,
         ],
     )

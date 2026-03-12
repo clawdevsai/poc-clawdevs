@@ -48,6 +48,24 @@ ROLE_CONFIGS: dict[str, OpenClawRoleConfig] = {
         skills=("release_ops", "deploy_validation", "redis_streams"),
         output_schema="devops",
     ),
+    "DBA": OpenClawRoleConfig(
+        profile="dba",
+        rules=("core", "engineering", "release_integrity"),
+        skills=("architecture_review", "deploy_validation", "redis_streams"),
+        output_schema="dba",
+    ),
+    "CyberSec": OpenClawRoleConfig(
+        profile="cybersec",
+        rules=("core", "engineering", "change_safety"),
+        skills=("architecture_review", "deploy_validation", "redis_streams"),
+        output_schema="cybersec",
+    ),
+    "Architect-review": OpenClawRoleConfig(
+        profile="architect_review",
+        rules=("core", "release_integrity", "solution_simplicity"),
+        skills=("architecture_review", "release_ops", "redis_streams"),
+        output_schema="architect_review",
+    ),
 }
 
 

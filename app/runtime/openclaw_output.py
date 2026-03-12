@@ -14,6 +14,9 @@ REQUIRED_OUTPUT_FIELDS: dict[str, tuple[str, ...]] = {
     "developer": ("status", "summary", "files_changed", "verification", "next_action"),
     "qa": ("status", "summary", "verification", "decision", "next_action"),
     "devops": ("status", "summary", "deployment", "next_action"),
+    "dba": ("status", "summary", "db_risks", "decision", "next_action"),
+    "cybersec": ("status", "summary", "security_findings", "decision", "next_action"),
+    "architect_review": ("status", "summary", "decision", "next_action"),
 }
 
 

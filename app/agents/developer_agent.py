@@ -35,11 +35,35 @@ class DeveloperAgent(BaseRoleAgent):
     def _dev_lock_key(self, issue_id: str) -> str:
         return f"{KEY_PREFIX}:issue:{issue_id}:dev_lock"
 
+    def _active_issue_key(self, developer_id: str) -> str:
+        return f"{KEY_PREFIX}:developer:{developer_id}:active_issue"
+
+    def _active_developer_key(self, issue_id: str) -> str:
+        return f"{KEY_PREFIX}:issue:{issue_id}:active_developer"
+
+    def _pr_merged_key(self, issue_id: str) -> str:
+        return f"{KEY_PREFIX}:issue:{issue_id}:pr_merged"
+
+    def _developer_id(self) -> str:
+        return os.getenv("POD_NAME", os.getenv("HOSTNAME", "developer"))
+
     def acquire_story_lock(self, redis_client, issue_id: str) -> bool:
         if not issue_id:
             return True
-        agent = os.getenv("POD_NAME", os.getenv("HOSTNAME", "developer"))
+        agent = self._developer_id()
         return bool(redis_client.set(self._dev_lock_key(issue_id), agent, nx=True, ex=self.dev_lock_ttl))
+
+    def _is_issue_merged(self, redis_client, issue_id: str) -> bool:
+        raw = redis_client.get(self._pr_merged_key(issue_id))
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8", errors="replace")
+        return str(raw or "").strip() in {"1", "true", "True", "merged"}
+
+    def _active_issue(self, redis_client, developer_id: str) -> str:
+        raw = redis_client.get(self._active_issue_key(developer_id))
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8", errors="replace")
+        return str(raw or "").strip()
 
     def get_issue_spec(self, redis_client, issue_id: str) -> str:
         raw = redis_client.get(f"{KEY_PREFIX}:issue:{issue_id}")
@@ -51,6 +75,26 @@ class DeveloperAgent(BaseRoleAgent):
 
     def prepare(self, redis_client, ctx: RunContext) -> PreparedRun:
         issue_id = ctx.issue_id or ""
+        developer_id = self._developer_id()
+        current_active = self._active_issue(redis_client, developer_id)
+        if current_active and current_active != issue_id and not self._is_issue_merged(redis_client, current_active):
+            redis_client.xadd(ctx.stream_name, ctx.envelope.next_attempt_payload())
+            return PreparedRun(
+                should_send=False,
+                ack_on_exit=True,
+                result=AgentResult(
+                    status="blocked",
+                    status_code="blocked_waiting_merge",
+                    event_name="developer.blocked_waiting_merge",
+                    summary=(
+                        f"[{self.role_name}] aguardando merge da issue ativa={current_active}; "
+                        f"nova issue={issue_id} devolvida para fila."
+                    ),
+                ),
+            )
+        if current_active and current_active != issue_id and self._is_issue_merged(redis_client, current_active):
+            redis_client.delete(self._active_issue_key(developer_id))
+
         if not self.acquire_story_lock(redis_client, issue_id):
             redis_client.xadd(ctx.stream_name, ctx.envelope.next_attempt_payload())
             return PreparedRun(
@@ -65,11 +109,16 @@ class DeveloperAgent(BaseRoleAgent):
             )
         if issue_id:
             set_issue_state(redis_client, issue_id, STATE_IN_PROGRESS)
+            redis_client.set(self._active_issue_key(developer_id), issue_id, ex=self.dev_lock_ttl)
+            redis_client.set(self._active_developer_key(issue_id), developer_id, ex=self.dev_lock_ttl)
+            redis_client.set(self._pr_merged_key(issue_id), "0")
             attempt = increment_attempt(redis_client, issue_id)
             stop, reason = should_stop_task(issue_id, attempt, self.finops_cost_estimate)
             if stop:
                 set_issue_state(redis_client, issue_id, "Backlog")
                 redis_client.delete(self._dev_lock_key(issue_id))
+                redis_client.delete(self._active_issue_key(developer_id))
+                redis_client.delete(self._active_developer_key(issue_id))
                 emit_event(
                     redis_client,
                     "task_returned_to_po",
