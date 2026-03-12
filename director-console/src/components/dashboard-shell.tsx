@@ -44,6 +44,22 @@ type WebhookLiveStats = {
   spikePerMinuteThreshold: number;
 };
 
+type ResetTotalResponse = {
+  status?: string;
+  error?: string;
+  requiredConfirmationText?: string;
+  deletedRedisKeys?: number;
+  deletedStreams?: number;
+  github?: {
+    attempted: number;
+    closed: number;
+    failed: number;
+    note: string;
+  };
+};
+
+const REQUIRED_RESET_CONFIRMATION = "RESET TOTAL";
+
 const MENU_GROUPS: Array<{ title: string; items: Array<{ id: MenuId; label: string }> }> = [
   {
     title: "Painel",
@@ -80,6 +96,10 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [isResettingWebhookMetrics, setIsResettingWebhookMetrics] = useState(false);
   const [webhookMetricsMessage, setWebhookMetricsMessage] = useState<string | null>(null);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetConfirmationText, setResetConfirmationText] = useState("");
+  const [isResettingTotal, setIsResettingTotal] = useState(false);
+  const [resetTotalMessage, setResetTotalMessage] = useState<string | null>(null);
 
   const refreshDashboard = useCallback(async () => {
     setIsRefreshing(true);
@@ -200,6 +220,59 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
     }
   }, [refreshDashboard]);
 
+  const openResetModal = useCallback(() => {
+    setResetConfirmationText("");
+    setResetTotalMessage(null);
+    setIsResetModalOpen(true);
+  }, []);
+
+  const closeResetModal = useCallback(() => {
+    if (isResettingTotal) {
+      return;
+    }
+    setIsResetModalOpen(false);
+    setResetConfirmationText("");
+  }, [isResettingTotal]);
+
+  const runTotalReset = useCallback(async () => {
+    if (resetConfirmationText.trim().toUpperCase() !== REQUIRED_RESET_CONFIRMATION) {
+      setResetTotalMessage(`Digite "${REQUIRED_RESET_CONFIRMATION}" para confirmar.`);
+      return;
+    }
+    setIsResettingTotal(true);
+    setResetTotalMessage(null);
+    try {
+      const response = await fetch("/api/reset-total", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ confirmationText: resetConfirmationText }),
+        cache: "no-store"
+      });
+      const payload = (await response.json()) as ResetTotalResponse;
+      if (!response.ok) {
+        setResetTotalMessage(`Falha no reset: ${payload.error ?? "reset_total_failed"}`);
+        return;
+      }
+      const githubSummary = payload.github
+        ? `GitHub fechadas ${payload.github.closed}/${payload.github.attempted} (falhas: ${payload.github.failed})`
+        : "GitHub sem retorno";
+      setResetTotalMessage(
+        `Reset concluido. Redis keys removidas: ${payload.deletedRedisKeys ?? 0}, streams removidas: ${
+          payload.deletedStreams ?? 0
+        }. ${githubSummary}.`
+      );
+      await refreshDashboard();
+      setIsResetModalOpen(false);
+      setResetConfirmationText("");
+    } catch (error) {
+      setResetTotalMessage(`Falha no reset: ${error instanceof Error ? error.message : "reset_total_error"}`);
+    } finally {
+      setIsResettingTotal(false);
+    }
+  }, [refreshDashboard, resetConfirmationText]);
+
   return (
     <main className="mx-auto min-h-screen max-w-[1400px] px-4 py-6 md:px-6">
       <div className="grid gap-6 lg:grid-cols-[250px_1fr]">
@@ -277,9 +350,17 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                 >
                   {isRefreshing ? "Atualizando..." : "Atualizar agora"}
                 </button>
+                <button
+                  type="button"
+                  onClick={openResetModal}
+                  className="rounded-full border border-rose-300/55 px-3 py-1 text-rose-100 transition hover:bg-rose-300/15"
+                >
+                  Reset total
+                </button>
               </div>
             </div>
             {refreshError ? <p className="mt-3 text-xs text-amber-300">Falha no refresh: {refreshError}</p> : null}
+            {resetTotalMessage ? <p className="mt-3 text-xs text-[var(--muted)]">{resetTotalMessage}</p> : null}
           </header>
 
           {activeMenu === "overview" ? (
@@ -472,6 +553,46 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
           ) : null}
         </section>
       </div>
+      {isResetModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="panel panel-strong w-full max-w-xl rounded-3xl border border-rose-300/35 p-6">
+            <h3 className="text-xl font-semibold text-white">Confirmar reset total</h3>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              Esta acao apaga eventos, historico e issues no Redis, remove streams operacionais e fecha issues abertas
+              no GitHub.
+            </p>
+            <p className="mt-2 text-sm text-rose-200">
+              Para continuar, digite <span className="font-semibold">{REQUIRED_RESET_CONFIRMATION}</span>.
+            </p>
+            <input
+              type="text"
+              value={resetConfirmationText}
+              onChange={(event) => setResetConfirmationText(event.target.value)}
+              placeholder={REQUIRED_RESET_CONFIRMATION}
+              className="mt-4 w-full rounded-xl border border-white/20 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-rose-300/60"
+            />
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeResetModal}
+                disabled={isResettingTotal}
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-[var(--muted)] transition hover:bg-white/10 disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void runTotalReset()}
+                disabled={isResettingTotal}
+                className="rounded-xl border border-rose-300/60 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/15 disabled:opacity-60"
+              >
+                {isResettingTotal ? "Resetando..." : "Confirmar reset"}
+              </button>
+            </div>
+            {resetTotalMessage ? <p className="mt-3 text-xs text-[var(--muted)]">{resetTotalMessage}</p> : null}
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
