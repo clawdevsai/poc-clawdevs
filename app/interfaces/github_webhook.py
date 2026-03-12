@@ -15,7 +15,22 @@ from app.shared.redis_client import get_redis_with_retry
 
 KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
 WEBHOOK_HOST = os.getenv("GITHUB_WEBHOOK_HOST", "0.0.0.0")
-WEBHOOK_PORT = int(os.getenv("GITHUB_WEBHOOK_PORT", "8081"))
+
+
+def _parse_webhook_port(raw_port: str) -> int:
+    value = str(raw_port or "").strip()
+    if not value:
+        return 8081
+    if value.isdigit():
+        return int(value)
+    if "://" in value:
+        candidate = value.rsplit(":", 1)[-1]
+        if candidate.isdigit():
+            return int(candidate)
+    raise ValueError(f"GITHUB_WEBHOOK_PORT invalido: {value}")
+
+
+WEBHOOK_PORT = _parse_webhook_port(os.getenv("GITHUB_WEBHOOK_PORT", "8081"))
 WEBHOOK_PATH = os.getenv("GITHUB_WEBHOOK_PATH", "/webhook/github")
 WEBHOOK_SECRET = (os.getenv("GITHUB_WEBHOOK_SECRET") or "").strip()
 WEBHOOK_ADMIN_TOKEN = (os.getenv("GITHUB_WEBHOOK_ADMIN_TOKEN") or "").strip()

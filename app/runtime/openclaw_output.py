@@ -22,6 +22,20 @@ REQUIRED_OUTPUT_FIELDS: dict[str, tuple[str, ...]] = {
 
 def normalize_openclaw_output(output: Any) -> dict[str, Any]:
     if isinstance(output, dict):
+        result = output.get("result")
+        if isinstance(result, dict):
+            payloads = result.get("payloads")
+            if isinstance(payloads, list):
+                for payload in payloads:
+                    if isinstance(payload, dict):
+                        text = payload.get("text")
+                        if isinstance(text, str):
+                            stripped = text.strip()
+                            if stripped.startswith("{") and stripped.endswith("}"):
+                                try:
+                                    return json.loads(stripped)
+                                except json.JSONDecodeError:
+                                    pass
         if isinstance(output.get("raw"), str):
             raw = output["raw"].strip()
             if raw.startswith("{") and raw.endswith("}"):

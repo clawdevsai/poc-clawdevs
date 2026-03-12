@@ -18,7 +18,7 @@ MINIKUBE_WAIT ?= all
 MINIKUBE_WAIT_TIMEOUT ?= 10m
 MINIKUBE_GPU_REQUEST ?= all
 
-.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard console
+.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status health-check logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs ensure-gateway-token env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard console
 
 help:
 	@echo "make test      - executa a suite"
@@ -36,6 +36,7 @@ help:
 	@echo "make cluster-reset - recria profile minikube do zero"
 	@echo "make cluster-reset-hard - purge total de profiles minikube + recriacao GPU"
 	@echo "make status    - status dos pods no Minikube"
+	@echo "make health-check - valida rollout, estado dos pods e logs criticos"
 	@echo "make logs      - logs dos deployments principais"
 	@echo "make telegram-enable TELEGRAM_BOT_TOKEN=<token> TELEGRAM_CHAT_ID=<chat_id>"
 	@echo "make telegram-disable - desabilita bridge Telegram"
@@ -51,6 +52,7 @@ help:
 	@echo "OLLAMA_MODELS=<m1,m2,...> pode sobrescrever a lista padrao de modelos"
 	@echo "make ollama-signin - gera URL de login para Ollama Cloud (necessario p/ modelos cloud)"
 	@echo "make gh-check - valida gh CLI em gateway e todos os agentes"
+	@echo "make ensure-gateway-token - gera e grava OPENCLAW_GATEWAY_TOKEN inline no Makefile"
 	@echo "make env-sync - sincroniza .env -> configmap (nao sensivel) + secret (sensivel)"
 	@echo "make gh-token-sync - alias para make env-sync"
 	@echo "make gh-auth-check - valida autenticacao do gh CLI em todos os deployments"
@@ -120,14 +122,14 @@ image-build:
 	@$(MINIKUBE) image build -t $(IMAGE) .
 	@$(MINIKUBE) image build -t $(DIRECTOR_IMAGE) $(DIRECTOR_CONSOLE_DIR)
 
-deploy:
+deploy: ensure-gateway-token
 	@$(KUBECTL) apply -f k8s/stack.yaml
 	@$(KUBECTL) set image deployment/director-console director-console=$(DIRECTOR_IMAGE) -n $(NAMESPACE)
 	@$(MAKE) env-sync
 	@powershell -NoProfile -Command "if ('$(OLLAMA_AUTO_PULL)' -eq '1') { & $(MAKE) ollama-pull-all } else { Write-Host 'OLLAMA_AUTO_PULL=0, pulando bootstrap de modelos' }"
 	@$(KUBECTL) get pods -n $(NAMESPACE)
 
-deploy-host:
+deploy-host: ensure-gateway-token
 	@$(KUBECTL) delete deploy/ollama svc/ollama -n $(NAMESPACE) --ignore-not-found=true
 	@$(KUBECTL) apply -f k8s/stack-host-ollama.yaml
 	@$(KUBECTL) set image deployment/director-console director-console=$(DIRECTOR_IMAGE) -n $(NAMESPACE)
@@ -137,16 +139,16 @@ deploy-host:
 	@$(KUBECTL) rollout restart deployment/po-worker -n $(NAMESPACE)
 	@$(KUBECTL) get pods -n $(NAMESPACE)
 
-up: preflight gpu-host-check minikube-start-host image-build deploy-host status console
+up: preflight gpu-host-check minikube-start-host image-build deploy-host status health-check console
 
-up-gpu: preflight gpu-host-check minikube-start gpu-assert image-build deploy status console
+up-gpu: preflight gpu-host-check minikube-start gpu-assert image-build deploy status health-check console
 
-up-force: preflight gpu-host-check cluster-reset image-build deploy status console
+up-force: preflight gpu-host-check cluster-reset image-build deploy status health-check console
 
 up-cdi:
 	@$(MAKE) MINIKUBE_GPU_REQUEST=nvidia.com up-force
 
-up-host-ollama: preflight gpu-host-check minikube-start-host image-build deploy-host status console
+up-host-ollama: preflight gpu-host-check minikube-start-host image-build deploy-host status health-check console
 
 down:
 	@$(KUBECTL) delete -f k8s/stack.yaml --ignore-not-found=true
@@ -184,6 +186,9 @@ status:
 	@$(KUBECTL) get pods -n $(NAMESPACE)
 	@$(KUBECTL) get svc -n $(NAMESPACE)
 	@$(KUBECTL) get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu
+
+health-check:
+	@powershell -NoProfile -Command "$$ErrorActionPreference='Stop'; $$deploys = & $(KUBECTL) get deploy -n $(NAMESPACE) -o name; foreach ($$d in $$deploys) { Write-Host ('[health] rollout ' + $$d); & $(KUBECTL) rollout status -n $(NAMESPACE) $$d --timeout=180s; if ($$LASTEXITCODE -ne 0) { Write-Host ('ERRO: rollout incompleto em ' + $$d); exit $$LASTEXITCODE } }; $$pods = & $(KUBECTL) get pods -n $(NAMESPACE) -o json | ConvertFrom-Json; $$badPods = @(); foreach ($$p in $$pods.items) { $$phase = [string]$$p.status.phase; if ($$phase -ne 'Running' -and $$phase -ne 'Succeeded') { $$badPods += ('pod ' + $$p.metadata.name + ' em fase ' + $$phase) }; foreach ($$cs in @($$p.status.containerStatuses)) { if ($$cs -and $$cs.state -and $$cs.state.waiting) { $$r = [string]$$cs.state.waiting.reason; if ($$r -in @('CrashLoopBackOff','ImagePullBackOff','ErrImagePull','CreateContainerConfigError','RunContainerError')) { $$badPods += ('pod ' + $$p.metadata.name + ' com waiting.reason=' + $$r) } } } }; if ($$badPods.Count -gt 0) { Write-Host 'ERRO: anomalias de pod detectadas:'; $$badPods | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; $$critical = @('Traceback (most recent call last):','No module named','ModuleNotFoundError:','ValueError:','RuntimeError:','panic:','Segmentation fault'); $$criticalHits = @(); foreach ($$d in $$deploys) { $$log = & $(KUBECTL) logs -n $(NAMESPACE) $$d --tail=120 2>$$null; foreach ($$pat in $$critical) { if ($$log -match [regex]::Escape($$pat)) { $$criticalHits += ('log critico em ' + $$d + ' (padrao: ' + $$pat + ')'); break } } }; if ($$criticalHits.Count -gt 0) { Write-Host 'ERRO: anomalias criticas de log detectadas:'; $$criticalHits | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; Write-Host '[health] ok: rollout, pods e logs criticos validados.'"
 
 console:
 	@echo ">>> Abrindo Director Console na porta :3000 no background..."
@@ -251,6 +256,9 @@ env-sync:
 	@powershell -NoProfile -Command "Remove-Item '.env.configmap.tmp','.env.secret.tmp' -Force -ErrorAction SilentlyContinue"
 	@$(KUBECTL) -n $(NAMESPACE) rollout restart deployment
 	@$(KUBECTL) -n $(NAMESPACE) get pods
+
+ensure-gateway-token:
+	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$lines=Get-Content $$envPath; $$existing=$$lines | Where-Object { $$_ -match '^OPENCLAW_GATEWAY_TOKEN=' } | Select-Object -First 1; $$current=''; if ($$existing) { $$current=($$existing -split '=',2)[1].Trim('\"').Trim() }; if ($$current -and $$current -ne 'local-dev-token') { Write-Host 'OPENCLAW_GATEWAY_TOKEN ja definido; ignorando geracao.'; exit 0 }; $$token=''; $$cli=if ($$env:OPENCLAW_CLI_PATH) { $$env:OPENCLAW_CLI_PATH } else { 'openclaw' }; $$cmd=Get-Command $$cli -ErrorAction SilentlyContinue; if ($$cmd) { Write-Host 'Gerando token via OpenClaw CLI...'; & $$cli doctor --generate-gateway-token | Out-Null; if ($$LASTEXITCODE -ne 0) { Write-Host 'ERRO: falha ao gerar token via openclaw.'; exit 1 }; $$raw=& $$cli config get gateway.auth.token; if ($$LASTEXITCODE -eq 0 -and $$raw) { $$first=($$raw -split \"`n\")[0].Trim(); if ($$first -match '=') { $$first=($$first -split '=',2)[1].Trim() }; $$token=$$first.Trim('\"').Trim() } }; if (-not $$token) { $$bytes=New-Object 'System.Byte[]' 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($$bytes); $$token=([System.BitConverter]::ToString($$bytes) -replace '-', '').ToLowerInvariant(); Write-Host 'OpenClaw CLI nao encontrado no host; gerando token criptografico local.' }; $$updated=$$false; $$out=foreach ($$line in $$lines) { if ($$line -match '^OPENCLAW_GATEWAY_TOKEN=') { $$updated=$$true; 'OPENCLAW_GATEWAY_TOKEN=' + $$token } else { $$line } }; if (-not $$updated) { $$out += 'OPENCLAW_GATEWAY_TOKEN=' + $$token }; $$out | Set-Content -Path $$envPath -Encoding Ascii; Write-Host 'OPENCLAW_GATEWAY_TOKEN atualizado em .env.'"
 
 gh-token-sync: env-sync
 
