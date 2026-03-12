@@ -190,6 +190,8 @@ spec:
           args:
             - |
               set -e
+              npm i -g openclaw@latest --force || true
+              openclaw doctor || true
               openclaw config set gateway.mode local
               openclaw config set gateway.auth.mode token
               openclaw config set gateway.auth.token "$OPENCLAW_GATEWAY_TOKEN"
@@ -226,11 +228,6 @@ spec:
                 secretKeyRef:
                   name: clawdevs-secrets
                   key: GITHUB_TOKEN
-            - name: GH_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: clawdevs-secrets
-                  key: GH_TOKEN
 ---
 apiVersion: apps/v1
 kind: Deployment
