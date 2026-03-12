@@ -6,6 +6,7 @@ import json
 import os
 
 from app.agents.base import AgentSettings, BaseRoleAgent
+from app.core.github_issues import ensure_github_issue_for_runtime_issue
 from app.runtime import AgentResult, ExecutionPolicy, PreparedRun, RunContext
 from app.runtime.openclaw_output import normalize_openclaw_output
 from app.shared.issue_state import KEY_PREFIX, STATE_REFINAMENTO, set_issue_state
@@ -56,6 +57,9 @@ Chave estrategica no Redis: {strategy_key or self.strategy_doc_key}
         normalized = normalize_openclaw_output(send_output)
         issues = normalized.get("issues") if isinstance(normalized, dict) else None
         published = 0
+        github_synced = 0
+        github_errors = 0
+        github_skipped = 0
         if isinstance(issues, list):
             for index, issue in enumerate(issues, start=1):
                 if not isinstance(issue, dict):
@@ -64,6 +68,7 @@ Chave estrategica no Redis: {strategy_key or self.strategy_doc_key}
                 title = str(issue.get("title") or f"{ctx.issue_id} item {index}")
                 summary = str(issue.get("acceptance") or issue.get("summary") or normalized.get("summary") or "")
                 priority = str(issue.get("priority") or "1")
+                repo = str(issue.get("repo") or ctx.event.get("repo") or self.github_repo or "").strip()
                 redis_client.set(
                     f"{KEY_PREFIX}:issue:{child_issue_id}",
                     json.dumps(
@@ -76,6 +81,20 @@ Chave estrategica no Redis: {strategy_key or self.strategy_doc_key}
                         ensure_ascii=False,
                     ),
                 )
+                github_result = ensure_github_issue_for_runtime_issue(
+                    redis_client,
+                    issue_id=child_issue_id,
+                    repo=repo,
+                    title=title,
+                    body=summary,
+                )
+                github_status = str(github_result.get("status") or "")
+                if github_status in {"synced", "already_synced"}:
+                    github_synced += 1
+                elif github_status.startswith("error"):
+                    github_errors += 1
+                else:
+                    github_skipped += 1
                 set_issue_state(redis_client, child_issue_id, STATE_REFINAMENTO)
                 redis_client.xadd(
                     self.stream_draft_issue,
@@ -99,7 +118,10 @@ Chave estrategica no Redis: {strategy_key or self.strategy_doc_key}
         if published > 0:
             status_code = "po_published_draft_issue"
             event_name = "po.published_draft_issue"
-            summary_suffix = f"{published} issue(s) publicada(s) em {self.stream_draft_issue}"
+            summary_suffix = (
+                f"{published} issue(s) publicada(s) em {self.stream_draft_issue}; "
+                f"github synced={github_synced} skipped={github_skipped} errors={github_errors}"
+            )
         return AgentResult(
             status="forwarded",
             status_code=status_code,
@@ -108,5 +130,11 @@ Chave estrategica no Redis: {strategy_key or self.strategy_doc_key}
                 f"[{self.role_name}] XACK {self.stream_name} {self.consumer_group} "
                 f"{ctx.message_id} ({summary_suffix})"
             ),
-            metadata={"run_id": ctx.run_id, "published_count": published},
+            metadata={
+                "run_id": ctx.run_id,
+                "published_count": published,
+                "github_synced": github_synced,
+                "github_skipped": github_skipped,
+                "github_errors": github_errors,
+            },
         )

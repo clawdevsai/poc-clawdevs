@@ -36,6 +36,7 @@ from app.runtime.check_stack import main as check_stack_main
 from app.agents.base import AgentSettings, BaseRoleAgent
 from app.agents.architect_agent import ArchitectDraftAgent
 from app.agents.architect_review_agent import ArchitectReviewAgent
+from app.agents.po_agent import POAgent
 from app.agents.developer_agent import DeveloperAgent
 from app.agents.devops_agent import DevOpsAgent
 from app.agents.dba_agent import DBAAgent
@@ -43,6 +44,7 @@ from app.agents.cybersec_agent import CyberSecAgent
 from app.agents.qa_agent import QAAgent
 from app.core.github_reviews import publish_consensus_comment, publish_role_review_comment
 from app.core.github_prs import check_pr_merged_status
+from app.core.github_issues import ensure_github_issue_for_runtime_issue
 from app.core.review_consensus import finalize_round_if_ready, record_review_decision
 from app.interfaces.github_webhook import (
     collect_metrics,
@@ -785,6 +787,105 @@ def test_architect_agent_acks_without_sending_when_issue_missing():
     assert redis_client.acks == [("draft.2.issue", "clawdevs", "2-0")]
 
 
+def test_architect_agent_routes_approved_issue_to_backlog():
+    redis_client = FakeRedis()
+    agent = ArchitectDraftAgent()
+    agent.settings.policy = ExecutionPolicy(block_ms=10, timeout_sec=5)
+
+    def sender(session_key, message, timeout_sec):
+        return True, {
+            "status": "approved",
+            "summary": "aprovado",
+            "decision": "ok",
+            "next_action": "task:backlog",
+        }
+
+    result = process_stream_message(
+        redis_client,
+        agent,
+        sender,
+        "draft.2.issue",
+        "2-1",
+        {"issue_id": "DIR-100", "title": "API CRUD user", "summary": "criar endpoints", "priority": "1"},
+    )
+
+    assert result.status == "forwarded"
+    assert result.status_code == "architect_approved_to_backlog"
+    assert result.event_name == "architect.approved_to_backlog"
+    assert redis_client.store["project:v1:issue:DIR-100:state"] == "Ready"
+    assert redis_client.added[-1][0] == "task:backlog"
+    assert redis_client.added[-1][1]["issue_id"] == "DIR-100"
+    assert redis_client.acks == [("draft.2.issue", "clawdevs", "2-1")]
+
+
+def test_architect_agent_routes_rejected_issue_to_draft_rejected():
+    redis_client = FakeRedis()
+    agent = ArchitectDraftAgent()
+    agent.settings.policy = ExecutionPolicy(block_ms=10, timeout_sec=5)
+
+    def sender(session_key, message, timeout_sec):
+        return True, {
+            "status": "rejected",
+            "summary": "reprovado",
+            "decision": "faltam criterios",
+            "next_action": "draft_rejected",
+        }
+
+    result = process_stream_message(
+        redis_client,
+        agent,
+        sender,
+        "draft.2.issue",
+        "2-2",
+        {"issue_id": "DIR-101", "title": "API CRUD user", "summary": "criar endpoints", "priority": "1"},
+    )
+
+    assert result.status == "forwarded"
+    assert result.status_code == "architect_rejected_to_refinamento"
+    assert result.event_name == "architect.rejected_to_refinamento"
+    assert redis_client.store["project:v1:issue:DIR-101:state"] == "Refinamento"
+    assert redis_client.added[-1][0] == "draft_rejected"
+    assert redis_client.added[-1][1]["issue_id"] == "DIR-101"
+    assert redis_client.acks == [("draft.2.issue", "clawdevs", "2-2")]
+
+
+def test_po_agent_publishes_draft_and_marks_github_sync():
+    redis_client = FakeRedis()
+    agent = POAgent()
+
+    with patch(
+        "app.agents.po_agent.ensure_github_issue_for_runtime_issue",
+        return_value={"status": "synced", "number": "77", "url": "https://github.com/org/repo/issues/77"},
+    ) as mocked_sync:
+        result = process_stream_message(
+            redis_client,
+            agent,
+            lambda session_key, message, timeout_sec: (
+                True,
+                {
+                    "status": "planned",
+                    "summary": "ok",
+                    "next_action": "draft.2.issue",
+                    "issues": [
+                        {"title": "Criar endpoint POST /users", "priority": "1", "acceptance": "retornar 201"}
+                    ],
+                },
+            ),
+            "cmd:strategy",
+            "9-9",
+            {"issue_id": "DIR-200", "repo": "clawdevsai/user-api"},
+        )
+
+    assert result.status == "forwarded"
+    assert result.status_code == "po_published_draft_issue"
+    assert result.metadata["published_count"] == 1
+    assert result.metadata["github_synced"] == 1
+    assert redis_client.store["project:v1:issue:DIR-200-1:state"] == "Refinamento"
+    assert redis_client.added[-1][0] == "draft.2.issue"
+    assert redis_client.added[-1][1]["issue_id"] == "DIR-200-1"
+    mocked_sync.assert_called_once()
+
+
 def test_qa_agent_consumes_pr_review_stream_by_default():
     previous_qa_review = os.environ.get("QA_REVIEW_STREAM")
     previous_pr_review = os.environ.get("STREAM_PR_REVIEW")
@@ -1212,6 +1313,58 @@ def test_check_pr_merged_status_uses_request_fn_and_cache():
     assert second is True
     assert len(calls) == 1
     assert redis_client.store["project:v1:issue:701:github_pr_merged_cache"] == "1"
+
+
+def test_ensure_github_issue_for_runtime_issue_creates_and_persists_mapping():
+    redis_client = FakeRedis()
+    calls = []
+
+    def fake_request(url, headers, payload):
+        calls.append((url, headers, payload))
+        return {"number": 88, "html_url": "https://github.com/org/repo/issues/88"}
+
+    previous_token = os.environ.get("GITHUB_TOKEN")
+    os.environ["GITHUB_TOKEN"] = "token-x"
+    try:
+        result = ensure_github_issue_for_runtime_issue(
+            redis_client,
+            issue_id="DIR-300",
+            repo="org/repo",
+            title="Criar endpoint",
+            body="Detalhes de aceite",
+            request_fn=fake_request,
+        )
+    finally:
+        if previous_token is None:
+            os.environ.pop("GITHUB_TOKEN", None)
+        else:
+            os.environ["GITHUB_TOKEN"] = previous_token
+
+    assert result["status"] == "synced"
+    assert redis_client.store["project:v1:issue:DIR-300:github_issue_number"] == "88"
+    assert redis_client.store["project:v1:issue:DIR-300:github_issue_url"] == "https://github.com/org/repo/issues/88"
+    assert redis_client.store["project:v1:issue:DIR-300:github_sync_status"] == "synced"
+    assert redis_client.store["project:v1:issue:DIR-300:repo"] == "org/repo"
+    assert len(calls) == 1
+
+
+def test_ensure_github_issue_for_runtime_issue_is_idempotent_when_already_synced():
+    redis_client = FakeRedis()
+    redis_client.store["project:v1:issue:DIR-301:github_issue_number"] = "89"
+    redis_client.store["project:v1:issue:DIR-301:github_issue_url"] = "https://github.com/org/repo/issues/89"
+
+    result = ensure_github_issue_for_runtime_issue(
+        redis_client,
+        issue_id="DIR-301",
+        repo="org/repo",
+        title="Nao deve criar",
+        body="",
+        request_fn=lambda *_args, **_kwargs: {"number": 90},
+    )
+
+    assert result["status"] == "already_synced"
+    assert result["number"] == "89"
+    assert redis_client.store["project:v1:issue:DIR-301:github_sync_status"] == "already_synced"
 
 
 def test_github_webhook_sets_in_review_on_pr_synchronize():
