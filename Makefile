@@ -7,7 +7,7 @@ PF_SERVICE ?= service/openclaw
 PF_PORTS ?= 18789:18789
 
 
-.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all
+.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -21,7 +21,8 @@ help:
 	@echo "  make ollama-apply   - aplica k8s/ollama-pod.yaml (Pod + Service)"
 	@echo "  make ollama-volume-apply - cria PVC ollama-data"
 	@echo "  make ollama-logs    - mostra logs do pod ollama"
-	@echo "  make openclaw-apply - aplica k8s via kustomize"
+	@echo "  make openclaw-apply - aplica k8s sem apagar deployment/sessoes"
+	@echo "  make openclaw-restart - reinicia o deployment openclaw preservando PVC e sessoes"
 	@echo "  make openclaw-kustomization - aplica k8s via kustomize"
 	@echo "  make openclaw-logs  - mostra logs do deployment openclaw"
 	@echo "  make port-forward-start PF_SERVICE=service/openclaw PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
@@ -93,9 +94,11 @@ net-test-openclaw:
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
 
 openclaw-apply: net-allow-egress
-	kubectl --context=$(KUBE_CONTEXT) delete pod openclaw --ignore-not-found
-	kubectl --context=$(KUBE_CONTEXT) delete deployment openclaw --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) apply -k k8s
+
+openclaw-restart:
+	kubectl --context=$(KUBE_CONTEXT) rollout restart deployment/openclaw
+	kubectl --context=$(KUBE_CONTEXT) rollout status deployment/openclaw --timeout=240s
 
 openclaw-logs:
 	kubectl --context=$(KUBE_CONTEXT) logs -f deployment/openclaw

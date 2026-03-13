@@ -116,9 +116,14 @@ spec:
                 "agents": {
                   "defaults": {
                     "model": "ollama/qwen3-coder-next:cloud",
+                    "thinkingDefault": "low",
+                    "typingMode": "thinking",
                     "subagents": {
                       "runTimeoutSeconds": 900,
                       "maxConcurrent": 4
+                    },
+                    "heartbeat": {
+                      "includeReasoning": true
                     }
                   },
                   "list": [
