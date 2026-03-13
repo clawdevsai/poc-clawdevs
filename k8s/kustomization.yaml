@@ -10,7 +10,9 @@ configMapGenerator:
   - name: openclaw-agent-config
     files:
       - ceo-AGENTS.md=openclaw-config/ceo/AGENTS.md
+      - ceo-IDENTITY.md=openclaw-config/ceo/IDENTITY.md
       - ceo-SOUL.md=openclaw-config/ceo/SOUL.md
+      - ceo-USER.md=openclaw-config/ceo/USER.md
       - ceo-skill-delegate-to-po-SKILL.md=openclaw-config/ceo/skills/delegate-to-po/SKILL.md
       - ceo-skill-research-and-delegate-SKILL.md=openclaw-config/ceo/skills/research-and-delegate/SKILL.md
       - po-AGENTS.md=openclaw-config/po/AGENTS.md

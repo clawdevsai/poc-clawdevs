@@ -66,12 +66,15 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent"
               cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
+              cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
               cp /bootstrap/agent-config/ceo-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SOUL.md"
+              cp /bootstrap/agent-config/ceo-USER.md "${OPENCLAW_STATE_DIR}/workspace-ceo/USER.md"
               cp /bootstrap/agent-config/ceo-skill-delegate-to-po-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/delegate-to-po/SKILL.md"
               cp /bootstrap/agent-config/ceo-skill-research-and-delegate-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate/SKILL.md"
               cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
               cp /bootstrap/agent-config/po-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-po/SOUL.md"
               cp /bootstrap/agent-config/po-skill-product-delivery-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery/SKILL.md"
+              rm -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
               {
                 "gateway": {
