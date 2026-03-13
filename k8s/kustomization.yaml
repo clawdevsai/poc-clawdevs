@@ -21,6 +21,17 @@ configMapGenerator:
       - architecture-AGENTS.md=openclaw-config/architecture/AGENTS.md
       - architecture-SOUL.md=openclaw-config/architecture/SOUL.md
       - architecture-skill-technical-design-SKILL.md=openclaw-config/architecture/skills/technical-design/SKILL.md
+      - architecture-skill-github-SKILL.md=openclaw-config/architecture/skills/github/SKILL.md
+      - architecture-skill-solid-SKILL.md=openclaw-config/architecture/skills/solid/SKILL.md
+      - architecture-skill-clean-code-SKILL.md=openclaw-config/architecture/skills/clean-code/SKILL.md
+      - architecture-skill-ddd-SKILL.md=openclaw-config/architecture/skills/ddd/SKILL.md
+      - architecture-skill-design-patterns-SKILL.md=openclaw-config/architecture/skills/design-patterns/SKILL.md
+      - architecture-skill-clean-architecture-SKILL.md=openclaw-config/architecture/skills/clean-architecture/SKILL.md
+      - architecture-skill-hexagonal-architecture-SKILL.md=openclaw-config/architecture/skills/hexagonal-architecture/SKILL.md
+      - architecture-skill-dry-yagni-SKILL.md=openclaw-config/architecture/skills/dry-yagni/SKILL.md
+      - architecture-skill-docker-SKILL.md=openclaw-config/architecture/skills/docker/SKILL.md
+      - architecture-skill-kubernetes-SKILL.md=openclaw-config/architecture/skills/kubernetes/SKILL.md
+      - architecture-skill-best-practices-SKILL.md=openclaw-config/architecture/skills/best-practices/SKILL.md
 
 generatorOptions:
   disableNameSuffixHash: true

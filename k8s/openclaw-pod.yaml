@@ -40,6 +40,16 @@ spec:
                 secretKeyRef:
                   name: openclaw-auth
                   key: telegram-chat-id-ceo
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: github-token
+            - name: GITHUB_REPOSITORY
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: github-repository
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config
@@ -55,7 +65,7 @@ spec:
               export OPENCLAW_NO_PROMPT=1
               export OPENCLAW_STATE_DIR=/data/openclaw
               apt-get update
-              apt-get install -y --no-install-recommends ca-certificates curl bash
+              apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh
               rm -rf /var/lib/apt/lists/*
               curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
               mkdir -p "${OPENCLAW_STATE_DIR}"
@@ -67,6 +77,17 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/technical-design"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/github"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/solid"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-code"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/ddd"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/design-patterns"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-architecture"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/hexagonal-architecture"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/dry-yagni"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/docker"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/kubernetes"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/best-practices"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent" "${OPENCLAW_STATE_DIR}/agents/architecture/agent"
               cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
               cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
@@ -80,6 +101,17 @@ spec:
               cp /bootstrap/agent-config/architecture-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-architecture/AGENTS.md"
               cp /bootstrap/agent-config/architecture-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/SOUL.md"
               cp /bootstrap/agent-config/architecture-skill-technical-design-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/technical-design/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-github-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/github/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-solid-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/solid/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-clean-code-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-code/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-ddd-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/ddd/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-design-patterns-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/design-patterns/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-clean-architecture-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-architecture/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-hexagonal-architecture-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/hexagonal-architecture/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-dry-yagni-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/dry-yagni/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-docker-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/docker/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-kubernetes-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/kubernetes/SKILL.md"
+              cp /bootstrap/agent-config/architecture-skill-best-practices-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/best-practices/SKILL.md"
               rm -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
               {
@@ -274,6 +306,8 @@ stringData:
   gateway-token: ***REMOVED***
   telegram-bot-token-ceo: "***REMOVED***"
   telegram-chat-id-ceo: "***REMOVED***"
+  github-token: "***REMOVED***"
+  github-repository: "lukeware-ai/user-api"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
