@@ -80,6 +80,9 @@ ollama-logs:
 ollama-sign:
 	kubectl --context=$(KUBE_CONTEXT) exec -it pod/ollama -- ollama signin
 
+ollama-list:
+	kubectl --context=$(KUBE_CONTEXT) exec -it pod/ollama -- ollama list
+
 openclaw-apply: net-allow-egress
 	kubectl --context=$(KUBE_CONTEXT) delete pod openclaw --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) delete deployment openclaw --ignore-not-found
