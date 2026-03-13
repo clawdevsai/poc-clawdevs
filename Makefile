@@ -1,286 +1,84 @@
-PYTHON ?= python
-MINIKUBE ?= minikube
-KUBECTL ?= kubectl
-DOCKER ?= docker
-IMAGE ?= clawdevs-ai:latest
-DIRECTOR_IMAGE ?= director-console:latest
-DIRECTOR_CONSOLE_DIR ?= director-console
-NAMESPACE ?= clawdevs-ai
-OLLAMA_MODEL ?= qwen3-next:80b-cloud
-OLLAMA_POD_SELECTOR ?= app=ollama
-OLLAMA_AUTO_PULL ?= 0
-OLLAMA_MODELS ?= rnj-1:8b-cloud,devstral-small-2:24b-cloud,nemotron-3-nano:30b-cloud,gpt-oss:120b-cloud,qwen3-coder-next:cloud,qwen3-coder:480b-cloud,devstral-2:123b-cloud,ministral-3:14b-cloud,qwen3-next:80b-cloud,qwen3.5:397b-cloud
-OPENCLAW_GATEWAY_IMAGE ?= clawdevs-ai:latest
-TELEGRAM_BOT_TOKEN ?=
-TELEGRAM_CHAT_ID ?=
-GPU_WAIT_TIMEOUT ?= 45
-MINIKUBE_WAIT ?= all
-MINIKUBE_WAIT_TIMEOUT ?= 10m
-MINIKUBE_GPU_REQUEST ?= all
+PROFILE ?= clawdevs-ai
+CPUS ?= 4
+MEMORY ?= 8192
+K8S_VERSION ?= v1.35.1
 
-.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status health-check logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs ensure-gateway-token env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard console reset-total-safe
+.PHONY: help minikube-up minikube-status minikube-logs minikube-delete dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-logs stack-apply stack-status openclaw-forward-start openclaw-forward-stop openclaw-forward-status
 
 help:
-	@echo "make test      - executa a suite"
-	@echo "make check-runtime-stack - valida OpenClaw + Ollama"
-	@echo "make preflight - valida ferramentas instaladas"
-	@echo "make up        - sobe stack (modo host-ollama, sem exigir GPU no node)"
-	@echo "make up-gpu    - sobe stack completa no Minikube com GPU (modo all)"
-	@echo "make up-force  - recria profile GPU (modo all) e sobe stack completa"
-	@echo "make up-cdi    - fallback usando --gpus nvidia.com (CDI)"
-	@echo "make up-host-ollama - sobe stack no cluster e usa Ollama no host"
-	@echo "make restart   - reinicia todos os deployments"
-	@echo "make console   - abre o diretor-console bloqueando a porta 3000 local para acesso"
-	@echo "make down      - remove stack do Minikube"
-	@echo "make down-host - remove stack host-ollama do Minikube"
-	@echo "make cluster-reset - recria profile minikube do zero"
-	@echo "make cluster-reset-hard - purge total de profiles minikube + recriacao GPU"
-	@echo "make status    - status dos pods no Minikube"
-	@echo "make health-check - valida rollout, estado dos pods e logs criticos"
-	@echo "make logs      - logs dos deployments principais"
-	@echo "make telegram-enable TELEGRAM_BOT_TOKEN=<token> TELEGRAM_CHAT_ID=<chat_id>"
-	@echo "make telegram-disable - desabilita bridge Telegram"
-	@echo "make telegram-logs - logs da bridge Telegram"
-	@echo "make gpu-host-check - valida GPU no Docker host (nvidia-smi)"
-	@echo "make gpu-cdi-check - valida suporte CDI no Docker host"
-	@echo "make gpu-cdi-help - abre checklist de setup CDI"
-	@echo "make gpu-assert - falha cedo se GPU nao estiver exposta no node"
-	@echo "make gpu-debug - diagnostico rapido de GPU no cluster"
-	@echo "make gpu-smoke - valida GPU no cluster (nvidia-smi)"
-	@echo "make ollama-pull OLLAMA_MODEL=<modelo> - baixa modelo no pod Ollama"
-	@echo "make ollama-pull-all - baixa automaticamente a lista OLLAMA_MODELS no pod Ollama"
-	@echo "OLLAMA_MODELS=<m1,m2,...> pode sobrescrever a lista padrao de modelos"
-	@echo "make ollama-signin - gera URL de login para Ollama Cloud (necessario p/ modelos cloud)"
-	@echo "make gh-check - valida gh CLI em gateway e todos os agentes"
-	@echo "make ensure-gateway-token - gera e grava OPENCLAW_GATEWAY_TOKEN inline no Makefile"
-	@echo "make env-sync - sincroniza .env -> configmap (nao sensivel) + secret (sensivel)"
-	@echo "make gh-token-sync - alias para make env-sync"
-	@echo "make gh-auth-check - valida autenticacao do gh CLI em todos os deployments"
-	@echo "make reset-total-safe - pausa runtime, executa reset total e restaura replicas"
-	@echo "OPENCLAW_GATEWAY_IMAGE=<img> pode sobrescrever imagem do gateway"
-	@echo "DIRECTOR_IMAGE=<img> pode sobrescrever imagem do director-console"
-	@echo "make clean     - remove caches Python"
+	@echo "Targets disponiveis (sem GPU):"
+	@echo "  make minikube-up    - sobe Minikube no Docker Desktop"
+	@echo "  make dashboard      - abre dashboard do Minikube"
+	@echo "  make dashboard-url  - mostra URL do dashboard"
+	@echo "  make ollama-apply   - aplica k8s/ollama-pod.yaml (Pod + Service)"
+	@echo "  make ollama-logs    - mostra logs do pod ollama"
+	@echo "  make openclaw-apply - aplica k8s/openclaw-pod.yaml"
+	@echo "  make openclaw-logs  - mostra logs do pod openclaw"
+	@echo "  make openclaw-forward-start  - inicia port-forward em background"
+	@echo "  make openclaw-forward-stop   - para port-forward em background"
+	@echo "  make openclaw-forward-status - status do port-forward"
+	@echo "  make stack-apply    - aplica ollama + openclaw"
+	@echo "  make stack-status   - status de pods e service do stack"
+	@echo "  make minikube-status|minikube-logs|minikube-delete"
 
-test:
-	@$(PYTHON) -m pytest -q
+minikube-up:
+	minikube start \
+		--profile=$(PROFILE) \
+		--driver=docker \
+		--container-runtime=docker \
+		--kubernetes-version=$(K8S_VERSION) \
+		--cpus=$(CPUS) \
+		--memory=$(MEMORY)
 
-check-runtime-stack:
-	@$(PYTHON) -m app.runtime.check_stack
+minikube-status:
+	minikube status --profile=$(PROFILE)
 
-preflight:
-	@where $(MINIKUBE)
-	@where $(KUBECTL)
-	@where $(DOCKER)
-	@$(MINIKUBE) version
-	@$(KUBECTL) version --client
-	@$(DOCKER) --version
-	@powershell -NoProfile -Command "docker info > $$null 2>&1; if ($$LASTEXITCODE -ne 0) { Write-Host 'ERRO: Docker daemon indisponivel. Inicie o Docker Desktop e tente novamente.'; exit 1 } else { Write-Host 'docker daemon: ok' }"
-	@echo "preflight ok: binarios encontrados"
+minikube-logs:
+	minikube logs --profile=$(PROFILE)
 
-gpu-host-check:
-	@$(DOCKER) run --rm --gpus all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
+minikube-delete:
+	minikube delete --profile=$(PROFILE)
 
-gpu-cdi-check:
-	@$(DOCKER) run --rm --device nvidia.com/gpu=all nvidia/cuda:12.3.2-base-ubuntu22.04 nvidia-smi
-	@where nvidia-ctk || echo "nvidia-ctk nao encontrado no host"
+dashboard:
+	minikube dashboard -p $(PROFILE)
 
-gpu-cdi-help:
-	@type docs\21-gpu-cdi-windows.md
+dashboard-url:
+	minikube dashboard -p $(PROFILE) --url
 
-minikube-start:
-	@$(MINIKUBE) start --driver=docker --container-runtime=docker --gpus $(MINIKUBE_GPU_REQUEST) --wait=$(MINIKUBE_WAIT) --wait-timeout=$(MINIKUBE_WAIT_TIMEOUT)
-	@$(MINIKUBE) update-context
-	@$(MINIKUBE) status
-	@$(KUBECTL) wait --for=condition=Ready node/minikube --timeout=240s
-	@$(MINIKUBE) addons enable storage-provisioner || $(MINIKUBE) addons enable storage-provisioner
-	@$(MINIKUBE) addons enable default-storageclass || $(MINIKUBE) addons enable default-storageclass
-	@$(MINIKUBE) addons enable nvidia-device-plugin
-	@$(MAKE) gpu-wait
+ollama-apply:
+	kubectl --context=$(PROFILE) delete pod ollama --ignore-not-found
+	kubectl --context=$(PROFILE) apply -f k8s/ollama-pod.yaml
 
-minikube-start-host:
-	@$(MINIKUBE) config unset gpus || true
-	@$(MINIKUBE) start --driver=docker --container-runtime=docker --wait=$(MINIKUBE_WAIT) --wait-timeout=$(MINIKUBE_WAIT_TIMEOUT)
-	@$(MINIKUBE) update-context
-	@$(MINIKUBE) status
-	@$(KUBECTL) wait --for=condition=Ready node/minikube --timeout=240s
-	@$(MINIKUBE) addons enable storage-provisioner || $(MINIKUBE) addons enable storage-provisioner
-	@$(MINIKUBE) addons enable default-storageclass || $(MINIKUBE) addons enable default-storageclass
+ollama-logs:
+	kubectl --context=$(PROFILE) logs -f pod/ollama
 
-gpu-wait:
-	@echo "Aguardando nvidia-device-plugin ficar Ready..."
-	@powershell -NoProfile -Command "$$timeout = $(GPU_WAIT_TIMEOUT); $$elapsed = 0; while ($$elapsed -lt $$timeout) { try { $$phase = & $(KUBECTL) -n kube-system get pods -l name=nvidia-device-plugin-ds -o jsonpath='{.items[0].status.phase}' 2>$$null; if ($$phase -eq 'Running') { break } } catch {} ; Start-Sleep -Seconds 5; $$elapsed += 5; Write-Host ('  aguardando plugin... ' + $$elapsed + 's/' + $$timeout + 's') }; if ($$elapsed -ge $$timeout) { Write-Host 'ERRO: timeout aguardando nvidia-device-plugin pod.'; exit 1 }; Write-Host 'nvidia-device-plugin Running. Aguardando GPU ser registrada no node...'; while ($$elapsed -lt $$timeout) { $$gpu = & $(KUBECTL) get nodes -o jsonpath='{.items[0].status.allocatable.nvidia\.com/gpu}' 2>$$null; if (-not [string]::IsNullOrWhiteSpace($$gpu) -and $$gpu -ne '<none>' -and $$gpu -ne '0') { Write-Host ('GPU registrada no node: ' + $$gpu); exit 0 }; Start-Sleep -Seconds 5; $$elapsed += 5; Write-Host ('  aguardando GPU no node... ' + $$elapsed + 's/' + $$timeout + 's') }; Write-Host 'ERRO: timeout aguardando GPU ser registrada no node.'; exit 1"
+ollama-sign:
+	kubectl exec -it pod/ollama -- ollama signin
 
-gpu-assert:
-	@powershell -NoProfile -Command "$$gpu = & $(KUBECTL) get nodes -o jsonpath='{.items[0].status.allocatable.nvidia\.com/gpu}'; if ([string]::IsNullOrWhiteSpace($$gpu) -or $$gpu -eq '<none>' -or $$gpu -eq '0') { Write-Host 'ERRO: GPU nao exposta no node minikube (nvidia.com/gpu).'; Write-Host 'Rode: make gpu-debug'; exit 1 } else { Write-Host ('GPU detectada no node: ' + $$gpu) }"
+openclaw-apply:
+	kubectl --context=$(PROFILE) delete pod openclaw --ignore-not-found
+	kubectl --context=$(PROFILE) apply -f k8s/openclaw-pod.yaml
 
-gpu-debug:
-	@$(KUBECTL) get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu
-	@$(KUBECTL) -n kube-system get ds nvidia-device-plugin-daemonset
-	@$(KUBECTL) -n kube-system get pods -l name=nvidia-device-plugin-ds
-	@$(KUBECTL) -n kube-system logs daemonset/nvidia-device-plugin-daemonset --tail=120
-	@$(KUBECTL) describe node minikube
+openclaw-forward:
+	kubectl port-forward pod/openclaw 18789:18789
 
-image-build:
-	@$(MINIKUBE) image build -t $(IMAGE) .
-	@$(MINIKUBE) image build -t $(DIRECTOR_IMAGE) $(DIRECTOR_CONSOLE_DIR)
+openclaw-logs:
+	kubectl --context=$(PROFILE) logs -f pod/openclaw
 
-deploy: ensure-gateway-token
-	@$(KUBECTL) apply -f k8s/stack.yaml
-	@$(KUBECTL) set image deployment/director-console director-console=$(DIRECTOR_IMAGE) -n $(NAMESPACE)
-	@$(MAKE) env-sync
-	@powershell -NoProfile -Command "if ('$(OLLAMA_AUTO_PULL)' -eq '1') { & $(MAKE) ollama-pull-all } else { Write-Host 'OLLAMA_AUTO_PULL=0, pulando bootstrap de modelos' }"
-	@$(KUBECTL) get pods -n $(NAMESPACE)
+openclaw-dashboard:
+	kubectl exec pod/openclaw -- openclaw dashboard --no-open
 
-deploy-host: ensure-gateway-token
-	@$(KUBECTL) delete deploy/ollama svc/ollama -n $(NAMESPACE) --ignore-not-found=true
-	@$(KUBECTL) apply -f k8s/stack-host-ollama.yaml
-	@$(KUBECTL) set image deployment/director-console director-console=$(DIRECTOR_IMAGE) -n $(NAMESPACE)
-	@$(MAKE) env-sync
-	@powershell -NoProfile -Command "if ('$(OLLAMA_AUTO_PULL)' -eq '1') { & $(MAKE) ollama-pull-all } else { Write-Host 'OLLAMA_AUTO_PULL=0, pulando bootstrap de modelos' }"
-	@$(KUBECTL) set image deployment/openclaw-gateway gateway=$(OPENCLAW_GATEWAY_IMAGE) -n $(NAMESPACE)
-	@$(KUBECTL) rollout restart deployment/po-worker -n $(NAMESPACE)
-	@$(KUBECTL) get pods -n $(NAMESPACE)
+stack-apply: ollama-apply openclaw-apply
 
-up: preflight gpu-host-check
-	@powershell -NoProfile -Command "$$ErrorActionPreference='Continue'; $$gpuOk=$$true; & $(MAKE) minikube-start; if ($$LASTEXITCODE -ne 0) { $$gpuOk=$$false }; if ($$gpuOk) { & $(MAKE) gpu-assert; if ($$LASTEXITCODE -ne 0) { $$gpuOk=$$false } }; if ($$gpuOk) { Write-Host '[up] GPU registrada no node; seguindo com stack GPU no cluster.'; & $(MAKE) image-build; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) deploy; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE } } else { Write-Host '[up] GPU nao registrada no node; aplicando fallback automatico para host-ollama.'; & $(MINIKUBE) update-context; & $(KUBECTL) wait --for=condition=Ready node/minikube --timeout=240s; & $(MINIKUBE) addons enable storage-provisioner > $$null 2>&1; & $(MINIKUBE) addons enable default-storageclass > $$null 2>&1; & $(MAKE) image-build; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) deploy-host; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE } }; & $(MAKE) status; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) health-check; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) console; exit $$LASTEXITCODE"
+stack-status:
+	kubectl --context=$(PROFILE) get pod ollama openclaw
+	kubectl --context=$(PROFILE) get svc ollama
 
-up-gpu: preflight gpu-host-check minikube-start gpu-assert image-build deploy status health-check console
+openclaw-forward-start:
+	powershell -NoProfile -Command "$$pidPath='.openclaw-forward.pid'; if (Test-Path $$pidPath) { try { $$oldPid=Get-Content $$pidPath; if ($$oldPid -and (Get-Process -Id $$oldPid -ErrorAction SilentlyContinue)) { Write-Host 'Port-forward ja esta rodando. PID:' $$oldPid; exit 0 } } catch {} }; $$p=Start-Process -FilePath kubectl -ArgumentList 'port-forward','pod/openclaw','18789:18789' -PassThru -WindowStyle Hidden; Set-Content -Path $$pidPath -Value $$p.Id; Write-Host 'Port-forward iniciado. PID:' $$p.Id; Write-Host 'URL: http://127.0.0.1:18789'"
 
-up-force: preflight gpu-host-check cluster-reset image-build deploy status health-check console
+openclaw-forward-stop:
+	powershell -NoProfile -Command "$$pidPath='.openclaw-forward.pid'; if (!(Test-Path $$pidPath)) { Write-Host 'Sem PID file (.openclaw-forward.pid).'; exit 0 }; $$pid=Get-Content $$pidPath; if ($$pid -and (Get-Process -Id $$pid -ErrorAction SilentlyContinue)) { Stop-Process -Id $$pid -Force; Write-Host 'Port-forward parado. PID:' $$pid } else { Write-Host 'Processo nao encontrado para PID:' $$pid }; Remove-Item $$pidPath -ErrorAction SilentlyContinue"
 
-up-cdi:
-	@$(MAKE) MINIKUBE_GPU_REQUEST=nvidia.com up-force
-
-up-host-ollama: preflight gpu-host-check minikube-start-host image-build deploy-host status health-check console
-
-down:
-	@powershell -NoProfile -Command "$$ErrorActionPreference='Continue'; & $(KUBECTL) cluster-info > $$null 2>&1; if ($$LASTEXITCODE -ne 0) { Write-Host 'kubectl sem contexto ativo; aplicando limpeza forcada de profile minikube...'; & $(MINIKUBE) delete -p minikube > $$null 2>&1; exit 0 }; Write-Host 'Removendo stack GPU (forcado)...'; & $(KUBECTL) delete -f k8s/stack.yaml --ignore-not-found=true --grace-period=0 --force > $$null 2>&1; Write-Host 'Removendo stack host-ollama (forcado)...'; & $(KUBECTL) delete -f k8s/stack-host-ollama.yaml --ignore-not-found=true --grace-period=0 --force > $$null 2>&1; Write-Host 'Limpando recursos remanescentes no namespace...'; & $(KUBECTL) -n $(NAMESPACE) delete deploy,svc,pvc,cm,secret --all --ignore-not-found=true > $$null 2>&1; Write-Host 'down forcado concluido.'"
-
-down-host:
-	@powershell -NoProfile -Command "& $(KUBECTL) cluster-info > $$null 2>&1; if ($$LASTEXITCODE -ne 0) { Write-Host 'kubectl sem contexto ativo; nada para remover em k8s/stack-host-ollama.yaml.'; exit 0 }; & $(KUBECTL) delete -f k8s/stack-host-ollama.yaml --ignore-not-found=true"
-
-cluster-reset:
-	@$(MINIKUBE) delete -p minikube
-	@$(MINIKUBE) start --driver=docker --container-runtime=docker --gpus $(MINIKUBE_GPU_REQUEST) --wait=$(MINIKUBE_WAIT) --wait-timeout=$(MINIKUBE_WAIT_TIMEOUT)
-	@$(MINIKUBE) update-context
-	@$(MINIKUBE) addons enable storage-provisioner
-	@$(MINIKUBE) addons enable default-storageclass
-	@$(MINIKUBE) addons enable nvidia-device-plugin
-	@$(KUBECTL) wait --for=condition=Ready node/minikube --timeout=240s
-	@$(MAKE) gpu-wait
-	@$(MAKE) gpu-assert
-
-cluster-reset-hard:
-	@$(MINIKUBE) delete --all --purge
-	@$(MINIKUBE) start --driver=docker --container-runtime=docker --gpus $(MINIKUBE_GPU_REQUEST) --wait=$(MINIKUBE_WAIT) --wait-timeout=$(MINIKUBE_WAIT_TIMEOUT)
-	@$(MINIKUBE) update-context
-	@$(MINIKUBE) addons enable storage-provisioner
-	@$(MINIKUBE) addons enable default-storageclass
-	@$(MINIKUBE) addons enable nvidia-device-plugin
-	@$(KUBECTL) wait --for=condition=Ready node/minikube --timeout=240s
-	@$(MAKE) gpu-wait
-	@$(MAKE) gpu-assert
-
-restart:
-	@$(KUBECTL) rollout restart deployment -n $(NAMESPACE)
-	@$(KUBECTL) get pods -n $(NAMESPACE)
-
-status:
-	@$(KUBECTL) get pods -n $(NAMESPACE)
-	@$(KUBECTL) get svc -n $(NAMESPACE)
-	@$(KUBECTL) get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu
-
-health-check:
-	@powershell -NoProfile -Command "$$ErrorActionPreference='Stop'; $$deploys = & $(KUBECTL) get deploy -n $(NAMESPACE) -o name; foreach ($$d in $$deploys) { Write-Host ('[health] rollout ' + $$d); & $(KUBECTL) rollout status -n $(NAMESPACE) $$d --timeout=180s; if ($$LASTEXITCODE -ne 0) { Write-Host ('ERRO: rollout incompleto em ' + $$d); exit $$LASTEXITCODE } }; $$pods = & $(KUBECTL) get pods -n $(NAMESPACE) -o json | ConvertFrom-Json; $$badPods = @(); foreach ($$p in $$pods.items) { $$phase = [string]$$p.status.phase; if ($$phase -ne 'Running' -and $$phase -ne 'Succeeded') { $$badPods += ('pod ' + $$p.metadata.name + ' em fase ' + $$phase) }; foreach ($$cs in @($$p.status.containerStatuses)) { if ($$cs -and $$cs.state -and $$cs.state.waiting) { $$r = [string]$$cs.state.waiting.reason; if ($$r -in @('CrashLoopBackOff','ImagePullBackOff','ErrImagePull','CreateContainerConfigError','RunContainerError')) { $$badPods += ('pod ' + $$p.metadata.name + ' com waiting.reason=' + $$r) } } } }; if ($$badPods.Count -gt 0) { Write-Host 'ERRO: anomalias de pod detectadas:'; $$badPods | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; $$critical = @('No module named','ModuleNotFoundError:','ValueError:','RuntimeError:','panic:','Segmentation fault'); $$criticalHits = @(); foreach ($$d in $$deploys) { $$log=''; try { $$log = & $(KUBECTL) logs -n $(NAMESPACE) $$d --all-pods=true --tail=120 2>$$null } catch { $$log='' }; foreach ($$pat in $$critical) { if ($$log -match [regex]::Escape($$pat)) { $$criticalHits += ('log critico em ' + $$d + ' (padrao: ' + $$pat + ')'); break } } }; if ($$criticalHits.Count -gt 0) { Write-Host 'ERRO: anomalias criticas de log detectadas:'; $$criticalHits | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; Write-Host '[health] ok: rollout, pods e logs criticos validados.'"
-
-console:
-	@echo ">>> Abrindo Director Console na porta :3000 no background..."
-	@powershell -NoProfile -Command "Start-Process -WindowStyle Hidden $(KUBECTL) -ArgumentList 'port-forward','svc/director-console','3000:3000','-n','$(NAMESPACE)'"
-
-reset-total-safe:
-	@powershell -NoProfile -Command "$$ErrorActionPreference='Stop'; $$ns='$(NAMESPACE)'; $$deploys=@('orchestration','po-worker','architect-worker','developer-worker','qa-worker','dba-worker','cybersec-worker','architect-review-worker','devops-worker','telegram-director','github-webhook'); $$rep=@{}; $$pf=$$null; try { Write-Host '[reset-safe] lendo replicas atuais...'; foreach ($$d in $$deploys) { $$r=& $(KUBECTL) -n $$ns get deployment $$d -o jsonpath='{.spec.replicas}'; if ([string]::IsNullOrWhiteSpace($$r)) { $$rep[$$d]=1 } else { $$rep[$$d]=[int]$$r } }; Write-Host '[reset-safe] pausando runtime (scale=0)...'; foreach ($$d in $$deploys) { & $(KUBECTL) -n $$ns scale deployment $$d --replicas=0 | Out-Null }; Write-Host '[reset-safe] aguardando pods encerrarem...'; Start-Sleep -Seconds 5; Write-Host '[reset-safe] abrindo port-forward diretor-console :3000...'; $$pf = Start-Process -WindowStyle Hidden $(KUBECTL) -ArgumentList '-n',$$ns,'port-forward','svc/director-console','3000:3000' -PassThru; Start-Sleep -Seconds 2; Write-Host '[reset-safe] executando reset total...'; $$body = '{\"confirmationText\":\"RESET TOTAL\"}'; $$result = Invoke-RestMethod -Uri 'http://localhost:3000/api/reset-total' -Method POST -ContentType 'application/json' -Body $$body; Write-Host '[reset-safe] resultado:'; $$result | ConvertTo-Json -Depth 10 | Write-Output } finally { if ($$pf -and -not $$pf.HasExited) { Write-Host '[reset-safe] encerrando port-forward...'; Stop-Process -Id $$pf.Id -Force -ErrorAction SilentlyContinue }; if ($$rep.Count -gt 0) { Write-Host '[reset-safe] restaurando replicas originais...'; foreach ($$k in $$rep.Keys) { & $(KUBECTL) -n $$ns scale deployment $$k --replicas=$$($$rep[$$k]) | Out-Null }; Write-Host '[reset-safe] aguardando rollout...'; foreach ($$k in $$rep.Keys) { & $(KUBECTL) -n $$ns rollout status deployment $$k --timeout=180s | Out-Null } } }; Write-Host '[reset-safe] concluido.'"
-
-logs:
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/orchestration --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/po-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/architect-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/developer-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/qa-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/dba-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/cybersec-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/architect-review-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/devops-worker --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/github-webhook --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/openclaw-gateway --tail=100
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/ollama --tail=100
-
-gpu-smoke:
-	@$(KUBECTL) run gpu-smoke --rm -it --restart=Never --image=nvidia/cuda:12.3.2-base-ubuntu22.04 --limits=nvidia.com/gpu=1 -n $(NAMESPACE) -- nvidia-smi
-
-ollama-pull:
-	@$(KUBECTL) get pods -n $(NAMESPACE) -l $(OLLAMA_POD_SELECTOR)
-	@$(KUBECTL) exec -n $(NAMESPACE) deployment/ollama -- ollama pull $(OLLAMA_MODEL)
-
-ollama-pull-all:
-	@powershell -NoProfile -Command "$$models = @(); foreach ($$item in '$(OLLAMA_MODELS)'.Split(',')) { $$m = $$item.Trim(); if (-not [string]::IsNullOrWhiteSpace($$m)) { $$models += $$m } }; if (-not $$models -or $$models.Count -eq 0) { Write-Host 'ERRO: OLLAMA_MODELS vazio.'; exit 1 }; & $(KUBECTL) -n $(NAMESPACE) rollout status deployment/ollama --timeout=300s; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; foreach ($$m in $$models) { Write-Host ('[ollama] pulling ' + $$m); & $(KUBECTL) -n $(NAMESPACE) exec deployment/ollama -- ollama pull $$m; if ($$LASTEXITCODE -ne 0) { Write-Host ('ERRO no pull: ' + $$m); exit $$LASTEXITCODE } }; Write-Host '[ollama] modelos instalados:'; & $(KUBECTL) -n $(NAMESPACE) exec deployment/ollama -- ollama list"
-
-ollama-signin:
-	@$(KUBECTL) -n $(NAMESPACE) exec -it deployment/ollama -- ollama signin
-
-telegram-enable:
-	@powershell -NoProfile -Command "if ([string]::IsNullOrWhiteSpace('$(TELEGRAM_BOT_TOKEN)')) { Write-Host 'ERRO: informe TELEGRAM_BOT_TOKEN'; exit 1 }"
-	@$(KUBECTL) set env deployment/telegram-director -n $(NAMESPACE) TELEGRAM_BOT_TOKEN="$(TELEGRAM_BOT_TOKEN)" TELEGRAM_CHAT_ID="$(TELEGRAM_CHAT_ID)"
-	@$(KUBECTL) rollout restart deployment/telegram-director -n $(NAMESPACE)
-	@$(KUBECTL) rollout status deployment/telegram-director -n $(NAMESPACE) --timeout=180s
-
-telegram-disable:
-	@$(KUBECTL) set env deployment/telegram-director -n $(NAMESPACE) TELEGRAM_BOT_TOKEN="" TELEGRAM_CHAT_ID=""
-	@$(KUBECTL) rollout restart deployment/telegram-director -n $(NAMESPACE)
-	@$(KUBECTL) rollout status deployment/telegram-director -n $(NAMESPACE) --timeout=180s
-
-telegram-logs:
-	@$(KUBECTL) logs -n $(NAMESPACE) deployment/telegram-director --tail=200 -f
-
-gh-check:
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/openclaw-gateway -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/orchestration -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/po-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/developer-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/qa-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/dba-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/cybersec-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-review-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/devops-worker -- gh --version
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- gh --version
-
-env-sync:
-	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$all=Get-Content $$envPath; $$secretPatterns='^(GITHUB_TOKEN|GITHUB_WEBHOOK_SECRET|GITHUB_WEBHOOK_ADMIN_TOKEN|TELEGRAM_BOT_TOKEN|OPENCLAW_GATEWAY_TOKEN|REDIS_PASSWORD|OLLAMA_API_KEY)='; $$secret=$$all | Where-Object { $$_ -match $$secretPatterns }; $$config=$$all | Where-Object { $$_ -notmatch $$secretPatterns }; $$cfg=@{}; foreach ($$line in $$config) { if ($$line -match '^[^#][^=]*=') { $$parts=$$line -split '=',2; $$cfg[$$parts[0].Trim()]=$$parts[1] } }; if (-not $$cfg.ContainsKey('OLLAMA_CPU_BASE_URL')) { $$cpu = if ($$cfg.ContainsKey('OLLAMA_BASE_URL') -and -not [string]::IsNullOrWhiteSpace($$cfg['OLLAMA_BASE_URL'])) { $$cfg['OLLAMA_BASE_URL'] } else { 'http://ollama:11434' }; $$config += ('OLLAMA_CPU_BASE_URL=' + $$cpu) }; if (-not $$cfg.ContainsKey('OLLAMA_GPU_BASE_URL')) { $$config += 'OLLAMA_GPU_BASE_URL=http://ollama-gpu:11434' }; Set-Content -Path '.env.configmap.tmp' -Value $$config -Encoding Ascii; Set-Content -Path '.env.secret.tmp' -Value $$secret -Encoding Ascii"
-	@$(KUBECTL) -n $(NAMESPACE) create configmap clawdevs-config --from-env-file=.env.configmap.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
-	@$(KUBECTL) -n $(NAMESPACE) create secret generic clawdevs-secrets --from-env-file=.env.secret.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
-	@powershell -NoProfile -Command "Remove-Item '.env.configmap.tmp','.env.secret.tmp' -Force -ErrorAction SilentlyContinue"
-	@$(KUBECTL) -n $(NAMESPACE) rollout restart deployment
-	@$(KUBECTL) -n $(NAMESPACE) get pods
-
-ensure-gateway-token:
-	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$lines=Get-Content $$envPath; $$existing=$$lines | Where-Object { $$_ -match '^OPENCLAW_GATEWAY_TOKEN=' } | Select-Object -First 1; $$current=''; if ($$existing) { $$current=($$existing -split '=',2)[1].Trim('\"').Trim() }; if ($$current -and $$current -ne 'local-dev-token') { Write-Host 'OPENCLAW_GATEWAY_TOKEN ja definido; ignorando geracao.'; exit 0 }; $$token=''; $$cli=if ($$env:OPENCLAW_CLI_PATH) { $$env:OPENCLAW_CLI_PATH } else { 'openclaw' }; $$cmd=Get-Command $$cli -ErrorAction SilentlyContinue; if ($$cmd) { Write-Host 'Gerando token via OpenClaw CLI...'; & $$cli doctor --generate-gateway-token | Out-Null; if ($$LASTEXITCODE -ne 0) { Write-Host 'ERRO: falha ao gerar token via openclaw.'; exit 1 }; $$raw=& $$cli config get gateway.auth.token; if ($$LASTEXITCODE -eq 0 -and $$raw) { $$first=($$raw -split \"`n\")[0].Trim(); if ($$first -match '=') { $$first=($$first -split '=',2)[1].Trim() }; $$token=$$first.Trim('\"').Trim() } }; if (-not $$token) { $$bytes=New-Object 'System.Byte[]' 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($$bytes); $$token=([System.BitConverter]::ToString($$bytes) -replace '-', '').ToLowerInvariant(); Write-Host 'OpenClaw CLI nao encontrado no host; gerando token criptografico local.' }; $$updated=$$false; $$out=foreach ($$line in $$lines) { if ($$line -match '^OPENCLAW_GATEWAY_TOKEN=') { $$updated=$$true; 'OPENCLAW_GATEWAY_TOKEN=' + $$token } else { $$line } }; if (-not $$updated) { $$out += 'OPENCLAW_GATEWAY_TOKEN=' + $$token }; $$out | Set-Content -Path $$envPath -Encoding Ascii; Write-Host 'OPENCLAW_GATEWAY_TOKEN atualizado em .env.'"
-
-gh-token-sync: env-sync
-
-gh-auth-check:
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/openclaw-gateway -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/orchestration -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/po-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/developer-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/qa-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/dba-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/cybersec-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/architect-review-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/devops-worker -- sh -lc "gh api user --jq .login"
-	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- sh -lc "gh api user --jq .login"
-
-clean:
-	@cmd /c "for /d /r %d in (__pycache__) do @if exist \"%d\" rd /s /q \"%d\"" || true
-	@cmd /c "if exist .pytest_cache rd /s /q .pytest_cache" || true
+openclaw-forward-status:
+	powershell -NoProfile -Command "$$pidPath='.openclaw-forward.pid'; if (!(Test-Path $$pidPath)) { Write-Host 'Port-forward: parado'; exit 0 }; $$pid=Get-Content $$pidPath; if ($$pid -and (Get-Process -Id $$pid -ErrorAction SilentlyContinue)) { Write-Host 'Port-forward: rodando (PID' $$pid ')'; Write-Host 'URL: http://127.0.0.1:18789' } else { Write-Host 'Port-forward: parado (PID stale:' $$pid ')'; exit 1 }"

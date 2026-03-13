@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ollama
+  labels:
+    app: ollama
+spec:
+  restartPolicy: Always
+  containers:
+    - name: ollama
+      image: ollama/ollama:latest
+      volumeMounts:
+        - name: ollama-data
+          mountPath: /root/.ollama
+      command: ["/bin/bash", "-lc"]
+      args:
+        - |
+          set -euo pipefail
+          ollama serve &
+          for i in $(seq 1 60); do
+            if ollama list >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          ollama pull qwen3-coder-next:cloud || echo "Aviso: pull cloud falhou (faca 'ollama signin' e rode pull novamente)."
+          wait
+      ports:
+        - containerPort: 11434
+      env:
+        - name: OLLAMA_HOST
+          value: 0.0.0.0:11434
+        - name: OLLAMA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ollama-auth
+              key: api-key
+  volumes:
+    - name: ollama-data
+      persistentVolumeClaim:
+        claimName: ollama-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  labels:
+    app: ollama
+spec:
+  selector:
+    app: ollama
+  ports:
+    - name: http
+      port: 11434
+      targetPort: 11434
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ollama-auth
+type: Opaque
+stringData:
+  api-key: 86942030867548bd8789b78cf55519a6.IiTM4Z6OW3rlM6aMG_lL5oGG
