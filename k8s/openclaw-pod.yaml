@@ -1,77 +1,201 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: openclaw
   labels:
     app: openclaw
 spec:
-  restartPolicy: Never
-  containers:
-    - name: openclaw
-      image: debian:bookworm-slim
-      ports:
-        - name: gateway
-          containerPort: 18789
-      env:
-        - name: OLLAMA_BASE_URL
-          value: http://ollama:11434
-        - name: OPENCLAW_GATEWAY_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: openclaw-auth
-              key: gateway-token
-      command: ["/bin/bash", "-lc"]
-      args:
-        - |
-          set -euo pipefail
-          export DEBIAN_FRONTEND=noninteractive
-          export OPENCLAW_NO_ONBOARD=1
-          export OPENCLAW_NO_PROMPT=1
-          apt-get update
-          apt-get install -y --no-install-recommends ca-certificates curl bash
-          rm -rf /var/lib/apt/lists/*
-          curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
-          mkdir -p ~/.openclaw
-          cat > ~/.openclaw/openclaw.json <<'EOF'
-          {
-            "gateway": {
-              "mode": "local",
-              "bind": "lan",
-              "port": 18789,
-              "auth": {
-                "token": "__TOKEN__"
-              }
-            },
-            "models": {
-              "providers": {
-                "ollama": {
-                  "baseUrl": "http://ollama:11434",
-                  "models": [
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: openclaw
+  template:
+    metadata:
+      labels:
+        app: openclaw
+    spec:
+      containers:
+        - name: openclaw
+          image: debian:bookworm-slim
+          ports:
+            - name: gateway
+              containerPort: 18789
+          env:
+            - name: OLLAMA_BASE_URL
+              value: http://ollama:11434
+            - name: OPENCLAW_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: gateway-token
+            - name: TELEGRAM_BOT_TOKEN_CEO
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: telegram-bot-token-ceo
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: telegram-chat-id-ceo
+          volumeMounts:
+            - name: agent-config
+              mountPath: /bootstrap/agent-config
+              readOnly: true
+            - name: openclaw-data
+              mountPath: /data/openclaw
+          command: ["/bin/bash", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+              export DEBIAN_FRONTEND=noninteractive
+              export OPENCLAW_NO_ONBOARD=1
+              export OPENCLAW_NO_PROMPT=1
+              export OPENCLAW_STATE_DIR=/data/openclaw
+              apt-get update
+              apt-get install -y --no-install-recommends ca-certificates curl bash
+              rm -rf /var/lib/apt/lists/*
+              curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
+              mkdir -p "${OPENCLAW_STATE_DIR}"
+              mkdir -p ~/.openclaw
+              mkdir -p "${OPENCLAW_STATE_DIR}/shared/product"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/delegate-to-po"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent"
+              cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
+              cp /bootstrap/agent-config/ceo-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SOUL.md"
+              cp /bootstrap/agent-config/ceo-skill-delegate-to-po-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/delegate-to-po/SKILL.md"
+              cp /bootstrap/agent-config/ceo-skill-research-and-delegate-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate/SKILL.md"
+              cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
+              cp /bootstrap/agent-config/po-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-po/SOUL.md"
+              cp /bootstrap/agent-config/po-skill-product-delivery-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery/SKILL.md"
+              cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
+              {
+                "gateway": {
+                  "mode": "local",
+                  "bind": "lan",
+                  "port": 18789,
+                  "auth": {
+                    "token": "__TOKEN__"
+                  }
+                },
+                "models": {
+                  "providers": {
+                    "ollama": {
+                      "baseUrl": "http://ollama:11434",
+                      "models": [
+                        {
+                          "id": "qwen3-coder-next:cloud",
+                          "name": "qwen3-coder-next:cloud"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "tools": {
+                  "agentToAgent": {
+                    "enabled": true,
+                    "allow": ["ceo", "po"]
+                  }
+                },
+                "agents": {
+                  "defaults": {
+                    "model": "ollama/qwen3-coder-next:cloud",
+                    "subagents": {
+                      "runTimeoutSeconds": 900,
+                      "maxConcurrent": 4
+                    }
+                  },
+                  "list": [
                     {
-                      "id": "qwen3-coder-next:cloud",
-                      "name": "qwen3-coder-next:cloud"
+                      "id": "ceo",
+                      "default": true,
+                      "name": "CEO",
+                      "workspace": "/data/openclaw/workspace-ceo",
+                      "agentDir": "/data/openclaw/agents/ceo/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "apply_patch",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn"
+                        ]
+                      },
+                      "subagents": {
+                        "allowAgents": ["po"]
+                      }
+                    },
+                    {
+                      "id": "po",
+                      "name": "PO",
+                      "workspace": "/data/openclaw/workspace-po",
+                      "agentDir": "/data/openclaw/agents/po/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "apply_patch",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_history",
+                          "sessions_send"
+                        ]
+                      }
                     }
                   ]
+                },
+                "bindings": [
+                  {
+                    "agentId": "ceo",
+                    "match": {
+                      "channel": "telegram",
+                      "accountId": "default"
+                    }
+                  }
+                ],
+                "channels": {
+                  "telegram": {
+                    "accounts": {
+                      "default": {
+                        "botToken": "__TELEGRAM_BOT_TOKEN_CEO__",
+                        "dmPolicy": "pairing"
+                      }
+                    }
+                  }
                 }
               }
-            },
-            "agents": {
-              "defaults": {
-                "model": "ollama/qwen3-coder-next:cloud"
-              }
-            }
-          }
-          EOF
-          sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" ~/.openclaw/openclaw.json
-          openclaw config set gateway.mode local
-          openclaw config set gateway.bind lan
-          openclaw config set gateway.port 18789
-          openclaw config set gateway.auth.token "${OPENCLAW_GATEWAY_TOKEN}"
-          openclaw gateway --port 18789 --token "${OPENCLAW_GATEWAY_TOKEN}" &
-          sleep 3
-          echo "Gerando URL do dashboard..."
-          openclaw dashboard --no-open || true
-          wait
+              EOF
+              sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+              sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+              cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+              openclaw config set gateway.mode local
+              openclaw config set gateway.bind lan
+              openclaw config set gateway.port 18789
+              openclaw config set gateway.auth.token "${OPENCLAW_GATEWAY_TOKEN}"
+              openclaw gateway --port 18789 --token "${OPENCLAW_GATEWAY_TOKEN}" &
+              sleep 3
+              echo "Gerando URL do dashboard..."
+              openclaw dashboard --no-open || true
+              wait
+      volumes:
+        - name: agent-config
+          configMap:
+            name: openclaw-agent-config
+        - name: openclaw-data
+          persistentVolumeClaim:
+            claimName: openclaw-data
 ---
 apiVersion: v1
 kind: Service
@@ -96,3 +220,18 @@ metadata:
 type: Opaque
 stringData:
   gateway-token: ***REMOVED***
+  telegram-bot-token-ceo: "***REMOVED***"
+  telegram-chat-id-ceo: "***REMOVED***"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openclaw-data
+  labels:
+    app: openclaw
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
