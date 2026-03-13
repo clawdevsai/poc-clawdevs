@@ -8,12 +8,12 @@ DIRECTOR_CONSOLE_DIR ?= director-console
 NAMESPACE ?= clawdevs-ai
 OLLAMA_MODEL ?= qwen3-next:80b-cloud
 OLLAMA_POD_SELECTOR ?= app=ollama
-OLLAMA_AUTO_PULL ?= 1
+OLLAMA_AUTO_PULL ?= 0
 OLLAMA_MODELS ?= rnj-1:8b-cloud,devstral-small-2:24b-cloud,nemotron-3-nano:30b-cloud,gpt-oss:120b-cloud,qwen3-coder-next:cloud,qwen3-coder:480b-cloud,devstral-2:123b-cloud,ministral-3:14b-cloud,qwen3-next:80b-cloud,qwen3.5:397b-cloud
 OPENCLAW_GATEWAY_IMAGE ?= clawdevs-ai:latest
 TELEGRAM_BOT_TOKEN ?=
 TELEGRAM_CHAT_ID ?=
-GPU_WAIT_TIMEOUT ?= 120
+GPU_WAIT_TIMEOUT ?= 45
 MINIKUBE_WAIT ?= all
 MINIKUBE_WAIT_TIMEOUT ?= 10m
 MINIKUBE_GPU_REQUEST ?= all
@@ -98,6 +98,7 @@ minikube-start:
 	@$(MAKE) gpu-wait
 
 minikube-start-host:
+	@$(MINIKUBE) config unset gpus || true
 	@$(MINIKUBE) start --driver=docker --container-runtime=docker --wait=$(MINIKUBE_WAIT) --wait-timeout=$(MINIKUBE_WAIT_TIMEOUT)
 	@$(MINIKUBE) update-context
 	@$(MINIKUBE) status
@@ -140,7 +141,8 @@ deploy-host: ensure-gateway-token
 	@$(KUBECTL) rollout restart deployment/po-worker -n $(NAMESPACE)
 	@$(KUBECTL) get pods -n $(NAMESPACE)
 
-up: preflight gpu-host-check minikube-start-host image-build deploy-host status health-check console
+up: preflight gpu-host-check
+	@powershell -NoProfile -Command "$$ErrorActionPreference='Continue'; $$gpuOk=$$true; & $(MAKE) minikube-start; if ($$LASTEXITCODE -ne 0) { $$gpuOk=$$false }; if ($$gpuOk) { & $(MAKE) gpu-assert; if ($$LASTEXITCODE -ne 0) { $$gpuOk=$$false } }; if ($$gpuOk) { Write-Host '[up] GPU registrada no node; seguindo com stack GPU no cluster.'; & $(MAKE) image-build; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) deploy; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE } } else { Write-Host '[up] GPU nao registrada no node; aplicando fallback automatico para host-ollama.'; & $(MINIKUBE) update-context; & $(KUBECTL) wait --for=condition=Ready node/minikube --timeout=240s; & $(MINIKUBE) addons enable storage-provisioner > $$null 2>&1; & $(MINIKUBE) addons enable default-storageclass > $$null 2>&1; & $(MAKE) image-build; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) deploy-host; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE } }; & $(MAKE) status; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) health-check; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & $(MAKE) console; exit $$LASTEXITCODE"
 
 up-gpu: preflight gpu-host-check minikube-start gpu-assert image-build deploy status health-check console
 
@@ -152,10 +154,10 @@ up-cdi:
 up-host-ollama: preflight gpu-host-check minikube-start-host image-build deploy-host status health-check console
 
 down:
-	@$(KUBECTL) delete -f k8s/stack.yaml --ignore-not-found=true
+	@powershell -NoProfile -Command "$$ErrorActionPreference='Continue'; & $(KUBECTL) cluster-info > $$null 2>&1; if ($$LASTEXITCODE -ne 0) { Write-Host 'kubectl sem contexto ativo; aplicando limpeza forcada de profile minikube...'; & $(MINIKUBE) delete -p minikube > $$null 2>&1; exit 0 }; Write-Host 'Removendo stack GPU (forcado)...'; & $(KUBECTL) delete -f k8s/stack.yaml --ignore-not-found=true --grace-period=0 --force > $$null 2>&1; Write-Host 'Removendo stack host-ollama (forcado)...'; & $(KUBECTL) delete -f k8s/stack-host-ollama.yaml --ignore-not-found=true --grace-period=0 --force > $$null 2>&1; Write-Host 'Limpando recursos remanescentes no namespace...'; & $(KUBECTL) -n $(NAMESPACE) delete deploy,svc,pvc,cm,secret --all --ignore-not-found=true > $$null 2>&1; Write-Host 'down forcado concluido.'"
 
 down-host:
-	@$(KUBECTL) delete -f k8s/stack-host-ollama.yaml --ignore-not-found=true
+	@powershell -NoProfile -Command "& $(KUBECTL) cluster-info > $$null 2>&1; if ($$LASTEXITCODE -ne 0) { Write-Host 'kubectl sem contexto ativo; nada para remover em k8s/stack-host-ollama.yaml.'; exit 0 }; & $(KUBECTL) delete -f k8s/stack-host-ollama.yaml --ignore-not-found=true"
 
 cluster-reset:
 	@$(MINIKUBE) delete -p minikube
@@ -189,7 +191,7 @@ status:
 	@$(KUBECTL) get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu
 
 health-check:
-	@powershell -NoProfile -Command "$$ErrorActionPreference='Stop'; $$deploys = & $(KUBECTL) get deploy -n $(NAMESPACE) -o name; foreach ($$d in $$deploys) { Write-Host ('[health] rollout ' + $$d); & $(KUBECTL) rollout status -n $(NAMESPACE) $$d --timeout=180s; if ($$LASTEXITCODE -ne 0) { Write-Host ('ERRO: rollout incompleto em ' + $$d); exit $$LASTEXITCODE } }; $$pods = & $(KUBECTL) get pods -n $(NAMESPACE) -o json | ConvertFrom-Json; $$badPods = @(); foreach ($$p in $$pods.items) { $$phase = [string]$$p.status.phase; if ($$phase -ne 'Running' -and $$phase -ne 'Succeeded') { $$badPods += ('pod ' + $$p.metadata.name + ' em fase ' + $$phase) }; foreach ($$cs in @($$p.status.containerStatuses)) { if ($$cs -and $$cs.state -and $$cs.state.waiting) { $$r = [string]$$cs.state.waiting.reason; if ($$r -in @('CrashLoopBackOff','ImagePullBackOff','ErrImagePull','CreateContainerConfigError','RunContainerError')) { $$badPods += ('pod ' + $$p.metadata.name + ' com waiting.reason=' + $$r) } } } }; if ($$badPods.Count -gt 0) { Write-Host 'ERRO: anomalias de pod detectadas:'; $$badPods | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; $$critical = @('Traceback (most recent call last):','No module named','ModuleNotFoundError:','ValueError:','RuntimeError:','panic:','Segmentation fault'); $$criticalHits = @(); foreach ($$d in $$deploys) { $$log = & $(KUBECTL) logs -n $(NAMESPACE) $$d --tail=120 2>$$null; foreach ($$pat in $$critical) { if ($$log -match [regex]::Escape($$pat)) { $$criticalHits += ('log critico em ' + $$d + ' (padrao: ' + $$pat + ')'); break } } }; if ($$criticalHits.Count -gt 0) { Write-Host 'ERRO: anomalias criticas de log detectadas:'; $$criticalHits | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; Write-Host '[health] ok: rollout, pods e logs criticos validados.'"
+	@powershell -NoProfile -Command "$$ErrorActionPreference='Stop'; $$deploys = & $(KUBECTL) get deploy -n $(NAMESPACE) -o name; foreach ($$d in $$deploys) { Write-Host ('[health] rollout ' + $$d); & $(KUBECTL) rollout status -n $(NAMESPACE) $$d --timeout=180s; if ($$LASTEXITCODE -ne 0) { Write-Host ('ERRO: rollout incompleto em ' + $$d); exit $$LASTEXITCODE } }; $$pods = & $(KUBECTL) get pods -n $(NAMESPACE) -o json | ConvertFrom-Json; $$badPods = @(); foreach ($$p in $$pods.items) { $$phase = [string]$$p.status.phase; if ($$phase -ne 'Running' -and $$phase -ne 'Succeeded') { $$badPods += ('pod ' + $$p.metadata.name + ' em fase ' + $$phase) }; foreach ($$cs in @($$p.status.containerStatuses)) { if ($$cs -and $$cs.state -and $$cs.state.waiting) { $$r = [string]$$cs.state.waiting.reason; if ($$r -in @('CrashLoopBackOff','ImagePullBackOff','ErrImagePull','CreateContainerConfigError','RunContainerError')) { $$badPods += ('pod ' + $$p.metadata.name + ' com waiting.reason=' + $$r) } } } }; if ($$badPods.Count -gt 0) { Write-Host 'ERRO: anomalias de pod detectadas:'; $$badPods | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; $$critical = @('No module named','ModuleNotFoundError:','ValueError:','RuntimeError:','panic:','Segmentation fault'); $$criticalHits = @(); foreach ($$d in $$deploys) { $$log=''; try { $$log = & $(KUBECTL) logs -n $(NAMESPACE) $$d --all-pods=true --tail=120 2>$$null } catch { $$log='' }; foreach ($$pat in $$critical) { if ($$log -match [regex]::Escape($$pat)) { $$criticalHits += ('log critico em ' + $$d + ' (padrao: ' + $$pat + ')'); break } } }; if ($$criticalHits.Count -gt 0) { Write-Host 'ERRO: anomalias criticas de log detectadas:'; $$criticalHits | ForEach-Object { Write-Host (' - ' + $$_) }; exit 1 }; Write-Host '[health] ok: rollout, pods e logs criticos validados.'"
 
 console:
 	@echo ">>> Abrindo Director Console na porta :3000 no background..."
@@ -254,7 +256,7 @@ gh-check:
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- gh --version
 
 env-sync:
-	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$all=Get-Content $$envPath; $$secretPatterns='^(GITHUB_TOKEN|GITHUB_WEBHOOK_SECRET|GITHUB_WEBHOOK_ADMIN_TOKEN|TELEGRAM_BOT_TOKEN|OPENCLAW_GATEWAY_TOKEN|REDIS_PASSWORD|OLLAMA_API_KEY)='; $$secret=$$all | Where-Object { $$_ -match $$secretPatterns }; $$config=$$all | Where-Object { $$_ -notmatch $$secretPatterns }; Set-Content -Path '.env.configmap.tmp' -Value $$config -Encoding Ascii; Set-Content -Path '.env.secret.tmp' -Value $$secret -Encoding Ascii"
+	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$all=Get-Content $$envPath; $$secretPatterns='^(GITHUB_TOKEN|GITHUB_WEBHOOK_SECRET|GITHUB_WEBHOOK_ADMIN_TOKEN|TELEGRAM_BOT_TOKEN|OPENCLAW_GATEWAY_TOKEN|REDIS_PASSWORD|OLLAMA_API_KEY)='; $$secret=$$all | Where-Object { $$_ -match $$secretPatterns }; $$config=$$all | Where-Object { $$_ -notmatch $$secretPatterns }; $$cfg=@{}; foreach ($$line in $$config) { if ($$line -match '^[^#][^=]*=') { $$parts=$$line -split '=',2; $$cfg[$$parts[0].Trim()]=$$parts[1] } }; if (-not $$cfg.ContainsKey('OLLAMA_CPU_BASE_URL')) { $$cpu = if ($$cfg.ContainsKey('OLLAMA_BASE_URL') -and -not [string]::IsNullOrWhiteSpace($$cfg['OLLAMA_BASE_URL'])) { $$cfg['OLLAMA_BASE_URL'] } else { 'http://ollama:11434' }; $$config += ('OLLAMA_CPU_BASE_URL=' + $$cpu) }; if (-not $$cfg.ContainsKey('OLLAMA_GPU_BASE_URL')) { $$config += 'OLLAMA_GPU_BASE_URL=http://ollama-gpu:11434' }; Set-Content -Path '.env.configmap.tmp' -Value $$config -Encoding Ascii; Set-Content -Path '.env.secret.tmp' -Value $$secret -Encoding Ascii"
 	@$(KUBECTL) -n $(NAMESPACE) create configmap clawdevs-config --from-env-file=.env.configmap.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
 	@$(KUBECTL) -n $(NAMESPACE) create secret generic clawdevs-secrets --from-env-file=.env.secret.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
 	@powershell -NoProfile -Command "Remove-Item '.env.configmap.tmp','.env.secret.tmp' -Force -ErrorAction SilentlyContinue"
