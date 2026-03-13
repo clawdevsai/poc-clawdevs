@@ -10,12 +10,17 @@ Guidelines:
 - Never hardcode `owner/repo` unless the requester explicitly asks for a different repository.
 - Prefer `--json` plus `--jq` for structured, machine-friendly output.
 - For issue creation from local backlog artifacts, summarize the task clearly and include source file paths.
+- For labels, never send a JSON-like string as a scalar value (for example, `"[EPIC01]"`).
+- With `gh issue create`, pass one `--label` per label (for example, `--label task --label P0 --label EPIC01`).
+- With `gh api` to `/issues/{n}/labels`, send arrays using repeated fields (`-f labels[]=EPIC01`) or JSON input body.
 - Official CLI documentation: https://cli.github.com/manual/gh
 
 Issue examples:
 ```bash
 gh issue list --repo "$GITHUB_REPOSITORY" --json number,title --jq '.[] | "\(.number): \(.title)"'
 gh issue create --repo "$GITHUB_REPOSITORY" --title "Task: improve onboarding" --body "Derived from /data/openclaw/backlog/tasks/TASK-101-onboarding.md"
+gh issue create --repo "$GITHUB_REPOSITORY" --title "Task: improve onboarding" --body "..." --label task --label P1 --label EPIC01
+gh api "repos/$GITHUB_REPOSITORY/issues/123/labels" --method POST -f labels[]=EPIC01 -f labels[]=P1
 ```
 
 Pull request and CI examples:

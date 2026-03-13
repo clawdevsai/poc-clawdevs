@@ -174,15 +174,14 @@ spec:
                       "name": "CEO",
                       "workspace": "/data/openclaw/workspace-ceo",
                       "agentDir": "/data/openclaw/agents/ceo/agent",
-                      "tools": {
-                        "allow": [
-                          "read",
-                          "write",
-                          "exec",
-                          "process",
-                          "browser",
-                          "message",
-                          "agents_list",
+                  "tools": {
+                    "allow": [
+                      "read",
+                      "write",
+                      "process",
+                      "browser",
+                      "message",
+                      "agents_list",
                           "sessions_list",
                           "sessions_history",
                           "sessions_send",
@@ -275,6 +274,10 @@ spec:
               sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
               sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
               sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+              # Hard guard: CEO must not have shell execution capability.
+              jq '(.agents.list[] | select(.id=="ceo").tools.allow) |= map(select(. != "exec"))' \
+                "${OPENCLAW_STATE_DIR}/openclaw.json" > "${OPENCLAW_STATE_DIR}/openclaw.json.tmp"
+              mv "${OPENCLAW_STATE_DIR}/openclaw.json.tmp" "${OPENCLAW_STATE_DIR}/openclaw.json"
               mkdir -p ~/.openclaw
               cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
               openclaw gateway &
