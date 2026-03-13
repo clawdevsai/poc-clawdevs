@@ -18,6 +18,9 @@ configMapGenerator:
       - po-AGENTS.md=openclaw-config/po/AGENTS.md
       - po-SOUL.md=openclaw-config/po/SOUL.md
       - po-skill-product-delivery-SKILL.md=openclaw-config/po/skills/product-delivery/SKILL.md
+      - architecture-AGENTS.md=openclaw-config/architecture/AGENTS.md
+      - architecture-SOUL.md=openclaw-config/architecture/SOUL.md
+      - architecture-skill-technical-design-SKILL.md=openclaw-config/architecture/skills/technical-design/SKILL.md
 
 generatorOptions:
   disableNameSuffixHash: true

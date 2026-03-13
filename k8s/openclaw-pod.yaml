@@ -60,11 +60,14 @@ spec:
               curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
               mkdir -p "${OPENCLAW_STATE_DIR}"
               mkdir -p ~/.openclaw
-              mkdir -p "${OPENCLAW_STATE_DIR}/shared/product"
+              mkdir -p "${OPENCLAW_STATE_DIR}/backlog/idea"
+              mkdir -p "${OPENCLAW_STATE_DIR}/backlog/user_story"
+              mkdir -p "${OPENCLAW_STATE_DIR}/backlog/tasks"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/delegate-to-po"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery"
-              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/technical-design"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent" "${OPENCLAW_STATE_DIR}/agents/architecture/agent"
               cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
               cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
               cp /bootstrap/agent-config/ceo-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SOUL.md"
@@ -74,6 +77,9 @@ spec:
               cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
               cp /bootstrap/agent-config/po-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-po/SOUL.md"
               cp /bootstrap/agent-config/po-skill-product-delivery-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery/SKILL.md"
+              cp /bootstrap/agent-config/architecture-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-architecture/AGENTS.md"
+              cp /bootstrap/agent-config/architecture-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/SOUL.md"
+              cp /bootstrap/agent-config/architecture-skill-technical-design-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/technical-design/SKILL.md"
               rm -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
               {
@@ -104,7 +110,7 @@ spec:
                   },
                   "agentToAgent": {
                     "enabled": true,
-                    "allow": ["ceo", "po"]
+                    "allow": ["ceo", "po", "architecture"]
                   }
                 },
                 "agents": {
@@ -130,14 +136,16 @@ spec:
                           "process",
                           "browser",
                           "message",
+                          "agents_list",
                           "sessions_list",
                           "sessions_history",
                           "sessions_send",
-                          "sessions_spawn"
+                          "sessions_spawn",
+                          "session_status"
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["po"]
+                        "allowAgents": ["po", "architecture"]
                       }
                     },
                     {
@@ -153,9 +161,37 @@ spec:
                           "process",
                           "browser",
                           "message",
+                          "agents_list",
                           "sessions_history",
-                          "sessions_send"
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status"
                         ]
+                      },
+                      "subagents": {
+                        "allowAgents": ["ceo", "architecture"]
+                      }
+                    },
+                    {
+                      "id": "architecture",
+                      "name": "Architecture",
+                      "workspace": "/data/openclaw/workspace-architecture",
+                      "agentDir": "/data/openclaw/agents/architecture/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_history",
+                          "sessions_send",
+                          "session_status"
+                        ]
+                      },
+                      "subagents": {
+                        "allowAgents": ["ceo", "po"]
                       }
                     }
                   ]

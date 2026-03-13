@@ -11,6 +11,6 @@ Workflow:
    - deadline
    - references collected by the CEO
    - relevant links or files
-3. Tell the PO to write the deliverables inside `/data/openclaw/shared/product`.
+3. Tell the PO to write the deliverables inside `/data/openclaw/backlog`.
 4. Use `sessions_spawn` with `agentId: "po"` for a new thread or `sessions_send` for a follow-up.
 5. After the PO completes, read the generated files and rewrite the result for the stakeholder.

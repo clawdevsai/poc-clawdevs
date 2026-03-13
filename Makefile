@@ -7,7 +7,7 @@ PF_SERVICE ?= service/openclaw
 PF_PORTS ?= 18789:18789
 
 
-.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw
+.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -29,6 +29,7 @@ help:
 	@echo "  make port-forward-status PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
 	@echo "  make net-allow-egress        - aplica policy liberando egress"
 	@echo "  make net-test-openclaw       - testa internet no pod openclaw"
+	@echo "  make reset-all    - reaplica openclaw e limpa sessoes/backlog para teste do zero"
 	@echo "  make stack-apply    - aplica ollama + openclaw"
 	@echo "  make stack-status   - status de pods e service do stack"
 	@echo "  make minikube-status|minikube-logs|minikube-delete"
@@ -101,6 +102,30 @@ openclaw-logs:
 
 openclaw-dashboard:
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- openclaw dashboard --no-open
+
+reset-all: openclaw-apply
+	kubectl --context=$(KUBE_CONTEXT) rollout status deployment/openclaw --timeout=240s
+	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "set -euo pipefail; \
+		mkdir -p /data/openclaw/agents/ceo/sessions /data/openclaw/agents/po/sessions /data/openclaw/agents/architecture/sessions; \
+		rm -f /data/openclaw/agents/ceo/sessions/*.jsonl /data/openclaw/agents/ceo/sessions/*.lock || true; \
+		rm -f /data/openclaw/agents/po/sessions/*.jsonl /data/openclaw/agents/po/sessions/*.lock || true; \
+		rm -f /data/openclaw/agents/architecture/sessions/*.jsonl /data/openclaw/agents/architecture/sessions/*.lock || true; \
+		printf '{}' > /data/openclaw/agents/ceo/sessions/sessions.json; \
+		printf '{}' > /data/openclaw/agents/po/sessions/sessions.json; \
+		printf '{}' > /data/openclaw/agents/architecture/sessions/sessions.json; \
+		rm -f /data/openclaw/backlog/*.md || true; \
+		rm -f /data/openclaw/backlog/idea/* || true; \
+		rm -f /data/openclaw/backlog/user_story/* || true; \
+		rm -f /data/openclaw/backlog/tasks/* || true; \
+		echo 'reset-all concluido'; \
+		echo 'sessions:'; \
+		cat /data/openclaw/agents/ceo/sessions/sessions.json; echo; \
+		cat /data/openclaw/agents/po/sessions/sessions.json; echo; \
+		cat /data/openclaw/agents/architecture/sessions/sessions.json; echo; \
+		echo 'backlog:'; \
+		ls -la /data/openclaw/backlog/idea; \
+		ls -la /data/openclaw/backlog/user_story; \
+		ls -la /data/openclaw/backlog/tasks"
 
 stack-apply: ollama-apply openclaw-apply
 

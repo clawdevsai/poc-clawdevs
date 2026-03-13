@@ -5,8 +5,10 @@ Use this skill when a request needs backlog design, feature breakdown, delivery 
 Output checklist:
 - problem statement
 - target outcome
-- milestones
-- prioritized tasks
+- approved idea file in `/data/openclaw/backlog/idea`
+- separated user stories in `/data/openclaw/backlog/user_story`
+- architecture handoff for technical design and tasks
+- prioritized tasks in `/data/openclaw/backlog/tasks`
 - acceptance criteria
 - risks and dependencies
-- generated files under `/data/openclaw/shared/product`
+- generated files under `/data/openclaw/backlog`
