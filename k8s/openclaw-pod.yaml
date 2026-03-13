@@ -99,6 +99,9 @@ spec:
                   }
                 },
                 "tools": {
+                  "sessions": {
+                    "visibility": "all"
+                  },
                   "agentToAgent": {
                     "enabled": true,
                     "allow": ["ceo", "po"]
@@ -123,7 +126,6 @@ spec:
                         "allow": [
                           "read",
                           "write",
-                          "apply_patch",
                           "exec",
                           "process",
                           "browser",
@@ -147,7 +149,6 @@ spec:
                         "allow": [
                           "read",
                           "write",
-                          "apply_patch",
                           "exec",
                           "process",
                           "browser",
