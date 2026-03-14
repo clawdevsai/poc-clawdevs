@@ -55,6 +55,11 @@ spec:
                 secretKeyRef:
                   name: openclaw-auth
                   key: GITHUB_REPOSITORY
+            - name: OLLAMA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: OLLAMA_API_KEY
             - name: DIRECTORS_NAME
               valueFrom:
                 secretKeyRef:
@@ -89,47 +94,27 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/idea"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/user_story"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/tasks"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/delegate-to-po"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/technical-design"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/github"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/solid"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-code"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/ddd"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/design-patterns"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-architecture"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/hexagonal-architecture"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/dry-yagni"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/docker"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/kubernetes"
-              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/best-practices"
-              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent" "${OPENCLAW_STATE_DIR}/agents/architecture/agent"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent" "${OPENCLAW_STATE_DIR}/agents/arquiteto/agent"
               cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
               cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
               cp /bootstrap/agent-config/ceo-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SOUL.md"
               cp /bootstrap/agent-config/ceo-USER.md "${OPENCLAW_STATE_DIR}/workspace-ceo/USER.md"
               DIRECTORS_NAME_ESCAPED="$(printf '%s' "${DIRECTORS_NAME}" | sed -e 's/[\\/&]/\\&/g')"
               sed -i "s|\${DIRECTORS_NAME}|${DIRECTORS_NAME_ESCAPED}|g" "${OPENCLAW_STATE_DIR}/workspace-ceo/USER.md"
-              cp /bootstrap/agent-config/ceo-skill-delegate-to-po-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/delegate-to-po/SKILL.md"
-              cp /bootstrap/agent-config/ceo-skill-research-and-delegate-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate/SKILL.md"
+              cp /bootstrap/agent-config/ceo-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SKILL.md"
               cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
+              cp /bootstrap/agent-config/po-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-po/IDENTITY.md"
               cp /bootstrap/agent-config/po-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-po/SOUL.md"
-              cp /bootstrap/agent-config/po-skill-product-delivery-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-po/skills/product-delivery/SKILL.md"
-              cp /bootstrap/agent-config/architecture-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-architecture/AGENTS.md"
-              cp /bootstrap/agent-config/architecture-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/SOUL.md"
-              cp /bootstrap/agent-config/architecture-skill-technical-design-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/technical-design/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-github-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/github/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-solid-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/solid/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-clean-code-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-code/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-ddd-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/ddd/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-design-patterns-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/design-patterns/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-clean-architecture-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/clean-architecture/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-hexagonal-architecture-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/hexagonal-architecture/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-dry-yagni-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/dry-yagni/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-docker-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/docker/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-kubernetes-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/kubernetes/SKILL.md"
-              cp /bootstrap/agent-config/architecture-skill-best-practices-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-architecture/skills/best-practices/SKILL.md"
+              cp /bootstrap/agent-config/po-USER.md "${OPENCLAW_STATE_DIR}/workspace-po/USER.md"
+              cp /bootstrap/agent-config/po-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-po/SKILL.md"
+              cp /bootstrap/agent-config/arquiteto-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/AGENTS.md"
+              cp /bootstrap/agent-config/arquiteto-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/IDENTITY.md"
+              cp /bootstrap/agent-config/arquiteto-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SOUL.md"
+              cp /bootstrap/agent-config/arquiteto-USER.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/USER.md"
+              cp /bootstrap/agent-config/arquiteto-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SKILL.md"
               rm -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
               {
@@ -147,8 +132,20 @@ spec:
                       "baseUrl": "http://ollama:11434",
                       "models": [
                         {
-                          "id": "qwen3-coder-next:cloud",
-                          "name": "qwen3-coder-next:cloud"
+                          "id": "qwen3-next:80b-cloud",
+                          "name": "qwen3-next:80b-cloud"
+                        },
+                        {
+                          "id": "gpt-oss:120b-cloud",
+                          "name": "gpt-oss:120b-cloud"
+                        },
+                        {
+                          "id": "nemotron-3-super:cloud",
+                          "name": "nemotron-3-super:cloud"
+                        },
+                        {
+                          "id": "qwen3-coder:480b-cloud",
+                          "name": "qwen3-coder:480b-cloud"
                         }
                       ]
                     }
@@ -160,17 +157,23 @@ spec:
                   },
                   "agentToAgent": {
                     "enabled": true,
-                    "allow": ["ceo", "po", "architecture"]
+                    "allow": ["ceo", "po", "arquiteto"]
+                  }
+                },
+                "skills": {
+                  "load": {
+                    "watch": true,
+                    "watchDebounceMs": 250
                   }
                 },
                 "agents": {
                   "defaults": {
-                    "model": "ollama/qwen3-coder-next:cloud",
+                    "model": "ollama/qwen3-next:80b-cloud",
                     "thinkingDefault": "low",
                     "typingMode": "thinking",
                     "subagents": {
                       "runTimeoutSeconds": 900,
-                      "maxConcurrent": 4
+                      "maxConcurrent": 2
                     },
                     "heartbeat": {
                       "includeReasoning": true
@@ -181,6 +184,7 @@ spec:
                       "id": "ceo",
                       "default": true,
                       "name": "CEO",
+                      "model": "ollama/nemotron-3-super:cloud",
                       "workspace": "/data/openclaw/workspace-ceo",
                       "agentDir": "/data/openclaw/agents/ceo/agent",
                       "tools": {
@@ -198,12 +202,13 @@ spec:
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["po", "architecture"]
+                        "allowAgents": ["po", "arquiteto"]
                       }
                     },
                     {
                       "id": "po",
                       "name": "PO",
+                      "model": "ollama/gpt-oss:120b-cloud",
                       "workspace": "/data/openclaw/workspace-po",
                       "agentDir": "/data/openclaw/agents/po/agent",
                       "tools": {
@@ -222,14 +227,15 @@ spec:
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["ceo", "architecture"]
+                        "allowAgents": ["ceo", "arquiteto"]
                       }
                     },
                     {
-                      "id": "architecture",
-                      "name": "Architecture",
-                      "workspace": "/data/openclaw/workspace-architecture",
-                      "agentDir": "/data/openclaw/agents/architecture/agent",
+                      "id": "arquiteto",
+                      "name": "Arquiteto",
+                      "model": "ollama/qwen3-coder:480b-cloud",
+                      "workspace": "/data/openclaw/workspace-arquiteto",
+                      "agentDir": "/data/openclaw/agents/arquiteto/agent",
                       "tools": {
                         "allow": [
                           "read",
@@ -258,6 +264,12 @@ spec:
                     }
                   }
                 ],
+                "commands": {
+                  "native": "auto",
+                  "nativeSkills": "auto",
+                  "restart": true,
+                  "ownerDisplay": "hash"
+                },
                 "channels": {
                   "telegram": {
                     "dmPolicy": "allowlist",
@@ -361,9 +373,9 @@ spec:
                    "${sess_dir}/sessions.json" > "${sess_dir}/sessions.json.tmp"
                 mv "${sess_dir}/sessions.json.tmp" "${sess_dir}/sessions.json"
               }
-              repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Pode me acionar por aqui para alinhamento, priorizacao e delegacao para PO e Architecture."
-              repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Architecture."
-              repair_main_session "architecture" "/data/openclaw/workspace-architecture" "Architecture pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
+              repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Pode me acionar por aqui para alinhamento, priorizacao e delegacao para PO e Arquiteto."
+              repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
+              repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
               openclaw gateway &
               sleep 3
               echo "Gerando URL do dashboard..."

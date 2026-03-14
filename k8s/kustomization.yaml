@@ -10,6 +10,9 @@ secretGenerator:
   - name: openclaw-auth
     envs:
       - .env
+  - name: ollama-auth
+    envs:
+      - .env
 
 configMapGenerator:
   - name: openclaw-agent-config
@@ -18,25 +21,17 @@ configMapGenerator:
       - ceo-IDENTITY.md=openclaw-config/ceo/IDENTITY.md
       - ceo-SOUL.md=openclaw-config/ceo/SOUL.md
       - ceo-USER.md=openclaw-config/ceo/USER.md
-      - ceo-skill-delegate-to-po-SKILL.md=openclaw-config/ceo/skills/delegate-to-po/SKILL.md
-      - ceo-skill-research-and-delegate-SKILL.md=openclaw-config/ceo/skills/research-and-delegate/SKILL.md
+      - ceo-skill-SKILL.md=openclaw-config/ceo/SKILL.md
       - po-AGENTS.md=openclaw-config/po/AGENTS.md
+      - po-IDENTITY.md=openclaw-config/po/IDENTITY.md
       - po-SOUL.md=openclaw-config/po/SOUL.md
-      - po-skill-product-delivery-SKILL.md=openclaw-config/po/skills/product-delivery/SKILL.md
-      - architecture-AGENTS.md=openclaw-config/architecture/AGENTS.md
-      - architecture-SOUL.md=openclaw-config/architecture/SOUL.md
-      - architecture-skill-technical-design-SKILL.md=openclaw-config/architecture/skills/technical-design/SKILL.md
-      - architecture-skill-github-SKILL.md=openclaw-config/architecture/skills/github/SKILL.md
-      - architecture-skill-solid-SKILL.md=openclaw-config/architecture/skills/solid/SKILL.md
-      - architecture-skill-clean-code-SKILL.md=openclaw-config/architecture/skills/clean-code/SKILL.md
-      - architecture-skill-ddd-SKILL.md=openclaw-config/architecture/skills/ddd/SKILL.md
-      - architecture-skill-design-patterns-SKILL.md=openclaw-config/architecture/skills/design-patterns/SKILL.md
-      - architecture-skill-clean-architecture-SKILL.md=openclaw-config/architecture/skills/clean-architecture/SKILL.md
-      - architecture-skill-hexagonal-architecture-SKILL.md=openclaw-config/architecture/skills/hexagonal-architecture/SKILL.md
-      - architecture-skill-dry-yagni-SKILL.md=openclaw-config/architecture/skills/dry-yagni/SKILL.md
-      - architecture-skill-docker-SKILL.md=openclaw-config/architecture/skills/docker/SKILL.md
-      - architecture-skill-kubernetes-SKILL.md=openclaw-config/architecture/skills/kubernetes/SKILL.md
-      - architecture-skill-best-practices-SKILL.md=openclaw-config/architecture/skills/best-practices/SKILL.md
+      - po-USER.md=openclaw-config/po/USER.md
+      - po-skill-SKILL.md=openclaw-config/po/SKILL.md
+      - arquiteto-AGENTS.md=openclaw-config/arquiteto/AGENTS.md
+      - arquiteto-IDENTITY.md=openclaw-config/arquiteto/IDENTITY.md
+      - arquiteto-SOUL.md=openclaw-config/arquiteto/SOUL.md
+      - arquiteto-USER.md=openclaw-config/arquiteto/USER.md
+      - arquiteto-skill-SKILL.md=openclaw-config/arquiteto/SKILL.md
 
 generatorOptions:
   disableNameSuffixHash: true

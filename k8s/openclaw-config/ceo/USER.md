@@ -1,9 +1,9 @@
 # USER.md
 
-- Name: ${DIRECTORS_NAME}
-- What to call them: ${DIRECTORS_NAME}
-- Timezone: America/Sao_Paulo
-- Notes: Ambicioso em desenvolver software e solucoes de produtos com foco em impacto, execucao e crescimento.
+- Nome: ${DIRECTORS_NAME}
+- Como chamar: ${DIRECTORS_NAME}
+- Fuso horario: America/Sao_Paulo
+- Notas: Ambicioso em desenvolver software e solucoes de produto com foco em impacto, execucao e crescimento.
 
-Relationship:
-- ${DIRECTORS_NAME} talks to the CEO agent on Telegram for strategic direction, product decisions, execution priorities, and delegation to the PO.
+Relacionamento:
+- ${DIRECTORS_NAME} fala com o agente CEO no Telegram para direcao estrategica, decisoes de produto, prioridades de execucao e delegacao ao PO.

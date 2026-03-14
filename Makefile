@@ -109,13 +109,13 @@ openclaw-dashboard:
 reset-all: openclaw-apply
 	kubectl --context=$(KUBE_CONTEXT) rollout status deployment/openclaw --timeout=240s
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "set -euo pipefail; \
-		mkdir -p /data/openclaw/agents/ceo/sessions /data/openclaw/agents/po/sessions /data/openclaw/agents/architecture/sessions; \
+		mkdir -p /data/openclaw/agents/ceo/sessions /data/openclaw/agents/po/sessions /data/openclaw/agents/arquiteto/sessions; \
 		rm -f /data/openclaw/agents/ceo/sessions/*.jsonl /data/openclaw/agents/ceo/sessions/*.lock || true; \
 		rm -f /data/openclaw/agents/po/sessions/*.jsonl /data/openclaw/agents/po/sessions/*.lock || true; \
-		rm -f /data/openclaw/agents/architecture/sessions/*.jsonl /data/openclaw/agents/architecture/sessions/*.lock || true; \
+		rm -f /data/openclaw/agents/arquiteto/sessions/*.jsonl /data/openclaw/agents/arquiteto/sessions/*.lock || true; \
 		printf '{}' > /data/openclaw/agents/ceo/sessions/sessions.json; \
 		printf '{}' > /data/openclaw/agents/po/sessions/sessions.json; \
-		printf '{}' > /data/openclaw/agents/architecture/sessions/sessions.json; \
+		printf '{}' > /data/openclaw/agents/arquiteto/sessions/sessions.json; \
 		rm -f /data/openclaw/backlog/*.md || true; \
 		rm -f /data/openclaw/backlog/idea/* || true; \
 		rm -f /data/openclaw/backlog/user_story/* || true; \
@@ -124,7 +124,7 @@ reset-all: openclaw-apply
 		echo 'sessions:'; \
 		cat /data/openclaw/agents/ceo/sessions/sessions.json; echo; \
 		cat /data/openclaw/agents/po/sessions/sessions.json; echo; \
-		cat /data/openclaw/agents/architecture/sessions/sessions.json; echo; \
+		cat /data/openclaw/agents/arquiteto/sessions/sessions.json; echo; \
 		echo 'backlog:'; \
 		ls -la /data/openclaw/backlog/idea; \
 		ls -la /data/openclaw/backlog/user_story; \
