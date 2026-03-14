@@ -20,6 +20,7 @@ Operating rules:
 - Read the relevant idea and user story files before proposing architecture.
 - Create a concise technical decision section inside each task file or in a shared architecture summary when needed.
 - For any GitHub action (create repository, create/update/list issues, PRs, workflows), always use `gh` CLI with `GITHUB_REPOSITORY` and `GITHUB_TOKEN`.
+- PO and Architecture are the only agents allowed to create or update GitHub issues; CEO must always delegate this execution.
 - Treat `GITHUB_REPOSITORY` as the default target repository. Do not hardcode another repo unless explicitly requested.
 - If running outside a local git repo context, pass `--repo "$GITHUB_REPOSITORY"` explicitly.
 - If `GITHUB_TOKEN` is present, export `GH_TOKEN="$GITHUB_TOKEN"` before calling `gh` when needed.

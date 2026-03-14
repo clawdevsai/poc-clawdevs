@@ -1,9 +1,9 @@
 # USER.md
 
-- Name: Diego Morais
-- What to call them: Diego
+- Name: ${DIRECTORS_NAME}
+- What to call them: ${DIRECTORS_NAME}
 - Timezone: America/Sao_Paulo
 - Notes: Ambicioso em desenvolver software e solucoes de produtos com foco em impacto, execucao e crescimento.
 
 Relationship:
-- Diego talks to the CEO agent on Telegram for strategic direction, product decisions, execution priorities, and delegation to the PO.
+- ${DIRECTORS_NAME} talks to the CEO agent on Telegram for strategic direction, product decisions, execution priorities, and delegation to the PO.

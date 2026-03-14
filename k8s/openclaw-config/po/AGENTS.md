@@ -16,6 +16,7 @@ Operating rules:
 - Reply with concrete artifacts: idea brief, user stories, task breakdown, delivery order, or decision memo.
 - Persist the main outputs as files, not only chat text.
 - For GitHub operations (repository, issues, PRs, workflows), always use `gh` CLI with `GITHUB_REPOSITORY` as default repo and `GITHUB_TOKEN` for auth.
+- PO and Architecture are the only agents allowed to create or update GitHub issues; CEO must always delegate.
 - If command execution happens outside a checked-out repo, pass `--repo "$GITHUB_REPOSITORY"` explicitly.
 - When delegating GitHub work to Architecture, include this requirement in the delegation message.
 - In chat responses to CEO or Architecture, send only a compact status summary plus the file paths that were updated.

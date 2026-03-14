@@ -55,6 +55,11 @@ spec:
                 secretKeyRef:
                   name: openclaw-auth
                   key: GITHUB_REPOSITORY
+            - name: DIRECTORS_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: DIRECTORS_NAME
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config
@@ -71,6 +76,8 @@ spec:
               export OPENCLAW_STATE_DIR=/data/openclaw
               # Garantir que todos os agentes tenham o repo default mesmo se o Secret vier sem essa chave
               export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-lukeware-ai/user-api}"
+              # Fallback para quando DIRECTORS_NAME nao estiver definido no Secret
+              export DIRECTORS_NAME="${DIRECTORS_NAME:-Director}"
               # Alinhar GH CLI caso GH_TOKEN venha em outro nome
               export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
               apt-get update
@@ -102,6 +109,8 @@ spec:
               cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
               cp /bootstrap/agent-config/ceo-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SOUL.md"
               cp /bootstrap/agent-config/ceo-USER.md "${OPENCLAW_STATE_DIR}/workspace-ceo/USER.md"
+              DIRECTORS_NAME_ESCAPED="$(printf '%s' "${DIRECTORS_NAME}" | sed -e 's/[\\/&]/\\&/g')"
+              sed -i "s|\${DIRECTORS_NAME}|${DIRECTORS_NAME_ESCAPED}|g" "${OPENCLAW_STATE_DIR}/workspace-ceo/USER.md"
               cp /bootstrap/agent-config/ceo-skill-delegate-to-po-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/delegate-to-po/SKILL.md"
               cp /bootstrap/agent-config/ceo-skill-research-and-delegate-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/research-and-delegate/SKILL.md"
               cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
@@ -178,8 +187,6 @@ spec:
                         "allow": [
                           "read",
                           "write",
-                          "exec",
-                          "process",
                           "browser",
                           "message",
                           "agents_list",
@@ -275,10 +282,6 @@ spec:
               sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
               sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
               sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
-              jq '(.agents.list[] | select(.id=="ceo").tools.allow) |=
-                    (if index("exec") then . else . + ["exec"] end)' \
-                "${OPENCLAW_STATE_DIR}/openclaw.json" > "${OPENCLAW_STATE_DIR}/openclaw.json.tmp"
-              mv "${OPENCLAW_STATE_DIR}/openclaw.json.tmp" "${OPENCLAW_STATE_DIR}/openclaw.json"
               mkdir -p ~/.openclaw
               cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
               # Exec approvals for CEO scope (Gateway target), aligned with Control UI preset:
