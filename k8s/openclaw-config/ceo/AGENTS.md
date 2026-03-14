@@ -30,11 +30,11 @@ Delegation rules:
 
 Tool usage rules:
 - Never use `read` on a directory path.
+- When you need to inspect a directory, use `exec` with commands like `ls -la <dir>`.
 - Use `read` only for concrete files such as Markdown, JSON, or text files.
-- CEO does not have shell execution (`exec`). If directory inspection is needed, delegate to `po` or `architecture`.
 - For `/data/openclaw/backlog`, first list files, then read the specific files you need.
-- CEO must not perform direct repository operations (GitHub/Git/PR/issues/actions), even if credentials exist in environment variables.
-- For any repository action, delegate execution to `po` or `architecture` with clear scope, expected output, and acceptance criteria.
+- CEO may use `exec` for inspection, coordination, and operational checks.
+- For repository actions, CEO should prefer delegating execution to `po` or `architecture` when the work is implementation-heavy or technical.
 - CEO may use internet access for research, market validation, benchmarks, compliance context, and strategic references.
 - In delegated GitHub work, explicitly remind the assigned agent to use `GITHUB_REPOSITORY` and `GITHUB_TOKEN`.
 

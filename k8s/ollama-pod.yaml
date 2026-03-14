@@ -24,6 +24,7 @@ spec:
             sleep 1
           done
           ollama pull qwen3-coder-next:cloud || echo "Aviso: pull cloud falhou (faca 'ollama signin' e rode pull novamente)."
+          ollama pull deepseek-v3.1:671b-cloud || echo "Aviso: pull cloud falhou (faca 'ollama signin' e rode pull novamente)."
           wait
       ports:
         - containerPort: 11434

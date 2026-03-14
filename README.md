@@ -70,3 +70,6 @@ make gpu-test-logs
 
 - `k8s/openclaw-pod.yaml`
 - `k8s/gpu-test.yaml`
+
+
+https://clawhub.ai/pskoett/self-improving-agent
