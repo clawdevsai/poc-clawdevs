@@ -171,6 +171,9 @@ spec:
                     "model": "ollama/qwen3-next:80b-cloud",
                     "thinkingDefault": "low",
                     "typingMode": "thinking",
+                    "sandbox": {
+                      "mode": "off"
+                    },
                     "subagents": {
                       "runTimeoutSeconds": 900,
                       "maxConcurrent": 2
@@ -224,7 +227,12 @@ spec:
                           "sessions_send",
                           "sessions_spawn",
                           "session_status"
-                        ]
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
                       },
                       "subagents": {
                         "allowAgents": ["ceo", "arquiteto"]
@@ -247,7 +255,12 @@ spec:
                           "sessions_history",
                           "sessions_send",
                           "session_status"
-                        ]
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
                       },
                       "subagents": {
                         "allowAgents": ["ceo", "po"]
