@@ -34,7 +34,9 @@ configMapGenerator:
       - po-BOOTSTRAP.md=openclaw-config/po/BOOTSTRAP.md
       - po-HEARTBEAT.md=openclaw-config/po/HEARTBEAT.md
       - po-IDENTITY.md=openclaw-config/po/IDENTITY.md
+      - po-INPUT_SCHEMA.json=openclaw-config/po/INPUT_SCHEMA.json
       - po-SOUL.md=openclaw-config/po/SOUL.md
+      - po-SECURITY_TEST_CASES.md=openclaw-config/po/SECURITY_TEST_CASES.md
       - po-USER.md=openclaw-config/po/USER.md
       - po-TOOLS.md=openclaw-config/po/TOOLS.md
       - po-skill-SKILL.md=openclaw-config/po/SKILL.md
@@ -43,7 +45,9 @@ configMapGenerator:
       - arquiteto-BOOTSTRAP.md=openclaw-config/arquiteto/BOOTSTRAP.md
       - arquiteto-HEARTBEAT.md=openclaw-config/arquiteto/HEARTBEAT.md
       - arquiteto-IDENTITY.md=openclaw-config/arquiteto/IDENTITY.md
+      - arquiteto-INPUT_SCHEMA.json=openclaw-config/arquiteto/INPUT_SCHEMA.json
       - arquiteto-SOUL.md=openclaw-config/arquiteto/SOUL.md
+      - arquiteto-SECURITY_TEST_CASES.md=openclaw-config/arquiteto/SECURITY_TEST_CASES.md
       - arquiteto-USER.md=openclaw-config/arquiteto/USER.md
       - arquiteto-TOOLS.md=openclaw-config/arquiteto/TOOLS.md
       - arquiteto-skill-SKILL.md=openclaw-config/arquiteto/SKILL.md

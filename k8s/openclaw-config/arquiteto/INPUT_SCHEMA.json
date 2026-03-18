@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Arquiteto Input Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent": {
+      "type": "string",
+      "enum": [
+        "criar_arquitetura",
+        "decompor_tasks",
+        "criar_task",
+        "definir_arquitetura",
+        "atualizar_github",
+        "pesquisar"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "po",
+        "ceo"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "us_id": {
+          "type": "string",
+          "pattern": "^US-\\d{3}-[a-z0-9-]+$"
+        },
+        "idea_id": {
+          "type": "string",
+          "pattern": "^IDEA-[a-z0-9-]+$"
+        },
+        "brief_arch_id": {
+          "type": "string",
+          "pattern": "^BRIEF-ARCH-\\d+(?:-[a-z0-9-]+)?$"
+        },
+        "budget_monthly_brl": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      }
+    }
+  },
+  "required": [
+    "intent",
+    "source"
+  ]
+}
