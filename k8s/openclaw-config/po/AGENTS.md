@@ -220,6 +220,15 @@ rules:
       - "se sessão com 'arquiteto' já existe: sessions_send"
       - "se não: sessions_spawn(agentId='arquiteto', mode='session', label='[Arch] <tópico>')"
       - "no webchat: omitir thread"
+
+  - id: architect_docs_commit_issue_flow
+    description: "Publicação final de documentação e issues é responsabilidade do Arquiteto."
+    priority: 89
+    conditions: ["intent in ['atualizar_github', 'reportar_status', 'continuar_delegacao']"]
+    actions:
+      - "encaminhar ao Arquiteto artefatos de CEO/PO para publicar em `/data/openclaw/backlog/implementation/docs`"
+      - "exigir do Arquiteto evidências: commit hash, issues criadas/editadas e validação"
+      - "se falha: notificar CEO com bloqueio e plano de correção"
   
   - id: security_by_design
     description: "Incluir requisitos de segurança e compliance em cada US e task."

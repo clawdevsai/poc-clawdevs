@@ -116,9 +116,30 @@ capabilities:
       quality_gates:
         - "Usar `gh` CLI com `--repo \"$GITHUB_REPOSITORY\"`"
         - "Labels: task, P0/P1/P2, EPIC, ADR, security, performance"
-        - "Body da issue: incluir objetivo, escopo, critérios, referências (caminhos dos arquivos), NFRs"
+        - "Body da issue: incluir objetivo, escopo, como desenvolver, critérios, DoD, referências (caminhos dos arquivos), NFRs"
+        - "Body da issue deve ser Markdown renderizável (sem `\\n` literal)"
+        - "Criar/editar issue com `--body-file <arquivo.md>` (não usar `--body` inline)"
         - "Vincular issue à US e IDEA correspondentes (ex: 'Closes #US-001')"
         - "Para múltiplas labels: `--label task --label P0 --label EPIC01` (não JSON string)"
+
+  - name: docs_commit_issue_orchestration
+    description: "Publicar documentação de CEO/PO/Arquiteto no repositório, criar issues e finalizar sessão com arquivamento"
+    parameters:
+      input:
+        - "Documentos em /data/openclaw/backlog gerados por CEO/PO/Arquiteto"
+        - "GITHUB_REPOSITORY e credenciais GitHub válidas"
+        - "Contexto da sessão (session_id, objetivo e escopo)"
+      output:
+        - "Commit inicial com documentação em /data/openclaw/backlog/implementation/docs"
+        - "Issues criadas/atualizadas com --body-file .md e links de rastreabilidade"
+        - "Relatório de validação com sucesso/erros"
+        - "Arquivamento da sessão em /data/openclaw/backlog/session_finished/<session_id>/"
+      quality_gates:
+        - "Ordem obrigatória: docs -> commit -> issues -> validação -> arquivamento"
+        - "Nenhuma issue pode ser criada antes de commit de docs concluído com hash"
+        - "Commit deve conter somente arquivos de docs relacionados à sessão"
+        - "Falha em commit/issue/validação exige notificação imediata para PO (e CEO em caso crítico)"
+        - "Sessão só pode ser marcada como finalizada após validação sem erro pendente"
 
   - name: research
     description: "Pesquisar boas práticas, padrões de referência e tradeoffs de tecnologia quando a decisão não for óbvia"
@@ -353,6 +374,19 @@ rules:
       - "forçar `--repo \"$GITHUB_REPOSITORY\"`"
       - "validar labels na whitelist: task,P0,P1,P2,ADR,security,performance,spike"
       - "sanitizar body e bloquear paths fora de `/data/openclaw/backlog`"
+
+  - id: docs_first_commit_then_issue
+    description: "Publicação obrigatória de documentos antes de criação de issues"
+    priority: 92
+    conditions: ["intent in ['atualizar_github', 'finalizar_sessao', 'publicar_docs']"]
+    actions:
+      - "garantir diretório `/data/openclaw/backlog/implementation/docs`"
+      - "copiar/mover artefatos da sessão (CEO/PO/Arquiteto) para `implementation/docs/` mantendo estrutura .md"
+      - "executar commit de documentação e obter hash"
+      - "somente após commit: criar/atualizar issues com `gh issue create|edit --body-file <arquivo.md>`"
+      - "validar issues criadas/editadas (`gh issue view`) e registrar links"
+      - "se houver erro: notificar PO com resumo + ação corretiva; escalar CEO se bloquear entrega"
+      - "se tudo ok: mover artefatos de sessão para `/data/openclaw/backlog/session_finished/<session_id>/` e gerar `SESSION-SUMMARY.md`"
 
   - id: research_timeout_enforcement
     description: "Impor timeout de research e fallback automático"

@@ -219,6 +219,7 @@ Use este documento como **skill única** para orientar decisões de arquitetura,
 - Preferir `--json` + `--jq` para saída estruturada.
 - Labels: **nunca** enviar string tipo JSON como valor escalar (ex.: `"[EPIC01]"`).
 - Em `gh issue create`: passar um `--label` por label (ex.: `--label task --label P0 --label EPIC01`).
+- Em `gh issue create`: **não usar** `--body` inline com `\n`; sempre usar `--body-file` apontando para arquivo `.md`.
 - Em `gh api` para `/issues/{n}/labels`: enviar arrays com campos repetidos (`-f labels[]=EPIC01`) ou corpo JSON.
 - Documentação oficial: `https://cli.github.com/manual/gh`
 
@@ -230,9 +231,39 @@ Use este documento como **skill única** para orientar decisões de arquitetura,
 gh issue list --repo "$GITHUB_REPOSITORY" --json number,title,labels --jq '.[] | "\(.number): \(.title) [\(.labels[].name)]"'
 
 # Criar issue a partir de task
+cat > /tmp/ISSUE-TASK-XXX.md <<'EOF'
+## Objetivo
+Implementar <feature> com foco em segurança, performance e custo.
+
+## O que desenvolver (escopo funcional)
+- Entregar <item 1>
+- Entregar <item 2>
+- Não incluir <fora de escopo>
+
+## Como desenvolver (plano técnico)
+1. Implementar <passo técnico 1>.
+2. Aplicar <padrão/arquitetura> em <módulo>.
+3. Cobrir com testes unitários e integração.
+
+## Critérios de aceitação (BDD)
+1. DADO <contexto> QUANDO <ação> ENTÃO <resultado>.
+2. DADO <contexto> QUANDO <ação> ENTÃO <resultado>.
+
+## Definição de pronto (DoD)
+- [ ] Testes passando no CI
+- [ ] Segurança validada (LGPD/OWASP aplicável)
+- [ ] Observabilidade implementada (logs/métricas/alertas)
+- [ ] Documentação atualizada
+
+## Referências
+- Task: /data/openclaw/backlog/tasks/TASK-XXX-<slug>.md
+- US: /data/openclaw/backlog/user_story/US-XXX-<slug>.md
+- ADR: /data/openclaw/backlog/architecture/ADR-XXX-<slug>.md
+EOF
+
 gh issue create --repo "$GITHUB_REPOSITORY" \
   --title "Task: TASK-XXX - Título" \
-  --body "Objetivo: ...\n\nEscopo:\n- Inclui: ...\n\nReferências:\n- Task: /data/openclaw/backlog/tasks/TASK-XXX-<slug>.md\n- US: /data/openclaw/backlog/user_story/US-XXX-<slug>.md" \
+  --body-file /tmp/ISSUE-TASK-XXX.md \
   --label task --label P0 --label EPIC01
 
 # Adicionar labels via API
@@ -255,6 +286,59 @@ gh run view <run-id> --repo "$GITHUB_REPOSITORY" --log-failed
 ```bash
 gh api "repos/$GITHUB_REPOSITORY/pulls/55" --jq '.title, .state, .user.login'
 ```
+
+---
+
+## Fluxo Obrigatório: Docs -> Commit -> Issues -> Validação -> Session Finished
+
+**Quando usar:** Sempre que houver documentos gerados por CEO, PO ou Arquiteto para publicação no repositório.
+
+### Ordem obrigatória
+1. Consolidar documentos `.md` da sessão em `/data/openclaw/backlog/implementation/docs/`.
+2. Fazer o **primeiro commit** com os documentos.
+3. Criar/editar issues com `--body-file` (Markdown renderizável).
+4. Validar resultado (issue criada/editada, links, formato e erros).
+5. Encerrar sessão movendo artefatos para `/data/openclaw/backlog/session_finished/<session_id>/`.
+
+### Comandos de referência (exec)
+```bash
+# 1) Preparar docs da sessão
+mkdir -p /data/openclaw/backlog/implementation/docs
+
+# 2) Commit inicial de documentação
+git -C /data/openclaw/backlog/implementation add docs/
+git -C /data/openclaw/backlog/implementation commit -m "docs(session): publicar artefatos CEO/PO/Arquiteto"
+git -C /data/openclaw/backlog/implementation rev-parse --short HEAD
+
+# 3) Criar/editar issue com body em .md
+gh issue create --repo "$GITHUB_REPOSITORY" \
+  --title "Task: TASK-XXX - Título" \
+  --body-file /tmp/ISSUE-TASK-XXX.md \
+  --label task --label P1
+
+# 4) Validação pós-criação
+gh issue view <numero> --repo "$GITHUB_REPOSITORY" --json number,title,url,state
+```
+
+### Critérios de validação
+- Commit de docs gerado com hash válido.
+- Body de issue renderiza Markdown corretamente (sem `\n` literal).
+- Seções obrigatórias presentes: `Objetivo`, `O que desenvolver`, `Como desenvolver`, `Critérios de aceitação`, `Definição de pronto (DoD)`.
+- Links de referência para arquivos `.md` incluídos.
+
+### Tratamento de erros e notificação
+- Se falhar commit: **não criar issue**; notificar PO com erro e correção proposta.
+- Se falhar criação/edição de issue: manter docs commitados, notificar PO e registrar bloqueio.
+- Se falhar validação final: reabrir ciclo de correção antes de encerrar sessão.
+
+### Encerramento de sessão
+- Criar pasta: `/data/openclaw/backlog/session_finished/<session_id>/`.
+- Mover/arquivar artefatos de trabalho da sessão para essa pasta.
+- Gerar `SESSION-SUMMARY.md` com:
+  - commit hash,
+  - issues criadas/editadas,
+  - validações executadas,
+  - erros encontrados (se houver) e status final.
 
 ---
 
@@ -421,9 +505,21 @@ YYYY-MM-DD
 - Inclui: <itens dentro do escopo>
 - Não inclui: <itens fora do escopo>
 
+## Como desenvolver (plano técnico)
+1. <Passo técnico obrigatório 1>
+2. <Passo técnico obrigatório 2>
+3. <Passo técnico obrigatório 3>
+
 ## Critérios de aceitação
 1. DADO <contexto> QUANDO <ação> ENTÃO <resultado>
 2. DADO <contexto> QUANDO <ação> ENTÃO <resultado>
+
+## Definição de pronto (DoD)
+- [ ] Código implementado conforme plano técnico
+- [ ] Testes unitários e integração passando
+- [ ] Requisitos de segurança atendidos
+- [ ] Logs/métricas/alertas implementados
+- [ ] Documentação atualizada
 
 ## Referências
 - Task: /data/openclaw/backlog/tasks/TASK-XXX-<slug>.md
@@ -452,7 +548,10 @@ YYYY-MM-DD
 ### GitHub issue
 - ✅ Título descritivo (ex.: "Task: TASK-XXX - Título").
 - ✅ Body contém objetivo, escopo, critérios e referências a arquivos.
+- ✅ Body contém "Como desenvolver" (passo a passo técnico) e "Definição de pronto (DoD)".
+- ✅ Body renderiza Markdown corretamente (sem `\n` literal no texto).
 - ✅ Labels passadas como múltiplos `--label` (não JSON string).
+- ✅ Issue criada/editada com `--body-file <arquivo.md>`.
 - ✅ Comando inclui `--repo "$GITHUB_REPOSITORY"` quando fora de repositório git.
 
 ---

@@ -273,6 +273,7 @@ constraints:
   - "EXIGIR reconciliação de backlog antes de reportar"
   - "EXIGIR trilha de auditoria imutável em JSONL para decisões e bloqueios"
   - "EXIGIR que todos os artefatos sejam salvos em `/data/openclaw/backlog`"
+  - "EXIGIR que documentos de CEO/PO/Arquiteto sejam publicados pelo Arquiteto no fluxo: docs -> commit -> issues -> validação -> session_finished"
   - "EXIGIR análise de TCO (cloud vs local) para projetos > 20 SP"
   - "EXIGIR SLOs definidos para features de interface/API"
 

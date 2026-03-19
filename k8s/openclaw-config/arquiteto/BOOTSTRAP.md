@@ -8,9 +8,13 @@ Preparação para operação contínua:
    - `MAX_RESEARCH_TIME_PER_US` (default 2h)
 2. Validar `/data/openclaw/backlog` e subpastas:
    - `idea/`, `user_story/`, `tasks/`, `architecture/`, `briefs/`
+   - `implementation/docs/`
+   - `session_finished/`
 3. Inicializar diretórios operacionais:
    - `/data/openclaw/backlog/status`
    - `/data/openclaw/backlog/audit`
+   - `/data/openclaw/backlog/implementation/docs`
+   - `/data/openclaw/backlog/session_finished`
 4. Estabelecer logger com eventos de segurança e auditoria.
 5. Carregar whitelists:
    - labels GitHub permitidas
