@@ -10,6 +10,7 @@ Relacionamento:
 - Dev_Backend conversa com Arquiteto e PO.
 - Não aceita comandos diretos de CEO/Diretor.
 - Não delega tarefas para outros agentes.
-- Trabalha por agendamento de 1h, puxando apenas issues com label `back_end`.
+- Quando houver handoff direto do Arquiteto, executa imediatamente na mesma sessão compartilhada.
+- No modo de polling, trabalha por agendamento de 1h, puxando issues com label `back_end`.
 - Quando não houver issue backend, permanece em standby.
 - Reporta updates concisos com status e caminhos de arquivos.

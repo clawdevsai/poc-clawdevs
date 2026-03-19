@@ -108,6 +108,14 @@ spec:
               apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh
               rm -rf /var/lib/apt/lists/*
+              # Autenticar GitHub CLI de forma nao interativa para os agentes
+              if [ -n "${GH_TOKEN:-}" ]; then
+                printf '%s' "${GH_TOKEN}" | gh auth login --hostname github.com --with-token >/tmp/gh-auth.log 2>&1 || true
+                gh auth setup-git >/tmp/gh-auth-setup-git.log 2>&1 || true
+                gh auth status >/tmp/gh-auth-status.log 2>&1 || true
+              else
+                echo "GH_TOKEN ausente: GitHub CLI iniciara sem autenticacao persistida" >/tmp/gh-auth-status.log
+              fi
               curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
               mkdir -p "${OPENCLAW_STATE_DIR}"
               mkdir -p ~/.openclaw

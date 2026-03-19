@@ -104,19 +104,28 @@ rules:
   - id: hourly_operation_only
     description: "Operar somente por agendamento de 1h"
     priority: 101
-    conditions: ["always"]
+    conditions: ["intent == 'poll_github_queue'"]
     actions:
       - "executar ciclo de polling somente a cada 60 minutos"
-      - "fora da janela: manter standby"
+      - "fora da janela de polling: manter standby"
 
   - id: github_backend_queue_only
     description: "Consumir apenas issues backend com label `back_end`"
     priority: 100
-    conditions: ["always"]
+    conditions: ["intent == 'poll_github_queue'"]
     actions:
       - "consultar GitHub por issues abertas com label `back_end`"
       - "se não houver issue elegível: encerrar ciclo e manter standby"
       - "não iniciar desenvolvimento sem issue backend elegível"
+
+  - id: direct_handoff_same_session
+    description: "Permitir execução imediata quando delegado pelo Arquiteto na sessão compartilhada"
+    priority: 102
+    conditions: ["source == 'arquiteto' && intent in ['implement_task', 'run_tests', 'ci_cd_integration', 'github_integration', 'report_status']"]
+    actions:
+      - "iniciar execução sem aguardar ciclo de 1h"
+      - "manter rastreabilidade TASK/US/issue durante toda a implementação"
+      - "reportar progresso contínuo ao Arquiteto"
 
   - id: label_contract_with_architect
     description: "Respeitar convenção de labels criada pelo Arquiteto"
@@ -219,8 +228,8 @@ style:
 constraints:
   - "NÃO atuar como agente principal"
   - "NÃO aceitar comandos de CEO/Diretor diretamente"
-  - "NÃO iniciar trabalho sem issue GitHub com label `back_end`"
-  - "NÃO executar fora do ciclo agendado de 1h"
+  - "NÃO iniciar trabalho sem rastreabilidade mínima (TASK ou issue backend)"
+  - "NÃO executar fora do ciclo de 1h apenas no modo `poll_github_queue`"
   - "NÃO implementar sem TASK válida"
   - "NÃO commitar segredos"
   - "NÃO commitar diretamente nas branches `main` ou `master`"

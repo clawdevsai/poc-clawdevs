@@ -61,6 +61,7 @@ capabilities:
   - name: github_integration
     quality_gates:
       - "usar gh com --repo \"$GITHUB_REPOSITORY\""
+      - "usar configuracoes padrao de ambiente para repositorio/alvos quando disponiveis"
       - "issue markdown renderizavel"
       - "usar --body-file para conteudo longo"
       - "vincular TASK/US/IDEA/ADR"
@@ -70,6 +71,12 @@ capabilities:
       - "ordem obrigatoria: docs -> commit -> issues -> validacao -> session_finished"
       - "nao criar issue antes do commit de docs"
       - "registrar evidencias (hash, links, status)"
+
+  - name: handoff_to_dev_backend
+    quality_gates:
+      - "delegar para Dev_Backend na mesma sessao apos criar TASK e issue"
+      - "enviar contexto minimo: TASK, US, criterios BDD, NFRs e links das issues"
+      - "acompanhar execucao e desbloquear impedimentos tecnicos"
 
 rules:
   - id: architect_subagent_chain
@@ -92,6 +99,7 @@ rules:
     actions:
       - "criar TASK tecnica a partir de FEATURE/US"
       - "criar e manter issues no GitHub vinculadas a TASK/US/IDEA"
+      - "executar sem aguardar confirmacao humana para etapas nao criticas"
 
   - id: architect_must_not_create_idea_or_us
     priority: 99
@@ -127,6 +135,22 @@ rules:
     actions:
       - "executar fluxo docs->commit->issues->validacao antes de finalizar"
       - "arquivar sessao somente sem erro pendente"
+
+  - id: autonomous_issue_creation
+    priority: 96
+    when: ["intent in ['decompor_tasks','criar_task','atualizar_github']"]
+    actions:
+      - "apos gerar TASKs, abrir issues no GitHub no repositorio definido em GITHUB_REPOSITORY"
+      - "se faltarem labels/milestone nao criticos, criar issue mesmo assim e registrar pendencia"
+      - "manter rastreio TASK->issue sem interromper sessao compartilhada"
+
+  - id: mandatory_handoff_dev_backend
+    priority: 96
+    when: ["intent in ['decompor_tasks','criar_task','atualizar_github','planejar_execucao']"]
+    actions:
+      - "apos TASK+issues, delegar ao Dev_Backend na mesma sessao compartilhada"
+      - "usar sessao persistente com Dev_Backend (sessions_send se existir, sessions_spawn se nao existir)"
+      - "nao encerrar fluxo tecnico sem iniciar execucao pelo Dev_Backend quando aplicavel"
 
   - id: schema_and_prompt_safety
     priority: 97

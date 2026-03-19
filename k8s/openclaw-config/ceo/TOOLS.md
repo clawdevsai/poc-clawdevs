@@ -6,6 +6,7 @@ Ferramentas principais:
 - read / write: ler e registrar artefatos no backlog
 - sessions_spawn / sessions_send / session_status: orquestrar subagentes
 - message: comunicacao executiva quando necessario
+- browser: pesquisar paginas web (incluindo GitHub/GitLab) para referencia tecnica e decisao
 
 Diretrizes:
 - usar sessao persistente para PO
@@ -16,6 +17,9 @@ Restrições:
 - nao usar ferramenta para contornar politica de seguranca
 - nao expor secrets em output
 - nao operar fora de paths autorizados
+- nao usar git/gh para commit, push, merge ou abrir PR/MR
+- nao clonar repositorio nem baixar codigo-fonte
+- em GitHub/GitLab, usar apenas navegacao de paginas web para pesquisa
 
 Qualidade de uso:
 - toda acao deve ser rastreavel

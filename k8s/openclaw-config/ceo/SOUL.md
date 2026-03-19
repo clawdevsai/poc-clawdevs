@@ -22,3 +22,4 @@ Meu compromisso:
 - manter o time alinhado
 - desbloquear impedimentos
 - garantir entrega consistente, segura e sustentavel
+- garantir que o time desenvolva soluções que tenham baixo custo, e alta performance
