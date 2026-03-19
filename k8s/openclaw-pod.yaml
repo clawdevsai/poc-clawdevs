@@ -188,6 +188,10 @@ spec:
                         {
                           "id": "qwen3-vl:235b-cloud",
                           "name": "qwen3-vl:235b-cloud"
+                        },
+                        {
+                          "id": "qwen3.5:397b-cloud",
+                          "name": "qwen3.5:397b-cloud"
                         }
                       ]
                     }
@@ -195,11 +199,22 @@ spec:
                 },
                 "tools": {
                   "sessions": {
-                    "visibility": "all"
+                    "visibility": "tree"
                   },
                   "agentToAgent": {
                     "enabled": true,
                     "allow": ["ceo", "po", "arquiteto", "dev_backend"]
+                  }
+                },
+                "session": {
+                  "sendPolicy": {
+                    "rules": [
+                      {
+                        "match": { "channel": "unknown", "chatType": "group" },
+                        "action": "deny"
+                      }
+                    ],
+                    "default": "allow"
                   }
                 },
                 "skills": {
@@ -210,12 +225,13 @@ spec:
                 },
                 "agents": {
                   "defaults": {
-                    "model": "ollama/qwen3-next:80b-cloud",
+                    "model": "ollama/nemotron-3-super:cloud",
                     "thinkingDefault": "low",
                     "typingMode": "instant",
                     "typingIntervalSeconds": 4,
                     "sandbox": {
-                      "mode": "off"
+                      "mode": "off",
+                      "sessionToolsVisibility": "spawned"
                     },
                     "subagents": {
                       "runTimeoutSeconds": 900,
@@ -245,10 +261,10 @@ spec:
                           "sessions_history",
                           "sessions_send",
                           "sessions_spawn",
-                          "session_status"
+                          "session_status",
                           "workflow_tool",
-                          "workflow", 
-                          "group:plugins",
+                          "workflow",
+                          "group:plugins"
                         ]
                       },
                       "subagents": {
@@ -271,13 +287,14 @@ spec:
                           "browser",
                           "message",
                           "agents_list",
+                          "sessions_list",
                           "sessions_history",
                           "sessions_send",
                           "sessions_spawn",
-                          "session_status"
+                          "session_status",
                           "workflow_tool",
-                          "workflow", 
-                          "group:plugins",
+                          "workflow",
+                          "group:plugins"
                         ],
                         "exec": {
                           "host": "gateway",
@@ -292,7 +309,7 @@ spec:
                     {
                       "id": "arquiteto",
                       "name": "Arquiteto",
-                      "model": "ollama/qwen3-coder:480b-cloud",
+                      "model": "ollama/qwen3.5:397b-cloud",
                       "workspace": "/data/openclaw/workspace-arquiteto",
                       "agentDir": "/data/openclaw/agents/arquiteto/agent",
                       "tools": {
@@ -304,12 +321,14 @@ spec:
                           "process",
                           "browser",
                           "message",
+                          "sessions_list",
                           "sessions_history",
                           "sessions_send",
+                          "sessions_spawn",
                           "session_status",
                           "workflow_tool",
-                          "workflow", 
-                          "group:plugins",
+                          "workflow",
+                          "group:plugins"
                         ],
                         "exec": {
                           "host": "gateway",
@@ -339,10 +358,11 @@ spec:
                           "sessions_list",
                           "sessions_history",
                           "sessions_send",
+                          "sessions_spawn",
                           "session_status",
                           "workflow_tool",
-                          "workflow", 
-                          "group:plugins",
+                          "workflow",
+                          "group:plugins"
                         ],
                         "exec": {
                           "host": "gateway",
