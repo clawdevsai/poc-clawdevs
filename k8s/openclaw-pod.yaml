@@ -80,13 +80,25 @@ spec:
               value: "0 * * * *"
             - name: DEV_BACKEND_CRON_TZ
               value: "America/Sao_Paulo"
+            - name: OPENCLAW_LOG_LEVEL
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: OPENCLAW_LOG_LEVEL
+                  optional: true
+            - name: DEBUG_LOG_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: DEBUG_LOG_ENABLED
+                  optional: true
           resources:
             requests:
               cpu: 500m
               memory: 2Gi
             limits:
               cpu: "2"
-              memory: 4Gi
+              memory: 3Gi
           startupProbe:
             tcpSocket:
               port: gateway
@@ -116,6 +128,35 @@ spec:
               export OPENCLAW_NO_ONBOARD=1
               export OPENCLAW_NO_PROMPT=1
               export OPENCLAW_STATE_DIR=/data/openclaw
+              export OPENCLAW_LOG_LEVEL="${OPENCLAW_LOG_LEVEL:-info}"
+              BOOTSTRAP_LOG_DIR="${OPENCLAW_STATE_DIR}/backlog/status"
+              BOOTSTRAP_LOG_FILE="${BOOTSTRAP_LOG_DIR}/openclaw-bootstrap.log"
+              mkdir -p "${BOOTSTRAP_LOG_DIR}"
+              touch "${BOOTSTRAP_LOG_FILE}"
+              DEBUG_LOG_ENABLED="${DEBUG_LOG_ENABLED:-false}"
+              if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then
+                export LOG_LEVEL=debug
+                export DEBUG=1
+                DEBUG_LOG_FILE="${BOOTSTRAP_LOG_DIR}/openclaw-debug.log"
+                touch "${DEBUG_LOG_FILE}"
+                exec > >(tee -a "${BOOTSTRAP_LOG_FILE}" "${DEBUG_LOG_FILE}") 2>&1
+                export PS4='+ [${BASH_SOURCE##*/}:${LINENO}] '
+                set -x
+                echo "[debug] debug logging enabled"
+              else
+                export LOG_LEVEL="${LOG_LEVEL:-info}"
+                exec > >(tee -a "${BOOTSTRAP_LOG_FILE}") 2>&1
+              fi
+              trap 'status=$?; echo "[bootstrap][error] line=${LINENO} cmd=${BASH_COMMAND} exit=${status}" >&2' ERR
+              echo "[bootstrap] log file: ${BOOTSTRAP_LOG_FILE}"
+              echo "[bootstrap] debug mode: ${DEBUG_LOG_ENABLED}"
+              for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID GITHUB_TOKEN GITHUB_REPOSITORY OLLAMA_API_KEY; do
+                if [ -n "${!var_name:-}" ]; then
+                  echo "[bootstrap] ${var_name}=set"
+                else
+                  echo "[bootstrap] ${var_name}=empty"
+                fi
+              done
               # Garantir que todos os agentes tenham o repo default mesmo se o Secret vier sem essa chave
               export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-lukeware-ai/user-api}"
               # Fallback para quando DIRECTORS_NAME nao estiver definido no Secret
@@ -397,7 +438,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": [" "]
+                        "allowAgents": ["dev_backend"]
                       }
                     },
                     {
@@ -555,6 +596,26 @@ spec:
               repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
               repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
               repair_main_session "dev_backend" "/data/openclaw/workspace-dev_backend" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
+              stream_agent_sessions() {
+                declare -A agent_offsets=()
+                while true; do
+                  for session_file in "${OPENCLAW_STATE_DIR}"/agents/*/sessions/*.jsonl; do
+                    [ -f "${session_file}" ] || continue
+                    agent_name="$(basename "$(dirname "$(dirname "${session_file}")")")"
+                    current_size="$(wc -c < "${session_file}" 2>/dev/null || echo 0)"
+                    previous_size="${agent_offsets["${session_file}"]:-0}"
+                    if [ "${current_size}" -gt "${previous_size}" ]; then
+                      tail -c +$((previous_size + 1)) "${session_file}" | sed "s#^#[agent:${agent_name}] #"
+                      agent_offsets["${session_file}"]="${current_size}"
+                    fi
+                  done
+                  sleep 2
+                done
+              }
+              if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then
+                echo "[debug] streaming agent session files into bootstrap logs"
+                ( set +e; stream_agent_sessions ) &
+              fi
               if [ "${AGENT_ERROR_ROUTER_ENABLED:-false}" = "true" ]; then
                 (
                   set +e
@@ -618,7 +679,18 @@ spec:
                   exit 0
                 ) &
               fi
-              exec openclaw gateway
+              echo "[bootstrap] starting openclaw gateway"
+              set +e
+              openclaw gateway
+              gateway_exit=$?
+              set -e
+              echo "[bootstrap] openclaw gateway exited with code ${gateway_exit}"
+              latest_gateway_log="$(ls -1t /tmp/openclaw/openclaw-*.log 2>/dev/null | head -n 1 || true)"
+              if [ -n "${latest_gateway_log}" ] && [ -f "${latest_gateway_log}" ]; then
+                cp "${latest_gateway_log}" "${BOOTSTRAP_LOG_DIR}/openclaw-gateway-last.log" || true
+                tail -n 200 "${latest_gateway_log}" || true
+              fi
+              exit "${gateway_exit}"
       volumes:
         - name: agent-config
           configMap:

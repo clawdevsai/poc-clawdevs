@@ -1,3 +1,4 @@
+# Pod standalone: para alterar resources, delete o Pod e reaplique (kubectl delete pod ollama && kubectl apply -k k8s).
 apiVersion: v1
 kind: Pod
 metadata:
@@ -12,25 +13,10 @@ spec:
       resources:
         requests:
           cpu: 500m
-          memory: 4G
+          memory: 512Mi
         limits:
-          cpu: "2"
-          memory: 5325Mi
-      startupProbe:
-        tcpSocket:
-          port: 11434
-        periodSeconds: 5
-        failureThreshold: 24
-      readinessProbe:
-        tcpSocket:
-          port: 11434
-        periodSeconds: 5
-        failureThreshold: 3
-      livenessProbe:
-        tcpSocket:
-          port: 11434
-        periodSeconds: 20
-        failureThreshold: 3
+          cpu: "1"
+          memory: 2Gi
       volumeMounts:
         - name: ollama-data
           mountPath: /root/.ollama
