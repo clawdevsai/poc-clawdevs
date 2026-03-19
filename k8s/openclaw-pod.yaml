@@ -82,9 +82,26 @@ spec:
               value: "America/Sao_Paulo"
           resources:
             requests:
+              cpu: 500m
               memory: 2Gi
             limits:
+              cpu: "2"
               memory: 4Gi
+          startupProbe:
+            tcpSocket:
+              port: gateway
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: gateway
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: gateway
+            periodSeconds: 20
+            failureThreshold: 3
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config
@@ -106,8 +123,19 @@ spec:
               # Alinhar GH CLI caso GH_TOKEN venha em outro nome
               export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
               apt-get update
-              apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh
+              apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh chromium
               rm -rf /var/lib/apt/lists/*
+              browser_bin="$(command -v chromium || command -v chromium-browser || command -v google-chrome || command -v google-chrome-stable || command -v brave-browser || command -v msedge || command -v microsoft-edge || true)"
+              if [ -z "${browser_bin}" ]; then
+                echo "Browser suportado nao encontrado apos a instalacao do Chromium" >&2
+                exit 1
+              fi
+              ln -sf "${browser_bin}" /usr/local/bin/chromium-browser
+              ln -sf "${browser_bin}" /usr/local/bin/google-chrome
+              ln -sf "${browser_bin}" /usr/local/bin/google-chrome-stable
+              ln -sf "${browser_bin}" /usr/local/bin/chrome
+              export CHROME_BIN="${browser_bin}"
+              echo "Browser disponivel: ${browser_bin}"
               # Autenticar GitHub CLI de forma nao interativa para os agentes
               if [ -n "${GH_TOKEN:-}" ]; then
                 printf '%s' "${GH_TOKEN}" | gh auth login --hostname github.com --with-token >/tmp/gh-auth.log 2>&1 || true
@@ -369,7 +397,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["dev_backend"]
+                        "allowAgents": [" "]
                       }
                     },
                     {

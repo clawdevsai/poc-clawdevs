@@ -6,6 +6,7 @@
 - `sessions_spawn(agentId, mode, label)`: Criar sessão. Validar `agentId in {'arquiteto'}`, `mode in {'session','task'}`, `label` ASCII e <= 50 chars.
 - `sessions_send(session_id, message)`: Enviar para sessão existente do Arquiteto.
 - `sessions_list()`: Listar sessões ativas.
+- `browser`: navegar paginas web para pesquisa tecnica, mercado e validacao de referencia externa.
 - `internet_search(query)`: Pesquisa de mercado/regulação em domínios confiáveis.
 - `gh(args...)`: Integração GitHub com validação rígida.
 

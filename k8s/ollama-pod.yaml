@@ -11,9 +11,26 @@ spec:
       image: ollama/ollama:latest
       resources:
         requests:
+          cpu: 500m
           memory: 4G
         limits:
+          cpu: "2"
           memory: 5325Mi
+      startupProbe:
+        tcpSocket:
+          port: 11434
+        periodSeconds: 5
+        failureThreshold: 24
+      readinessProbe:
+        tcpSocket:
+          port: 11434
+        periodSeconds: 5
+        failureThreshold: 3
+      livenessProbe:
+        tcpSocket:
+          port: 11434
+        periodSeconds: 20
+        failureThreshold: 3
       volumeMounts:
         - name: ollama-data
           mountPath: /root/.ollama

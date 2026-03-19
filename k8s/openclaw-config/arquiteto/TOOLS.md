@@ -7,6 +7,7 @@
 - `sessions_spawn(agentId, mode, label)`: Criar sessão. Validar `agentId in {'po'}`, `mode='session'`, `label` ASCII <= 50 chars.
 - `sessions_send(session_id, message)`: Enviar mensagem para sessão válida do PO.
 - `sessions_list()`: Listar sessões ativas.
+- `browser`: navegar paginas web quando a pesquisa tecnica exigir referencia externa.
 - `internet_search(query)`: Pesquisa técnica em fontes confiáveis com rate limit.
 - `gh(args...)`: Operações GitHub com guardrails.
 

@@ -9,6 +9,7 @@
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto.
 - `sessions_send(session_id, message)`: enviar update.
 - `sessions_list()`: listar sessões.
+- `browser`: navegar paginas web quando houver necessidade de referencia externa durante implementacao ou debug.
 - `internet_search(query)`: pesquisar arquiteturas, protocolos e boas práticas para custo/performance.
 
 ## regras_de_uso

@@ -7,7 +7,7 @@ PF_SERVICE ?= service/clawdevs-ai
 PF_PORTS ?= 18789:18789
 
 
-.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -28,6 +28,8 @@ help:
 	@echo "  make port-forward-start PF_SERVICE=service/openclaw PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
 	@echo "  make port-forward-stop  PF_PID=.openclaw-forward.pid"
 	@echo "  make port-forward-status PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
+	@echo "  make preflight      - valida k8s/.env antes do deploy"
+	@echo "  make manifests-validate - valida renderizacao do kustomize"
 	@echo "  make net-allow-egress        - aplica policy liberando egress"
 	@echo "  make net-test-openclaw       - testa internet no pod openclaw"
 	@echo "  make reset-all    - reaplica openclaw e limpa sessoes/backlog para teste do zero"
@@ -41,6 +43,20 @@ help:
 	@echo "  make gpu-plugin-apply    - aplica RuntimeClass + NVIDIA device plugin"
 	@echo "  make gpu-node-check      - valida nvidia.com/gpu no node"
 	@echo "  make gpu-migrate-apply   - aplica stack no contexto docker-desktop"
+
+preflight:
+	@set -eu; \
+	required_keys="OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID_CEO GITHUB_TOKEN GITHUB_REPOSITORY OLLAMA_API_KEY"; \
+	for key in $$required_keys; do \
+		value="$$(sed -n "s/^$${key}=//p" k8s/.env | head -n 1 | tr -d '\r' || true)"; \
+		if [ -z "$$value" ]; then \
+			echo "Erro: $$key vazio em k8s/.env. Preencha os segredos antes de aplicar."; \
+			exit 1; \
+		fi; \
+	done
+
+manifests-validate:
+	kubectl kustomize k8s >/dev/null
 
 minikube-up:
 	minikube start \
@@ -78,7 +94,7 @@ minikube-logs:
 minikube-dashboard:
 	minikube dashboard -p $(PROFILE) --url
 
-ollama-apply: ollama-volume-apply
+ollama-apply: preflight ollama-volume-apply
 	kubectl --context=$(KUBE_CONTEXT) delete pod ollama --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/ollama-pod.yaml
 
@@ -100,7 +116,7 @@ net-allow-egress:
 net-test-openclaw:
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
 
-openclaw-apply: net-allow-egress
+openclaw-apply: preflight manifests-validate net-allow-egress
 	kubectl --context=$(KUBE_CONTEXT) apply -k k8s
 
 openclaw-restart:

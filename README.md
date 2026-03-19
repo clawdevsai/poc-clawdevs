@@ -13,11 +13,15 @@ Fluxo para subir Kubernetes local no Docker Desktop (Windows), validar GPU real 
 ## Comandos principais
 
 ```bash
+make preflight
+make manifests-validate
 make gpu-doctor
 make docker-k8s-check
 make gpu-plugin-apply
 make gpu-node-check
 ```
+
+O arquivo `k8s/.env` deve conter apenas valores preenchidos localmente. Antes de aplicar o stack, rode `make preflight` para validar os segredos obrigatorios.
 
 Quando o `gpu-node-check` mostrar `GPU_ALLOC` diferente de `<none>`, aplique o stack no contexto `docker-desktop`:
 
