@@ -234,6 +234,7 @@ spec:
                       "workspace": "/data/openclaw/workspace-ceo",
                       "agentDir": "/data/openclaw/agents/ceo/agent",
                       "tools": {
+                        "agentToAgent":["po", "arquiteto", "dev_backend"],
                         "allow": [
                           "read",
                           "write",
@@ -245,10 +246,13 @@ spec:
                           "sessions_send",
                           "sessions_spawn",
                           "session_status"
+                          "workflow_tool",
+                          "workflow", 
+                          "group:plugins",
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["po", "arquiteto", "dev_backend"]
+                        "allowAgents": ["po"]
                       }
                     },
                     {
@@ -258,6 +262,7 @@ spec:
                       "workspace": "/data/openclaw/workspace-po",
                       "agentDir": "/data/openclaw/agents/po/agent",
                       "tools": {
+                        "agentToAgent":["ceo", "arquiteto", "dev_backend"],
                         "allow": [
                           "read",
                           "write",
@@ -270,6 +275,9 @@ spec:
                           "sessions_send",
                           "sessions_spawn",
                           "session_status"
+                          "workflow_tool",
+                          "workflow", 
+                          "group:plugins",
                         ],
                         "exec": {
                           "host": "gateway",
@@ -278,7 +286,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["", "arquiteto", "dev_backend"]
+                        "allowAgents": ["arquiteto"]
                       }
                     },
                     {
@@ -288,6 +296,7 @@ spec:
                       "workspace": "/data/openclaw/workspace-arquiteto",
                       "agentDir": "/data/openclaw/agents/arquiteto/agent",
                       "tools": {
+                        "agentToAgent":["ceo", "po", "dev_backend"],
                         "allow": [
                           "read",
                           "write",
@@ -297,7 +306,10 @@ spec:
                           "message",
                           "sessions_history",
                           "sessions_send",
-                          "session_status"
+                          "session_status",
+                          "workflow_tool",
+                          "workflow", 
+                          "group:plugins",
                         ],
                         "exec": {
                           "host": "gateway",
@@ -316,6 +328,7 @@ spec:
                       "workspace": "/data/openclaw/workspace-dev_backend",
                       "agentDir": "/data/openclaw/agents/dev_backend/agent",
                       "tools": {
+                        "agentToAgent":["ceo", "po", "arquiteto"],
                         "allow": [
                           "read",
                           "write",
@@ -326,7 +339,10 @@ spec:
                           "sessions_list",
                           "sessions_history",
                           "sessions_send",
-                          "session_status"
+                          "session_status",
+                          "workflow_tool",
+                          "workflow", 
+                          "group:plugins",
                         ],
                         "exec": {
                           "host": "gateway",
@@ -465,8 +481,9 @@ spec:
               if [ "${AGENT_ERROR_ROUTER_ENABLED:-false}" = "true" ]; then
                 (
                   set +e
-                  ERROR_CENTER="${OPENCLAW_STATE_DIR}/scheduler/agent_error_center.jsonl"
-                  ERROR_SEEN="${OPENCLAW_STATE_DIR}/scheduler/agent_error_seen.txt"
+                  ERROR_CENTER="${OPENCLAW_STATE_DIR}/backlog/status/agent_error_center.jsonl"
+                  ERROR_SEEN="${OPENCLAW_STATE_DIR}/backlog/status/agent_error_seen.txt"
+                  mkdir -p "$(dirname "${ERROR_CENTER}")"
                   touch "${ERROR_CENTER}" "${ERROR_SEEN}"
                   while true; do
                     for f in "${OPENCLAW_STATE_DIR}"/agents/*/sessions/*.jsonl; do
