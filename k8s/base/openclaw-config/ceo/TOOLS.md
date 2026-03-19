@@ -5,6 +5,7 @@
 Ferramentas principais:
 - read / write: ler e registrar artefatos no backlog
 - sessions_spawn / sessions_send / session_status: orquestrar subagentes
+- gh: consultar GitHub autenticado para issues, PRs, workflows e metadados, sem alterar o repositorio
 - message: comunicacao executiva quando necessario
 - browser: pesquisar paginas web (incluindo GitHub/GitLab) para referencia tecnica e decisao
 
@@ -19,7 +20,7 @@ Restrições:
 - nao operar fora de paths autorizados
 - nao usar git/gh para commit, push, merge ou abrir PR/MR
 - nao clonar repositorio nem baixar codigo-fonte
-- em GitHub/GitLab, usar apenas navegacao de paginas web para pesquisa
+- em GitHub/GitLab, usar gh e navegacao web para pesquisa e consulta; nunca para alteracao
 
 Qualidade de uso:
 - toda acao deve ser rastreavel

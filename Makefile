@@ -3,22 +3,23 @@ KUBE_CONTEXT ?= clawdevs-ai
 CPUS ?= 4
 MEMORY ?= 6144
 K8S_VERSION ?= v1.34.1
+GPU ?= 1
 PF_SERVICE ?= service/clawdevs-ai
 PF_PORTS ?= 18789:18789
 
 
-.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
-	@echo "  make minikube-up    - sobe Minikube no Docker Desktop"
+	@echo "  make minikube-up    - sobe Minikube no Docker Desktop com GPU"
 	@echo "  make minikube-down  - para Minikube"
 	@echo "  make minikube-addons - habilita addons do Minikube"
-	@echo "  make minikube-addons-gpu - habilita addons GPU (NVIDIA) no Minikube"
+	@echo "  make clawdevs-up   - sobe o profile, aplica o stack e mostra status"
 	@echo "  make minikube-context - ajusta kubeconfig e seta contexto clawdevs-ai"
 	@echo "  make dashboard      - abre dashboard do Minikube"
 	@echo "  make dashboard-url  - mostra URL do dashboard"
-	@echo "  make ollama-apply   - aplica k8s/ollama-pod.yaml (Pod + Service)"
+	@echo "  make ollama-apply   - aplica k8s/base/ollama-pod.yaml (Pod + Service)"
 	@echo "  make ollama-volume-apply - cria PVC ollama-data"
 	@echo "  make ollama-logs    - mostra logs do pod ollama"
 	@echo "  make openclaw-apply - aplica k8s sem apagar deployment/sessoes"
@@ -32,9 +33,23 @@ help:
 	@echo "  make manifests-validate - valida renderizacao do kustomize"
 	@echo "  make net-allow-egress        - aplica policy liberando egress"
 	@echo "  make net-test-openclaw       - testa internet no pod openclaw"
-	@echo "  make reset-all    - reaplica openclaw e limpa sessoes/backlog para teste do zero"
+	@echo "  make reset-all    - apaga pods e volumes do stack e recria tudo do zero"
 	@echo "  make stack-apply    - aplica ollama + openclaw"
 	@echo "  make stack-status   - status de pods e service do stack"
+	@echo "  make spec-template  - mostra o template de SPEC e o backlog de specs"
+	@echo "  make vibe-playbook   - mostra o playbook de vibe coding"
+	@echo "  make sdd-contract    - mostra o contrato SDD do repositorio"
+	@echo "  make constitution-template - mostra a constitution do repositorio"
+	@echo "  make speckit-flow    - mostra o fluxo adaptado do Spec Kit"
+	@echo "  make sdd-checklist   - mostra o checklist SDD"
+	@echo "  make brief-template  - mostra o template de BRIEF"
+	@echo "  make clarify-template - mostra o template de CLARIFY"
+	@echo "  make plan-template   - mostra o template de PLAN"
+	@echo "  make task-template   - mostra o template de TASK"
+	@echo "  make validate-template - mostra o template de VALIDATE"
+	@echo "  make sdd-prompts     - mostra o pack de prompts operacionais"
+	@echo "  make sdd-example     - mostra o ciclo completo de exemplo"
+	@echo "  make sdd-real-initiative - mostra a iniciativa real pronta para uso"
 	@echo "  make minikube-status|minikube-logs|minikube-delete"
 	@echo ""
 	@echo "Fluxo GPU real (Docker Desktop Kubernetes):"
@@ -56,13 +71,14 @@ preflight:
 	done
 
 manifests-validate:
-	kubectl kustomize k8s >/dev/null
+	kubectl kustomize k8s >NUL 2>NUL
 
 minikube-up:
 	minikube start \
 		--profile=$(PROFILE) \
 		--driver=docker \
 		--container-runtime=docker \
+		--gpus=all \
 		--kubernetes-version=$(K8S_VERSION) \
 		--cpus=$(CPUS) \
 		--memory=$(MEMORY)
@@ -85,6 +101,14 @@ ifneq ($(GPU),0)
 	minikube addons enable nvidia-device-plugin -p $(PROFILE) --force --refresh
 endif
 
+clawdevs-up:
+	$(MAKE) minikube-up
+	$(MAKE) minikube-context
+	$(MAKE) minikube-addons
+	$(MAKE) manifests-validate
+	$(MAKE) stack-apply
+	$(MAKE) stack-status
+
 minikube-status:
 	minikube status --profile=$(PROFILE)
 
@@ -96,10 +120,10 @@ minikube-dashboard:
 
 ollama-apply: preflight ollama-volume-apply
 	kubectl --context=$(KUBE_CONTEXT) delete pod ollama --ignore-not-found
-	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/ollama-pod.yaml
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pod.yaml
 
 ollama-volume-apply:
-	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/ollama-pvc.yaml
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pvc.yaml
 
 ollama-logs:
 	kubectl --context=$(KUBE_CONTEXT) logs -f pod/ollama
@@ -111,7 +135,7 @@ ollama-list:
 	kubectl --context=$(KUBE_CONTEXT) exec -it pod/ollama -- ollama list
 
 net-allow-egress:
-	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/networkpolicy-allow-egress.yaml
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/networkpolicy-allow-egress.yaml
 
 net-test-openclaw:
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
@@ -130,15 +154,20 @@ openclaw-dashboard:
 	kubectl --context=$(KUBE_CONTEXT) exec pod/clawdevs-ai-0 -- openclaw dashboard --no-open
 
 reset-all:
-	@echo "Reset completo: apaga pods/deployment e PVCs (perde o estado persistido)."
-	kubectl --context=$(KUBE_CONTEXT) delete pod ollama --ignore-not-found
-	kubectl --context=$(KUBE_CONTEXT) delete statefulset clawdevs-ai --ignore-not-found
-	kubectl --context=$(KUBE_CONTEXT) delete pvc ollama-data openclaw-data --ignore-not-found --wait=true --timeout=120s
+	@echo "Reset completo: apaga todos os pods e volumes do stack e recria tudo do zero."
+	kubectl --context=$(KUBE_CONTEXT) delete pod --all --ignore-not-found --wait=true --timeout=120s
+	kubectl --context=$(KUBE_CONTEXT) delete pvc --all --ignore-not-found --wait=true --timeout=120s
+	kubectl --context=$(KUBE_CONTEXT) delete statefulset clawdevs-ai --ignore-not-found --wait=true
 	kubectl --context=$(KUBE_CONTEXT) delete configmap openclaw-agent-config --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) delete secret openclaw-auth ollama-auth --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) delete service ollama clawdevs-ai --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) delete networkpolicy allow-all-egress --ignore-not-found
-	make stack-apply
+	kubectl --context=$(KUBE_CONTEXT) delete runtimeclass nvidia --ignore-not-found
+	kubectl --context=$(KUBE_CONTEXT) -n kube-system delete daemonset nvidia-device-plugin-daemonset --ignore-not-found
+	$(MAKE) stack-apply
+	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/ollama --timeout=240s
+	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=240s
+	$(MAKE) stack-status
 
 stack-apply: ollama-apply openclaw-apply
 
@@ -174,8 +203,7 @@ docker-k8s-context:
 	kubectl config use-context docker-desktop
 
 gpu-plugin-apply:
-	kubectl --context=docker-desktop apply -f k8s/nvidia-runtimeclass.yaml
-	kubectl --context=docker-desktop apply -f k8s/nvidia-device-plugin.yaml
+	kubectl --context=docker-desktop apply -k k8s/overlays/gpu
 	kubectl --context=docker-desktop -n kube-system rollout status daemonset/nvidia-device-plugin-daemonset --timeout=240s
 
 gpu-node-check:
@@ -185,3 +213,46 @@ gpu-node-check:
 gpu-migrate-apply:
 	$(MAKE) KUBE_CONTEXT=docker-desktop stack-apply
 	$(MAKE) KUBE_CONTEXT=docker-desktop stack-status
+
+spec-template:
+	@echo "Template: k8s/base/openclaw-config/shared/SPEC_TEMPLATE.md"
+	@echo "Backlog de specs: /data/openclaw/backlog/specs/"
+
+vibe-playbook:
+	@echo "Playbook: k8s/base/openclaw-config/shared/VIBE_CODING_PLAYBOOK.md"
+
+sdd-contract:
+	@echo "Contrato SDD: k8s/base/openclaw-config/shared/SDD_OPERATING_MODEL.md"
+
+constitution-template:
+	@echo "Constitution: k8s/base/openclaw-config/shared/CONSTITUTION.md"
+
+speckit-flow:
+	@echo "Spec Kit adaptado: k8s/base/openclaw-config/shared/SPECKIT_ADAPTATION.md"
+
+sdd-checklist:
+	@echo "Checklist SDD: k8s/base/openclaw-config/shared/SDD_CHECKLIST.md"
+
+brief-template:
+	@echo "Brief template: k8s/base/openclaw-config/shared/BRIEF_TEMPLATE.md"
+
+clarify-template:
+	@echo "Clarify template: k8s/base/openclaw-config/shared/CLARIFY_TEMPLATE.md"
+
+plan-template:
+	@echo "Plan template: k8s/base/openclaw-config/shared/PLAN_TEMPLATE.md"
+
+task-template:
+	@echo "Task template: k8s/base/openclaw-config/shared/TASK_TEMPLATE.md"
+
+validate-template:
+	@echo "Validate template: k8s/base/openclaw-config/shared/VALIDATE_TEMPLATE.md"
+
+sdd-prompts:
+	@echo "Prompts operacionais: k8s/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md"
+
+sdd-example:
+	@echo "Exemplo SDD completo: k8s/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md"
+
+sdd-real-initiative:
+	@echo "Iniciativa real: k8s/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/"

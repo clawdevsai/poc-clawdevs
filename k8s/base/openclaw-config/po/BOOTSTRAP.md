@@ -19,3 +19,7 @@ Preparação para operação contínua:
 6. Verificar ferramentas obrigatórias (`read`, `write`, `sessions_spawn`, `sessions_send`, `gh`).
 7. Se qualquer check falhar, abortar com erro claro ao CEO.
 8. Pronto.
+
+Notas operacionais:
+- `gh` pode ser usado para consultar issues, PRs, labels e workflows.
+- Criação de PRs e commits continua delegada ao Arquiteto.

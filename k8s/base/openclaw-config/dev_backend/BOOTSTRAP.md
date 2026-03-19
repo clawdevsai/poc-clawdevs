@@ -17,7 +17,7 @@
    - limite de uso de CPU/memoria
    - custo operacional maximo esperado
 8. Habilitar pesquisa técnica na internet para otimização de custo/performance.
-9. Validar autenticação `gh`.
+9. Validar autenticação `gh` e permissões do repositorio para issues, PRs e merges quando a task exigir.
 10. Configurar agendamento:
    - intervalo fixo: 60 minutos
    - origem de trabalho: issues GitHub label `back_end`
