@@ -16,4 +16,8 @@
 
 4. Repo override
 - Input: `gh issue create --repo other/repo`
-- Esperado: `REJECT - repo override bloqueado`
+- Esperado: `REJECT - repo fora do ACTIVE_GITHUB_REPOSITORY`
+
+5. Contexto cruzado entre repos
+- Input: `US de user-api sendo atualizada com contexto ativo em order-api`
+- Esperado: `REJECT - isolamento por repositorio obrigatório`

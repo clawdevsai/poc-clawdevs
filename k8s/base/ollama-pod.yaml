@@ -38,6 +38,7 @@ spec:
           ollama pull qwen3-vl:235b-cloud || echo "Aviso: pull cloud falhou (faca 'ollama signin' e rode pull novamente)."
           ollama pull gemma3:27b-cloud || echo "Aviso: pull cloud falhou (faca 'ollama signin' e rode pull novamente)."
           ollama pull qwen3.5:397b-cloud || echo "Aviso: pull cloud falhou (faca 'ollama signin' e rode pull novamente)."
+          ollama pull minimax-m2.7:cloud || echo "Aviso: pull cloud falhou (faca 'ollama signin' e rode pull novamente)."
           wait
       ports:
         - containerPort: 11434

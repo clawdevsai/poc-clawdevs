@@ -51,11 +51,17 @@ spec:
                 secretKeyRef:
                   name: openclaw-auth
                   key: GITHUB_TOKEN
-            - name: GITHUB_REPOSITORY
+            - name: GITHUB_ORG
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: GITHUB_REPOSITORY
+                  key: GITHUB_ORG
+            - name: GITHUB_DEFAULT_REPOSITORY
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: GITHUB_DEFAULT_REPOSITORY
+                  optional: true
             - name: OLLAMA_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -154,19 +160,82 @@ spec:
               trap 'status=$?; echo "[bootstrap][error] line=${LINENO} cmd=${BASH_COMMAND} exit=${status}" >&2' ERR
               echo "[bootstrap] log file: ${BOOTSTRAP_LOG_FILE}"
               echo "[bootstrap] debug mode: ${DEBUG_LOG_ENABLED}"
-              for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID GITHUB_TOKEN GITHUB_REPOSITORY OLLAMA_API_KEY; do
+              for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID GITHUB_TOKEN GITHUB_ORG OLLAMA_API_KEY; do
                 if [ -n "${!var_name:-}" ]; then
                   echo "[bootstrap] ${var_name}=set"
                 else
                   echo "[bootstrap] ${var_name}=empty"
                 fi
               done
-              # Garantir que todos os agentes tenham o repo default mesmo se o Secret vier sem essa chave
-              export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-lukeware-ai/user-api}"
+              # Garantir fallback de org/repositorio default
+              export GITHUB_ORG="${GITHUB_ORG:-lukeware-ai}"
+              export GITHUB_DEFAULT_REPOSITORY="${GITHUB_DEFAULT_REPOSITORY:-${GITHUB_REPOSITORY:-${GITHUB_ORG}/user-api}}"
+              case "${GITHUB_DEFAULT_REPOSITORY}" in
+                */*) ;;
+                *) GITHUB_DEFAULT_REPOSITORY="${GITHUB_ORG}/${GITHUB_DEFAULT_REPOSITORY}" ;;
+              esac
+              export ACTIVE_GITHUB_REPOSITORY="${GITHUB_DEFAULT_REPOSITORY}"
+              export ACTIVE_REPOSITORY_BRANCH="${ACTIVE_REPOSITORY_BRANCH:-main}"
+              export OPENCLAW_SESSION_ID="${OPENCLAW_SESSION_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$(cat /proc/sys/kernel/random/uuid | cut -d- -f1)}"
               # Fallback para quando DIRECTORS_NAME nao estiver definido no Secret
               export DIRECTORS_NAME="${DIRECTORS_NAME:-Director}"
               # Alinhar GH CLI caso GH_TOKEN venha em outro nome
               export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+              mkdir -p "${OPENCLAW_STATE_DIR}/contexts/repos"
+              write_repository_context() {
+                repo_ref="$1"
+                repo_branch="$2"
+                repo_slug="${repo_ref#*/}"
+                repo_safe="$(printf '%s' "${repo_slug}" | tr '/' '_' | tr -cd '[:alnum:]_.-')"
+                repo_id="$(gh api "repos/${repo_ref}" --jq '.id' 2>/dev/null || true)"
+                if [ -z "${repo_id}" ]; then
+                  repo_id="unknown"
+                fi
+                repo_context_dir="${OPENCLAW_STATE_DIR}/contexts/repos/${repo_safe}"
+                mkdir -p "${repo_context_dir}/logs" "${repo_context_dir}/history"
+                cat > "${OPENCLAW_STATE_DIR}/contexts/active_repository.env" <<EOF
+              GITHUB_ORG=${GITHUB_ORG}
+              ACTIVE_GITHUB_REPOSITORY=${repo_ref}
+              ACTIVE_REPOSITORY_BRANCH=${repo_branch}
+              ACTIVE_REPOSITORY_ID=${repo_id}
+              OPENCLAW_SESSION_ID=${OPENCLAW_SESSION_ID}
+              REPOSITORY_CONTEXT_DIR=${repo_context_dir}
+              EOF
+                export ACTIVE_GITHUB_REPOSITORY="${repo_ref}"
+                export GITHUB_REPOSITORY="${repo_ref}"
+                export GH_REPO="${repo_ref}"
+                export ACTIVE_REPOSITORY_BRANCH="${repo_branch}"
+                export ACTIVE_REPOSITORY_ID="${repo_id}"
+                export REPOSITORY_CONTEXT_DIR="${repo_context_dir}"
+                echo "[bootstrap] repository context active=${ACTIVE_GITHUB_REPOSITORY} id=${ACTIVE_REPOSITORY_ID} branch=${ACTIVE_REPOSITORY_BRANCH} session=${OPENCLAW_SESSION_ID}"
+              }
+              render_agent_context() {
+                agent_workspace="$1"
+                [ -f "${OPENCLAW_STATE_DIR}/contexts/active_repository.env" ] && . "${OPENCLAW_STATE_DIR}/contexts/active_repository.env"
+                GITHUB_ORG_ESCAPED="$(printf '%s' "${GITHUB_ORG}" | sed -e 's/[\\/&]/\\&/g')"
+                ACTIVE_GITHUB_REPOSITORY_ESCAPED="$(printf '%s' "${ACTIVE_GITHUB_REPOSITORY}" | sed -e 's/[\\/&]/\\&/g')"
+                ACTIVE_REPOSITORY_BRANCH_ESCAPED="$(printf '%s' "${ACTIVE_REPOSITORY_BRANCH}" | sed -e 's/[\\/&]/\\&/g')"
+                OPENCLAW_SESSION_ID_ESCAPED="$(printf '%s' "${OPENCLAW_SESSION_ID}" | sed -e 's/[\\/&]/\\&/g')"
+                ACTIVE_REPOSITORY_ID_ESCAPED="$(printf '%s' "${ACTIVE_REPOSITORY_ID}" | sed -e 's/[\\/&]/\\&/g')"
+                if [ -f "${agent_workspace}/AGENTS.md" ]; then
+                  sed -i "s|__GITHUB_ORG__|${GITHUB_ORG_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+                  sed -i "s|__ACTIVE_GITHUB_REPOSITORY__|${ACTIVE_GITHUB_REPOSITORY_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+                  sed -i "s|__ACTIVE_REPOSITORY_BRANCH__|${ACTIVE_REPOSITORY_BRANCH_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+                  sed -i "s|__OPENCLAW_SESSION_ID__|${OPENCLAW_SESSION_ID_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+                  sed -i "s|__ACTIVE_REPOSITORY_ID__|${ACTIVE_REPOSITORY_ID_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+                  sed -i "s|__GITHUB_REPOSITORY__|${ACTIVE_GITHUB_REPOSITORY_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+                fi
+                cat > "${agent_workspace}/REPOSITORY_CONTEXT.md" <<EOF
+              # REPOSITORY_CONTEXT
+              - organization: ${GITHUB_ORG}
+              - active_repository: ${ACTIVE_GITHUB_REPOSITORY}
+              - repository_id: ${ACTIVE_REPOSITORY_ID}
+              - active_branch: ${ACTIVE_REPOSITORY_BRANCH}
+              - session_id: ${OPENCLAW_SESSION_ID}
+              - repository_context_dir: ${REPOSITORY_CONTEXT_DIR}
+              - policy: validar contexto ativo antes de qualquer acao e nunca misturar artefatos entre repositorios.
+              EOF
+              }
               echo "[bootstrap] GH_CONFIG_DIR=${GH_CONFIG_DIR}"
               apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh chromium
@@ -198,6 +267,140 @@ spec:
               else
                 echo "GH_TOKEN ausente: GitHub CLI iniciara sem autenticacao persistida" >/tmp/gh-auth-status.log
               fi
+              if ! gh api "repos/${GITHUB_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
+                discovered_repo="$(gh repo list "${GITHUB_ORG}" --limit 1 --json nameWithOwner --jq '.[0].nameWithOwner' 2>/dev/null || true)"
+                if [ -n "${discovered_repo}" ]; then
+                  GITHUB_DEFAULT_REPOSITORY="${discovered_repo}"
+                fi
+              fi
+              if ! gh api "repos/${GITHUB_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
+                GITHUB_DEFAULT_REPOSITORY="${GITHUB_ORG}/user-api"
+              fi
+              write_repository_context "${GITHUB_DEFAULT_REPOSITORY}" "${ACTIVE_REPOSITORY_BRANCH}"
+              mkdir -p "${OPENCLAW_STATE_DIR}/bin"
+              cat > "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh" <<'EOF'
+              #!/usr/bin/env bash
+              set -euo pipefail
+              : "${OPENCLAW_STATE_DIR:=/data/openclaw}"
+              : "${GITHUB_ORG:=}"
+              CONTEXT_FILE="${OPENCLAW_STATE_DIR}/contexts/active_repository.env"
+              load_repo_context() {
+                if [ -f "${CONTEXT_FILE}" ]; then
+                  . "${CONTEXT_FILE}"
+                fi
+              }
+              normalize_repo_ref() {
+                input="$1"
+                case "${input}" in
+                  */*) printf '%s\n' "${input}" ;;
+                  *) printf '%s/%s\n' "${GITHUB_ORG}" "${input}" ;;
+                esac
+              }
+              resolve_repo_id() {
+                ref="$1"
+                gh api "repos/${ref}" --jq '.id' 2>/dev/null || true
+              }
+              write_repo_context_file() {
+                ref="$1"
+                branch="$2"
+                repo_slug="${ref#*/}"
+                repo_safe="$(printf '%s' "${repo_slug}" | tr '/' '_' | tr -cd '[:alnum:]_.-')"
+                repo_id="$(resolve_repo_id "${ref}")"
+                [ -n "${repo_id}" ] || repo_id="unknown"
+                repo_context_dir="${OPENCLAW_STATE_DIR}/contexts/repos/${repo_safe}"
+                mkdir -p "${repo_context_dir}/logs" "${repo_context_dir}/history"
+                cat > "${CONTEXT_FILE}" <<CTX
+              GITHUB_ORG=${GITHUB_ORG}
+              ACTIVE_GITHUB_REPOSITORY=${ref}
+              ACTIVE_REPOSITORY_BRANCH=${branch}
+              ACTIVE_REPOSITORY_ID=${repo_id}
+              OPENCLAW_SESSION_ID=${OPENCLAW_SESSION_ID:-unknown}
+              REPOSITORY_CONTEXT_DIR=${repo_context_dir}
+              CTX
+              }
+              EOF
+              cat > "${OPENCLAW_STATE_DIR}/bin/claw-repo-discover" <<'EOF'
+              #!/usr/bin/env bash
+              set -euo pipefail
+              : "${OPENCLAW_STATE_DIR:=/data/openclaw}"
+              . "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh"
+              filter="${1:-}"
+              if [ -n "${filter}" ]; then
+                gh repo list "${GITHUB_ORG}" --limit 200 --json nameWithOwner,isPrivate,description --jq --arg f "${filter}" '.[] | select(.nameWithOwner | test($f;"i")) | [.nameWithOwner, (if .isPrivate then "private" else "public" end), (.description // "")] | @tsv'
+              else
+                gh repo list "${GITHUB_ORG}" --limit 200 --json nameWithOwner,isPrivate,description --jq '.[] | [.nameWithOwner, (if .isPrivate then "private" else "public" end), (.description // "")] | @tsv'
+              fi
+              EOF
+              cat > "${OPENCLAW_STATE_DIR}/bin/claw-repo-ensure" <<'EOF'
+              #!/usr/bin/env bash
+              set -euo pipefail
+              : "${OPENCLAW_STATE_DIR:=/data/openclaw}"
+              . "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh"
+              if [ "$#" -lt 1 ]; then
+                echo "usage: claw-repo-ensure <repo|org/repo> [--create]"
+                exit 1
+              fi
+              target_ref="$(normalize_repo_ref "$1")"
+              create_mode="false"
+              if [ "${2:-}" = "--create" ]; then
+                create_mode="true"
+              fi
+              if gh api "repos/${target_ref}" --silent >/dev/null 2>&1; then
+                echo "${target_ref}"
+                exit 0
+              fi
+              if [ "${create_mode}" != "true" ]; then
+                echo "NOT_FOUND:${target_ref}"
+                exit 2
+              fi
+              repo_name="${target_ref#*/}"
+              gh repo create "${target_ref}" --private --add-readme >/tmp/claw-repo-create.log 2>&1
+              echo "${target_ref}"
+              EOF
+              cat > "${OPENCLAW_STATE_DIR}/bin/claw-repo-switch" <<'EOF'
+              #!/usr/bin/env bash
+              set -euo pipefail
+              : "${OPENCLAW_STATE_DIR:=/data/openclaw}"
+              . "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh"
+              if [ "$#" -lt 1 ]; then
+                echo "usage: claw-repo-switch <repo|org/repo> [branch]"
+                exit 1
+              fi
+              target_ref="$(normalize_repo_ref "$1")"
+              branch="${2:-main}"
+              gh api "repos/${target_ref}" --silent >/dev/null 2>&1
+              write_repo_context_file "${target_ref}" "${branch}"
+              for workspace in "${OPENCLAW_STATE_DIR}/workspace-ceo" "${OPENCLAW_STATE_DIR}/workspace-po" "${OPENCLAW_STATE_DIR}/workspace-arquiteto" "${OPENCLAW_STATE_DIR}/workspace-dev_backend"; do
+                [ -f "${workspace}/REPOSITORY_CONTEXT.md" ] || true
+                target_ref_escaped="$(printf '%s' "${target_ref}" | sed -e 's/[\\/&]/\\&/g')"
+                branch_escaped="$(printf '%s' "${branch}" | sed -e 's/[\\/&]/\\&/g')"
+                session_escaped="$(printf '%s' "${OPENCLAW_SESSION_ID:-unknown}" | sed -e 's/[\\/&]/\\&/g')"
+                repo_id="$(resolve_repo_id "${target_ref}")"
+                [ -n "${repo_id}" ] || repo_id="unknown"
+                repo_id_escaped="$(printf '%s' "${repo_id}" | sed -e 's/[\\/&]/\\&/g')"
+                if [ -f "${workspace}/AGENTS.md" ]; then
+                  sed -i -E "s|^(  active_repository: ).*$|\\1\"${target_ref_escaped}\"|" "${workspace}/AGENTS.md"
+                  sed -i -E "s|^(  active_branch: ).*$|\\1\"${branch_escaped}\"|" "${workspace}/AGENTS.md"
+                  sed -i -E "s|^(  active_repository_id: ).*$|\\1\"${repo_id_escaped}\"|" "${workspace}/AGENTS.md"
+                  sed -i -E "s|^(  session_id: ).*$|\\1\"${session_escaped}\"|" "${workspace}/AGENTS.md"
+                fi
+                cat > "${workspace}/REPOSITORY_CONTEXT.md" <<CTX
+              # REPOSITORY_CONTEXT
+              - organization: ${GITHUB_ORG}
+              - active_repository: ${target_ref}
+              - repository_id: ${repo_id}
+              - active_branch: ${branch}
+              - session_id: ${OPENCLAW_SESSION_ID:-unknown}
+              - repository_context_dir: ${OPENCLAW_STATE_DIR}/contexts/repos/$(printf '%s' "${target_ref#*/}" | tr '/' '_' | tr -cd '[:alnum:]_.-')
+              - policy: validar contexto ativo antes de qualquer acao e nunca misturar artefatos entre repositorios.
+              CTX
+              done
+              printf 'active_repository=%s\nbranch=%s\n' "${target_ref}" "${branch}"
+              EOF
+              chmod +x "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh" "${OPENCLAW_STATE_DIR}/bin/claw-repo-discover" "${OPENCLAW_STATE_DIR}/bin/claw-repo-ensure" "${OPENCLAW_STATE_DIR}/bin/claw-repo-switch"
+              ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-discover" /usr/local/bin/claw-repo-discover
+              ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-ensure" /usr/local/bin/claw-repo-ensure
+              ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-switch" /usr/local/bin/claw-repo-switch
               curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
               mkdir -p "${OPENCLAW_STATE_DIR}"
               mkdir -p ~/.openclaw
@@ -243,6 +446,7 @@ spec:
               cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-ceo/VIBE_CODING_PLAYBOOK.md"
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SPECKIT_ADAPTATION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-ceo/README.md"
               cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
               cp /bootstrap/agent-config/po-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-po/IDENTITY.md"
               cp /bootstrap/agent-config/po-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-po/SOUL.md"
@@ -269,6 +473,7 @@ spec:
               cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-po/VIBE_CODING_PLAYBOOK.md"
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-po/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-po/SPECKIT_ADAPTATION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-po/README.md"
               cp /bootstrap/agent-config/arquiteto-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/AGENTS.md"
               cp /bootstrap/agent-config/arquiteto-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/IDENTITY.md"
               cp /bootstrap/agent-config/arquiteto-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SOUL.md"
@@ -295,6 +500,7 @@ spec:
               cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/VIBE_CODING_PLAYBOOK.md"
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SPECKIT_ADAPTATION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/README.md"
               cp /bootstrap/agent-config/dev_backend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/AGENTS.md"
               cp /bootstrap/agent-config/dev_backend-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOT.md"
               cp /bootstrap/agent-config/dev_backend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOTSTRAP.md"
@@ -327,6 +533,11 @@ spec:
               cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/VIBE_CODING_PLAYBOOK.md"
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SPECKIT_ADAPTATION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/README.md"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dev_backend"
               mkdir -p "${OPENCLAW_STATE_DIR}/git-hooks"
               cat > "${OPENCLAW_STATE_DIR}/git-hooks/pre-commit" <<'EOF'
               #!/usr/bin/env bash
@@ -399,6 +610,10 @@ spec:
                         {
                           "id": "qwen3.5:397b-cloud",
                           "name": "qwen3.5:397b-cloud"
+                        },
+                        {
+                          "id": "minimax-m2.7:cloud",
+                          "name": "minimax-m2.7:cloud"
                         }
                       ]
                     }
@@ -454,7 +669,7 @@ spec:
                       "id": "ceo",
                       "default": true,
                       "name": "CEO",
-                      "model": "ollama/qwen3-vl:235b-cloud",
+                      "model": "ollama/minimax-m2.7:cloud",
                       "workspace": "/data/openclaw/workspace-ceo",
                       "agentDir": "/data/openclaw/agents/ceo/agent",
                       "tools": {
@@ -479,7 +694,7 @@ spec:
                     {
                       "id": "po",
                       "name": "PO",
-                      "model": "ollama/gpt-oss:120b-cloud",
+                      "model": "ollama/minimax-m2.7:cloud",
                       "workspace": "/data/openclaw/workspace-po",
                       "agentDir": "/data/openclaw/agents/po/agent",
                       "tools": {
@@ -511,7 +726,7 @@ spec:
                     {
                       "id": "arquiteto",
                       "name": "Arquiteto",
-                      "model": "ollama/qwen3.5:397b-cloud",
+                      "model": "ollama/minimax-m2.7:cloud",
                       "workspace": "/data/openclaw/workspace-arquiteto",
                       "agentDir": "/data/openclaw/agents/arquiteto/agent",
                       "tools": {
@@ -542,7 +757,7 @@ spec:
                     {
                       "id": "dev_backend",
                       "name": "Dev_Backend",
-                      "model": "ollama/qwen3-coder:480b-cloud",
+                      "model": "ollama/minimax-m2.7:cloud",
                       "workspace": "/data/openclaw/workspace-dev_backend",
                       "agentDir": "/data/openclaw/agents/dev_backend/agent",
                       "tools": {

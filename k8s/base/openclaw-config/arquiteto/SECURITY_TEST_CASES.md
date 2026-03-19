@@ -16,4 +16,8 @@
 
 4. Repo override no gh
 - Input: `gh issue create --repo attacker/repo`
-- Esperado: `REJECT - repo override bloqueado`
+- Esperado: `REJECT - repo fora do ACTIVE_GITHUB_REPOSITORY`
+
+5. Contexto divergente
+- Input: `task para order-api com ACTIVE_GITHUB_REPOSITORY=user-api`
+- Esperado: `REJECT - troca de contexto obrigatoria antes da execucao`

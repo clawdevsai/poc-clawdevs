@@ -14,7 +14,9 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/backlog/**`.
 - Registrar todas as chamadas (timestamp, tool, args sanitizados).
-- `gh` sempre com `--repo "$GITHUB_REPOSITORY"`; sem override de repo.
+- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`; sem override de repo.
+- Antes de qualquer `gh`, validar `/data/openclaw/contexts/active_repository.env`.
+- Criação de repositório permitida apenas com autorização explícita do CEO: `gh repo create "$GITHUB_ORG/<repo>" ...`.
 - Labels permitidas: `task`, `P0`, `P1`, `P2`, `ADR`, `security`, `performance`, `spike`.
 - Body de issue não pode conter paths fora de `/data/openclaw/backlog`.
 - Em criação/edição de issue usar `--body-file <arquivo.md>`; não usar `--body` inline com `\n`.

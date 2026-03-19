@@ -13,7 +13,9 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/backlog/**`; bloquear qualquer path fora da allowlist.
 - Todas as chamadas de ferramenta devem ser auditadas (timestamp, tool, args sanitizados).
-- `gh` sempre com `--repo "$GITHUB_REPOSITORY"`; não permitir override de repo.
+- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`; não permitir override de repo.
+- Validar `/data/openclaw/contexts/active_repository.env` antes de consultas GitHub.
+- Se demanda mencionar outro repo, solicitar troca de contexto ao CEO antes de continuar.
 - Labels GitHub permitidas: `task`, `P0`, `P1`, `P2`, `EPIC`, `bug`, `security`.
 - Corpo de issue não pode referenciar caminhos fora de `/data/openclaw/backlog`.
 - Rate limits:

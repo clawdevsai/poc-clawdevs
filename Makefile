@@ -61,7 +61,7 @@ help:
 
 preflight:
 	@set -eu; \
-	required_keys="OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID_CEO GITHUB_TOKEN GITHUB_REPOSITORY OLLAMA_API_KEY"; \
+	required_keys="OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID_CEO GITHUB_TOKEN GITHUB_ORG OLLAMA_API_KEY"; \
 	for key in $$required_keys; do \
 		value="$$(sed -n "s/^$${key}=//p" k8s/.env | head -n 1 | tr -d '\r' || true)"; \
 		if [ -z "$$value" ]; then \

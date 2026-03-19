@@ -79,6 +79,8 @@ configMapGenerator:
       - shared-VIBE_CODING_PLAYBOOK.md=openclaw-config/shared/VIBE_CODING_PLAYBOOK.md
       - shared-SDD_OPERATING_MODEL.md=openclaw-config/shared/SDD_OPERATING_MODEL.md
       - shared-SPECKIT_ADAPTATION.md=openclaw-config/shared/SPECKIT_ADAPTATION.md
+      # repo
+      - project-README.md=openclaw-config/shared/PROJECT_README.md
 
 generatorOptions:
   disableNameSuffixHash: true

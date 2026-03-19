@@ -141,9 +141,15 @@ Observacao: o fluxo validado para GPU real neste repo usa Minikube com `--gpus=a
 
 ## GitHub (gh CLI)
 
-- O repositório padrão para ações GitHub dos agentes deve vir de `GITHUB_REPOSITORY` (definido em `k8s/.env` e injetado no pod).
+- A organização padrão para ações GitHub dos agentes deve vir de `GITHUB_ORG` (definido em `k8s/.env` e injetado no pod).
+- Opcionalmente, `GITHUB_DEFAULT_REPOSITORY` define o primeiro repositório ativo na inicialização.
 - O token deve vir de `GITHUB_TOKEN` (também definido em `k8s/.env` e injetado no pod).
-- Para comandos `gh` fora de um checkout local, usar `--repo "$GITHUB_REPOSITORY"`.
+- O repositório ativo por sessão fica em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GITHUB_REPOSITORY`).
+- Para comandos `gh` fora de um checkout local, usar `--repo "$ACTIVE_GITHUB_REPOSITORY"` (ou `"$GITHUB_REPOSITORY"` para compatibilidade).
+- Utilitários de contexto multi-repo no pod:
+  - `claw-repo-discover [filtro]` para descobrir repositórios da organização
+  - `claw-repo-ensure <repo> [--create]` para validar existência e criar quando autorizado
+  - `claw-repo-switch <repo> [branch]` para trocar contexto de todos os agentes/workspaces
 - Documentação oficial: https://cli.github.com/manual/gh
 
 ## Estrutura K8s

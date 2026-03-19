@@ -15,10 +15,11 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**`.
 - Bloquear comandos destrutivos (`rm -rf`, `git push -f`, etc.).
-- `gh` sempre com `--repo "$GITHUB_REPOSITORY"`.
+- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Validar `/data/openclaw/contexts/active_repository.env` antes de qualquer ação gh/git.
 - `gh` com paridade operacional ao Arquiteto para leitura/atualização de CI, issues e PRs (sem operações destrutivas).
 - Poll de fila GitHub 1x por hora:
-  - exemplo: `gh issue list --state open --label back_end --limit 20 --repo "$GITHUB_REPOSITORY"`
+  - exemplo: `gh issue list --state open --label back_end --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`
 - Processar somente label `back_end`.
 - Ignorar labels: `front_end`, `tests`, `dba`, `devops`, `documentacao`.
 - Sempre executar testes antes de reportar conclusão.
