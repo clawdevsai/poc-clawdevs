@@ -258,6 +258,7 @@ spec:
                 "agents": {
                   "defaults": {
                     "model": "ollama/nemotron-3-super:cloud",
+                    "bootstrapMaxChars": 25000,
                     "thinkingDefault": "low",
                     "typingMode": "instant",
                     "typingIntervalSeconds": 4,
@@ -293,8 +294,6 @@ spec:
                           "sessions_send",
                           "sessions_spawn",
                           "session_status",
-                          "workflow_tool",
-                          "workflow",
                           "group:plugins"
                         ]
                       },
@@ -322,8 +321,6 @@ spec:
                           "sessions_send",
                           "sessions_spawn",
                           "session_status",
-                          "workflow_tool",
-                          "workflow",
                           "group:plugins"
                         ],
                         "exec": {
@@ -355,8 +352,6 @@ spec:
                           "sessions_send",
                           "sessions_spawn",
                           "session_status",
-                          "workflow_tool",
-                          "workflow",
                           "group:plugins"
                         ],
                         "exec": {
@@ -388,8 +383,6 @@ spec:
                           "sessions_send",
                           "sessions_spawn",
                           "session_status",
-                          "workflow_tool",
-                          "workflow",
                           "group:plugins"
                         ],
                         "exec": {
