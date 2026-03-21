@@ -126,7 +126,7 @@ capabilities:
       - "  mobile     -> Dev_Mobile"
       - "  tests      -> QA_Engineer"
       - "  devops     -> DevOps_SRE"
-      - "  dba        -> DBA_DataEngineer (Fase 2)"
+      - "  dba        -> DBA_DataEngineer"
       - "  security   -> Security_Engineer"
       - "delegar na mesma sessao apos criar TASK e issue"
       - "enviar contexto minimo: TASK, US, criterios BDD, NFRs e links das issues"

@@ -21,6 +21,13 @@
 - Nunca commitar secrets ou credenciais.
 - `terraform destroy` somente com TASK explícita e aprovação.
 
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `devops` — criar automaticamente no boot se não existir:
+  `gh label create "devops" --color "#b60205" --description "DevOps/SRE tasks — routed to DevOps_SRE" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 ## comandos_principais
 ### Kubernetes
 - `kubectl apply`, `kubectl rollout`, `kubectl get`, `kubectl logs`, `kubectl top`

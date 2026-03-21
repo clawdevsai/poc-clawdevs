@@ -27,6 +27,13 @@
 - Internet: acesso total liberado para pesquisa técnica, descoberta de frameworks, CVEs, benchmarks de performance e atualização de habilidades — sem restrição de fonte.
 - `sessions_spawn` permitido para: `arquiteto`, `qa_engineer`.
 
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `front_end` — criar automaticamente no boot se não existir:
+  `gh label create "front_end" --color "#0e8a16" --description "Frontend tasks — routed to Dev_Frontend" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 ## comandos_adicionais_frontend
 - `npx next build`: build Next.js com análise de bundle
 - `npx playwright test`: testes e2e Playwright

@@ -22,6 +22,13 @@
 - Processar somente label `mobile`.
 - `sessions_spawn` permitido para: `arquiteto`, `qa_engineer`.
 
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `mobile` — criar automaticamente no boot se não existir:
+  `gh label create "mobile" --color "#e4e669" --description "Mobile tasks — routed to Dev_Mobile" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 ## comandos_adicionais_mobile
 - `expo`: `npx expo start`, `npx expo lint`, `eas build`, `eas submit`
 - `flutter`: `flutter test`, `flutter build apk`, `flutter build ios`
