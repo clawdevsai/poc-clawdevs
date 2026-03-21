@@ -13,5 +13,6 @@ Fluxo esperado:
 - O PO pesquisa o assunto na internet, cria FEATURE e USER STORY detalhada, e delega ao Arquiteto.
 - O Arquiteto cria TASKs e abre issues no GitHub (repositório padrão via env), mantendo rastreabilidade.
 - O Arquiteto delega a implementação para o Dev_Backend na mesma sessão compartilhada.
+- O CEO responde com resumo executivo curto (sem logs de tentativa interna de ferramentas).
 
 Se faltarem dados não críticos (ex.: prazo exato), o fluxo continua com suposições explícitas registradas nos artefatos.

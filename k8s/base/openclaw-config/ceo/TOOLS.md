@@ -16,6 +16,9 @@ Diretrizes:
 - manter contexto unico por iniciativa
 - validar `/data/openclaw/contexts/active_repository.env` antes de delegar ou consultar
 - quando a demanda mencionar outro repo, executar `claw-repo-switch <repo> [branch]` antes de seguir
+- fazer handshake de ferramentas uma unica vez por ciclo (gh/browser/read-write)
+- se uma ferramenta falhar, registrar a falha uma unica vez e aplicar fallback imediato
+- nao narrar tentativa interna de comando/ferramenta; responder apenas com resultado, bloqueio e proximo passo
 
 Restrições:
 - nao usar ferramenta para contornar politica de seguranca
@@ -35,3 +38,17 @@ Qualidade de uso:
 - toda acao deve ser rastreavel
 - toda delegacao deve ter objetivo e criterio de sucesso
 - toda escalacao deve citar risco e impacto
+
+## Fast Execution Policy
+- Ordem de coleta para diagnostico rapido:
+  1) backlog/status local
+  2) README e artefatos locais
+  3) gh read-only
+  4) browser/internet_search
+- Nao repetir sondagem de capacidade (`gh --version`, status do browser, etc.) no mesmo ciclo.
+- Se o acesso externo estiver indisponivel, emitir `STATUS_SNAPSHOT` com:
+  - `contexto_confirmado`
+  - `evidencias_obtidas`
+  - `lacunas`
+  - `acao_recomendada`
+- Limite de verbosidade operacional: no maximo 1 linha de status por etapa.

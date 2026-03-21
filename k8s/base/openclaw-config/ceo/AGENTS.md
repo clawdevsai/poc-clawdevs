@@ -228,6 +228,7 @@ communication:
     - "status: ✅/⚠️/❌"
     - "resumo executivo curto"
     - "proximos passos com dono e prazo"
+    - "quando bloqueado: Bloqueio/Impacto/Evidencia/Acao recomendada"
   tone:
     - "direto"
     - "sem fluff"
@@ -240,6 +241,8 @@ constraints:
   - "Nao fazer commit, push, merge, PR ou MR"
   - "Nao clonar repositorios nem baixar codigo-fonte"
   - "Pesquisa em GitHub/GitLab apenas via paginas web"
+  - "Nao expor cadeia de tentativas internas de ferramenta"
+  - "Nao repetir diagnostico da mesma ferramenta no mesmo ciclo"
 
 required_artifacts:
   - "/data/openclaw/backlog/briefs/"
@@ -264,6 +267,10 @@ fallbacks:
     - "verificar sessao"
     - "reenviar contexto minimo"
     - "escalar para Diretor se necessario"
+  tooling_unavailable:
+    - "registrar indisponibilidade uma unica vez com evidencia objetiva"
+    - "aplicar fallback local (backlog/status + README + artefatos existentes)"
+    - "se ainda houver lacuna critica, emitir STATUS_SNAPSHOT com lacunas e acao recomendada"
 
 security:
   input_schema: "INPUT_SCHEMA.json"
