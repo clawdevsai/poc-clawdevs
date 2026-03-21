@@ -479,6 +479,12 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_backend"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent" "${OPENCLAW_STATE_DIR}/agents/arquiteto/agent" "${OPENCLAW_STATE_DIR}/agents/dev_backend/agent"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_frontend" "${OPENCLAW_STATE_DIR}/workspace-dev_mobile" "${OPENCLAW_STATE_DIR}/workspace-qa_engineer"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-devops_sre" "${OPENCLAW_STATE_DIR}/workspace-security_engineer"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer" "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/dev_frontend/agent" "${OPENCLAW_STATE_DIR}/agents/dev_mobile/agent" "${OPENCLAW_STATE_DIR}/agents/qa_engineer/agent"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/devops_sre/agent" "${OPENCLAW_STATE_DIR}/agents/security_engineer/agent"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ux_designer/agent" "${OPENCLAW_STATE_DIR}/agents/dba_data_engineer/agent"
               cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
               cp /bootstrap/agent-config/ceo-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOT.md"
               cp /bootstrap/agent-config/ceo-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
@@ -613,10 +619,108 @@ spec:
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SPECKIT_ADAPTATION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/README.md"
+              cp /bootstrap/agent-config/dev_frontend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/AGENTS.md"
+              cp /bootstrap/agent-config/dev_frontend-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOT.md"
+              cp /bootstrap/agent-config/dev_frontend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/dev_frontend-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/HEARTBEAT.md"
+              cp /bootstrap/agent-config/dev_frontend-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/IDENTITY.md"
+              cp /bootstrap/agent-config/dev_frontend-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/dev_frontend-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SOUL.md"
+              cp /bootstrap/agent-config/dev_frontend-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/dev_frontend-USER.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/USER.md"
+              cp /bootstrap/agent-config/dev_frontend-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/TOOLS.md"
+              cp /bootstrap/agent-config/dev_frontend-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SKILL.md"
+              cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/CONSTITUTION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/README.md"
+              cp /bootstrap/agent-config/dev_mobile-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/AGENTS.md"
+              cp /bootstrap/agent-config/dev_mobile-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOT.md"
+              cp /bootstrap/agent-config/dev_mobile-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/dev_mobile-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/HEARTBEAT.md"
+              cp /bootstrap/agent-config/dev_mobile-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/IDENTITY.md"
+              cp /bootstrap/agent-config/dev_mobile-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/dev_mobile-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SOUL.md"
+              cp /bootstrap/agent-config/dev_mobile-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/dev_mobile-USER.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/USER.md"
+              cp /bootstrap/agent-config/dev_mobile-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/TOOLS.md"
+              cp /bootstrap/agent-config/dev_mobile-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SKILL.md"
+              cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/CONSTITUTION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/README.md"
+              cp /bootstrap/agent-config/qa_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/AGENTS.md"
+              cp /bootstrap/agent-config/qa_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOT.md"
+              cp /bootstrap/agent-config/qa_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/qa_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/HEARTBEAT.md"
+              cp /bootstrap/agent-config/qa_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/IDENTITY.md"
+              cp /bootstrap/agent-config/qa_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/qa_engineer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SOUL.md"
+              cp /bootstrap/agent-config/qa_engineer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/qa_engineer-USER.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/USER.md"
+              cp /bootstrap/agent-config/qa_engineer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/TOOLS.md"
+              cp /bootstrap/agent-config/qa_engineer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SKILL.md"
+              cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/CONSTITUTION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/README.md"
+              cp /bootstrap/agent-config/devops_sre-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/AGENTS.md"
+              cp /bootstrap/agent-config/devops_sre-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOT.md"
+              cp /bootstrap/agent-config/devops_sre-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/devops_sre-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/HEARTBEAT.md"
+              cp /bootstrap/agent-config/devops_sre-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/IDENTITY.md"
+              cp /bootstrap/agent-config/devops_sre-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-devops_sre/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/devops_sre-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SOUL.md"
+              cp /bootstrap/agent-config/devops_sre-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/devops_sre-USER.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/USER.md"
+              cp /bootstrap/agent-config/devops_sre-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/TOOLS.md"
+              cp /bootstrap/agent-config/devops_sre-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SKILL.md"
+              cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/CONSTITUTION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/README.md"
+              cp /bootstrap/agent-config/security_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/AGENTS.md"
+              cp /bootstrap/agent-config/security_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOT.md"
+              cp /bootstrap/agent-config/security_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/security_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/HEARTBEAT.md"
+              cp /bootstrap/agent-config/security_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/IDENTITY.md"
+              cp /bootstrap/agent-config/security_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-security_engineer/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/security_engineer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SOUL.md"
+              cp /bootstrap/agent-config/security_engineer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/security_engineer-USER.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/USER.md"
+              cp /bootstrap/agent-config/security_engineer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/TOOLS.md"
+              cp /bootstrap/agent-config/security_engineer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SKILL.md"
+              cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/CONSTITUTION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/README.md"
+              cp /bootstrap/agent-config/ux_designer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/AGENTS.md"
+              cp /bootstrap/agent-config/ux_designer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOT.md"
+              cp /bootstrap/agent-config/ux_designer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/ux_designer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/HEARTBEAT.md"
+              cp /bootstrap/agent-config/ux_designer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/IDENTITY.md"
+              cp /bootstrap/agent-config/ux_designer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-ux_designer/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/ux_designer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SOUL.md"
+              cp /bootstrap/agent-config/ux_designer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/ux_designer-USER.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/USER.md"
+              cp /bootstrap/agent-config/ux_designer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/TOOLS.md"
+              cp /bootstrap/agent-config/ux_designer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SKILL.md"
+              cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/CONSTITUTION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/README.md"
+              cp /bootstrap/agent-config/dba_data_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/AGENTS.md"
+              cp /bootstrap/agent-config/dba_data_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOT.md"
+              cp /bootstrap/agent-config/dba_data_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/dba_data_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/HEARTBEAT.md"
+              cp /bootstrap/agent-config/dba_data_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/IDENTITY.md"
+              cp /bootstrap/agent-config/dba_data_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/dba_data_engineer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SOUL.md"
+              cp /bootstrap/agent-config/dba_data_engineer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/dba_data_engineer-USER.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/USER.md"
+              cp /bootstrap/agent-config/dba_data_engineer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/TOOLS.md"
+              cp /bootstrap/agent-config/dba_data_engineer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SKILL.md"
+              cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/CONSTITUTION.md"
+              cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/README.md"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dev_backend"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dev_frontend"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dev_mobile"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-qa_engineer"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-devops_sre"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-security_engineer"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ux_designer"
+              render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer"
               mkdir -p "${OPENCLAW_STATE_DIR}/git-hooks"
               cat > "${OPENCLAW_STATE_DIR}/git-hooks/pre-commit" <<'EOF'
               #!/usr/bin/env bash
@@ -704,7 +808,7 @@ spec:
                   },
                   "agentToAgent": {
                     "enabled": true,
-                    "allow": ["ceo", "po", "arquiteto", "dev_backend"]
+                    "allow": ["ceo", "po", "arquiteto", "dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "ux_designer", "dba_data_engineer"]
                   }
                 },
                 "session": {
@@ -767,7 +871,7 @@ spec:
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["po", "arquiteto", "dev_backend"]
+                        "allowAgents": ["po", "arquiteto", "dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "ux_designer", "dba_data_engineer"]
                       }
                     },
                     {
@@ -799,7 +903,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["arquiteto", "dev_backend"]
+                        "allowAgents": ["arquiteto", "ux_designer", "dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "dba_data_engineer"]
                       }
                     },
                     {
@@ -830,7 +934,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["dev_backend"]
+                        "allowAgents": ["dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "dba_data_engineer"]
                       }
                     },
                     {
@@ -861,7 +965,217 @@ spec:
                         }
                       },
                       "subagents": {
+                        "allowAgents": ["qa_engineer", "security_engineer"]
+                      }
+                    },
+                    {
+                      "id": "dev_frontend",
+                      "name": "Dev_Frontend",
+                      "model": "ollama/qwen3-coder:480b-cloud",
+                      "workspace": "/data/openclaw/workspace-dev_frontend",
+                      "agentDir": "/data/openclaw/agents/dev_frontend/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status",
+                          "group:plugins"
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
+                      },
+                      "subagents": {
+                        "allowAgents": ["qa_engineer", "security_engineer"]
+                      }
+                    },
+                    {
+                      "id": "dev_mobile",
+                      "name": "Dev_Mobile",
+                      "model": "ollama/qwen3-coder:480b-cloud",
+                      "workspace": "/data/openclaw/workspace-dev_mobile",
+                      "agentDir": "/data/openclaw/agents/dev_mobile/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status",
+                          "group:plugins"
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
+                      },
+                      "subagents": {
+                        "allowAgents": ["qa_engineer", "security_engineer"]
+                      }
+                    },
+                    {
+                      "id": "qa_engineer",
+                      "name": "QA_Engineer",
+                      "model": "ollama/nemotron-3-super:cloud",
+                      "workspace": "/data/openclaw/workspace-qa_engineer",
+                      "agentDir": "/data/openclaw/agents/qa_engineer/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status",
+                          "group:plugins"
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
+                      },
+                      "subagents": {
                         "allowAgents": []
+                      }
+                    },
+                    {
+                      "id": "devops_sre",
+                      "name": "DevOps_SRE",
+                      "model": "ollama/nemotron-3-super:cloud",
+                      "workspace": "/data/openclaw/workspace-devops_sre",
+                      "agentDir": "/data/openclaw/agents/devops_sre/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status",
+                          "group:plugins"
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
+                      },
+                      "subagents": {
+                        "allowAgents": []
+                      }
+                    },
+                    {
+                      "id": "security_engineer",
+                      "name": "Security_Engineer",
+                      "model": "ollama/qwen3.5:397b-cloud",
+                      "workspace": "/data/openclaw/workspace-security_engineer",
+                      "agentDir": "/data/openclaw/agents/security_engineer/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status",
+                          "group:plugins"
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
+                      },
+                      "subagents": {
+                        "allowAgents": ["dev_backend", "dev_frontend", "dev_mobile"]
+                      }
+                    },
+                    {
+                      "id": "ux_designer",
+                      "name": "UX_Designer",
+                      "model": "ollama/nemotron-3-super:cloud",
+                      "workspace": "/data/openclaw/workspace-ux_designer",
+                      "agentDir": "/data/openclaw/agents/ux_designer/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status",
+                          "group:plugins"
+                        ]
+                      },
+                      "subagents": {
+                        "allowAgents": ["po", "arquiteto"]
+                      }
+                    },
+                    {
+                      "id": "dba_data_engineer",
+                      "name": "DBA_DataEngineer",
+                      "model": "ollama/qwen3.5:397b-cloud",
+                      "workspace": "/data/openclaw/workspace-dba_data_engineer",
+                      "agentDir": "/data/openclaw/agents/dba_data_engineer/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "sessions_spawn",
+                          "session_status",
+                          "group:plugins"
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
+                      },
+                      "subagents": {
+                        "allowAgents": ["dev_backend", "devops_sre"]
                       }
                     }
                   ]
