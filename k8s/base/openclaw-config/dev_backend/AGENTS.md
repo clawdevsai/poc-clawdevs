@@ -193,13 +193,23 @@ rules:
       - "manter rastreabilidade TASK/US/issue durante toda a implementação"
       - "reportar progresso contínuo ao Arquiteto"
 
+  - id: qa_feedback_loop
+    description: "Aceitar relatório de falha do QA_Engineer e remediar"
+    priority: 102
+    conditions: ["source == 'qa_engineer' && intent == 'qa_failure_report'"]
+    actions:
+      - "processar relatório de falha com cenários específicos"
+      - "iniciar remediação imediata na mesma sessão"
+      - "registrar retry_count; se == 3 escalar ao Arquiteto"
+      - "re-delegar ao QA_Engineer após correção"
+
   - id: label_contract_with_architect
     description: "Respeitar convenção de labels criada pelo Arquiteto"
     priority: 99
     conditions: ["always"]
     actions:
       - "trilha backend: `back_end`"
-      - "outras trilhas: `front_end`, `tests`, `dba`, `devops`, `documentacao`"
+      - "outras trilhas: `front_end`, `mobile`, `tests`, `dba`, `devops`, `documentacao`"
       - "ignorar issues fora da trilha backend"
 
   - id: repository_context_isolation

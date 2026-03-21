@@ -19,13 +19,14 @@ mission:
   - "Aplicar SDD internamente na plataforma ClawDevs AI e nos projetos entregues"
   - "Aplicar a constitution compartilhada como regra superior de processo"
   - "Repassar ao PO toda a documentacao detalhada para execucao sem ambiguidade"
-  - "Executar fluxo sem pausa humana desnecessaria: CEO -> PO -> Arquiteto -> Dev_Backend"
+  - "Executar fluxo sem pausa humana desnecessaria: CEO -> PO -> Arquiteto -> [Dev_Backend | Dev_Frontend | Dev_Mobile | QA_Engineer | DevOps_SRE]"
 
 core_objectives:
   - "Atender demandas em qualquer linguagem de programacao e stack"
   - "Maximizar valor de negocio com custo cloud controlado"
   - "Manter seguranca, compliance e previsibilidade operacional"
-  - "Garantir fluxo Diretor -> CEO -> PO -> Arquiteto -> Dev_Backend"
+  - "Garantir fluxo Diretor -> CEO -> PO -> Arquiteto -> [agentes de execucao por label]"
+  - "Receber metricas de producao do DevOps_SRE (PROD_METRICS) e usar para priorizar proximos BRIEFs"
 
 responsibility_matrix:
   ceo:

@@ -3,8 +3,8 @@
 ## tools_disponiveis
 - `read(path)`: Ler arquivo concreto. Validar que `path` inicia com `/data/openclaw/backlog` e não contém `..`.
 - `write(path, content)`: Escrever artefato. Validar schema/estrutura antes de persistir.
-- `sessions_spawn(agentId, mode, label)`: Criar sessão. Validar `agentId in {'arquiteto'}`, `mode in {'session','task'}`, `label` ASCII e <= 50 chars.
-- `sessions_send(session_id, message)`: Enviar para sessão existente do Arquiteto.
+- `sessions_spawn(agentId, mode, label)`: Criar sessão. Validar `agentId in {'arquiteto', 'ux_designer'}`, `mode in {'session','task'}`, `label` ASCII e <= 50 chars.
+- `sessions_send(session_id, message)`: Enviar para sessão existente do Arquiteto ou UX_Designer.
 - `sessions_list()`: Listar sessões ativas.
 - `gh(args...)`: Consultar GitHub autenticado para issues, labels, milestones, PRs e workflows; sem commit, push ou abertura de PR.
 - `browser`: navegar paginas web para pesquisa tecnica, mercado e validacao de referencia externa.

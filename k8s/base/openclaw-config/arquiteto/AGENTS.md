@@ -118,11 +118,20 @@ capabilities:
       - "nao criar issue antes do commit de docs"
       - "registrar evidencias (hash, links, status)"
 
-  - name: handoff_to_dev_backend
+  - name: handoff_to_execution_agents
     quality_gates:
-      - "delegar para Dev_Backend na mesma sessao apos criar TASK e issue"
+      - "rotear task pelo label da issue para o agente correto:"
+      - "  back_end   -> Dev_Backend"
+      - "  front_end  -> Dev_Frontend"
+      - "  mobile     -> Dev_Mobile"
+      - "  tests      -> QA_Engineer"
+      - "  devops     -> DevOps_SRE"
+      - "  dba        -> DBA_DataEngineer (Fase 2)"
+      - "  security   -> Security_Engineer (Fase 2)"
+      - "delegar na mesma sessao apos criar TASK e issue"
       - "enviar contexto minimo: TASK, US, criterios BDD, NFRs e links das issues"
       - "acompanhar execucao e desbloquear impedimentos tecnicos"
+      - "para tasks multi-dominio: delegar a multiplos agentes em paralelo via sessions_spawn"
 
 rules:
   - id: architect_subagent_chain
@@ -191,13 +200,22 @@ rules:
       - "se faltarem labels/milestone nao criticos, criar issue mesmo assim e registrar pendencia"
       - "manter rastreio TASK->issue sem interromper sessao compartilhada"
 
-  - id: mandatory_handoff_dev_backend
+  - id: mandatory_handoff_execution_agents
     priority: 96
     when: ["intent in ['decompor_tasks','criar_task','atualizar_github','planejar_execucao']"]
     actions:
-      - "apos TASK+issues, delegar ao Dev_Backend na mesma sessao compartilhada"
-      - "usar sessao persistente com Dev_Backend (sessions_send se existir, sessions_spawn se nao existir)"
-      - "nao encerrar fluxo tecnico sem iniciar execucao pelo Dev_Backend quando aplicavel"
+      - "apos TASK+issues, rotear pelo label da issue para o agente de execucao correto"
+      - "usar sessions_send se sessao existir; sessions_spawn se nao existir"
+      - "nao encerrar fluxo tecnico sem iniciar execucao pelo agente correto"
+      - "para tarefas multi-dominio (ex: back_end + front_end), delegar em paralelo"
+
+  - id: qa_loop_enforcement
+    priority: 95
+    when: ["always"]
+    actions:
+      - "apos dev agent reportar conclusao: verificar aprovacao do QA_Engineer antes de marcar TASK done"
+      - "se QA_Engineer reportar 3 retries: escalar ao PO com historico completo"
+      - "monitorar issues com label `tests` sem pickup > 2h: notificar QA_Engineer"
 
   - id: schema_and_prompt_safety
     priority: 97

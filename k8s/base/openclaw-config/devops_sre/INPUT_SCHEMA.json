@@ -1,19 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Dev Backend Input Contract",
+  "title": "DevOps SRE Input Contract",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "intent": {
       "type": "string",
       "enum": [
-        "implement_task",
-        "run_tests",
-        "code_review_self",
-        "ci_cd_integration",
+        "manage_pipeline",
+        "provision_infrastructure",
+        "rotate_secrets",
+        "monitor_production",
+        "generate_prod_metrics",
+        "incident_response",
+        "ci_cd_failure_triage",
         "github_integration",
         "report_status",
-        "research_cost_performance",
         "poll_github_queue"
       ]
     },
@@ -22,7 +24,7 @@
       "enum": [
         "arquiteto",
         "po",
-        "qa_engineer"
+        "ceo"
       ]
     },
     "payload": {
@@ -33,30 +35,28 @@
           "type": "string",
           "pattern": "^TASK-\\d+(?:-[a-z0-9-]+)?$"
         },
-        "us_id": {
-          "type": "string",
-          "pattern": "^US-\\d{3}-[a-z0-9-]+$"
-        },
-        "technology_stack": {
-          "type": "string",
-          "minLength": 2
-        },
         "issue_label": {
           "type": "string",
-          "enum": [
-            "back_end"
-          ]
+          "enum": ["devops"]
         },
-        "retry_count": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 3
+        "severity": {
+          "type": "string",
+          "enum": ["P0", "P1", "P2"]
+        },
+        "infra_type": {
+          "type": "string",
+          "enum": ["kubernetes", "terraform", "helm", "github_actions", "docker", "cloud"]
+        },
+        "cloud_provider": {
+          "type": "string",
+          "enum": ["aws", "gcp", "azure", "other"]
+        },
+        "incident_description": {
+          "type": "string",
+          "minLength": 10
         }
       }
     }
   },
-  "required": [
-    "intent",
-    "source"
-  ]
+  "required": ["intent", "source"]
 }

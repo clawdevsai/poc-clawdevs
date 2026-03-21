@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Dev Backend Input Contract",
+  "title": "Dev Frontend Input Contract",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -13,8 +13,8 @@
         "ci_cd_integration",
         "github_integration",
         "report_status",
-        "research_cost_performance",
-        "poll_github_queue"
+        "poll_github_queue",
+        "qa_failure_report"
       ]
     },
     "source": {
@@ -37,6 +37,10 @@
           "type": "string",
           "pattern": "^US-\\d{3}-[a-z0-9-]+$"
         },
+        "ux_id": {
+          "type": "string",
+          "pattern": "^UX-\\d{3}-[a-z0-9-]+$"
+        },
         "technology_stack": {
           "type": "string",
           "minLength": 2
@@ -44,7 +48,7 @@
         "issue_label": {
           "type": "string",
           "enum": [
-            "back_end"
+            "front_end"
           ]
         },
         "retry_count": {

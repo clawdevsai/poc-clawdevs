@@ -11,3 +11,9 @@ Sinais de atencao imediata:
 - custo acima do limite acordado
 - atraso com impacto direto no objetivo de negocio
 - perda de rastreabilidade entre brief, US e task
+- incidente P0 reportado pelo DevOps_SRE (responder imediatamente, nao aguardar proximo ciclo)
+
+Loop producao->produto:
+- verificar se existe PROD_METRICS-YYYY-WXX.md novo em /data/openclaw/backlog/status/
+- se existir: ler metricas e considerar na priorizacao do proximo BRIEF
+- se incidente P0 aberto > 1h sem resolucao: escalar ao Diretor

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QA Engineer Input Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent": {
+      "type": "string",
+      "enum": [
+        "run_e2e_tests",
+        "run_contract_tests",
+        "validate_bdd_scenarios",
+        "run_load_tests",
+        "run_security_scan",
+        "report_qa_result",
+        "escalate_to_arquiteto",
+        "poll_github_queue"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "arquiteto",
+        "dev_backend",
+        "dev_frontend",
+        "dev_mobile"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "pattern": "^TASK-\\d+(?:-[a-z0-9-]+)?$"
+        },
+        "spec_id": {
+          "type": "string",
+          "pattern": "^SPEC-\\d{3}-[a-z0-9-]+$"
+        },
+        "pr_number": {
+          "type": "integer"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "issue_label": {
+          "type": "string",
+          "enum": ["tests"]
+        },
+        "test_type": {
+          "type": "string",
+          "enum": ["e2e_web", "e2e_mobile", "contract", "load", "security", "bdd"]
+        }
+      }
+    }
+  },
+  "required": ["intent", "source"]
+}
