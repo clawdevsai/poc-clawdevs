@@ -295,7 +295,7 @@ spec:
               }
               echo "[bootstrap] GH_CONFIG_DIR=${GH_CONFIG_DIR}"
               apt-get update
-              apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh chromium
+              apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh python3
               apt-get upgrade -y
               apt-get autoremove -y
               apt-get clean
@@ -305,22 +305,53 @@ spec:
                 exit 1
               fi
               gh --version | head -n 1
-              browser_bin="$(command -v chromium || command -v chromium-browser || command -v google-chrome || command -v google-chrome-stable || command -v brave-browser || command -v msedge || command -v microsoft-edge || true)"
-              if [ -z "${browser_bin}" ]; then
-                echo "Browser suportado nao encontrado apos a instalacao do Chromium" >&2
+              # --- web-search: pesquisa via SearxNG (self-hosted, cluster-internal) ---
+              cat > /usr/local/bin/web-search <<'SCRIPT'
+              #!/usr/bin/env bash
+              set -euo pipefail
+              query="${*}"
+              if [ -z "${query}" ]; then
+                echo "Usage: web-search <query>" >&2
                 exit 1
               fi
-              cat > /usr/local/bin/openclaw-chrome <<EOF
+              encoded="$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "${query}")"
+              result="$(curl -sf "http://searxng:8080/search?q=${encoded}&format=json&categories=general&language=pt-BR" 2>/dev/null || true)"
+              if [ -z "${result}" ]; then
+                echo "[web-search] SearxNG indisponivel. Tente novamente." >&2
+                exit 1
+              fi
+              echo "${result}" | python3 -c "
+              import json,sys
+              data = json.load(sys.stdin)
+              results = data.get('results', [])[:10]
+              for i, r in enumerate(results, 1):
+                  print(f'{i}. {r.get(\"title\",\"(sem titulo)\")}')
+                  print(f'   URL: {r.get(\"url\",\"\")}')
+                  print(f'   {r.get(\"content\",\"\")[:200]}')
+                  print()
+              if not results:
+                  print('Nenhum resultado encontrado.')
+              "
+              SCRIPT
+              chmod +x /usr/local/bin/web-search
+              # --- web-read: leitura de paginas via Jina Reader (API publica gratuita) ---
+              cat > /usr/local/bin/web-read <<'SCRIPT'
               #!/usr/bin/env bash
-              exec "${browser_bin}" --no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage "\$@"
-              EOF
-              chmod +x /usr/local/bin/openclaw-chrome
-              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/chromium-browser
-              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/google-chrome
-              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/google-chrome-stable
-              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/chrome
-              export CHROME_BIN=/usr/local/bin/openclaw-chrome
-              echo "Browser disponivel: ${browser_bin} (wrapper: ${CHROME_BIN})"
+              set -euo pipefail
+              url="${1:-}"
+              if [ -z "${url}" ]; then
+                echo "Usage: web-read <url>" >&2
+                exit 1
+              fi
+              result="$(curl -sf -H "Accept: text/markdown" "https://r.jina.ai/${url}" 2>/dev/null || true)"
+              if [ -z "${result}" ]; then
+                echo "[web-read] Nao foi possivel ler a URL: ${url}" >&2
+                exit 1
+              fi
+              echo "${result}"
+              SCRIPT
+              chmod +x /usr/local/bin/web-read
+              echo "[bootstrap] web-search e web-read instalados em /usr/local/bin/"
               # Autenticar GitHub CLI de forma nao interativa para os agentes
               if [ -n "${GH_TOKEN:-}" ]; then
                 printf '%s' "${GH_TOKEN}" | gh auth login --hostname github.com --with-token >/tmp/gh-auth.log 2>&1 || true
