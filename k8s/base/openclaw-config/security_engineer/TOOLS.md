@@ -22,6 +22,13 @@
 - Nunca commitar secrets, credenciais ou tokens em nenhuma circunstância.
 - `exec` com comandos de scanner: sempre redirecionar output para `/data/openclaw/backlog/security/scans/`.
 
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `security` — criar automaticamente no boot se não existir:
+  `gh label create "security" --color "#ee0701" --description "Security tasks — routed to Security_Engineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 ## comandos_principais
 
 ### Auditoria de Dependências

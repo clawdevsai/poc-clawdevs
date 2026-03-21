@@ -118,6 +118,30 @@ configMapGenerator:
       - security_engineer-USER.md=openclaw-config/security_engineer/USER.md
       - security_engineer-TOOLS.md=openclaw-config/security_engineer/TOOLS.md
       - security_engineer-skill-SKILL.md=openclaw-config/security_engineer/SKILL.md
+      # ux_designer
+      - ux_designer-IDENTITY.md=openclaw-config/ux_designer/IDENTITY.md
+      - ux_designer-AGENTS.md=openclaw-config/ux_designer/AGENTS.md
+      - ux_designer-BOOT.md=openclaw-config/ux_designer/BOOT.md
+      - ux_designer-BOOTSTRAP.md=openclaw-config/ux_designer/BOOTSTRAP.md
+      - ux_designer-HEARTBEAT.md=openclaw-config/ux_designer/HEARTBEAT.md
+      - ux_designer-INPUT_SCHEMA.json=openclaw-config/ux_designer/INPUT_SCHEMA.json
+      - ux_designer-SOUL.md=openclaw-config/ux_designer/SOUL.md
+      - ux_designer-SECURITY_TEST_CASES.md=openclaw-config/ux_designer/SECURITY_TEST_CASES.md
+      - ux_designer-USER.md=openclaw-config/ux_designer/USER.md
+      - ux_designer-TOOLS.md=openclaw-config/ux_designer/TOOLS.md
+      - ux_designer-SKILL.md=openclaw-config/ux_designer/SKILL.md
+      # dba_data_engineer
+      - dba_data_engineer-IDENTITY.md=openclaw-config/dba_data_engineer/IDENTITY.md
+      - dba_data_engineer-AGENTS.md=openclaw-config/dba_data_engineer/AGENTS.md
+      - dba_data_engineer-BOOT.md=openclaw-config/dba_data_engineer/BOOT.md
+      - dba_data_engineer-BOOTSTRAP.md=openclaw-config/dba_data_engineer/BOOTSTRAP.md
+      - dba_data_engineer-HEARTBEAT.md=openclaw-config/dba_data_engineer/HEARTBEAT.md
+      - dba_data_engineer-INPUT_SCHEMA.json=openclaw-config/dba_data_engineer/INPUT_SCHEMA.json
+      - dba_data_engineer-SOUL.md=openclaw-config/dba_data_engineer/SOUL.md
+      - dba_data_engineer-SECURITY_TEST_CASES.md=openclaw-config/dba_data_engineer/SECURITY_TEST_CASES.md
+      - dba_data_engineer-USER.md=openclaw-config/dba_data_engineer/USER.md
+      - dba_data_engineer-TOOLS.md=openclaw-config/dba_data_engineer/TOOLS.md
+      - dba_data_engineer-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
       # shared
       - shared-BRIEF_TEMPLATE.md=openclaw-config/shared/BRIEF_TEMPLATE.md
       - shared-CLARIFY_TEMPLATE.md=openclaw-config/shared/CLARIFY_TEMPLATE.md

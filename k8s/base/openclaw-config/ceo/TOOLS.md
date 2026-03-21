@@ -26,6 +26,11 @@ Restrições:
 - em GitHub/GitLab, usar gh e navegacao web para pesquisa e consulta; nunca para alteracao
 - nao permitir acao com repo divergente de `ACTIVE_GITHUB_REPOSITORY`
 
+## github_permissions
+- **Tipo:** `read-only`
+- **Operações permitidas:** `gh issue list`, `gh pr list`, `gh workflow list`, `gh run view`, `gh label list` — consulta apenas
+- **Proibido:** `gh issue create/edit/close`, `gh pr create/merge`, `gh label create/edit/delete`, `gh workflow run`, qualquer operação de escrita
+
 Qualidade de uso:
 - toda acao deve ser rastreavel
 - toda delegacao deve ter objetivo e criterio de sucesso

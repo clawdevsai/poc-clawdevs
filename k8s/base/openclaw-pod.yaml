@@ -128,6 +128,22 @@ spec:
               value: "0 */6 * * *"
             - name: SECURITY_ENGINEER_CRON_TZ
               value: "America/Sao_Paulo"
+            - name: UX_DESIGNER_CRON_ENABLED
+              value: "true"
+            - name: UX_DESIGNER_CRON_NAME
+              value: "ux_designer_queue_poll"
+            - name: UX_DESIGNER_CRON_EXPR
+              value: "0 */4 * * *"
+            - name: UX_DESIGNER_CRON_TZ
+              value: "America/Sao_Paulo"
+            - name: DBA_DATA_ENGINEER_CRON_ENABLED
+              value: "true"
+            - name: DBA_DATA_ENGINEER_CRON_NAME
+              value: "dba_data_engineer_queue_poll"
+            - name: DBA_DATA_ENGINEER_CRON_EXPR
+              value: "30 */4 * * *"
+            - name: DBA_DATA_ENGINEER_CRON_TZ
+              value: "America/Sao_Paulo"
             - name: OPENCLAW_LOG_LEVEL
               valueFrom:
                 secretKeyRef:
@@ -1212,6 +1228,70 @@ spec:
                     fi
                   done
                   echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do devops_sre; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/devops_sre.log"
+                  exit 0
+                ) &
+              fi
+              if [ "${UX_DESIGNER_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${UX_DESIGNER_CRON_NAME:-ux_designer_queue_poll}"
+                  CRON_EXPR="${UX_DESIGNER_CRON_EXPR:-0 */4 * * *}"
+                  CRON_TZ="${UX_DESIGNER_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Poll GitHub issues com label "ux"; produzir wireframes, fluxos de usuario e design tokens; gerar artefatos UX-XXX.md em /data/openclaw/backlog/ux/; se nao houver acao, manter standby.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/ux_designer.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent ux_designer \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/ux_designer.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do ux_designer; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/ux_designer.log"
+                  exit 0
+                ) &
+              fi
+              if [ "${DBA_DATA_ENGINEER_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${DBA_DATA_ENGINEER_CRON_NAME:-dba_data_engineer_queue_poll}"
+                  CRON_EXPR="${DBA_DATA_ENGINEER_CRON_EXPR:-30 */4 * * *}"
+                  CRON_TZ="${DBA_DATA_ENGINEER_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Poll GitHub issues com label "dba"; otimizar schemas, migrations, queries e politicas de retencao LGPD; gerar artefatos em /data/openclaw/backlog/tasks/; se nao houver acao, manter standby.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dba_data_engineer.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent dba_data_engineer \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dba_data_engineer.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do dba_data_engineer; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/dba_data_engineer.log"
                   exit 0
                 ) &
               fi

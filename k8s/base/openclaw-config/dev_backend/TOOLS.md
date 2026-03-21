@@ -26,6 +26,14 @@
 - Sempre reportar impacto de custo/performance da solução implementada.
 - Se task trouxer `## Comandos`, usar esses comandos em vez de defaults.
 - Internet: acesso total liberado para pesquisa técnica, descoberta de alternativas, CVEs, benchmarks e atualização de habilidades — sem restrição de fonte.
+
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `back_end` — criar automaticamente no boot se não existir:
+  `gh label create "back_end" --color "#1d76db" --description "Backend tasks — routed to Dev_Backend" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
 - Usar `browser` e `internet_search` livremente para:

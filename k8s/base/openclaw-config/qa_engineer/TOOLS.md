@@ -23,6 +23,13 @@
 - Processar somente label `tests`.
 - Armazenar retry_count em `/data/openclaw/backlog/qa/retries/{issue_id}.json`.
 
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `tests` — criar automaticamente no boot se não existir:
+  `gh label create "tests" --color "#fbca04" --description "QA/test tasks — routed to QA_Engineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 ## comandos_de_teste
 - Playwright: `npx playwright test`, `npx playwright show-report`
 - Cypress: `npx cypress run`, `npx cypress open`
