@@ -6,42 +6,22 @@ metadata:
   name: searxng-config
 data:
   settings.yml: |
+    use_default_settings: true
     general:
       debug: false
-      instance_name: "clawdevs-searxng"
+      instance_name: "ClawDevs Search"
+    server:
+      secret_key: "clawdevs-searxng-internal-secret-key"
+      limiter: false
+      public_instance: false
+      bind_address: "0.0.0.0"
+      port: 8080
     search:
       safe_search: 0
-      autocomplete: ""
       default_lang: "pt-BR"
       formats:
         - html
         - json
-    server:
-      port: 8080
-      bind_address: "0.0.0.0"
-      secret_key: "clawdevs-searxng-secret-key-change-in-prod"
-      limiter: false
-      public_instance: false
-    engines:
-      - name: google
-        engine: google
-        shortcut: g
-        disabled: false
-      - name: bing
-        engine: bing
-        shortcut: b
-        disabled: false
-      - name: duckduckgo
-        engine: duckduckgo
-        shortcut: d
-        disabled: false
-      - name: github
-        engine: github
-        shortcut: gh
-        disabled: false
-    outgoing:
-      request_timeout: 10.0
-      useragent_suffix: "ClawDevs AI Research Agent"
     ui:
       default_theme: simple
 ---
