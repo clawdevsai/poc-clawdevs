@@ -120,10 +120,9 @@ minikube-dashboard:
 
 ollama-apply: preflight ollama-volume-apply
 	kubectl --context=$(KUBE_CONTEXT) delete pod ollama --ignore-not-found
-	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pod.yaml
 
 ollama-volume-apply:
-	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pvc.yaml
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pvc.yaml --server-side --force-conflicts
 
 ollama-logs:
 	kubectl --context=$(KUBE_CONTEXT) logs -f pod/ollama
