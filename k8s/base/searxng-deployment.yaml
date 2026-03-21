@@ -5,25 +5,34 @@ kind: ConfigMap
 metadata:
   name: searxng-config
 data:
-  settings.yml: |
-    use_default_settings: true
-    general:
-      debug: false
-      instance_name: "ClawDevs Search"
-    server:
-      secret_key: "clawdevs-searxng-internal-secret-key"
-      limiter: false
-      public_instance: false
-      bind_address: "0.0.0.0"
-      port: 8080
-    search:
-      safe_search: 0
-      default_lang: "pt-BR"
-      formats:
-        - html
-        - json
-    ui:
-      default_theme: simple
+  limiter.toml: |
+    [botdetection]
+    ipv4_prefix = 32
+    ipv6_prefix = 48
+    trusted_proxies = []
+
+    [botdetection.ip_limit]
+    filter_link_local = false
+    link_token = false
+
+    [botdetection.ip_lists]
+    block_ip = []
+    pass_ip = []
+    pass_searxng_org = true
+  nginx-default.conf: |
+    server {
+      listen 18080;
+      server_name _;
+
+      location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -41,6 +50,49 @@ spec:
       labels:
         app: searxng
     spec:
+      initContainers:
+        - name: searxng-init-config
+          image: searxng/searxng:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              mkdir -p /etc/searxng
+              cp /usr/local/searxng/searx/settings.yml /etc/searxng/settings.yml
+              awk '
+                BEGIN { skip = 0 }
+                {
+                  if ($0 ~ /^  - name: (google|ahmia|torch)$/) { skip = 1; next }
+                  if (skip == 1) {
+                    if ($0 ~ /^  - name: /) { skip = 0 } else { next }
+                  }
+                  print $0
+                }
+              ' /etc/searxng/settings.yml > /etc/searxng/settings.yml.tmp
+              mv /etc/searxng/settings.yml.tmp /etc/searxng/settings.yml
+              sed -i 's/instance_name: "SearXNG"/instance_name: "ClawDevs Search"/g' /etc/searxng/settings.yml
+              sed -i 's/default_lang: "auto"/default_lang: "pt-BR"/g' /etc/searxng/settings.yml
+              awk '
+                { print }
+                /^  formats:$/ {
+                  if (getline > 0) {
+                    if ($0 ~ /^    - html$/) {
+                      print $0
+                      print "    - json"
+                      next
+                    }
+                    print $0
+                  }
+                }
+              ' /etc/searxng/settings.yml > /etc/searxng/settings.yml.tmp
+              mv /etc/searxng/settings.yml.tmp /etc/searxng/settings.yml
+              cp /config/limiter.toml /etc/searxng/limiter.toml
+          volumeMounts:
+            - name: searxng-config-src
+              mountPath: /config
+              readOnly: true
+            - name: searxng-config
+              mountPath: /etc/searxng
       containers:
         - name: searxng
           image: searxng/searxng:latest
@@ -49,6 +101,8 @@ spec:
           env:
             - name: SEARXNG_SETTINGS_PATH
               value: /etc/searxng/settings.yml
+            - name: SEARXNG_SECRET
+              value: clawdevs-searxng-internal-secret-key
           volumeMounts:
             - name: searxng-config
               mountPath: /etc/searxng
@@ -59,20 +113,31 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+        - name: searxng-proxy
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 18080
+          volumeMounts:
+            - name: searxng-config-src
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: nginx-default.conf
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8080
-            initialDelaySeconds: 30
+              port: 18080
+            initialDelaySeconds: 10
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /healthz
-              port: 8080
-            initialDelaySeconds: 10
+              port: 18080
+            initialDelaySeconds: 5
             periodSeconds: 10
       volumes:
         - name: searxng-config
+          emptyDir: {}
+        - name: searxng-config-src
           configMap:
             name: searxng-config
 ---
@@ -85,5 +150,5 @@ spec:
     app: searxng
   ports:
     - port: 8080
-      targetPort: 8080
+      targetPort: 18080
   type: ClusterIP
