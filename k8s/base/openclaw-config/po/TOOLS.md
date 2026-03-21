@@ -7,8 +7,8 @@
 - `sessions_send(session_id, message)`: Enviar para sessão existente do Arquiteto ou UX_Designer.
 - `sessions_list()`: Listar sessões ativas.
 - `gh(args...)`: Consultar GitHub autenticado para issues, labels, milestones, PRs e workflows; sem commit, push ou abertura de PR.
-- `browser`: navegar paginas web para pesquisa tecnica, mercado e validacao de referencia externa.
-- `internet_search(query)`: Pesquisa de mercado/regulação em domínios confiáveis.
+- `browser`: acesso total à internet — pesquisa de mercado, referências de produto, UX patterns, regulação, concorrência, benchmarks.
+- `internet_search(query)`: pesquisa irrestrita — mercado, regulação, padrões UX, tecnologias de produto e custo.
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/backlog/**`; bloquear qualquer path fora da allowlist.

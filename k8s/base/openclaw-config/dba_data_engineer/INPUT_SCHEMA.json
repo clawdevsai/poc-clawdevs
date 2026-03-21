@@ -1,30 +1,31 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Dev Backend Input Contract",
+  "title": "DBA DataEngineer Input Contract",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "intent": {
       "type": "string",
       "enum": [
-        "implement_task",
-        "run_tests",
-        "code_review_self",
-        "ci_cd_integration",
-        "github_integration",
-        "report_status",
-        "research_cost_performance",
-        "poll_github_queue"
+        "design_schema",
+        "create_migration",
+        "optimize_query",
+        "lgpd_audit",
+        "backup_strategy",
+        "data_pipeline",
+        "heartbeat",
+        "poll_github_queue",
+        "research_cost_performance"
       ]
     },
     "source": {
       "type": "string",
       "enum": [
         "arquiteto",
+        "dev_backend",
         "po",
-        "qa_engineer",
-        "security_engineer",
-        "dba_data_engineer"
+        "ceo",
+        "cron"
       ]
     },
     "payload": {
@@ -39,26 +40,23 @@
           "type": "string",
           "pattern": "^US-\\d{3}-[a-z0-9-]+$"
         },
-        "technology_stack": {
+        "db_engine": {
           "type": "string",
           "minLength": 2
         },
         "issue_label": {
           "type": "string",
-          "enum": [
-            "back_end"
-          ]
+          "enum": ["dba"]
         },
-        "retry_count": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 3
+        "target_table": {
+          "type": "string"
+        },
+        "migration_type": {
+          "type": "string",
+          "enum": ["up", "down", "squash"]
         }
       }
     }
   },
-  "required": [
-    "intent",
-    "source"
-  ]
+  "required": ["intent", "source"]
 }

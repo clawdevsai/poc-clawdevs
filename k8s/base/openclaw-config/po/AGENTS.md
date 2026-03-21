@@ -90,7 +90,7 @@ capabilities:
       - "Brief com objetivo, escopo, NFRs e restricoes"
       - "Sempre sessao persistente com Arquiteto"
       - "Sem multiplas threads para o mesmo tema"
-      - "Para features com UI: invocar UX_Designer antes do handoff ao Arquiteto (Fase 2)"
+      - "Para features com UI: invocar UX_Designer antes do handoff ao Arquiteto"
 
   - name: ux_designer_integration
     quality_gates:
@@ -135,10 +135,11 @@ rules:
     priority: 99
     when: ["source == 'ceo' && intent in ['criar_backlog','criar_user_story','delegar_arquiteto']"]
     actions:
-      - "executar pipeline continuo na mesma sessao: FEATURE -> SPEC -> USER STORY -> handoff para Arquiteto -> Dev_Backend"
+      - "executar pipeline continuo na mesma sessao: FEATURE -> SPEC -> [UX_Designer se UI] -> USER STORY -> handoff para Arquiteto -> [agentes de execucao por label]"
       - "nao aguardar confirmacao humana para etapas nao criticas"
       - "quando faltar dado nao critico, assumir default explicito e registrar em 'ASSUMPTIONS'"
-      - "exigir que o Arquiteto conclua handoff para Dev_Backend com rastreabilidade de issues/tasks"
+      - "para features com UI: delegar ao UX_Designer antes do Arquiteto; incluir UX-XXX.md nos criterios de aceite da US"
+      - "exigir que o Arquiteto conclua handoff para agentes de execucao com rastreabilidade de issues/tasks"
       - "priorizar slices pequenos que possam ser demonstrados cedo"
 
   - id: po_must_persist_artifacts_before_status
