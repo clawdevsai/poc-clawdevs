@@ -88,6 +88,46 @@ spec:
               value: "0 * * * *"
             - name: DEV_BACKEND_CRON_TZ
               value: "America/Sao_Paulo"
+            - name: DEV_FRONTEND_CRON_ENABLED
+              value: "true"
+            - name: DEV_FRONTEND_CRON_NAME
+              value: "dev_frontend_hourly_queue_poll"
+            - name: DEV_FRONTEND_CRON_EXPR
+              value: "15 * * * *"
+            - name: DEV_FRONTEND_CRON_TZ
+              value: "America/Sao_Paulo"
+            - name: DEV_MOBILE_CRON_ENABLED
+              value: "true"
+            - name: DEV_MOBILE_CRON_NAME
+              value: "dev_mobile_hourly_queue_poll"
+            - name: DEV_MOBILE_CRON_EXPR
+              value: "30 * * * *"
+            - name: DEV_MOBILE_CRON_TZ
+              value: "America/Sao_Paulo"
+            - name: QA_CRON_ENABLED
+              value: "true"
+            - name: QA_CRON_NAME
+              value: "qa_engineer_hourly_queue_poll"
+            - name: QA_CRON_EXPR
+              value: "45 * * * *"
+            - name: QA_CRON_TZ
+              value: "America/Sao_Paulo"
+            - name: DEVOPS_SRE_CRON_ENABLED
+              value: "true"
+            - name: DEVOPS_SRE_CRON_NAME
+              value: "devops_sre_queue_poll"
+            - name: DEVOPS_SRE_CRON_EXPR
+              value: "*/30 * * * *"
+            - name: DEVOPS_SRE_CRON_TZ
+              value: "America/Sao_Paulo"
+            - name: SECURITY_ENGINEER_CRON_ENABLED
+              value: "true"
+            - name: SECURITY_ENGINEER_CRON_NAME
+              value: "security_engineer_scan"
+            - name: SECURITY_ENGINEER_CRON_EXPR
+              value: "0 */6 * * *"
+            - name: SECURITY_ENGINEER_CRON_TZ
+              value: "America/Sao_Paulo"
             - name: OPENCLAW_LOG_LEVEL
               valueFrom:
                 secretKeyRef:
@@ -102,11 +142,11 @@ spec:
                   optional: true
           resources:
             requests:
-              cpu: 500m
-              memory: 2Gi
+              cpu: 1000m
+              memory: 4Gi
             limits:
-              cpu: "2"
-              memory: 3Gi
+              cpu: "4"
+              memory: 6Gi
           startupProbe:
             tcpSocket:
               port: gateway
@@ -1012,6 +1052,166 @@ spec:
                     fi
                   done
                   echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do dev_backend; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_backend_hourly.log"
+                  exit 0
+                ) &
+              fi
+              if [ "${DEV_FRONTEND_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${DEV_FRONTEND_CRON_NAME:-dev_frontend_hourly_queue_poll}"
+                  CRON_EXPR="${DEV_FRONTEND_CRON_EXPR:-15 * * * *}"
+                  CRON_TZ="${DEV_FRONTEND_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Poll GitHub issues com label "front_end"; se houver issue elegivel, implementar task frontend com React/Next.js/TypeScript respeitando Core Web Vitals e criterios de aceite da US; se nao houver, manter standby.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_frontend_hourly.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent dev_frontend \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_frontend_hourly.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do dev_frontend; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_frontend_hourly.log"
+                  exit 0
+                ) &
+              fi
+              if [ "${DEV_MOBILE_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${DEV_MOBILE_CRON_NAME:-dev_mobile_hourly_queue_poll}"
+                  CRON_EXPR="${DEV_MOBILE_CRON_EXPR:-30 * * * *}"
+                  CRON_TZ="${DEV_MOBILE_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Poll GitHub issues com label "mobile"; se houver issue elegivel, implementar task mobile com React Native/Expo respeitando criterios de aceite da US; se nao houver, manter standby.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_mobile_hourly.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent dev_mobile \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_mobile_hourly.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do dev_mobile; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_mobile_hourly.log"
+                  exit 0
+                ) &
+              fi
+              if [ "${QA_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${QA_CRON_NAME:-qa_engineer_hourly_queue_poll}"
+                  CRON_EXPR="${QA_CRON_EXPR:-45 * * * *}"
+                  CRON_TZ="${QA_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Poll GitHub issues com label "tests"; se houver issue elegivel, executar validacao BDD, testes e2e e relatorios de qualidade; se nao houver, manter standby.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/qa_engineer_hourly.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent qa_engineer \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/qa_engineer_hourly.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do qa_engineer; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/qa_engineer_hourly.log"
+                  exit 0
+                ) &
+              fi
+              if [ "${SECURITY_ENGINEER_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${SECURITY_ENGINEER_CRON_NAME:-security_engineer_scan}"
+                  CRON_EXPR="${SECURITY_ENGINEER_CRON_EXPR:-0 */6 * * *}"
+                  CRON_TZ="${SECURITY_ENGINEER_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Executar scan proativo de segurança: auditoria de dependências (CVEs), SAST, detecção de secrets e supply chain; aplicar patches autônomos para CVSS >= 7.0; escalar P0 (CVSS >= 9.0) ao CEO imediatamente.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/security_engineer.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent security_engineer \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/security_engineer.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do security_engineer; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/security_engineer.log"
+                  exit 0
+                ) &
+              fi
+              if [ "${DEVOPS_SRE_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${DEVOPS_SRE_CRON_NAME:-devops_sre_queue_poll}"
+                  CRON_EXPR="${DEVOPS_SRE_CRON_EXPR:-*/30 * * * *}"
+                  CRON_TZ="${DEVOPS_SRE_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Poll GitHub issues com label "devops"; verificar SLOs, pipelines e alertas de producao; gerar PROD_METRICS semanal; se nao houver acao, manter standby.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/devops_sre.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent devops_sre \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/devops_sre.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do devops_sre; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/devops_sre.log"
                   exit 0
                 ) &
               fi

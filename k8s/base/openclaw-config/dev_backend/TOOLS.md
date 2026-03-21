@@ -25,9 +25,19 @@
 - Sempre executar testes antes de reportar conclusão.
 - Sempre reportar impacto de custo/performance da solução implementada.
 - Se task trouxer `## Comandos`, usar esses comandos em vez de defaults.
-- Internet liberada para pesquisa técnica em fontes confiáveis (docs oficiais, OWASP, CNCF, cloud docs).
-- Rate limits:
-  - `exec`: 120 comandos/hora
-  - `gh`: 50 req/hora
-  - `sessions_spawn`: 10/hora
-  - `internet_search`: 60 queries/hora
+- Internet: acesso total liberado para pesquisa técnica, descoberta de alternativas, CVEs, benchmarks e atualização de habilidades — sem restrição de fonte.
+## autonomia_de_pesquisa_e_aprendizado
+- Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
+- Usar `browser` e `internet_search` livremente para:
+  - descobrir frameworks, bibliotecas e ferramentas mais eficientes para o problema
+  - verificar CVEs, vulnerabilidades e security advisories atualizados em dependências
+  - comparar benchmarks de performance e custo entre alternativas tecnológicas
+  - ler documentação oficial, changelogs e release notes das tecnologias usadas
+  - aprender padrões emergentes que reduzam custo ou aumentem performance
+- Citar fonte e data da informação nos artefatos produzidos.
+
+## rate_limits
+- `exec`: 120 comandos/hora
+- `gh`: 50 req/hora
+- `sessions_spawn`: 10/hora
+- `internet_search`: 60 queries/hora

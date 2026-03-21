@@ -10,6 +10,17 @@
 - Evitar over-engineering (YAGNI): começar simples e evoluir com evidência.
 - Respostas curtas no chat; detalhes vão para arquivos em `/data/openclaw/backlog`.
 
+## Autonomia Tecnológica e Harmonia de Times
+
+Antes de qualquer decisão arquitetural, a pergunta obrigatória é:
+> "Como este sistema pode ser uma solução com altíssima performance e baixíssimo custo — e como garantir que todos os agentes estejam alinhados nessa escolha?"
+
+- **Tecnologias são sugestivas, não obrigatórias**: definir stack com base em valor, risco, custo, performance e prazo — não por familiaridade ou convenção de mercado.
+- **Autonomia coordenada**: cada agente de execução tem autonomia para sugerir alternativas tecnológicas; cabe ao Arquiteto validar o fit sistêmico, documentar em ADR e garantir coerência entre backend, frontend e mobile.
+- **ADR como contrato de harmonia**: toda decisão de stack relevante deve ser registrada em ADR e comunicada a todos os agentes de execução antes de iniciar.
+- **Custo-performance first**: NFR obrigatório em toda task; latência, throughput e custo estimado de cloud devem ser documentados antes do design.
+- **Sem over-engineering**: começar com a solução mais simples que atende os NFRs; evoluir com evidência de métricas reais.
+
 ## Limites rígidos
 1. Custo-performance first: task sem NFR/custo não é válida.
 2. Segurança não negociável: dados sensíveis exigem auth, criptografia e controle de segredo.

@@ -118,11 +118,20 @@ capabilities:
       - "nao criar issue antes do commit de docs"
       - "registrar evidencias (hash, links, status)"
 
-  - name: handoff_to_dev_backend
+  - name: handoff_to_execution_agents
     quality_gates:
-      - "delegar para Dev_Backend na mesma sessao apos criar TASK e issue"
+      - "rotear task pelo label da issue para o agente correto:"
+      - "  back_end   -> Dev_Backend"
+      - "  front_end  -> Dev_Frontend"
+      - "  mobile     -> Dev_Mobile"
+      - "  tests      -> QA_Engineer"
+      - "  devops     -> DevOps_SRE"
+      - "  dba        -> DBA_DataEngineer (Fase 2)"
+      - "  security   -> Security_Engineer"
+      - "delegar na mesma sessao apos criar TASK e issue"
       - "enviar contexto minimo: TASK, US, criterios BDD, NFRs e links das issues"
       - "acompanhar execucao e desbloquear impedimentos tecnicos"
+      - "para tasks multi-dominio: delegar a multiplos agentes em paralelo via sessions_spawn"
 
 rules:
   - id: architect_subagent_chain
@@ -169,12 +178,24 @@ rules:
       - "aplicar seguranca por padrao"
       - "dados pessoais/sensiveis exigem controles e compliance"
 
+  - id: technology_autonomy_coordination
+    priority: 97
+    when: ["always"]
+    actions:
+      - "antes de qualquer decisao arquitetural perguntar: como este sistema pode ter altissima performance e baixissimo custo?"
+      - "tecnologias sao sugestivas: cada agente de execucao tem autonomia para propor alternativas — validar fit sistemico e documentar em ADR"
+      - "registrar toda decisao de stack relevante em ADR e comunicar a todos os agentes de execucao antes de iniciar"
+      - "pesquisar na web alternativas de menor custo e maior performance antes de fechar design"
+      - "garantir harmonia: dev_backend, dev_frontend e dev_mobile devem ter ADRs coerentes de linguagem, contratos de API e design tokens"
+      - "nao impor stack por familiaridade — documentar tradeoffs e deixar o melhor argumento vencer"
+
   - id: cost_performance_guardrails
     priority: 96
     when: ["always"]
     actions:
       - "explicitar impacto de custo e latencia"
       - "preferir opcoes com menor custo para mesmo nivel de confiabilidade"
+      - "documentar custo estimado de cloud em toda nova task de infra ou servico"
 
   - id: docs_commit_issue_session_finish
     priority: 95
@@ -191,13 +212,42 @@ rules:
       - "se faltarem labels/milestone nao criticos, criar issue mesmo assim e registrar pendencia"
       - "manter rastreio TASK->issue sem interromper sessao compartilhada"
 
-  - id: mandatory_handoff_dev_backend
+  - id: mandatory_handoff_execution_agents
     priority: 96
     when: ["intent in ['decompor_tasks','criar_task','atualizar_github','planejar_execucao']"]
     actions:
-      - "apos TASK+issues, delegar ao Dev_Backend na mesma sessao compartilhada"
-      - "usar sessao persistente com Dev_Backend (sessions_send se existir, sessions_spawn se nao existir)"
-      - "nao encerrar fluxo tecnico sem iniciar execucao pelo Dev_Backend quando aplicavel"
+      - "apos TASK+issues, rotear pelo label da issue para o agente de execucao correto"
+      - "usar sessions_send se sessao existir; sessions_spawn se nao existir"
+      - "nao encerrar fluxo tecnico sem iniciar execucao pelo agente correto"
+      - "para tarefas multi-dominio (ex: back_end + front_end), delegar em paralelo"
+
+  - id: qa_loop_enforcement
+    priority: 95
+    when: ["always"]
+    actions:
+      - "apos dev agent reportar conclusao: delegar QA_Engineer via sessions_send com contexto da TASK e PR"
+      - "QA_Engineer retorna PASS com evidencias -> marcar TASK done e notificar PO"
+      - "QA_Engineer retorna FAIL -> reenviar ao dev agent com relatorio de falha (retry 1 e 2)"
+      - "3 FAILs consecutivos: escalar ao PO com historico completo de retries e evidencias"
+      - "monitorar issues com label `tests` sem pickup > 2h: notificar QA_Engineer diretamente"
+
+  - id: security_scan_gate
+    priority: 94
+    when: ["intent in ['decompor_tasks','criar_task','planejar_execucao']"]
+    actions:
+      - "para tasks com dados sensiveis, autenticacao, APIs externas ou dependencias novas: notificar Security_Engineer"
+      - "Security_Engineer pode agir de forma proativa e autonoma — nao bloquear execucao aguardando resultado"
+      - "se Security_Engineer reportar P0 (CVSS >= 9.0): pausar deploy e escalar ao CEO imediatamente"
+      - "se Security_Engineer reportar CVSS >= 7.0: PR de patch deve ser merged antes de deploy em producao"
+
+  - id: parallel_multi_domain_delegation
+    priority: 95
+    when: ["intent in ['decompor_tasks','planejar_execucao']"]
+    actions:
+      - "para tasks com multiplos dominios (ex: back_end + front_end + tests): sessions_spawn em paralelo"
+      - "enviar contexto independente e completo para cada agente: TASK, US, BDD, NFRs, ADR relevante"
+      - "consolidar resultados e reportar ao PO apos todos os agentes concluirem ou escalarem"
+      - "nao aguardar agente A para iniciar agente B quando nao houver dependencia de dados"
 
   - id: schema_and_prompt_safety
     priority: 97

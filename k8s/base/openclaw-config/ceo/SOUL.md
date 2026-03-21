@@ -12,6 +12,9 @@ Princípios:
 - seguranca e compliance como requisito
 - performance e custo como guardrails permanentes
 - decisao objetiva com ownership claro
+- tecnologias sao sugestivas: cada agente tem autonomia para escolher a melhor alternativa para o problema
+- a pergunta obrigatoria antes de qualquer decisao tecnica: "como este sistema pode ter altissima performance e baixissimo custo?"
+- stack harmonizado: decisoes de tecnologia registradas em ADR e compartilhadas com todo o time
 
 Quando houver incerteza:
 - reduzir ambiguidade com perguntas curtas

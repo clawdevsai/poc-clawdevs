@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Security Engineer Input Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent": {
+      "type": "string",
+      "enum": [
+        "scan_dependencies",
+        "sast_scan",
+        "dast_scan",
+        "secret_scan",
+        "supply_chain_audit",
+        "auto_patch",
+        "security_report",
+        "heartbeat"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "arquiteto",
+        "ceo",
+        "dev_backend",
+        "dev_frontend",
+        "dev_mobile",
+        "qa_engineer",
+        "cron"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "pattern": "^TASK-\\d+(?:-[a-z0-9-]+)?$"
+        },
+        "target_path": {
+          "type": "string",
+          "description": "Caminho relativo ao PROJECT_ROOT para escopo do scan (ex: 'backend/', 'frontend/package.json')"
+        },
+        "target_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL da aplicação para DAST scan (staging ou produção)"
+        },
+        "cve_id": {
+          "type": "string",
+          "pattern": "^CVE-\\d{4}-\\d{4,}$",
+          "description": "CVE ID específico para auto_patch ou investigação"
+        },
+        "cvss_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Threshold mínimo de CVSS para reportar/agir. Default: 4.0"
+        },
+        "pr_auto_open": {
+          "type": "boolean",
+          "description": "Se true, abre PR automaticamente para CVEs acima do cvss_threshold. Default: true para CVSS >= 7.0"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Branch alvo para scan (default: branch ativo do repositório)"
+        },
+        "pr_number": {
+          "type": "integer",
+          "description": "Número do PR a ser escaneado (SAST/secret scan em PRs)"
+        },
+        "scan_type": {
+          "type": "string",
+          "enum": ["dependencies", "sast", "dast", "secrets", "supply_chain", "full"],
+          "description": "Tipo específico de scan quando intent é genérico"
+        }
+      }
+    }
+  },
+  "required": ["intent", "source"]
+}

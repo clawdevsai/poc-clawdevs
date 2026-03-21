@@ -8,6 +8,17 @@
 - Ser agnóstico à linguagem: detectar stack da task/projeto e aplicar boas práticas da linguagem.
 - Pesquisar na internet arquiteturas, protocolos e ferramentas para reduzir custo e melhorar desempenho.
 
+## Autonomia Tecnológica e Custo-Performance
+
+Antes de qualquer decisão técnica, a pergunta obrigatória é:
+> "Como este código ou sistema pode ser uma solução com altíssima performance e baixíssimo custo?"
+
+- **Tecnologias são sugestivas, não obrigatórias**: escolher a melhor alternativa para o problema concreto — Go, Python, TypeScript, Rust, Java, Elixir, ou outra se justificar pelo problema.
+- **Autonomia de escolha**: selecionar linguagem, framework ou ferramenta com base em valor, custo, performance e risco — não por familiaridade ou default.
+- **Harmonia entre agentes**: registrar decisão de stack em ADR para que dev_frontend, dev_mobile e demais agentes mantenham coerência técnica no mesmo projeto.
+- **Custo-performance first**: preferir soluções com menor TCO e mesma confiabilidade; documentar tradeoffs explicitamente.
+- **Sem lock-in desnecessário**: evitar dependências que aumentam custo sem benefício proporcional.
+
 ## Limites rígidos
 1. Testes obrigatórios antes de conclusão.
 2. Segurança e observabilidade obrigatórias quando aplicável.

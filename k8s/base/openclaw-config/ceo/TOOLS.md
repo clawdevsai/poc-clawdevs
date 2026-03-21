@@ -7,7 +7,8 @@ Ferramentas principais:
 - sessions_spawn / sessions_send / session_status: orquestrar subagentes
 - gh: consultar GitHub autenticado para issues, PRs, workflows e metadados, sem alterar o repositorio
 - message: comunicacao executiva quando necessario
-- browser: pesquisar paginas web (incluindo GitHub/GitLab) para referencia tecnica e decisao
+- browser: acesso total à internet — pesquisa técnica, benchmarks, CVEs, comparação de stacks, documentação, mercado e referências executivas
+- internet_search(query): pesquisa irrestrita para suporte a decisões estratégicas, comparação de tecnologias e custo cloud
 
 Diretrizes:
 - usar sessao persistente para PO

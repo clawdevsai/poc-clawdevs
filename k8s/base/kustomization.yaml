@@ -58,6 +58,66 @@ configMapGenerator:
       - dev_backend-USER.md=openclaw-config/dev_backend/USER.md
       - dev_backend-TOOLS.md=openclaw-config/dev_backend/TOOLS.md
       - dev_backend-skill-SKILL.md=openclaw-config/dev_backend/SKILL.md
+      # dev_frontend
+      - dev_frontend-AGENTS.md=openclaw-config/dev_frontend/AGENTS.md
+      - dev_frontend-BOOT.md=openclaw-config/dev_frontend/BOOT.md
+      - dev_frontend-BOOTSTRAP.md=openclaw-config/dev_frontend/BOOTSTRAP.md
+      - dev_frontend-HEARTBEAT.md=openclaw-config/dev_frontend/HEARTBEAT.md
+      - dev_frontend-IDENTITY.md=openclaw-config/dev_frontend/IDENTITY.md
+      - dev_frontend-INPUT_SCHEMA.json=openclaw-config/dev_frontend/INPUT_SCHEMA.json
+      - dev_frontend-SOUL.md=openclaw-config/dev_frontend/SOUL.md
+      - dev_frontend-SECURITY_TEST_CASES.md=openclaw-config/dev_frontend/SECURITY_TEST_CASES.md
+      - dev_frontend-USER.md=openclaw-config/dev_frontend/USER.md
+      - dev_frontend-TOOLS.md=openclaw-config/dev_frontend/TOOLS.md
+      - dev_frontend-skill-SKILL.md=openclaw-config/dev_frontend/SKILL.md
+      # dev_mobile
+      - dev_mobile-AGENTS.md=openclaw-config/dev_mobile/AGENTS.md
+      - dev_mobile-BOOT.md=openclaw-config/dev_mobile/BOOT.md
+      - dev_mobile-BOOTSTRAP.md=openclaw-config/dev_mobile/BOOTSTRAP.md
+      - dev_mobile-HEARTBEAT.md=openclaw-config/dev_mobile/HEARTBEAT.md
+      - dev_mobile-IDENTITY.md=openclaw-config/dev_mobile/IDENTITY.md
+      - dev_mobile-INPUT_SCHEMA.json=openclaw-config/dev_mobile/INPUT_SCHEMA.json
+      - dev_mobile-SOUL.md=openclaw-config/dev_mobile/SOUL.md
+      - dev_mobile-SECURITY_TEST_CASES.md=openclaw-config/dev_mobile/SECURITY_TEST_CASES.md
+      - dev_mobile-USER.md=openclaw-config/dev_mobile/USER.md
+      - dev_mobile-TOOLS.md=openclaw-config/dev_mobile/TOOLS.md
+      - dev_mobile-skill-SKILL.md=openclaw-config/dev_mobile/SKILL.md
+      # qa_engineer
+      - qa_engineer-AGENTS.md=openclaw-config/qa_engineer/AGENTS.md
+      - qa_engineer-BOOT.md=openclaw-config/qa_engineer/BOOT.md
+      - qa_engineer-BOOTSTRAP.md=openclaw-config/qa_engineer/BOOTSTRAP.md
+      - qa_engineer-HEARTBEAT.md=openclaw-config/qa_engineer/HEARTBEAT.md
+      - qa_engineer-IDENTITY.md=openclaw-config/qa_engineer/IDENTITY.md
+      - qa_engineer-INPUT_SCHEMA.json=openclaw-config/qa_engineer/INPUT_SCHEMA.json
+      - qa_engineer-SOUL.md=openclaw-config/qa_engineer/SOUL.md
+      - qa_engineer-SECURITY_TEST_CASES.md=openclaw-config/qa_engineer/SECURITY_TEST_CASES.md
+      - qa_engineer-USER.md=openclaw-config/qa_engineer/USER.md
+      - qa_engineer-TOOLS.md=openclaw-config/qa_engineer/TOOLS.md
+      - qa_engineer-skill-SKILL.md=openclaw-config/qa_engineer/SKILL.md
+      # devops_sre
+      - devops_sre-AGENTS.md=openclaw-config/devops_sre/AGENTS.md
+      - devops_sre-BOOT.md=openclaw-config/devops_sre/BOOT.md
+      - devops_sre-BOOTSTRAP.md=openclaw-config/devops_sre/BOOTSTRAP.md
+      - devops_sre-HEARTBEAT.md=openclaw-config/devops_sre/HEARTBEAT.md
+      - devops_sre-IDENTITY.md=openclaw-config/devops_sre/IDENTITY.md
+      - devops_sre-INPUT_SCHEMA.json=openclaw-config/devops_sre/INPUT_SCHEMA.json
+      - devops_sre-SOUL.md=openclaw-config/devops_sre/SOUL.md
+      - devops_sre-SECURITY_TEST_CASES.md=openclaw-config/devops_sre/SECURITY_TEST_CASES.md
+      - devops_sre-USER.md=openclaw-config/devops_sre/USER.md
+      - devops_sre-TOOLS.md=openclaw-config/devops_sre/TOOLS.md
+      - devops_sre-skill-SKILL.md=openclaw-config/devops_sre/SKILL.md
+      # security_engineer
+      - security_engineer-AGENTS.md=openclaw-config/security_engineer/AGENTS.md
+      - security_engineer-BOOT.md=openclaw-config/security_engineer/BOOT.md
+      - security_engineer-BOOTSTRAP.md=openclaw-config/security_engineer/BOOTSTRAP.md
+      - security_engineer-HEARTBEAT.md=openclaw-config/security_engineer/HEARTBEAT.md
+      - security_engineer-IDENTITY.md=openclaw-config/security_engineer/IDENTITY.md
+      - security_engineer-INPUT_SCHEMA.json=openclaw-config/security_engineer/INPUT_SCHEMA.json
+      - security_engineer-SOUL.md=openclaw-config/security_engineer/SOUL.md
+      - security_engineer-SECURITY_TEST_CASES.md=openclaw-config/security_engineer/SECURITY_TEST_CASES.md
+      - security_engineer-USER.md=openclaw-config/security_engineer/USER.md
+      - security_engineer-TOOLS.md=openclaw-config/security_engineer/TOOLS.md
+      - security_engineer-skill-SKILL.md=openclaw-config/security_engineer/SKILL.md
       # shared
       - shared-BRIEF_TEMPLATE.md=openclaw-config/shared/BRIEF_TEMPLATE.md
       - shared-CLARIFY_TEMPLATE.md=openclaw-config/shared/CLARIFY_TEMPLATE.md

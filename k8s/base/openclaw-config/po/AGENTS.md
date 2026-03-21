@@ -90,6 +90,13 @@ capabilities:
       - "Brief com objetivo, escopo, NFRs e restricoes"
       - "Sempre sessao persistente com Arquiteto"
       - "Sem multiplas threads para o mesmo tema"
+      - "Para features com UI: invocar UX_Designer antes do handoff ao Arquiteto (Fase 2)"
+
+  - name: ux_designer_integration
+    quality_gates:
+      - "se a FEATURE envolve telas, fluxos de usuario ou UI: delegar ao UX_Designer antes do Arquiteto"
+      - "aguardar artefato UX-XXX.md para enriquecer criterios de aceite da US"
+      - "referenciar UX-XXX.md no handoff ao Arquiteto"
 
   - name: stakeholder_communication
     quality_gates:
