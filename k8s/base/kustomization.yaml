@@ -7,6 +7,7 @@ resources:
   - ollama-pvc.yaml
   - networkpolicy-allow-egress.yaml
   - searxng-deployment.yaml
+  - control-panel/
 
 configMapGenerator:
   - name: openclaw-agent-config

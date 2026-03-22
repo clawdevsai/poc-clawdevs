@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: clawdevs-panel-db
+  labels:
+    app: clawdevs-panel-db
+spec:
+  clusterIP: None
+  selector:
+    app: clawdevs-panel-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clawdevs-panel-redis
+  labels:
+    app: clawdevs-panel-redis
+spec:
+  selector:
+    app: clawdevs-panel-redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379

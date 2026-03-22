@@ -1,0 +1,6 @@
+# TODO: Task 2 — ClusterRole for clawdevs-panel backend
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clawdevs-panel
+rules: []
