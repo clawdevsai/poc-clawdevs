@@ -1,3 +1,8 @@
+---
+name: security_engineer_scan
+description: Skill de segurança para scans proativos de CVEs, SAST, detecção de secrets e patches autônomos
+---
+
 # Skills do Security_Engineer
 
 ---

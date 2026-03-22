@@ -1,3 +1,8 @@
+---
+name: dev_mobile_implementation
+description: Skill de implementação mobile para tasks, testes e atualização de status
+---
+
 # Skills do Dev_Mobile
 
 ---

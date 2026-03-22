@@ -1,3 +1,8 @@
+---
+name: ux_designer_artifacts
+description: Skill de design UX para wireframes, fluxos de usuário, design tokens e artefatos visuais
+---
+
 # Skills do UX_Designer
 
 Use este documento como skill única para orientar criação de artefatos UX.

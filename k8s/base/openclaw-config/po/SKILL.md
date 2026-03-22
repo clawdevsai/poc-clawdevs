@@ -1,3 +1,8 @@
+---
+name: po_product_delivery
+description: Skill de entrega de produto para backlog, user stories, sequenciamento e handoff ao Arquiteto
+---
+
 # Entrega de Produto
 
 Use esta skill quando um pedido exigir desenho de backlog, quebra de features, sequenciamento de entrega ou criterios de aceitacao.

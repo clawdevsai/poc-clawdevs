@@ -1,3 +1,8 @@
+---
+name: dev_frontend_implementation
+description: Skill de implementação frontend para tasks, testes, CI/CD e atualização de status
+---
+
 # Skills do Dev_Frontend
 
 Use este documento como skill única para orientar implementação frontend, testes, integração CI/CD e atualização de status.

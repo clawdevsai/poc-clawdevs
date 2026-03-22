@@ -1,3 +1,8 @@
+---
+name: dev_backend_implementation
+description: Skill de implementação backend para tasks, testes, CI/CD, otimização de custo/performance e atualização de status
+---
+
 # Skills do Dev_Backend
 
 Use este documento como skill unica para orientar implementacao backend, testes, integracao CI/CD e atualizacao de status.

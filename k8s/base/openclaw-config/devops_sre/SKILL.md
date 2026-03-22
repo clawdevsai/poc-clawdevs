@@ -1,3 +1,8 @@
+---
+name: devops_sre_operations
+description: Skill DevOps/SRE para pipelines, infra Kubernetes, SLOs e resposta a incidentes de produção
+---
+
 # Skills do DevOps_SRE
 
 ---

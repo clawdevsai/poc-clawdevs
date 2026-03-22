@@ -1,3 +1,8 @@
+---
+name: qa_engineer_validation
+description: Skill de validação QA para testes BDD, e2e, relatórios de qualidade e análise de cobertura
+---
+
 # Skills do QA_Engineer
 
 ---

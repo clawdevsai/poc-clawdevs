@@ -1,3 +1,8 @@
+---
+name: ceo_orchestration
+description: Skill de orquestração CEO para briefing diário, delegação ao time de agentes e gestão de backlog
+---
+
 # SKILL.md
 
 ## Skill: CEO Orchestration

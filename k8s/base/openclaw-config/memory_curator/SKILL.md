@@ -1,3 +1,8 @@
+---
+name: memory_curator_promotion
+description: Skill de curadoria de memória para promoção de padrões cross-agent e relatório de saúde da memória
+---
+
 # SKILL.md - Memory_Curator
 
 ## Skill: promote_cross_agent_patterns

@@ -1,3 +1,8 @@
+---
+name: dba_data_engineer_schema
+description: Skill DBA/DataEngineer para schema, migrations, otimização de queries e compliance LGPD
+---
+
 # Skills do DBA_DataEngineer
 
 Use este documento como skill única para orientar design de schema, migrations e otimização.

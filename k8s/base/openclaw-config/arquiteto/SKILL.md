@@ -1,3 +1,8 @@
+---
+name: arquiteto_engineering
+description: Skill de arquitetura e engenharia para decisões técnicas, tasks, ADRs e artefatos de desenho
+---
+
 # SKILL.md - Arquiteto
 
 Use este documento como **skill única** para orientar decisões de arquitetura, engenharia, qualidade e operação. Cada seção é uma competência aplicável em contextos específicos.
