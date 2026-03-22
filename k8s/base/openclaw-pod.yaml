@@ -168,7 +168,7 @@ spec:
               memory: 4Gi
             limits:
               cpu: "4"
-              memory: 6Gi
+              memory: 5Gi
           startupProbe:
             tcpSocket:
               port: gateway

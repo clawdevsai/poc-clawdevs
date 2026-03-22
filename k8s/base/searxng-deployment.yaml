@@ -108,10 +108,10 @@ spec:
               mountPath: /etc/searxng
           resources:
             requests:
-              memory: "256Mi"
+              memory: "128Mi"
               cpu: "100m"
             limits:
-              memory: "512Mi"
+              memory: "256Mi"
               cpu: "500m"
         - name: searxng-proxy
           image: nginx:1.27-alpine

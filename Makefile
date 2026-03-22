@@ -9,7 +9,7 @@ PF_PORTS ?= 18789:18789
 KUSTOMIZE_DIR ?= k8s
 
 
-.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -171,6 +171,46 @@ reset-all: stack-apply stack-status
 	$(MAKE) stack-apply
 	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/ollama --timeout=240s
 	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=240s
+	$(MAKE) stack-status
+
+DOCKER_VOLUMES_CLAWDEVS := $(shell docker volume ls -q --filter=name=clawdevs 2>NUL)
+DOCKER_VOLUMES_OPENCLAW := $(shell docker volume ls -q --filter=name=openclaw 2>NUL)
+DOCKER_VOLUMES_OLLAMA   := $(shell docker volume ls -q --filter=name=ollama 2>NUL)
+DOCKER_IMAGES_PROJECT   := $(shell docker images --filter=reference=*clawdevs* --filter=reference=*openclaw* --filter=reference=*ollama* -q 2>NUL)
+
+destroy-all:
+	@echo "[destroy-all] Removendo todos os recursos k8s do projeto clawdevs-ai..."
+	-kubectl --context=$(KUBE_CONTEXT) delete statefulset clawdevs-ai --ignore-not-found --wait=true --timeout=120s
+	-kubectl --context=$(KUBE_CONTEXT) delete pod --all --ignore-not-found --wait=true --timeout=120s
+	-kubectl --context=$(KUBE_CONTEXT) delete pvc --all --ignore-not-found --wait=true --timeout=120s
+	-kubectl --context=$(KUBE_CONTEXT) delete configmap openclaw-agent-config --ignore-not-found
+	-kubectl --context=$(KUBE_CONTEXT) delete secret openclaw-auth ollama-auth --ignore-not-found
+	-kubectl --context=$(KUBE_CONTEXT) delete service ollama clawdevs-ai --ignore-not-found
+	-kubectl --context=$(KUBE_CONTEXT) delete networkpolicy allow-all-egress --ignore-not-found
+	-kubectl --context=$(KUBE_CONTEXT) delete runtimeclass nvidia --ignore-not-found
+	-kubectl --context=$(KUBE_CONTEXT) -n kube-system delete daemonset nvidia-device-plugin-daemonset --ignore-not-found
+	@echo "[destroy-all] Destruindo perfil Minikube $(PROFILE)..."
+	-minikube delete --profile=$(PROFILE)
+	@echo "[destroy-all] Removendo volumes Docker do projeto..."
+	-docker volume rm clawdevs-ai-openclaw-data-clawdevs-ai-0 openclaw-data ollama-data
+	$(if $(DOCKER_VOLUMES_CLAWDEVS),-docker volume rm $(DOCKER_VOLUMES_CLAWDEVS))
+	$(if $(DOCKER_VOLUMES_OPENCLAW),-docker volume rm $(DOCKER_VOLUMES_OPENCLAW))
+	$(if $(DOCKER_VOLUMES_OLLAMA),-docker volume rm $(DOCKER_VOLUMES_OLLAMA))
+	@echo "[destroy-all] Removendo imagens Docker do projeto..."
+	$(if $(DOCKER_IMAGES_PROJECT),-docker rmi --force $(DOCKER_IMAGES_PROJECT))
+	@echo "[destroy-all] Removendo volumes Docker orfaos..."
+	-docker volume prune --force
+	@echo "[destroy-all] Concluido."
+
+clawdevs-rebuild:
+	$(MAKE) destroy-all
+	$(MAKE) minikube-up
+	$(MAKE) minikube-context
+	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready node --all --timeout=120s
+	$(MAKE) minikube-addons
+	$(MAKE) stack-apply
+	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/ollama --timeout=300s
+	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=300s
 	$(MAKE) stack-status
 
 stack-apply: ollama-apply openclaw-apply
