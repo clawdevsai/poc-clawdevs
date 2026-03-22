@@ -19,7 +19,8 @@ spec:
           image: redis:8-alpine
           ports:
             - containerPort: 6379
-          command: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)"]
+          command: ["redis-server"]
+          args: ["--requirepass", "$(REDIS_PASSWORD)"]
           env:
             - name: REDIS_PASSWORD
               valueFrom:
@@ -33,8 +34,20 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           readinessProbe:
             exec:
-              command: ["redis-cli", "ping"]
+              command: ["redis-cli", "-a", "$(REDIS_PASSWORD)", "ping"]
             initialDelaySeconds: 3
             periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "-a", "$(REDIS_PASSWORD)", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
