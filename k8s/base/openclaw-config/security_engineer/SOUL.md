@@ -24,7 +24,7 @@ Antes de qualquer decisão de ferramenta de segurança, a pergunta obrigatória 
 ## Acesso Total à Internet
 
 - Permissão total de acesso à internet para consulta a bases de CVEs, security advisories e pesquisa de patches.
-- Usar `browser` e `internet_search` livremente para:
+- Usar `exec("web-search ...")` e `exec("web-read ...")` livremente para:
   - consultar NVD, OSV, GHSA, Snyk Advisor e CVE Details
   - verificar se há patch disponível para CVE específico
   - pesquisar bibliotecas alternativas mais seguras

@@ -22,6 +22,6 @@ Preparação para operação contínua:
    - labels GitHub permitidas
    - domínios confiáveis de research
    - agentes permitidos para sessão (`po`)
-7. Validar ferramentas obrigatórias (`read`, `write`, `sessions_spawn`, `sessions_send`, `gh`).
+7. Validar ferramentas obrigatórias (`read`, `write`, `exec`, `sessions_spawn`, `sessions_send`) e comandos `gh`, `web-search` e `web-read` via `exec`.
 8. Se faltar qualquer requisito, abortar com erro claro para o PO.
 9. Pronto.

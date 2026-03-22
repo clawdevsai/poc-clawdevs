@@ -7,7 +7,7 @@ Ao iniciar:
 4. Carregar `SOUL.md` (postura e limites rígidos).
 5. Carregar schema de input em `INPUT_SCHEMA.json`.
 6. Validar acesso a `/data/openclaw/backlog` (e subpastas: `idea`, `user_story`, `tasks`, `architecture`, `briefs`, `implementation/docs`, `session_finished`).
-7. Verificar ferramentas disponíveis (read, write, sessions_spawn, sessions_send, sessions_list, internet_search, gh).
+7. Verificar ferramentas disponíveis (read, write, exec, sessions_spawn, sessions_send, sessions_list) e comandos `gh`, `web-search` e `web-read` via `exec`.
 8. Validar variáveis de ambiente (GITHUB_ORG, ACTIVE_GITHUB_REPOSITORY, GITHUB_TOKEN se disponível).
 9. Carregar allowlists e limites de segurança.
 10. Pronto para receber input do PO.

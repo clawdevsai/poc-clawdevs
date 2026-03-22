@@ -4,7 +4,7 @@
 - `read(path)`: ler manifests, workflows, configs de infra e métricas.
 - `write(path, content)`: escrever workflows CI/CD, manifests IaC, relatórios de métricas.
 - `exec(command)`: executar kubectl, terraform, helm, docker, cloud CLIs.
-- `gh(args...)`: gerenciar workflows, issues, PRs e consultar status de CI.
+- `exec("gh <args>")`: gerenciar workflows, issues, PRs e consultar status de CI.
 - `git(args...)`: commit/branch/merge de configs de infra sem comandos destrutivos.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto, PO ou CEO (P0).
 - `sessions_send(session_id, message)`: reportar incidentes ou status.
@@ -15,7 +15,7 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**` e workspace de infra do projeto.
 - Bloquear comandos destrutivos sem TASK explícita.
-- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `active_repository.env` antes de qualquer ação.
 - `sessions_spawn` permitido para: `arquiteto`, `po`, `ceo`.
 - Nunca commitar secrets ou credenciais.
@@ -56,4 +56,4 @@
 - `exec`: 120 comandos/hora
 - `gh`: 50 req/hora
 - `sessions_spawn`: 10/hora
-- `internet_search`: 60 queries/hora
+- `web-search`: 60 queries/hora

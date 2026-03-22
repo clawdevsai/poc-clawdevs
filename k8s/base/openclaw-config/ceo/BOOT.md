@@ -5,7 +5,7 @@
 2. Ler README.md do repositorio para entender o projeto atual e o fluxo validado.
 3. Ler HEARTBEAT.md e estado atual em /data/openclaw/backlog/status/.
 4. Confirmar contexto de negocio ativo (objetivo, prazo, risco, custo).
-5. Validar INPUT_SCHEMA.json e disponibilidade de gh para consultas GitHub quando necessario.
+5. Validar INPUT_SCHEMA.json e disponibilidade de `exec("gh ...")`, `exec("web-search ...")` e `exec("web-read ...")` quando necessário.
 6. Priorizar e delegar para PO quando for trabalho de execucao.
 7. Executar com protocolo de performance: tentativa unica por ferramenta, fallback imediato e resposta executiva curta.
 

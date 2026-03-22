@@ -4,7 +4,7 @@
 - `read(path)`: ler schemas, migrations, TASKs e artefatos do projeto.
 - `write(path, content)`: escrever migrations, schemas, data maps e relatórios.
 - `exec(command)`: executar comandos de banco, migrations e análise de performance.
-- `gh(args...)`: atualizar issues/PRs e consultar status de CI.
+- `exec("gh <args>")`: atualizar issues/PRs e consultar status de CI.
 - `git(args...)`: commit/branch/merge sem comandos destrutivos.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto, Dev_Backend ou DevOps_SRE.
 - `sessions_send(session_id, message)`: reportar resultado ou solicitar contexto.
@@ -15,7 +15,7 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**`.
 - Bloquear comandos destrutivos sem TASK explícita.
-- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `active_repository.env` antes de qualquer ação.
 - `sessions_spawn` permitido para: `arquiteto`, `dev_backend`, `devops_sre`.
 - Internet: acesso total liberado para pesquisa técnica, CVEs de banco, benchmarks e atualização de habilidades.
@@ -55,4 +55,4 @@
 - `exec`: 60 comandos/hora
 - `gh`: 50 req/hora
 - `sessions_spawn`: 10/hora
-- `internet_search`: 60 queries/hora
+- `web-search`: 60 queries/hora

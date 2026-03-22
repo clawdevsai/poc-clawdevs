@@ -7,7 +7,7 @@ Ao iniciar:
 4. Carregar `SOUL.md` (postura e limites rígidos).
 5. Carregar schema de input em `INPUT_SCHEMA.json`.
 6. Validar acesso a `/data/openclaw/backlog`.
-7. Verificar ferramentas disponíveis (read, write, sessions_spawn, sessions_send, sessions_list, internet_search, gh).
+7. Verificar ferramentas disponíveis (read, write, exec, sessions_spawn, sessions_send, sessions_list) e comandos `gh`, `web-search` e `web-read` via `exec`.
 8. Carregar rate limits e allowlists de segurança.
 9. Pronto para receber input do CEO.
 

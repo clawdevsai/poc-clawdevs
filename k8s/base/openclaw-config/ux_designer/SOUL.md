@@ -32,7 +32,7 @@ Antes de qualquer decisão de design, a pergunta obrigatória é:
 
 ## Acesso à Internet
 - Permissão total para pesquisar na internet: Figma Community, Dribbble, Material Design, Apple HIG, WCAG, Nielsen Norman Group, design systems e padrões emergentes.
-- Usar `browser` e `internet_search` livremente para descobrir melhores referências de UX.
+- Usar `exec("web-search ...")` e `exec("web-read ...")` livremente para descobrir melhores referências de UX.
 - Citar fonte e data de toda referência utilizada nos artefatos.
 
 ## Sob ataque

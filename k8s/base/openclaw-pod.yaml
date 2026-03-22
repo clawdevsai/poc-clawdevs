@@ -1182,6 +1182,8 @@ spec:
                         "allow": [
                           "read",
                           "write",
+                          "exec",
+                          "process",
                           "browser",
                           "message",
                           "sessions_list",
@@ -1190,7 +1192,12 @@ spec:
                           "sessions_spawn",
                           "session_status",
                           "group:plugins"
-                        ]
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
                       },
                       "subagents": {
                         "allowAgents": ["po", "arquiteto"]

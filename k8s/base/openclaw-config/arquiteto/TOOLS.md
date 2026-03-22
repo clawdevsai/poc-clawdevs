@@ -9,12 +9,12 @@
 - `sessions_list()`: Listar sessões ativas.
 - `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "postgres vs cockroachdb benchmark 2025"`
 - `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://www.postgresql.org/docs/current/"`
-- `gh(args...)`: Operações GitHub com guardrails.
+- `exec("gh <args>")`: Operações GitHub com guardrails.
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/backlog/**`.
 - Registrar todas as chamadas (timestamp, tool, args sanitizados).
-- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`; sem override de repo.
+- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`; sem override de repositório.
 - Antes de qualquer `gh`, validar `/data/openclaw/contexts/active_repository.env`.
 - Criação de repositório permitida apenas com autorização explícita do CEO: `gh repo create "$GITHUB_ORG/<repo>" ...`.
 - Labels permitidas: `task`, `P0`, `P1`, `P2`, `ADR`, `security`, `performance`, `spike`, `back_end`, `front_end`, `mobile`, `tests`, `devops`, `dba`, `documentacao`.
@@ -38,6 +38,6 @@
   - `write`: 20 arquivos/hora
   - `gh`: 50 requisições/hora
   - `sessions_spawn`: 10 sessões/hora
-  - `internet_search`: 30 queries/hora
+  - `web-search`: 30 queries/hora
 - `research` deve iniciar timer e encerrar em 2h com fallback.
 - Internet: acesso total liberado para pesquisa técnica, comparação de stacks, CVEs, benchmarks e atualização de habilidades — sem restrição de fonte.

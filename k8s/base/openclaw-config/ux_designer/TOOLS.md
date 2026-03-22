@@ -8,15 +8,15 @@
 - `sessions_list()`: listar sessões ativas.
 - `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "WCAG 2.2 contrast ratio guidelines"`
 - `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://m3.material.io/components/buttons/guidelines"`
-- `gh(args...)`: consultar issues e PRs para contexto de produto; sem commit ou push.
+- `exec("gh <args>")`: consultar issues e PRs para contexto de produto; sem commit ou push.
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/backlog/**`.
-- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `active_repository.env` antes de consultas GitHub.
 - `sessions_spawn` permitido para: `po`, `arquiteto`, `dev_frontend`, `dev_mobile`.
 - NÃO criar issues ou PRs — apenas artefatos UX.
-- Poll de fila GitHub a cada 4h: `gh issue list --state open --label ux --limit 20`.
+- Poll de fila GitHub a cada 4h: `gh issue list --state open --label ux --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`.
 
 ## github_permissions
 - **Tipo:** `read+write`
@@ -39,4 +39,4 @@
 - `write`: 10 arquivos/hora
 - `gh`: 30 req/hora
 - `sessions_spawn`: 5/hora
-- `internet_search`: 60 queries/hora
+- `web-search`: 60 queries/hora

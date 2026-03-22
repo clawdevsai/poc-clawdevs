@@ -9,6 +9,6 @@ Ao iniciar:
 6. Validar `/data/openclaw` e workspace de implementação.
 7. Detectar linguagem pelo `technology_stack` da task ou arquivos do projeto.
 8. Carregar comandos padrão por linguagem.
-9. Validar ferramentas (`read`, `write`, `exec`, `gh`, `git`, `sessions_send`, `internet_search`) e permissões para commits/PRs quando a task exigir.
+9. Validar ferramentas (`read`, `write`, `exec`, `git`, `sessions_send`) e disponibilidade de `gh`, `web-search` e `web-read` via `exec` quando a task exigir.
 10. Carregar metas padrão de custo/performance (latência alvo, consumo de recursos, custo por requisição).
 11. Pronto para receber task do Arquiteto.

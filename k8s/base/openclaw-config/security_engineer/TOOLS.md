@@ -4,7 +4,7 @@
 - `read(path)`: ler manifests de dependências, código-fonte, configs, relatórios de scan e histórico git.
 - `write(path, content)`: escrever relatórios de segurança, evidências de CVEs e artefatos de patch.
 - `exec(command)`: executar ferramentas de segurança (npm audit, pip-audit, trivy, semgrep, gitleaks, osv-scanner, trufflehog, syft, grype).
-- `gh(args...)`: criar PRs de patch, issues de segurança, consultar Dependabot alerts e gerenciar labels `security`.
+- `exec("gh <args>")`: criar PRs de patch, issues de segurança, consultar Dependabot alerts e gerenciar labels `security`.
 - `git(args...)`: criar branches de segurança, commitar patches, verificar histórico de commits para detecção de secrets.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto (P1/P2) ou CEO (P0).
 - `sessions_send(session_id, message)`: reportar vulnerabilidades críticas, status de patches e escalações.
@@ -15,7 +15,7 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**` e workspace do projeto.
 - Bloquear paths com `../` ou fora da allowlist (path traversal prevention).
-- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `active_repository.env` antes de qualquer ação.
 - `sessions_spawn` permitido para: `arquiteto`, `ceo` (somente P0).
 - Nunca logar o valor de secrets ou credenciais detectadas.
@@ -129,5 +129,5 @@ Citar fonte, CVE ID e data da informação em todos os relatórios e PRs produzi
 - `exec`: 120 comandos/hora
 - `gh`: 50 req/hora
 - `sessions_spawn`: 10/hora
-- `internet_search`: 60 queries/hora
+- `web-search`: 60 queries/hora
 - `trivy` / `semgrep`: sem limite (ferramentas locais); atualizar DB no máximo 1x/hora

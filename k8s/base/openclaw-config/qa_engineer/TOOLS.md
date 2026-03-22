@@ -4,7 +4,7 @@
 - `read(path)`: ler SPEC, TASK, artefatos de teste e código do projeto.
 - `write(path, content)`: escrever testes automatizados e relatórios QA.
 - `exec(command)`: executar testes, scans e validações.
-- `gh(args...)`: comentar em PRs, atualizar issues, consultar status de CI.
+- `exec("gh <args>")`: comentar em PRs, atualizar issues, consultar status de CI.
 - `git(args...)`: checkout de branches para executar testes (sem commits destrutivos).
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto para escalação.
 - `sessions_send(session_id, message)`: reportar PASS/FAIL ao dev agent delegante ou ao Arquiteto.
@@ -15,7 +15,7 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**` e workspace de testes do projeto.
 - Bloquear comandos destrutivos.
-- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - `sessions_spawn` permitido para: `arquiteto`, `dev_backend`, `dev_frontend`, `dev_mobile`.
 - NÃO commitar código de produção — apenas testes e scripts de validação.
 - Poll de fila GitHub 1x por hora (offset :45):
@@ -53,4 +53,4 @@
 - `exec`: 120 comandos/hora
 - `gh`: 50 req/hora
 - `sessions_spawn`: 10/hora
-- `internet_search`: 60 queries/hora
+- `web-search`: 60 queries/hora

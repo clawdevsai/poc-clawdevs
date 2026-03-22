@@ -157,7 +157,7 @@ openclaw-logs:
 openclaw-dashboard:
 	kubectl --context=$(KUBE_CONTEXT) exec pod/clawdevs-ai-0 -- openclaw dashboard --no-open
 
-reset-all:
+reset-all: stack-apply stack-status
 	@echo "Reset completo: apaga todos os pods e volumes do stack e recria tudo do zero."
 	kubectl --context=$(KUBE_CONTEXT) delete pod --all --ignore-not-found --wait=true --timeout=120s
 	kubectl --context=$(KUBE_CONTEXT) delete pvc --all --ignore-not-found --wait=true --timeout=120s

@@ -8,7 +8,7 @@ A cada 30 minutos:
    - iniciar 1 task por ciclo
    - reportar `em progresso` ao Arquiteto
 3. Verificar saúde de produção:
-   - consultar dashboards de SLO (via browser/API)
+   - consultar dashboards de SLO via API/telemetria e `web-read` quando necessário
    - verificar taxa de erro e latência p95/p99
    - verificar uptime e health checks
 4. Classificar anomalias de produção:

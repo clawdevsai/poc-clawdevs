@@ -4,7 +4,7 @@
 - `read(path)`: ler arquivos da task/projeto e artefatos UX.
 - `write(path, content)`: escrever screens/componentes/testes/docs.
 - `exec(command)`: executar build/test/lint mobile.
-- `gh(args...)`: atualizar issues/PRs e consultar workflows.
+- `exec("gh <args>")`: atualizar issues/PRs e consultar workflows.
 - `git(args...)`: commit/branch/merge sem comandos destrutivos.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto ou QA_Engineer.
 - `sessions_send(session_id, message)`: enviar update ou delegar ao QA_Engineer.
@@ -15,7 +15,7 @@
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**`.
 - Bloquear comandos destrutivos (`rm -rf`, `git push -f`, etc.).
-- `gh` sempre com `--repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `active_repository.env` antes de qualquer ação gh/git.
 - Poll de fila GitHub 1x por hora (offset :30):
   - `gh issue list --state open --label mobile --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`
@@ -49,4 +49,4 @@
 - `exec`: 120 comandos/hora
 - `gh`: 50 req/hora
 - `sessions_spawn`: 10/hora
-- `internet_search`: 60 queries/hora
+- `web-search`: 60 queries/hora

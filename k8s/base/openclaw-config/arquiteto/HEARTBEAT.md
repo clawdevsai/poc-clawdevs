@@ -9,7 +9,7 @@ A cada 5 minutos (ou conforme configurado):
    - ADR pendente de aprovação > 48h: notificar PO.
 3. Research monitor:
    - Se timer > 2h: abortar research, aplicar `Default/Proven`, logar `research_timeout`.
-   - Se `internet_search` > 30 queries/hora: aplicar throttle.
+   - Se `web-search` > 30 queries/hora: aplicar throttle.
 4. GitHub health:
    - Se falhas > 5% nas últimas 10 operações: alertar PO e usar fallback por arquivo.
 5. Pipeline docs/issue:
