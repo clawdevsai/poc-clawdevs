@@ -11,6 +11,9 @@ secretGenerator:
   - name: ollama-auth
     envs:
       - .env
+  - name: clawdevs-panel-auth
+    envs:
+      - .env
 
 generatorOptions:
   disableNameSuffixHash: true

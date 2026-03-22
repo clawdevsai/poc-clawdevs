@@ -319,3 +319,46 @@ sdd-example:
 
 sdd-real-initiative:
 	@echo "Iniciativa real: k8s/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/"
+
+# ─────────────────────────────────────────────────────────────
+# Control Panel
+# ─────────────────────────────────────────────────────────────
+
+.PHONY: panel-build panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url
+
+panel-build: ## Build control panel Docker images in minikube context
+	eval $$(minikube docker-env) && \
+	docker build -t clawdevs-panel-backend:latest control-panel/backend/ && \
+	docker build -t clawdevs-panel-frontend:latest control-panel/frontend/
+
+panel-apply: ## Deploy control panel to cluster
+	kubectl apply -k k8s/base/control-panel/
+
+panel-status: ## Show control panel pod status
+	kubectl get pods -l app.kubernetes.io/part-of=clawdevs-panel 2>/dev/null || \
+	kubectl get pods | grep clawdevs-panel
+
+panel-logs-backend: ## Stream backend logs
+	kubectl logs -l app=clawdevs-panel-backend -f --tail=100
+
+panel-logs-frontend: ## Stream frontend logs
+	kubectl logs -l app=clawdevs-panel-frontend -f --tail=100
+
+panel-db-migrate: ## Run Alembic migrations
+	kubectl exec -it $$(kubectl get pod -l app=clawdevs-panel-backend -o jsonpath='{.items[0].metadata.name}') \
+	-- alembic upgrade head
+
+panel-restart: ## Restart control panel pods
+	kubectl rollout restart deployment/clawdevs-panel-backend deployment/clawdevs-panel-frontend deployment/clawdevs-panel-worker
+
+panel-destroy: ## Remove all control panel resources
+	kubectl delete -k k8s/base/control-panel/ || true
+
+panel-url: ## Show access URLs for the control panel
+	@echo "┌─────────────────────────────────────────┐"
+	@echo "│     ClawDevs AI Control Panel URLs      │"
+	@echo "├─────────────────────────────────────────┤"
+	@echo "│ Frontend: http://$$(minikube ip):31880   │"
+	@echo "│ Backend:  http://$$(minikube ip):31881   │"
+	@echo "│ API Docs: http://$$(minikube ip):31881/docs │"
+	@echo "└─────────────────────────────────────────┘"
