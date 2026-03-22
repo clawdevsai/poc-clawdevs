@@ -536,6 +536,9 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/briefs"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/implementation/docs"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/session_finished"
+              mkdir -p "${OPENCLAW_STATE_DIR}/backlog/ux"
+              mkdir -p "${OPENCLAW_STATE_DIR}/backlog/security/scans"
+              mkdir -p "${OPENCLAW_STATE_DIR}/backlog/database"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
@@ -547,9 +550,9 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/dev_frontend/agent" "${OPENCLAW_STATE_DIR}/agents/dev_mobile/agent" "${OPENCLAW_STATE_DIR}/agents/qa_engineer/agent"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/devops_sre/agent" "${OPENCLAW_STATE_DIR}/agents/security_engineer/agent"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/ux_designer/agent" "${OPENCLAW_STATE_DIR}/agents/dba_data_engineer/agent"
-              cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md" ] || cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
               cp /bootstrap/agent-config/ceo-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOT.md"
-              cp /bootstrap/agent-config/ceo-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/ceo-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cp /bootstrap/agent-config/ceo-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-ceo/HEARTBEAT.md"
               cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
               cp /bootstrap/agent-config/ceo-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-ceo/INPUT_SCHEMA.json"
@@ -582,9 +585,9 @@ spec:
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SPECKIT_ADAPTATION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-ceo/README.md"
-              cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md" ] || cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
               cp /bootstrap/agent-config/po-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-po/BOOT.md"
-              cp /bootstrap/agent-config/po-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-po/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-po/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/po-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-po/BOOTSTRAP.md"
               cp /bootstrap/agent-config/po-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-po/HEARTBEAT.md"
               cp /bootstrap/agent-config/po-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-po/IDENTITY.md"
               cp /bootstrap/agent-config/po-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-po/INPUT_SCHEMA.json"
@@ -615,9 +618,9 @@ spec:
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-po/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-po/SPECKIT_ADAPTATION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-po/README.md"
-              cp /bootstrap/agent-config/arquiteto-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-arquiteto/AGENTS.md" ] || cp /bootstrap/agent-config/arquiteto-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/AGENTS.md"
               cp /bootstrap/agent-config/arquiteto-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BOOT.md"
-              cp /bootstrap/agent-config/arquiteto-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/arquiteto-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BOOTSTRAP.md"
               cp /bootstrap/agent-config/arquiteto-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/HEARTBEAT.md"
               cp /bootstrap/agent-config/arquiteto-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/IDENTITY.md"
               cp /bootstrap/agent-config/arquiteto-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-arquiteto/INPUT_SCHEMA.json"
@@ -648,9 +651,9 @@ spec:
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SPECKIT_ADAPTATION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/README.md"
-              cp /bootstrap/agent-config/dev_backend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dev_backend/AGENTS.md" ] || cp /bootstrap/agent-config/dev_backend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/AGENTS.md"
               cp /bootstrap/agent-config/dev_backend-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOT.md"
-              cp /bootstrap/agent-config/dev_backend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dev_backend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOTSTRAP.md"
               cp /bootstrap/agent-config/dev_backend-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/HEARTBEAT.md"
               cp /bootstrap/agent-config/dev_backend-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/IDENTITY.md"
               cp /bootstrap/agent-config/dev_backend-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_backend/INPUT_SCHEMA.json"
@@ -681,9 +684,9 @@ spec:
               cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SDD_OPERATING_MODEL.md"
               cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SPECKIT_ADAPTATION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/README.md"
-              cp /bootstrap/agent-config/dev_frontend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/AGENTS.md" ] || cp /bootstrap/agent-config/dev_frontend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/AGENTS.md"
               cp /bootstrap/agent-config/dev_frontend-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOT.md"
-              cp /bootstrap/agent-config/dev_frontend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dev_frontend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOTSTRAP.md"
               cp /bootstrap/agent-config/dev_frontend-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/HEARTBEAT.md"
               cp /bootstrap/agent-config/dev_frontend-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/IDENTITY.md"
               cp /bootstrap/agent-config/dev_frontend-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/INPUT_SCHEMA.json"
@@ -694,9 +697,9 @@ spec:
               cp /bootstrap/agent-config/dev_frontend-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/README.md"
-              cp /bootstrap/agent-config/dev_mobile-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/AGENTS.md" ] || cp /bootstrap/agent-config/dev_mobile-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/AGENTS.md"
               cp /bootstrap/agent-config/dev_mobile-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOT.md"
-              cp /bootstrap/agent-config/dev_mobile-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dev_mobile-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOTSTRAP.md"
               cp /bootstrap/agent-config/dev_mobile-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/HEARTBEAT.md"
               cp /bootstrap/agent-config/dev_mobile-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/IDENTITY.md"
               cp /bootstrap/agent-config/dev_mobile-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/INPUT_SCHEMA.json"
@@ -707,9 +710,9 @@ spec:
               cp /bootstrap/agent-config/dev_mobile-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/README.md"
-              cp /bootstrap/agent-config/qa_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/AGENTS.md" ] || cp /bootstrap/agent-config/qa_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/AGENTS.md"
               cp /bootstrap/agent-config/qa_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOT.md"
-              cp /bootstrap/agent-config/qa_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/qa_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOTSTRAP.md"
               cp /bootstrap/agent-config/qa_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/HEARTBEAT.md"
               cp /bootstrap/agent-config/qa_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/IDENTITY.md"
               cp /bootstrap/agent-config/qa_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/INPUT_SCHEMA.json"
@@ -720,9 +723,9 @@ spec:
               cp /bootstrap/agent-config/qa_engineer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/README.md"
-              cp /bootstrap/agent-config/devops_sre-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-devops_sre/AGENTS.md" ] || cp /bootstrap/agent-config/devops_sre-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/AGENTS.md"
               cp /bootstrap/agent-config/devops_sre-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOT.md"
-              cp /bootstrap/agent-config/devops_sre-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/devops_sre-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOTSTRAP.md"
               cp /bootstrap/agent-config/devops_sre-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/HEARTBEAT.md"
               cp /bootstrap/agent-config/devops_sre-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/IDENTITY.md"
               cp /bootstrap/agent-config/devops_sre-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-devops_sre/INPUT_SCHEMA.json"
@@ -733,9 +736,9 @@ spec:
               cp /bootstrap/agent-config/devops_sre-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/README.md"
-              cp /bootstrap/agent-config/security_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-security_engineer/AGENTS.md" ] || cp /bootstrap/agent-config/security_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/AGENTS.md"
               cp /bootstrap/agent-config/security_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOT.md"
-              cp /bootstrap/agent-config/security_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/security_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOTSTRAP.md"
               cp /bootstrap/agent-config/security_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/HEARTBEAT.md"
               cp /bootstrap/agent-config/security_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/IDENTITY.md"
               cp /bootstrap/agent-config/security_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-security_engineer/INPUT_SCHEMA.json"
@@ -746,9 +749,9 @@ spec:
               cp /bootstrap/agent-config/security_engineer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/README.md"
-              cp /bootstrap/agent-config/ux_designer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-ux_designer/AGENTS.md" ] || cp /bootstrap/agent-config/ux_designer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/AGENTS.md"
               cp /bootstrap/agent-config/ux_designer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOT.md"
-              cp /bootstrap/agent-config/ux_designer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/ux_designer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOTSTRAP.md"
               cp /bootstrap/agent-config/ux_designer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/HEARTBEAT.md"
               cp /bootstrap/agent-config/ux_designer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/IDENTITY.md"
               cp /bootstrap/agent-config/ux_designer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-ux_designer/INPUT_SCHEMA.json"
@@ -759,9 +762,9 @@ spec:
               cp /bootstrap/agent-config/ux_designer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/README.md"
-              cp /bootstrap/agent-config/dba_data_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/AGENTS.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/AGENTS.md" ] || cp /bootstrap/agent-config/dba_data_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/AGENTS.md"
               cp /bootstrap/agent-config/dba_data_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOT.md"
-              cp /bootstrap/agent-config/dba_data_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOTSTRAP.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dba_data_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOTSTRAP.md"
               cp /bootstrap/agent-config/dba_data_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/HEARTBEAT.md"
               cp /bootstrap/agent-config/dba_data_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/IDENTITY.md"
               cp /bootstrap/agent-config/dba_data_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/INPUT_SCHEMA.json"
@@ -772,6 +775,26 @@ spec:
               cp /bootstrap/agent-config/dba_data_engineer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/README.md"
+              for ws_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer; do
+                ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
+                if [ ! -f "${ws_dir}/MEMORY.md" ]; then
+                  printf '%s\n' \
+                    "# MEMORY.md - ${ws_agent}" \
+                    "" \
+                    "## Instrucoes de uso" \
+                    "- Registre decisoes duraveis, tech stack, contexto de projeto e aprendizados relevantes." \
+                    "- Use memory/YYYY-MM-DD.md para notas do dia-a-dia." \
+                    "- Este arquivo e carregado em toda sessao -- mantenha conciso e objetivo." \
+                    "" \
+                    "## Contexto do projeto" \
+                    "" \
+                    "## Decisoes arquiteturais (ADRs resumidas)" \
+                    "" \
+                    "## Historico de escalacoes e resolucoes" \
+                    > "${ws_dir}/MEMORY.md"
+                fi
+                mkdir -p "${ws_dir}/memory"
+              done
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
@@ -812,7 +835,6 @@ spec:
               EOF
               chmod +x "${OPENCLAW_STATE_DIR}/git-hooks/pre-commit" "${OPENCLAW_STATE_DIR}/git-hooks/pre-push"
               git config --global core.hooksPath "${OPENCLAW_STATE_DIR}/git-hooks"
-              rm -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
               {
                 "gateway": {
@@ -874,6 +896,15 @@ spec:
                   }
                 },
                 "session": {
+                  "dmScope": "per-channel-peer",
+                  "maintenance": {
+                    "mode": "enforce",
+                    "pruneAfter": "30d",
+                    "maxEntries": 1000,
+                    "rotateBytes": "20mb",
+                    "maxDiskBytes": "3gb",
+                    "highWaterBytes": "2.4gb"
+                  },
                   "sendPolicy": {
                     "rules": [
                       {
@@ -902,7 +933,7 @@ spec:
                       "sessionToolsVisibility": "spawned"
                     },
                     "subagents": {
-                      "runTimeoutSeconds": 900,
+                      "runTimeoutSeconds": 1800,
                       "maxConcurrent": 6,
                       "maxSpawnDepth": 3,
                       "maxChildrenPerAgent": 8,
@@ -992,6 +1023,7 @@ spec:
                           "process",
                           "browser",
                           "message",
+                          "agents_list",
                           "sessions_list",
                           "sessions_history",
                           "sessions_send",
@@ -1434,6 +1466,66 @@ spec:
                   done
                 ) &
               fi
+              (
+                set +e
+                CEO_CRON_NAME="ceo_daily_briefing"
+                CEO_CRON_EXPR="0 8 * * *"
+                CEO_CRON_TZ="${DEV_BACKEND_CRON_TZ:-America/Sao_Paulo}"
+                CEO_CRON_MSG='Executar briefing diario: (1) verificar /data/openclaw/backlog/briefs/ por BRIEFs nao processados — para cada BRIEF sem SPEC correspondente, delegar ao PO via sessions_send para refinamento; (2) verificar /data/openclaw/backlog/status/agent_error_center.jsonl por erros nao resolvidos e tomar acao; (3) se nada pendente: registrar status OK no /data/openclaw/backlog/status/ceo-daily.log.'
+                for _ in $(seq 1 24); do
+                  sleep 5
+                  if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                    CRON_ID="$(jq -r --arg n "${CEO_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                    if [ -n "${CRON_ID}" ]; then
+                      echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CEO_CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/ceo_daily.log"
+                      exit 0
+                    fi
+                    if openclaw cron add \
+                        --name "${CEO_CRON_NAME}" \
+                        --cron "${CEO_CRON_EXPR}" \
+                        --tz "${CEO_CRON_TZ}" \
+                        --session isolated \
+                        --message "${CEO_CRON_MSG}" \
+                        --agent ceo \
+                        --no-deliver >/tmp/openclaw-cron-add-ceo.log 2>&1; then
+                      echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CEO_CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/ceo_daily.log"
+                      exit 0
+                    fi
+                  fi
+                done
+                echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron do ceo; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/ceo_daily.log"
+                exit 0
+              ) &
+              (
+                set +e
+                ARQ_CRON_NAME="arquiteto_spec_review"
+                ARQ_CRON_EXPR="30 8 * * *"
+                ARQ_CRON_TZ="${DEV_BACKEND_CRON_TZ:-America/Sao_Paulo}"
+                ARQ_CRON_MSG='Executar revisao proativa de artefatos: (1) verificar /data/openclaw/backlog/specs/ por SPECs aprovadas sem PLAN correspondente em /data/openclaw/backlog/tasks/ — para cada SPEC sem PLAN, criar PLAN e TASKs e delegar ao agente correto (dev_backend/dev_frontend/dev_mobile/dba) via sessions_spawn; (2) verificar issues GitHub com label "ready-for-dev" que nao possuem TASK criada e criar as TASKs; (3) se nada pendente: registrar status OK em /data/openclaw/backlog/status/arquiteto-daily.log.'
+                for _ in $(seq 1 24); do
+                  sleep 5
+                  if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                    CRON_ID="$(jq -r --arg n "${ARQ_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                    if [ -n "${CRON_ID}" ]; then
+                      echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${ARQ_CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/arquiteto_spec_review.log"
+                      exit 0
+                    fi
+                    if openclaw cron add \
+                        --name "${ARQ_CRON_NAME}" \
+                        --cron "${ARQ_CRON_EXPR}" \
+                        --tz "${ARQ_CRON_TZ}" \
+                        --session isolated \
+                        --message "${ARQ_CRON_MSG}" \
+                        --agent arquiteto \
+                        --no-deliver >/tmp/openclaw-cron-add-arquiteto.log 2>&1; then
+                      echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${ARQ_CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/arquiteto_spec_review.log"
+                      exit 0
+                    fi
+                  fi
+                done
+                echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron do arquiteto; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/arquiteto_spec_review.log"
+                exit 0
+              ) &
               if [ "${DEV_BACKEND_CRON_ENABLED:-false}" = "true" ]; then
                 (
                   set +e
@@ -1693,13 +1785,37 @@ spec:
               (
                 set +e
                 WATCHDOG_INTERVAL=3600
+                declare -A CRON_CONFIGS
+                CRON_CONFIGS[ceo]="ceo_daily_briefing|0 8 * * *|${DEV_BACKEND_CRON_TZ:-America/Sao_Paulo}|Executar briefing diario: verificar backlog/briefs/ por BRIEFs nao processados e delegar ao PO; verificar erros nao resolvidos; registrar status."
+                CRON_CONFIGS[arquiteto]="arquiteto_spec_review|30 8 * * *|${DEV_BACKEND_CRON_TZ:-America/Sao_Paulo}|Verificar SPECs aprovadas sem PLAN e criar TASKs; verificar issues ready-for-dev sem TASK; registrar status."
+                CRON_CONFIGS[dev_backend]="${DEV_BACKEND_CRON_NAME:-dev_backend_hourly_queue_poll}|${DEV_BACKEND_CRON_EXPR:-0 * * * *}|${DEV_BACKEND_CRON_TZ:-America/Sao_Paulo}|Poll GitHub issues com label \"back_end\"; se houver issue elegivel, implementar task com foco em baixissimo custo cloud e altissima performance; se nao houver, manter standby."
+                CRON_CONFIGS[dev_frontend]="${DEV_FRONTEND_CRON_NAME:-dev_frontend_hourly_queue_poll}|${DEV_FRONTEND_CRON_EXPR:-15 * * * *}|${DEV_FRONTEND_CRON_TZ:-America/Sao_Paulo}|Poll GitHub issues com label \"front_end\"; se houver issue elegivel, implementar task frontend; se nao houver, manter standby."
+                CRON_CONFIGS[dev_mobile]="${DEV_MOBILE_CRON_NAME:-dev_mobile_hourly_queue_poll}|${DEV_MOBILE_CRON_EXPR:-30 * * * *}|${DEV_MOBILE_CRON_TZ:-America/Sao_Paulo}|Poll GitHub issues com label \"mobile\"; se houver issue elegivel, implementar task mobile; se nao houver, manter standby."
+                CRON_CONFIGS[qa_engineer]="${QA_CRON_NAME:-qa_engineer_hourly_queue_poll}|${QA_CRON_EXPR:-45 * * * *}|${QA_CRON_TZ:-America/Sao_Paulo}|Poll GitHub issues com label \"tests\"; se houver issue elegivel, executar validacao BDD e testes e2e; se nao houver, manter standby."
+                CRON_CONFIGS[security_engineer]="${SECURITY_ENGINEER_CRON_NAME:-security_engineer_scan}|${SECURITY_ENGINEER_CRON_EXPR:-0 */6 * * *}|${SECURITY_ENGINEER_CRON_TZ:-America/Sao_Paulo}|Executar scan proativo de seguranca: auditoria de dependencias (CVEs), SAST, deteccao de secrets e supply chain; aplicar patches autonomos para CVSS >= 7.0; escalar P0 ao CEO."
+                CRON_CONFIGS[devops_sre]="${DEVOPS_SRE_CRON_NAME:-devops_sre_queue_poll}|${DEVOPS_SRE_CRON_EXPR:-*/30 * * * *}|${DEVOPS_SRE_CRON_TZ:-America/Sao_Paulo}|Poll GitHub issues com label \"devops\"; verificar SLOs, pipelines e alertas de producao; se nao houver acao, manter standby."
+                CRON_CONFIGS[ux_designer]="${UX_DESIGNER_CRON_NAME:-ux_designer_queue_poll}|${UX_DESIGNER_CRON_EXPR:-0 */4 * * *}|${UX_DESIGNER_CRON_TZ:-America/Sao_Paulo}|Poll GitHub issues com label \"ux\"; produzir wireframes, fluxos de usuario e design tokens; se nao houver acao, manter standby."
+                CRON_CONFIGS[dba_data_engineer]="${DBA_DATA_ENGINEER_CRON_NAME:-dba_data_engineer_queue_poll}|${DBA_DATA_ENGINEER_CRON_EXPR:-30 */4 * * *}|${DBA_DATA_ENGINEER_CRON_TZ:-America/Sao_Paulo}|Poll GitHub issues com label \"dba\"; otimizar schemas, migrations e queries; se nao houver acao, manter standby."
                 while true; do
                   sleep "${WATCHDOG_INTERVAL}"
                   if openclaw cron list --json > /tmp/openclaw-cron-watchdog.json 2>/dev/null; then
-                    for agent_name in dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer; do
+                    for agent_name in ceo arquiteto dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer; do
                       count="$(jq -r --arg n "${agent_name}" '[.jobs[]? | select(.name | startswith($n))] | length' /tmp/openclaw-cron-watchdog.json 2>/dev/null || echo 0)"
                       if [ "${count}" = "0" ]; then
-                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") WATCHDOG: cron do agente ${agent_name} nao encontrado na lista de jobs — possivel falha do scheduler" >> "${OPENCLAW_STATE_DIR}/scheduler/watchdog.log"
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") WATCHDOG: cron do agente ${agent_name} ausente — tentando recriar" >> "${OPENCLAW_STATE_DIR}/scheduler/watchdog.log"
+                        IFS='|' read -r cron_name cron_expr cron_tz cron_msg <<< "${CRON_CONFIGS[${agent_name}]}"
+                        if openclaw cron add \
+                            --name "${cron_name}" \
+                            --cron "${cron_expr}" \
+                            --tz "${cron_tz}" \
+                            --session isolated \
+                            --message "${cron_msg}" \
+                            --agent "${agent_name}" \
+                            --no-deliver >>/tmp/openclaw-cron-watchdog-recreate.log 2>&1; then
+                          echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") WATCHDOG: cron '${cron_name}' recriado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/watchdog.log"
+                        else
+                          echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") WATCHDOG: falha ao recriar cron do agente ${agent_name}" >> "${OPENCLAW_STATE_DIR}/scheduler/watchdog.log"
+                        fi
                       fi
                     done
                   else
