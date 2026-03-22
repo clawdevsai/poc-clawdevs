@@ -150,6 +150,16 @@ spec:
               value: "30 */4 * * *"
             - name: DBA_DATA_ENGINEER_CRON_TZ
               value: "America/Sao_Paulo"
+            - name: MEMORY_CURATOR_CRON_ENABLED
+              value: "true"
+            - name: MEMORY_CURATOR_CRON_NAME
+              value: "memory_curator_promote"
+            - name: MEMORY_CURATOR_CRON_EXPR
+              value: "0 2 * * *"
+            - name: MEMORY_CURATOR_CRON_TZ
+              value: "America/Sao_Paulo"
+            - name: MEMORY_BASE_PATH
+              value: "/data/openclaw/memory"
             - name: OPENCLAW_LOG_LEVEL
               valueFrom:
                 secretKeyRef:
@@ -547,9 +557,11 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_frontend" "${OPENCLAW_STATE_DIR}/workspace-dev_mobile" "${OPENCLAW_STATE_DIR}/workspace-qa_engineer"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-devops_sre" "${OPENCLAW_STATE_DIR}/workspace-security_engineer"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer" "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-memory_curator"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/dev_frontend/agent" "${OPENCLAW_STATE_DIR}/agents/dev_mobile/agent" "${OPENCLAW_STATE_DIR}/agents/qa_engineer/agent"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/devops_sre/agent" "${OPENCLAW_STATE_DIR}/agents/security_engineer/agent"
               mkdir -p "${OPENCLAW_STATE_DIR}/agents/ux_designer/agent" "${OPENCLAW_STATE_DIR}/agents/dba_data_engineer/agent"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/memory_curator/agent"
               [ -f "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md" ] || cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
               cp /bootstrap/agent-config/ceo-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOT.md"
               [ -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/ceo-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
@@ -775,6 +787,12 @@ spec:
               cp /bootstrap/agent-config/dba_data_engineer-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SKILL.md"
               cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/CONSTITUTION.md"
               cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/README.md"
+              [ -f "${OPENCLAW_STATE_DIR}/workspace-memory_curator/AGENTS.md" ] || cp /bootstrap/agent-config/memory_curator-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/AGENTS.md"
+              cp /bootstrap/agent-config/memory_curator-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/BOOT.md"
+              cp /bootstrap/agent-config/memory_curator-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/HEARTBEAT.md"
+              cp /bootstrap/agent-config/memory_curator-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/IDENTITY.md"
+              cp /bootstrap/agent-config/memory_curator-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/SOUL.md"
+              cp /bootstrap/agent-config/memory_curator-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/SKILL.md"
               for ws_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer; do
                 ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
                 if [ ! -f "${ws_dir}/MEMORY.md" ]; then
@@ -795,6 +813,29 @@ spec:
                 fi
                 mkdir -p "${ws_dir}/memory"
               done
+              # --- Sistema de Memória Cross-Agent (aiox-core pattern) ---
+              MEMORY_BASE="${OPENCLAW_STATE_DIR}/memory"
+              mkdir -p "${MEMORY_BASE}/shared"
+              for mem_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer memory_curator; do
+                mkdir -p "${MEMORY_BASE}/${mem_agent}"
+                if [ ! -f "${MEMORY_BASE}/${mem_agent}/MEMORY.md" ]; then
+                  src="/bootstrap/agent-config/${mem_agent}-MEMORY.md"
+                  if [ -f "${src}" ]; then
+                    cp "${src}" "${MEMORY_BASE}/${mem_agent}/MEMORY.md"
+                  else
+                    printf '# MEMORY — %s\n\n## Active Patterns\n\n## Promotion Candidates\n\n## Archived\n' "${mem_agent}" > "${MEMORY_BASE}/${mem_agent}/MEMORY.md"
+                  fi
+                fi
+              done
+              if [ ! -f "${MEMORY_BASE}/shared/SHARED_MEMORY.md" ]; then
+                src_shared="/bootstrap/agent-config/shared-SHARED_MEMORY.md"
+                if [ -f "${src_shared}" ]; then
+                  cp "${src_shared}" "${MEMORY_BASE}/shared/SHARED_MEMORY.md"
+                else
+                  printf '# SHARED MEMORY — ClawDevs AI\n\n## Promoted Patterns\n' > "${MEMORY_BASE}/shared/SHARED_MEMORY.md"
+                fi
+              fi
+              # --- Fim: Sistema de Memória Cross-Agent ---
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
               render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"

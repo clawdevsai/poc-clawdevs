@@ -252,3 +252,25 @@ subagent_guardrails:
 
 communication:
   language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."
+
+memory:
+  enabled: true
+  agent_memory_path: "/data/openclaw/memory/qa_engineer/MEMORY.md"
+  shared_memory_path: "/data/openclaw/memory/shared/SHARED_MEMORY.md"
+  read_on_task_start:
+    - "Ler shared_memory_path — aplicar padrões globais como contexto adicional"
+    - "Ler agent_memory_path — resgatar aprendizados próprios relevantes ao domínio da task"
+  write_on_task_complete:
+    - "Identificar até 3 aprendizados da sessão aplicáveis a tarefas futuras"
+    - "Appendar em agent_memory_path no formato: '- [PATTERN] <descrição> | Descoberto: <data> | Fonte: <task-id>'"
+    - "Não duplicar padrões já existentes — verificar antes de escrever"
+  capture_categories:
+    - "Cenários BDD que geraram falhas recorrentes e suas correções"
+    - "Padrões de cobertura de testes exigidos pelo projeto"
+    - "Ferramentas de teste preferidas (Playwright, Cypress, k6, Pact)"
+    - "Erros recorrentes encontrados em revisões de PR"
+    - "NFRs de qualidade específicas do projeto"
+  do_not_capture:
+    - "Código completo ou diffs (muito volumoso)"
+    - "Detalhes de issues específicas"
+    - "Informações temporárias ou one-off"

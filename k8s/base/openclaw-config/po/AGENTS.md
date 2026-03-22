@@ -275,3 +275,25 @@ operational_notes:
   - "Priorizar clareza de escopo e sequenciamento"
   - "Evitar replanejamento sem evidencia"
   - "Toda excecao relevante deve ser registrada"
+
+memory:
+  enabled: true
+  agent_memory_path: "/data/openclaw/memory/po/MEMORY.md"
+  shared_memory_path: "/data/openclaw/memory/shared/SHARED_MEMORY.md"
+  read_on_task_start:
+    - "Ler shared_memory_path — aplicar padrões globais como contexto adicional"
+    - "Ler agent_memory_path — resgatar aprendizados próprios relevantes ao domínio da task"
+  write_on_task_complete:
+    - "Identificar até 3 aprendizados da sessão aplicáveis a tarefas futuras"
+    - "Appendar em agent_memory_path no formato: '- [PATTERN] <descrição> | Descoberto: <data> | Fonte: <task-id>'"
+    - "Não duplicar padrões já existentes — verificar antes de escrever"
+  capture_categories:
+    - "Padrões de user story que geraram maior clareza para os devs"
+    - "Critérios de aceitação BDD mais efetivos por domínio"
+    - "Preferências de priorização do Director para este projeto"
+    - "Tipos de feature mais frequentes no projeto"
+    - "Ambiguidades recorrentes e como foram resolvidas"
+  do_not_capture:
+    - "Conteúdo completo de SPECs (já no backlog)"
+    - "Detalhes de issues específicas"
+    - "Informações temporárias ou one-off"

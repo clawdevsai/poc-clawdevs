@@ -462,3 +462,25 @@ subagent_guardrails:
 
 communication:
   language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."
+
+memory:
+  enabled: true
+  agent_memory_path: "/data/openclaw/memory/dev_backend/MEMORY.md"
+  shared_memory_path: "/data/openclaw/memory/shared/SHARED_MEMORY.md"
+  read_on_task_start:
+    - "Ler shared_memory_path — aplicar padrões globais como contexto adicional"
+    - "Ler agent_memory_path — resgatar aprendizados próprios relevantes ao domínio da task"
+  write_on_task_complete:
+    - "Identificar até 3 aprendizados da sessão aplicáveis a tarefas futuras"
+    - "Appendar em agent_memory_path no formato: '- [PATTERN] <descrição> | Descoberto: <data> | Fonte: <task-id>'"
+    - "Não duplicar padrões já existentes — verificar antes de escrever"
+  capture_categories:
+    - "Preferências de stack/framework identificadas no projeto"
+    - "Padrões de arquitetura aprovados pelo Arquiteto"
+    - "Erros recorrentes e como foram resolvidos"
+    - "Convenções de nomenclatura, estrutura de pastas, padrões de commit"
+    - "NFRs específicas do projeto (targets de performance, regras de segurança)"
+  do_not_capture:
+    - "Código completo ou diffs (muito volumoso)"
+    - "Detalhes de issues específicas"
+    - "Informações temporárias ou one-off"

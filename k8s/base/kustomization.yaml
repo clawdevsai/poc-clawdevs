@@ -145,6 +145,28 @@ configMapGenerator:
       - dba_data_engineer-TOOLS.md=openclaw-config/dba_data_engineer/TOOLS.md
       - dba_data_engineer-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
       - dba_data_engineer-skill-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
+      # memory_curator
+      - memory_curator-AGENTS.md=openclaw-config/memory_curator/AGENTS.md
+      - memory_curator-BOOT.md=openclaw-config/memory_curator/BOOT.md
+      - memory_curator-HEARTBEAT.md=openclaw-config/memory_curator/HEARTBEAT.md
+      - memory_curator-IDENTITY.md=openclaw-config/memory_curator/IDENTITY.md
+      - memory_curator-SOUL.md=openclaw-config/memory_curator/SOUL.md
+      - memory_curator-skill-SKILL.md=openclaw-config/memory_curator/SKILL.md
+      - memory_curator-MEMORY.md=openclaw-config/memory_curator/MEMORY.md
+      # memory baselines (por agente)
+      - ceo-MEMORY.md=openclaw-config/ceo/MEMORY.md
+      - po-MEMORY.md=openclaw-config/po/MEMORY.md
+      - arquiteto-MEMORY.md=openclaw-config/arquiteto/MEMORY.md
+      - dev_backend-MEMORY.md=openclaw-config/dev_backend/MEMORY.md
+      - dev_frontend-MEMORY.md=openclaw-config/dev_frontend/MEMORY.md
+      - dev_mobile-MEMORY.md=openclaw-config/dev_mobile/MEMORY.md
+      - qa_engineer-MEMORY.md=openclaw-config/qa_engineer/MEMORY.md
+      - security_engineer-MEMORY.md=openclaw-config/security_engineer/MEMORY.md
+      - devops_sre-MEMORY.md=openclaw-config/devops_sre/MEMORY.md
+      - ux_designer-MEMORY.md=openclaw-config/ux_designer/MEMORY.md
+      - dba_data_engineer-MEMORY.md=openclaw-config/dba_data_engineer/MEMORY.md
+      # shared memory
+      - shared-SHARED_MEMORY.md=openclaw-config/shared/SHARED_MEMORY.md
       # shared
       - shared-BRIEF_TEMPLATE.md=openclaw-config/shared/BRIEF_TEMPLATE.md
       - shared-CLARIFY_TEMPLATE.md=openclaw-config/shared/CLARIFY_TEMPLATE.md
