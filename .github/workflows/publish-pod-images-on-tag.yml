@@ -139,6 +139,8 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
+          dockerhub-user: ${{ steps.hub.outputs.username }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
           image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: critical,high
           only-fixed: true
@@ -151,6 +153,8 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
+          dockerhub-user: ${{ steps.hub.outputs.username }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
           image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: critical,high
           only-fixed: true
@@ -165,6 +169,8 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
+          dockerhub-user: ${{ steps.hub.outputs.username }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
           image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: medium
           ignore-base: ${{ matrix.image == 'ollama-runtime' }}
@@ -177,6 +183,8 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
+          dockerhub-user: ${{ steps.hub.outputs.username }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
           image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: medium
           only-fixed: true
