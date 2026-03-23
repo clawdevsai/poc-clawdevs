@@ -2,9 +2,10 @@ import asyncio
 import json
 import logging
 from typing import Dict, List
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.auth import decode_token
+from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -14,8 +15,7 @@ class ConnectionManager:
     def __init__(self):
         self.active: Dict[str, List[WebSocket]] = {}
 
-    async def connect(self, channel: str, websocket: WebSocket):
-        await websocket.accept()
+    def register(self, channel: str, websocket: WebSocket):
         self.active.setdefault(channel, []).append(websocket)
         logger.info(f"WS connected: channel={channel}, total={len(self.active[channel])}")
 
@@ -44,25 +44,42 @@ manager = ConnectionManager()
 async def websocket_endpoint(
     websocket: WebSocket,
     channel: str,
-    token: str = Query(default=""),
 ):
+    settings = get_settings()
     ALLOWED_CHANNELS = {"dashboard", "agents", "approvals", "cluster", "crons"}
+
     if channel not in ALLOWED_CHANNELS:
         await websocket.close(code=4000)
         return
 
-    # Validate JWT — WebSocket connections cannot send Authorization headers,
-    # so the token is passed as a query parameter.
+    # Validate Origin header — CORSMiddleware does not protect WebSocket connections.
+    origin = websocket.headers.get("origin", "")
+    if origin not in settings.allowed_origins:
+        logger.warning(f"WS rejected invalid origin: origin={origin!r}, channel={channel}")
+        await websocket.close(code=4003)
+        return
+
+    await websocket.accept()
+
+    # Authenticate via first frame instead of query parameter.
+    # Tokens in URLs are logged by proxies, servers, and stored in browser history.
+    try:
+        raw = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
+        frame = json.loads(raw)
+        token = frame.get("token", "") if isinstance(frame, dict) and frame.get("type") == "auth" else ""
+    except (asyncio.TimeoutError, json.JSONDecodeError, Exception):
+        await websocket.close(code=4001)
+        return
+
     payload = decode_token(token) if token else None
     if payload is None:
         logger.warning(f"WS rejected unauthenticated connection: channel={channel}, ip={websocket.client}")
         await websocket.close(code=4001)
         return
 
-    await manager.connect(channel, websocket)
+    manager.register(channel, websocket)
     try:
         while True:
-            # Keep alive — client can send pings
             data = await websocket.receive_text()
             if data == "ping":
                 await websocket.send_text("pong")

@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     # Kubernetes
     k8s_namespace: str = "default"
 
+    # Security
+    debug: bool = False
+    allowed_origins: list[str] = [
+        "http://localhost:3000",
+        "http://clawdevs-panel-frontend:3000",
+    ]
+
     model_config = {"env_prefix": "PANEL_", "env_file": ".env", "extra": "allow"}
 
 

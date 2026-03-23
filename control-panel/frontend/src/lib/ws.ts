@@ -15,9 +15,15 @@ class WSManager {
 
   connect(channel: WSChannel) {
     if (this.sockets.has(channel)) return;
-    const token = localStorage.getItem("panel_token") ?? "";
-    const url = `${this.baseUrl}/ws/${channel}?token=${encodeURIComponent(token)}`;
+    const url = `${this.baseUrl}/ws/${channel}`;
     const ws = new WebSocket(url);
+
+    // Send token in the first frame instead of the URL query param.
+    // Tokens in URLs are visible in server logs, proxy logs, and browser history.
+    ws.onopen = () => {
+      const token = localStorage.getItem("panel_token") ?? "";
+      ws.send(JSON.stringify({ type: "auth", token }));
+    };
 
     ws.onmessage = (e) => {
       try {
