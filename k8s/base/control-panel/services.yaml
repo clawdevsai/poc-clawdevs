@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: clawdevs-panel-db
+  labels:
+    app: clawdevs-panel-db
+spec:
+  type: ClusterIP
+  selector:
+    app: clawdevs-panel-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clawdevs-panel-redis
+  labels:
+    app: clawdevs-panel-redis
+spec:
+  type: ClusterIP
+  selector:
+    app: clawdevs-panel-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
