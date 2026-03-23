@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clawdevs-panel-backend
+  labels:
+    app: clawdevs-panel-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clawdevs-panel-backend
+  template:
+    metadata:
+      labels:
+        app: clawdevs-panel-backend
+    spec:
+      serviceAccountName: clawdevs-panel
+      containers:
+        - name: backend
+          image: clawdevs-panel-backend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PANEL_DATABASE_URL
+              value: "postgresql+asyncpg://panel:$(PANEL_DB_PASSWORD)@clawdevs-panel-db:5432/clawdevs_panel"
+            - name: PANEL_REDIS_URL
+              value: "redis://:$(PANEL_REDIS_PASSWORD)@clawdevs-panel-redis:6379/0"
+            - name: PANEL_OPENCLAW_GATEWAY_URL
+              value: "http://clawdevs-ai:18789"
+          envFrom:
+            - secretRef:
+                name: clawdevs-panel-auth
+            - secretRef:
+                name: openclaw-auth
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: openclaw-data
+              mountPath: /data/openclaw
+              readOnly: true
+      volumes:
+        - name: openclaw-data
+          persistentVolumeClaim:
+            claimName: openclaw-data
+            readOnly: true

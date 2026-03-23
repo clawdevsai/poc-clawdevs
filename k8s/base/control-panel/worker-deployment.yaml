@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clawdevs-panel-worker
+  labels:
+    app: clawdevs-panel-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clawdevs-panel-worker
+  template:
+    metadata:
+      labels:
+        app: clawdevs-panel-worker
+    spec:
+      serviceAccountName: clawdevs-panel
+      containers:
+        - name: worker
+          image: clawdevs-panel-backend:latest
+          imagePullPolicy: Never
+          command: ["python", "-m", "rq", "worker", "--with-scheduler"]
+          env:
+            - name: PANEL_DATABASE_URL
+              value: "postgresql+asyncpg://panel:$(PANEL_DB_PASSWORD)@clawdevs-panel-db:5432/clawdevs_panel"
+            - name: PANEL_REDIS_URL
+              value: "redis://:$(PANEL_REDIS_PASSWORD)@clawdevs-panel-redis:6379/0"
+          envFrom:
+            - secretRef:
+                name: clawdevs-panel-auth
+            - secretRef:
+                name: openclaw-auth
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: openclaw-data
+              mountPath: /data/openclaw
+              readOnly: true
+      volumes:
+        - name: openclaw-data
+          persistentVolumeClaim:
+            claimName: openclaw-data
+            readOnly: true
