@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 
 from app.core.config import get_settings
+from app.api import auth as auth_router
 
 
 @asynccontextmanager
@@ -29,6 +31,10 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
+
+    add_pagination(app)
 
     @app.get("/healthz", tags=["health"])
     async def healthz():
