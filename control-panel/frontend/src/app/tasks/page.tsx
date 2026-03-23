@@ -33,6 +33,16 @@ interface CreateTaskPayload {
   assigned_agent_slug?: string
 }
 
+// ---- Helpers ----------------------------------------------------------------
+
+const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL ?? ""
+
+function githubIssueUrl(issueNumber: number) {
+  return GITHUB_REPO_URL
+    ? `${GITHUB_REPO_URL}/issues/${issueNumber}`
+    : `https://github.com/search?q=${issueNumber}&type=issues`
+}
+
 // ---- Fetchers ---------------------------------------------------------------
 
 const STATUSES = ["inbox", "in_progress", "done", "cancelled"] as const
@@ -110,7 +120,7 @@ function TaskCard({ task }: { task: Task }) {
         </span>
         {task.github_issue_number && (
           <a
-            href={`https://github.com/issues/${task.github_issue_number}`}
+            href={githubIssueUrl(task.github_issue_number!)}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
@@ -130,7 +140,7 @@ function TaskCard({ task }: { task: Task }) {
 function BoardColumn({ status, tasks, loading }: { status: string; tasks: Task[]; loading: boolean }) {
   const color = statusColor(status)
   return (
-    <div className="flex flex-col min-w-0 flex-1 min-w-[200px]">
+    <div className="flex flex-col flex-1 min-w-[200px]">
       <div className="flex items-center gap-2 mb-3">
         <h3 className="text-sm font-semibold" style={{ color }}>
           {statusLabel(status)}
@@ -462,7 +472,7 @@ export default function TasksPage() {
                           <td className="px-4 py-3">
                             {task.github_issue_number ? (
                               <a
-                                href={`https://github.com/issues/${task.github_issue_number}`}
+                                href={githubIssueUrl(task.github_issue_number!)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"

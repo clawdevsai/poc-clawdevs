@@ -2,7 +2,9 @@ import asyncio
 import json
 import logging
 from typing import Dict, List
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+
+from app.core.auth import decode_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -39,10 +41,22 @@ manager = ConnectionManager()
 
 
 @router.websocket("/ws/{channel}")
-async def websocket_endpoint(websocket: WebSocket, channel: str):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    channel: str,
+    token: str = Query(default=""),
+):
     ALLOWED_CHANNELS = {"dashboard", "agents", "approvals", "cluster", "crons"}
     if channel not in ALLOWED_CHANNELS:
         await websocket.close(code=4000)
+        return
+
+    # Validate JWT — WebSocket connections cannot send Authorization headers,
+    # so the token is passed as a query parameter.
+    payload = decode_token(token) if token else None
+    if payload is None:
+        logger.warning(f"WS rejected unauthenticated connection: channel={channel}, ip={websocket.client}")
+        await websocket.close(code=4001)
         return
 
     await manager.connect(channel, websocket)

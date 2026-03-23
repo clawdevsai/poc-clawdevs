@@ -15,7 +15,8 @@ class WSManager {
 
   connect(channel: WSChannel) {
     if (this.sockets.has(channel)) return;
-    const url = `${this.baseUrl}/ws/${channel}`;
+    const token = localStorage.getItem("panel_token") ?? "";
+    const url = `${this.baseUrl}/ws/${channel}?token=${encodeURIComponent(token)}`;
     const ws = new WebSocket(url);
 
     ws.onmessage = (e) => {
@@ -29,8 +30,10 @@ class WSManager {
 
     ws.onclose = () => {
       this.sockets.delete(channel);
-      // Reconnect with exponential backoff
-      setTimeout(() => this.connect(channel), 3000);
+      // Only reconnect if there are still active listeners
+      if ((this.listeners.get(channel)?.size ?? 0) > 0) {
+        setTimeout(() => this.connect(channel), 3000);
+      }
     };
 
     ws.onerror = () => ws.close();

@@ -85,7 +85,7 @@ export default function DashboardPage() {
   })
 
   const { data: approvalsData, isLoading: approvalsLoading } = useQuery({
-    queryKey: ["approvals", "pending"],
+    queryKey: ["approvals-pending-count"],
     queryFn: fetchApprovals,
   })
 
@@ -114,7 +114,7 @@ export default function DashboardPage() {
     if (!wsManager) return
     const unsubscribe = wsManager.subscribe("dashboard", () => {
       queryClient.invalidateQueries({ queryKey: ["agents"] })
-      queryClient.invalidateQueries({ queryKey: ["approvals", "pending"] })
+      queryClient.invalidateQueries({ queryKey: ["approvals-pending-count"] })
       queryClient.invalidateQueries({ queryKey: ["sessions"] })
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       queryClient.invalidateQueries({ queryKey: ["activity-events"] })

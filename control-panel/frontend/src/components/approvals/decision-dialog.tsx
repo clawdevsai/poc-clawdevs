@@ -46,8 +46,9 @@ export function DecisionDialog({
         justification: justification.trim() || undefined,
       }),
     onSuccess: () => {
-      // Invalidate all approval queries
       queryClient.invalidateQueries({ queryKey: ["approvals"] })
+      queryClient.invalidateQueries({ queryKey: ["approvals-stats"] })
+      queryClient.invalidateQueries({ queryKey: ["approvals-pending-count"] })
       setJustification("")
       setError(null)
       onClose()
@@ -67,12 +68,14 @@ export function DecisionDialog({
     mutation.mutate()
   }
 
+  function resetAndClose() {
+    setJustification("")
+    setError(null)
+    onClose()
+  }
+
   function handleOpenChange(open: boolean) {
-    if (!open) {
-      setJustification("")
-      setError(null)
-      onClose()
-    }
+    if (!open) resetAndClose()
   }
 
   if (!approval) return null
@@ -95,8 +98,10 @@ export function DecisionDialog({
         {/* Content */}
         <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-2xl focus:outline-none">
           {/* Close */}
-          <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity">
-            <X className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+          <Dialog.Close asChild>
+            <button onClick={resetAndClose} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity">
+              <X className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+            </button>
           </Dialog.Close>
 
           {/* Title */}
@@ -179,7 +184,7 @@ export function DecisionDialog({
           {/* Actions */}
           <div className="flex gap-2 justify-end">
             <button
-              onClick={onClose}
+              onClick={resetAndClose}
               disabled={mutation.isPending}
               className="px-4 py-2 rounded-lg text-sm border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:border-[hsl(var(--foreground)/0.3)] transition-colors disabled:opacity-50"
             >
