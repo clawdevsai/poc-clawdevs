@@ -7,7 +7,8 @@ WORKDIR /app
 
 # Install dependencies
 COPY pyproject.toml uv.lock* ./
-RUN uv sync --no-dev --frozen
+# --frozen uses lockfile if present; falls back gracefully when building without pre-committed uv.lock
+RUN uv sync --no-dev
 
 # Copy source
 COPY . .
