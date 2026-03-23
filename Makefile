@@ -82,7 +82,7 @@ NULL_DEV ?= /dev/null
 endif
 
 manifests-validate:
-	kubectl kustomize $(KUSTOMIZE_DIR) >$(NULL_DEV) 2>&1
+	kubectl kustomize $(KUSTOMIZE_DIR)
 
 minikube-up:
 	minikube start \
@@ -113,12 +113,36 @@ ifneq ($(GPU),0)
 endif
 
 clawdevs-up:
+	@echo ""; echo "════════════════════════════════════════════"
+	@echo " [1/7] Subindo cluster Minikube..."
+	@echo "════════════════════════════════════════════"
 	$(MAKE) minikube-up
+	@echo ""; echo "════════════════════════════════════════════"
+	@echo " [2/7] Ajustando contexto kubeconfig..."
+	@echo "════════════════════════════════════════════"
 	$(MAKE) minikube-context
+	@echo ""; echo "════════════════════════════════════════════"
+	@echo " [3/7] Habilitando addons do Minikube..."
+	@echo "════════════════════════════════════════════"
 	$(MAKE) minikube-addons
+	@echo ""; echo "════════════════════════════════════════════"
+	@echo " [4/7] Validando manifests kustomize..."
+	@echo "════════════════════════════════════════════"
 	$(MAKE) manifests-validate
+	@echo ""; echo "════════════════════════════════════════════"
+	@echo " [5/7] Aplicando stack (ollama + openclaw)..."
+	@echo "════════════════════════════════════════════"
 	$(MAKE) stack-apply
+	@echo ""; echo "════════════════════════════════════════════"
+	@echo " [6/7] Aguardando pods ficarem Ready..."
+	@echo "════════════════════════════════════════════"
+	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/ollama --timeout=300s
+	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=300s
+	@echo ""; echo "════════════════════════════════════════════"
+	@echo " [7/7] Status final do stack"
+	@echo "════════════════════════════════════════════"
 	$(MAKE) stack-status
+	@echo ""; echo "✔  clawdevs-up concluido com sucesso."
 
 minikube-status:
 	minikube status --profile=$(PROFILE)

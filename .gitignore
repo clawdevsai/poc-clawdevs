@@ -4,3 +4,4 @@ k8s/.env
 .worktrees/
 NUL
 .claude
+control-panel/frontend/node_modules

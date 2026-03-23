@@ -69,23 +69,57 @@ Regra pratica:
 - `minikube`, `kubectl` e `make` no PATH
 - Docker Desktop rodando, com GPU exposta aos containers do driver Docker
 
-## Comandos principais
+## Ordem de execução — subindo toda a aplicação
+
+### 1. Pré-requisitos
+
+Copie e preencha o arquivo de segredos antes de qualquer coisa:
 
 ```bash
-make preflight
-make manifests-validate
+cp k8s/.env.example k8s/.env
+# edite k8s/.env com os valores reais
+```
+
+### 2. Validar segredos e manifests
+
+```bash
+make preflight           # valida que os segredos obrigatórios estão em k8s/.env
+make manifests-validate  # valida renderização do kustomize (dry-run)
+```
+
+### 3. Subir o cluster e o stack principal (OpenClaw + Ollama)
+
+```bash
 make clawdevs-up
 ```
 
-Esse target executa o fluxo completo no Minikube com GPU:
+Esse único target executa, em sequência:
+
+| Passo | Target interno | O que faz |
+|-------|---------------|-----------|
+| 1 | `minikube-up` | Sobe o cluster Minikube no Docker com GPU |
+| 2 | `minikube-context` | Ajusta kubeconfig e seta o contexto `clawdevs-ai` |
+| 3 | `minikube-addons` | Habilita dashboard, metrics-server, storage e nvidia-device-plugin |
+| 4 | `stack-apply` | Aplica `ollama-apply` (PVC + Pod) e `openclaw-apply` (Kustomize + NetworkPolicy) |
+| 5 | `stack-status` | Exibe status dos pods e services do stack |
+
+### 4. Control Panel (opcional)
 
 ```bash
-make minikube-up
-make minikube-context
-make minikube-addons
-kubectl apply -k k8s
-kubectl get node clawdevs-ai -o custom-columns=NAME:.metadata.name,GPU_CAP:.status.capacity.nvidia\.com/gpu,GPU_ALLOC:.status.allocatable.nvidia\.com/gpu
+make panel-build        # build das imagens Docker no contexto Minikube
+make panel-apply        # aplica os manifests do control panel no cluster
+make panel-db-migrate   # executa as migrations Alembic no backend
+make panel-url          # exibe as URLs de acesso (frontend, backend, API docs)
 ```
+
+### 5. Acessar o dashboard e port-forward
+
+```bash
+make dashboard          # abre o dashboard Minikube no browser
+make port-forward-start PF_SERVICE=service/clawdevs-ai PF_PORTS=18789:18789
+```
+
+---
 
 O arquivo `k8s/.env` deve conter apenas valores preenchidos localmente. Antes de aplicar o stack, rode `make preflight` para validar os segredos obrigatorios.
 Para manter o pod estavel e ainda ter logs úteis, use `OPENCLAW_LOG_LEVEL=info` em `k8s/.env`. Deixe `DEBUG_LOG_ENABLED=true` apenas para rastrear o bootstrap e espelhar sessoes dos agentes no log principal, porque esse modo gera muito mais ruido e pode atrapalhar o fluxo normal.
