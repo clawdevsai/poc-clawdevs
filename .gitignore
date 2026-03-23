@@ -2,3 +2,4 @@
 .env
 k8s/.env
 .worktrees/
+NUL
