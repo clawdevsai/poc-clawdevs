@@ -6,6 +6,7 @@ from fastapi_pagination import add_pagination
 from app.core.config import get_settings
 from app.api import auth as auth_router
 from app.api import agents as agents_router
+from app.api import approvals as approvals_router
 from app.core.database import AsyncSessionLocal
 from app.services.agent_sync import sync_agents
 
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
     app.include_router(agents_router.router, prefix="/agents", tags=["agents"])
+    app.include_router(approvals_router.router, prefix="/approvals", tags=["approvals"])
 
     add_pagination(app)
 
