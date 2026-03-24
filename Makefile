@@ -44,6 +44,8 @@ help:
 	@echo ""
 	@echo "Deploy / operacao:"
 	@echo "  make stack-apply            - aplica ollama + openclaw + control-panel"
+	@echo "  make panel-url              - URLs do control panel (NodePort + nota Windows)"
+	@echo "  make panel-forward          - UI em http://localhost:3000 (driver docker no Windows)"
 	@echo "  make stack-status           - status de pods e services do stack"
 	@echo "  make ollama-volume-apply    - cria PVC ollama-data"
 	@echo "  make ollama-apply           - aplica k8s/base/ollama-pod.yaml (Pod + Service)"
@@ -408,7 +410,7 @@ sdd-real-initiative:
 # Control Panel
 # ─────────────────────────────────────────────────────────────
 
-.PHONY: panel-build panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url
+.PHONY: panel-build panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url panel-forward
 .PHONY: images-build images-push images-release ollama-image-build ollama-image-push searxng-image-build searxng-image-push searxng-proxy-image-build searxng-proxy-image-push panel-backend-image-build panel-backend-image-push panel-frontend-image-build panel-frontend-image-push postgres-image-build postgres-image-push redis-image-build redis-image-push
 
 images-build: openclaw-image-build ollama-image-build searxng-image-build searxng-proxy-image-build panel-backend-image-build panel-frontend-image-build postgres-image-build redis-image-build
@@ -487,10 +489,20 @@ panel-destroy: ## Remove all control panel resources
 	kubectl delete -k k8s/base/control-panel/ || true
 
 panel-url: ## Show access URLs for the control panel
-	@echo "┌─────────────────────────────────────────┐"
-	@echo "│     ClawDevs AI Control Panel URLs      │"
-	@echo "├─────────────────────────────────────────┤"
-	@echo "│ Frontend: http://$$(minikube ip):31880   │"
-	@echo "│ Backend:  http://$$(minikube ip):31881   │"
-	@echo "│ API Docs: http://$$(minikube ip):31881/docs │"
-	@echo "└─────────────────────────────────────────┘"
+	@echo "┌────────────────────────────────────────────────────────────┐"
+	@echo "│     ClawDevs AI Control Panel URLs                         │"
+	@echo "├────────────────────────────────────────────────────────────┤"
+	@echo "│ NodePort (funciona de outro host na mesma rede que o VM):  │"
+	@echo "│   Frontend: http://$$(minikube ip):31880                    │"
+	@echo "│   Backend:  http://$$(minikube ip):31881                    │"
+	@echo "│   API Docs: http://$$(minikube ip):31881/docs               │"
+	@echo "├────────────────────────────────────────────────────────────┤"
+	@echo "│ Windows + Minikube driver docker: o IP acima costuma NAO   │"
+	@echo "│ abrir no navegador. Use uma destas opcoes:                 │"
+	@echo "│   make panel-forward  -> http://localhost:3000             │"
+	@echo "│   minikube service clawdevs-panel-frontend --url           │"
+	@echo "│     (deixe o terminal aberto; abra a URL http://127.0.0.1)  │"
+	@echo "└────────────────────────────────────────────────────────────┘"
+
+panel-forward: ## Port-forward UI to http://localhost:3000 (Ctrl+C to stop)
+	kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-panel-frontend 3000:3000
