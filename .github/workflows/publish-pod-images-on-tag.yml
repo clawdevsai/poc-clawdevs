@@ -1,9 +1,6 @@
 name: Publish Pod Images On Tag
 
 on:
-  push:
-    tags:
-      - "*"
   workflow_dispatch:
     inputs:
       version_tag:
