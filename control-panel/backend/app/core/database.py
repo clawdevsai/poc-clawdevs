@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import get_settings
 
@@ -7,20 +8,10 @@ settings = get_settings()
 
 engine = create_async_engine(settings.database_url, echo=False, future=True)
 
-if not hasattr(AsyncSession, "exec"):
-    async def _compat_exec(self, statement, *args, **kwargs):
-        return await self.execute(statement, *args, **kwargs)
-    AsyncSession.exec = _compat_exec
-
-
-class AsyncSessionCompat(AsyncSession):
-    async def exec(self, statement, *args, **kwargs):
-        return await self.execute(statement, *args, **kwargs)
-
 
 AsyncSessionLocal = async_sessionmaker(
     engine,
-    class_=AsyncSessionCompat,
+    class_=AsyncSession,
     expire_on_commit=False,
 )
 
