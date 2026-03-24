@@ -1,7 +1,5 @@
 import Axios, { type AxiosRequestConfig } from "axios";
-
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import { getApiBaseUrl } from "./api-base-url";
 
 export const customInstance = async <T>(
   config: AxiosRequestConfig
@@ -13,7 +11,7 @@ export const customInstance = async <T>(
 
   const { data } = await Axios({
     ...config,
-    baseURL: BACKEND_URL,
+    baseURL: getApiBaseUrl(),
     headers: {
       ...config.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

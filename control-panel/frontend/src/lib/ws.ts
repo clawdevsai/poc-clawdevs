@@ -1,3 +1,5 @@
+import { getWsBaseUrl } from "./api-base-url";
+
 type WSChannel = "dashboard" | "agents" | "approvals" | "cluster" | "crons";
 
 type WSListener = (data: unknown) => void;
@@ -8,9 +10,7 @@ class WSManager {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl =
-      process.env.NEXT_PUBLIC_API_URL?.replace("http", "ws") ??
-      "ws://localhost:8000";
+    this.baseUrl = getWsBaseUrl();
   }
 
   connect(channel: WSChannel) {
