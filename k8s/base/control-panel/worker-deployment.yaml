@@ -17,10 +17,22 @@ spec:
       serviceAccountName: clawdevs-panel
       containers:
         - name: worker
-          image: clawdevsai/clawdevs-panel-backend:latest
+          image: clawdevs-panel-backend:latest
           imagePullPolicy: IfNotPresent
-          command: ["rq", "worker", "--with-scheduler"]
+          command: ["sh", "-c"]
+          args:
+            - exec rq worker --with-scheduler --url "redis://:${PANEL_REDIS_PASSWORD}@clawdevs-panel-redis:6379/0"
           env:
+            - name: PANEL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clawdevs-panel-auth
+                  key: PANEL_DB_PASSWORD
+            - name: PANEL_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clawdevs-panel-auth
+                  key: PANEL_REDIS_PASSWORD
             - name: PANEL_DATABASE_URL
               value: "postgresql+asyncpg://panel:$(PANEL_DB_PASSWORD)@clawdevs-panel-db:5432/clawdevs_panel"
             - name: PANEL_REDIS_URL

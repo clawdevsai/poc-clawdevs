@@ -7,6 +7,11 @@ settings = get_settings()
 
 engine = create_async_engine(settings.database_url, echo=False, future=True)
 
+if not hasattr(AsyncSession, "exec"):
+    async def _compat_exec(self, statement, *args, **kwargs):
+        return await self.execute(statement, *args, **kwargs)
+    AsyncSession.exec = _compat_exec
+
 
 class AsyncSessionCompat(AsyncSession):
     async def exec(self, statement, *args, **kwargs):

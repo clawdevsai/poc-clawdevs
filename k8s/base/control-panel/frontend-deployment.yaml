@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: clawdevsai/clawdevs-panel-frontend:latest
+          image: clawdevs-panel-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

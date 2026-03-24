@@ -17,11 +17,21 @@ spec:
       serviceAccountName: clawdevs-panel
       containers:
         - name: backend
-          image: clawdevsai/clawdevs-panel-backend:latest
+          image: clawdevs-panel-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           env:
+            - name: PANEL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clawdevs-panel-auth
+                  key: PANEL_DB_PASSWORD
+            - name: PANEL_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: clawdevs-panel-auth
+                  key: PANEL_REDIS_PASSWORD
             - name: PANEL_DATABASE_URL
               value: "postgresql+asyncpg://panel:$(PANEL_DB_PASSWORD)@clawdevs-panel-db:5432/clawdevs_panel"
             - name: PANEL_REDIS_URL
