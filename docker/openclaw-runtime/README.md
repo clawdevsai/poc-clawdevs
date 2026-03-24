@@ -6,8 +6,8 @@ Imagem otimizada para o `StatefulSet` do OpenClaw, com dependências e OpenClaw 
 
 ```bash
 docker build \
-  --build-arg OPENCLAW_VERSION=2026.3.22 \
-  -t clawdevsai/openclaw-runtime:2026.3.22 \
+  --build-arg OPENCLAW_VERSION=2026.3.23-2 \
+  -t clawdevsai/openclaw-runtime:2026.3.23-2 \
   -t clawdevsai/openclaw-runtime:latest \
   -f docker/openclaw-runtime/Dockerfile .
 ```
@@ -17,7 +17,7 @@ docker build \
 ```bash
 docker login -u clawdevsAI
 
-docker push clawdevsai/openclaw-runtime:2026.3.22
+docker push clawdevsai/openclaw-runtime:2026.3.23-2
 docker push clawdevsai/openclaw-runtime:latest
 ```
 

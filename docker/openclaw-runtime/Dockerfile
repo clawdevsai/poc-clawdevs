@@ -1,6 +1,6 @@
 FROM public.ecr.aws/docker/library/node:22-bookworm-slim
 
-ARG OPENCLAW_VERSION=2026.3.22
+ARG OPENCLAW_VERSION=2026.3.23-2
 ARG DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
