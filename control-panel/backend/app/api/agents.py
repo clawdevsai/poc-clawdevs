@@ -2,7 +2,6 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_pagination import Page, paginate
 from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
@@ -48,14 +47,20 @@ class AgentResponse(BaseModel):
         )
 
 
-@router.get("", response_model=Page[AgentResponse])
+class AgentsListResponse(BaseModel):
+    items: list[AgentResponse]
+    total: int
+
+
+@router.get("", response_model=AgentsListResponse)
 async def list_agents(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(select(Agent).order_by(Agent.slug))
     agents = result.all()
-    return paginate([AgentResponse.from_orm(a) for a in agents])
+    items = [AgentResponse.from_orm(a) for a in agents]
+    return AgentsListResponse(items=items, total=len(items))
 
 
 @router.get("/{slug}", response_model=AgentResponse)

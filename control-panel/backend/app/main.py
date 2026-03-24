@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_pagination import add_pagination
 from sqlmodel import select
 
 from app.core.config import get_settings
@@ -67,8 +66,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-add_pagination(app)
 
 # API routers
 app.include_router(auth_api.router, prefix="/auth", tags=["auth"])

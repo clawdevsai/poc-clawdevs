@@ -2,7 +2,6 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_pagination import Page, paginate
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -40,7 +39,12 @@ class ApprovalStats(BaseModel):
     rejected: int
 
 
-@router.get("", response_model=Page[ApprovalResponse])
+class ApprovalsListResponse(BaseModel):
+    items: list[ApprovalResponse]
+    total: int
+
+
+@router.get("", response_model=ApprovalsListResponse)
 async def list_approvals(
     current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -78,7 +82,7 @@ async def list_approvals(
             decided_at=a.decided_at,
             created_at=a.created_at,
         ))
-    return paginate(items)
+    return ApprovalsListResponse(items=items, total=len(items))
 
 
 @router.get("/stats", response_model=ApprovalStats)

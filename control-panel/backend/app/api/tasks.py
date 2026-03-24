@@ -2,7 +2,6 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_pagination import Page, paginate
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
@@ -42,7 +41,12 @@ class UpdateTaskRequest(BaseModel):
     assigned_agent_id: str | None = None
 
 
-@router.get("", response_model=Page[TaskResponse])
+class TasksListResponse(BaseModel):
+    items: list[TaskResponse]
+    total: int
+
+
+@router.get("", response_model=TasksListResponse)
 async def list_tasks(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -53,7 +57,7 @@ async def list_tasks(
         query = query.where(Task.status == status)
     result = await session.exec(query)
     tasks = result.all()
-    return paginate([
+    items = [
         TaskResponse(
             id=str(t.id), title=t.title, description=t.description,
             status=t.status, priority=t.priority,
@@ -64,7 +68,8 @@ async def list_tasks(
             due_at=t.due_at, created_at=t.created_at, updated_at=t.updated_at,
         )
         for t in tasks
-    ])
+    ]
+    return TasksListResponse(items=items, total=len(items))
 
 
 @router.post("", response_model=TaskResponse, status_code=201)

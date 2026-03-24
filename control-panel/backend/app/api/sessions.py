@@ -2,7 +2,6 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_pagination import Page, paginate
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -26,7 +25,12 @@ class SessionResponse(BaseModel):
     created_at: datetime
 
 
-@router.get("", response_model=Page[SessionResponse])
+class SessionsListResponse(BaseModel):
+    items: list[SessionResponse]
+    total: int
+
+
+@router.get("", response_model=SessionsListResponse)
 async def list_sessions(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -38,7 +42,7 @@ async def list_sessions(
         query = query.where(SessionModel.agent_id == UUID(agent_id))
     result = await session.exec(query)
     sessions = result.all()
-    return paginate([
+    items = [
         SessionResponse(
             id=str(s.id),
             agent_id=str(s.agent_id) if s.agent_id else None,
@@ -52,4 +56,5 @@ async def list_sessions(
             created_at=s.created_at,
         )
         for s in sessions
-    ])
+    ]
+    return SessionsListResponse(items=items, total=len(items))

@@ -2,7 +2,6 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_pagination import Page, paginate
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from uuid import UUID
@@ -26,7 +25,12 @@ class MemoryEntryResponse(BaseModel):
     updated_at: datetime
 
 
-@router.get("", response_model=Page[MemoryEntryResponse])
+class MemoryListResponse(BaseModel):
+    items: list[MemoryEntryResponse]
+    total: int
+
+
+@router.get("", response_model=MemoryListResponse)
 async def list_memory(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -40,7 +44,7 @@ async def list_memory(
         query = query.where(MemoryEntry.entry_type == entry_type)
     result = await session.exec(query)
     entries = result.all()
-    return paginate([
+    items = [
         MemoryEntryResponse(
             id=str(e.id), agent_id=str(e.agent_id) if e.agent_id else None,
             entry_type=e.entry_type, content=e.content,
@@ -48,7 +52,8 @@ async def list_memory(
             promoted_at=e.promoted_at, created_at=e.created_at, updated_at=e.updated_at,
         )
         for e in entries
-    ])
+    ]
+    return MemoryListResponse(items=items, total=len(items))
 
 
 @router.post("/{entry_id}/promote")

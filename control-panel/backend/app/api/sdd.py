@@ -2,7 +2,6 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_pagination import Page, paginate
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
@@ -43,7 +42,12 @@ class UpdateSddRequest(BaseModel):
     title: str | None = None
 
 
-@router.get("", response_model=Page[SddArtifactResponse])
+class SddArtifactsListResponse(BaseModel):
+    items: list[SddArtifactResponse]
+    total: int
+
+
+@router.get("", response_model=SddArtifactsListResponse)
 async def list_artifacts(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -57,7 +61,7 @@ async def list_artifacts(
         query = query.where(SddArtifact.status == status)
     result = await session.exec(query)
     artifacts = result.all()
-    return paginate([
+    items = [
         SddArtifactResponse(
             id=str(a.id), agent_id=str(a.agent_id) if a.agent_id else None,
             artifact_type=a.artifact_type, title=a.title, content=a.content,
@@ -66,7 +70,8 @@ async def list_artifacts(
             created_at=a.created_at, updated_at=a.updated_at,
         )
         for a in artifacts
-    ])
+    ]
+    return SddArtifactsListResponse(items=items, total=len(items))
 
 
 @router.post("", response_model=SddArtifactResponse, status_code=201)

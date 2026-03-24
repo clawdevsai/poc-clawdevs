@@ -17,6 +17,10 @@
 - Bloquear comandos destrutivos (`rm -rf`, `git push -f`, etc.).
 - Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `/data/openclaw/contexts/active_repository.env` antes de qualquer ação gh/git.
+- Comunicação interagente com chave `agent:<id>:main` deve usar `sessions_send` (nunca `message`).
+- `message` é somente para destinos de canal (ex.: Telegram `chatId`), nunca para sessão de agente.
+- Antes de ler arquivos de stack (`package.json`, `go.mod`, etc.), validar existência com `read` no diretório alvo.
+- Se `PROJECT_ROOT` não tiver código-fonte, usar `/data/openclaw/backlog/implementation` como fallback e registrar `standby` sem erro.
 - `gh` com paridade operacional ao Arquiteto para leitura/atualização de CI, issues e PRs (sem operações destrutivas).
 - Poll de fila GitHub 1x por hora:
   - exemplo: `gh issue list --state open --label back_end --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`
@@ -58,6 +62,7 @@ Comunicacao entre agentes via sessao persistente:
 - **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
 - **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
 - **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
+- **Proibido:** usar `message` com `agent:<id>:main` (isso quebra em canais como Telegram com `Unknown target`)
 
 Agentes disponiveis e suas keys:
 - CEO: `agent:ceo:main`

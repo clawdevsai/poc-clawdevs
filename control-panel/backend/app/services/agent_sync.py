@@ -52,8 +52,10 @@ def parse_identity(slug: str) -> dict:
     display_name = DISPLAY_NAME_MAP.get(slug, slug.replace("_", " ").title())
     role = ROLE_MAP.get(slug, slug)
 
-    if identity_file.exists():
-        try:
+    # Some agent folders/files can be mounted with restrictive ACLs.
+    # Startup must not fail if identity metadata cannot be read.
+    try:
+        if identity_file.exists():
             content = identity_file.read_text(encoding="utf-8")
             name_match = re.search(r"(?:Nome|Name)[:\s]+([^\n]+)", content, re.IGNORECASE)
             role_match = re.search(r"(?:Papel|Role)[:\s]+([^\n]+)", content, re.IGNORECASE)
@@ -61,8 +63,8 @@ def parse_identity(slug: str) -> dict:
                 display_name = name_match.group(1).strip()
             if role_match:
                 role = role_match.group(1).strip()
-        except Exception:
-            pass
+    except (OSError, PermissionError):
+        pass
 
     return {"display_name": display_name, "role": role}
 
