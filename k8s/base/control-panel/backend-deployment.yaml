@@ -19,6 +19,9 @@ spec:
         - name: backend
           image: clawdevs-panel-backend:latest
           imagePullPolicy: IfNotPresent
+          command: ["sh", "-c"]
+          args:
+            - alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000
           ports:
             - containerPort: 8000
           env:
