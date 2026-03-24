@@ -68,17 +68,13 @@ jobs:
       - name: Resolve Docker Hub credentials
         id: hub
         env:
-          HUB_USER_VAR: ${{ vars.DOCKERHUB_USERNAME }}
           HUB_USER_SECRET: ${{ secrets.DOCKERHUB_USERNAME }}
           HUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           set -euo pipefail
-          USERNAME="${HUB_USER_VAR:-}"
+          USERNAME="${HUB_USER_SECRET:-}"
           if [ -z "${USERNAME}" ]; then
-            USERNAME="${HUB_USER_SECRET:-}"
-          fi
-          if [ -z "${USERNAME}" ]; then
-            echo "DOCKERHUB_USERNAME ausente (defina em Repository Variables ou Secrets)." >&2
+            echo "DOCKERHUB_USERNAME ausente em Repository Secrets." >&2
             exit 1
           fi
           if [ -z "${HUB_TOKEN:-}" ]; then
