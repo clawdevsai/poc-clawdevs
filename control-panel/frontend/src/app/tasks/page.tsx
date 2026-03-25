@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { LayoutGrid, List, Plus, X, ExternalLink } from "lucide-react"
+import { LayoutGrid, List, Plus, X } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -17,8 +17,23 @@ interface Task {
   status: "inbox" | "in_progress" | "done" | "cancelled"
   priority?: "critical" | "high" | "medium" | "low"
   assigned_agent_slug?: string
-  github_issue_number?: number
+  github_repo?: string
+  github_issue_number?: number  // kept for backwards compat but not displayed
+  label?: string
   created_at: string
+}
+
+interface Repository {
+  id: string
+  name: string
+  full_name: string
+  default_branch: string
+  is_active: boolean
+}
+
+interface RepositoriesResponse {
+  items: Repository[]
+  total: number
 }
 
 interface TasksResponse {
@@ -30,17 +45,8 @@ interface CreateTaskPayload {
   title: string
   description?: string
   priority?: string
-  assigned_agent_slug?: string
-}
-
-// ---- Helpers ----------------------------------------------------------------
-
-const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL ?? ""
-
-function githubIssueUrl(issueNumber: number) {
-  return GITHUB_REPO_URL
-    ? `${GITHUB_REPO_URL}/issues/${issueNumber}`
-    : `https://github.com/search?q=${issueNumber}&type=issues`
+  label?: string
+  github_repo?: string
 }
 
 // ---- Fetchers ---------------------------------------------------------------
@@ -56,6 +62,34 @@ const fetchTasks = (status?: string, page = 1, pageSize = 50) =>
 
 const createTask = (payload: CreateTaskPayload) =>
   customInstance<Task>({ url: "/tasks", method: "POST", data: payload })
+
+const fetchRepositories = () =>
+  customInstance<RepositoriesResponse>({ url: "/repositories", method: "GET" })
+
+// ---- Label constants --------------------------------------------------------
+
+const LABELS = [
+  { value: "", label: "(nenhum)" },
+  { value: "back_end", label: "back_end" },
+  { value: "front_end", label: "front_end" },
+  { value: "mobile", label: "mobile" },
+  { value: "tests", label: "tests" },
+  { value: "devops", label: "devops" },
+  { value: "dba", label: "dba" },
+  { value: "security", label: "security" },
+  { value: "ux", label: "ux" },
+] as const
+
+const LABEL_COLORS: Record<string, string> = {
+  back_end: "#3B82F6",
+  front_end: "#8B5CF6",
+  mobile: "#EC4899",
+  tests: "#10B981",
+  devops: "#F59E0B",
+  dba: "#6366F1",
+  security: "#EF4444",
+  ux: "#14B8A6",
+}
 
 // ---- Badge helpers ----------------------------------------------------------
 
@@ -102,6 +136,9 @@ function TaskCard({ task }: { task: Task }) {
       <p className="text-sm font-medium text-[hsl(var(--foreground))] leading-snug">
         {task.title}
       </p>
+      {task.github_repo && (
+        <p className="text-[10px] text-[hsl(var(--muted-foreground))] truncate">{task.github_repo}</p>
+      )}
       <div className="flex items-center gap-1.5 flex-wrap">
         {task.priority && (
           <Badge variant={priorityVariant(task.priority)} className="text-[10px] px-1.5 py-0">
@@ -118,17 +155,17 @@ function TaskCard({ task }: { task: Task }) {
         <span className="text-[11px] text-[hsl(var(--muted-foreground))]">
           {formatDate(task.created_at)}
         </span>
-        {task.github_issue_number && (
-          <a
-            href={githubIssueUrl(task.github_issue_number!)}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300"
+        {task.label && (
+          <span
+            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+            style={{
+              backgroundColor: `${LABEL_COLORS[task.label] ?? "#9CA3AF"}1A`,
+              color: LABEL_COLORS[task.label] ?? "#9CA3AF",
+              border: `1px solid ${LABEL_COLORS[task.label] ?? "#9CA3AF"}33`,
+            }}
           >
-            #{task.github_issue_number}
-            <ExternalLink className="h-3 w-3" />
-          </a>
+            {task.label}
+          </span>
         )}
       </div>
     </div>
@@ -183,44 +220,45 @@ function BoardColumn({ status, tasks, loading }: { status: string; tasks: Task[]
 function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [label, setLabel] = useState("")
+  const [githubRepo, setGithubRepo] = useState("")
   const [error, setError] = useState("")
+
+  const { data: reposData } = useQuery({
+    queryKey: ["repositories"],
+    queryFn: fetchRepositories,
+  })
+  const repos = reposData?.items ?? []
 
   const mutation = useMutation({
     mutationFn: createTask,
-    onSuccess: () => {
-      onSuccess()
-      onClose()
-    },
-    onError: () => {
-      setError("Failed to create task. Please try again.")
-    },
+    onSuccess: () => { onSuccess(); onClose() },
+    onError: () => setError("Failed to create task. Please try again."),
   })
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!title.trim()) {
-      setError("Title is required.")
-      return
-    }
+    if (!title.trim()) { setError("Title is required."); return }
     setError("")
-    mutation.mutate({ title: title.trim(), description: description.trim() || undefined })
+    mutation.mutate({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      label: label || undefined,
+      github_repo: githubRepo || undefined,
+    })
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[hsl(var(--foreground))]">
-            Create Task
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-          >
+          <h2 className="text-base font-semibold text-[hsl(var(--foreground))]">Create Task</h2>
+          <button onClick={onClose} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Title */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">
               Title <span className="text-red-400">*</span>
@@ -233,10 +271,39 @@ function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSucce
               className="px-3 py-2 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
             />
           </div>
+
+          {/* Label + Repo row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Label / Track</label>
+              <select
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                className="px-3 py-2 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+              >
+                {LABELS.map((l) => (
+                  <option key={l.value} value={l.value}>{l.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Repositório</label>
+              <select
+                value={githubRepo}
+                onChange={(e) => setGithubRepo(e.target.value)}
+                className="px-3 py-2 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+              >
+                <option value="">Selecionar…</option>
+                {repos.map((r) => (
+                  <option key={r.id} value={r.full_name}>{r.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">
-              Description
-            </label>
+            <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -245,21 +312,20 @@ function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSucce
               className="px-3 py-2 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] resize-none"
             />
           </div>
-          {error && (
-            <p className="text-xs text-red-400">{error}</p>
-          )}
+
+          {error && <p className="text-xs text-red-400">{error}</p>}
           <div className="flex items-center justify-end gap-2 mt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm rounded-lg border border-[hsl(var(--border))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/30 transition-colors"
+              className="px-4 py-2 text-sm rounded-lg border border-[hsl(var(--border))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/30"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="px-4 py-2 text-sm rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="px-4 py-2 text-sm rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
             >
               {mutation.isPending ? "Creating…" : "Create"}
             </button>
@@ -275,7 +341,7 @@ function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSucce
 function ListRowSkeleton() {
   return (
     <tr className="border-b border-[hsl(var(--border))]">
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 7 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <Skeleton className="h-4 w-full" />
         </td>
@@ -417,7 +483,10 @@ export default function TasksPage() {
                         Agent
                       </th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
-                        Issue
+                        Label
+                      </th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                        Repo
                       </th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
                         Created
@@ -430,7 +499,7 @@ export default function TasksPage() {
                     ) : listItems.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={7}
                           className="px-4 py-12 text-center text-sm text-[hsl(var(--muted-foreground))]"
                         >
                           No tasks found.
@@ -470,19 +539,23 @@ export default function TasksPage() {
                             {task.assigned_agent_slug ?? "—"}
                           </td>
                           <td className="px-4 py-3">
-                            {task.github_issue_number ? (
-                              <a
-                                href={githubIssueUrl(task.github_issue_number!)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                            {task.label ? (
+                              <span
+                                className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                style={{
+                                  backgroundColor: `${LABEL_COLORS[task.label] ?? "#9CA3AF"}1A`,
+                                  color: LABEL_COLORS[task.label] ?? "#9CA3AF",
+                                  border: `1px solid ${LABEL_COLORS[task.label] ?? "#9CA3AF"}33`,
+                                }}
                               >
-                                #{task.github_issue_number}
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
+                                {task.label}
+                              </span>
                             ) : (
                               <span className="text-[hsl(var(--muted-foreground))] text-xs">—</span>
                             )}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))] truncate max-w-[120px]">
+                            {task.github_repo ?? "—"}
                           </td>
                           <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">
                             {formatDate(task.created_at)}
