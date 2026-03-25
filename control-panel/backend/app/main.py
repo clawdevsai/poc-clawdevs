@@ -22,6 +22,7 @@ from app.api import cluster as cluster_api
 from app.api import metrics as metrics_api
 from app.api import activity_events as activity_events_api
 from app.api import ws as ws_api
+from app.api import repositories as repositories_api
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO)
@@ -79,6 +80,7 @@ app.include_router(agents_api.router, prefix="/agents", tags=["agents"])
 app.include_router(approvals_api.router, prefix="/approvals", tags=["approvals"])
 app.include_router(sessions_api.router, prefix="/sessions", tags=["sessions"])
 app.include_router(tasks_api.router, prefix="/tasks", tags=["tasks"])
+app.include_router(repositories_api.router, prefix="/repositories", tags=["repositories"])
 app.include_router(sdd_api.router, prefix="/sdd", tags=["sdd"])
 app.include_router(memory_api.router, prefix="/memory", tags=["memory"])
 app.include_router(crons_api.router, prefix="/crons", tags=["crons"])
