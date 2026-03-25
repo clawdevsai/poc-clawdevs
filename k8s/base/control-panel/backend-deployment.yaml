@@ -15,6 +15,19 @@ spec:
         app: clawdevs-panel-backend
     spec:
       serviceAccountName: clawdevs-panel
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL at clawdevs-panel-db:5432..."
+              until nc -z clawdevs-panel-db 5432; do
+                echo "PostgreSQL not ready yet, sleeping..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
       containers:
         - name: backend
           image: clawdevsai/clawdevs-panel-backend:latest
