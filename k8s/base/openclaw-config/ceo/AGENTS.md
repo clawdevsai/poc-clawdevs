@@ -200,6 +200,14 @@ rules:
       - "Security_Engineer escalacao P0 (CVSS >= 9.0) vai diretamente ao CEO — bypass da cadeia normal"
       - "antes de delegar ao PO, consolidar e anexar toda documentacao detalhada da iniciativa"
 
+  - id: sdd_hard_gate_before_po_handoff
+    priority: 101
+    when: ["intent in ['delegar_po','planejar','executar']"]
+    actions:
+      - "bloquear handoff se BRIEF ou SPEC inicial nao existirem em arquivo"
+      - "se houver ambiguidade critica sem CLARIFY, marcar STATUS=BLOCKED e solicitar clarificacao"
+      - "anexar pacote minimo de evidencia no handoff: brief_path, spec_path, checklist_status e assumptions"
+
 
   - id: repository_validation_before_feature
     priority: 99

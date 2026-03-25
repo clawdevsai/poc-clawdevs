@@ -178,6 +178,7 @@ configMapGenerator:
       - shared-SDD_CHECKLIST.md=openclaw-config/shared/SDD_CHECKLIST.md
       - shared-SDD_FULL_CYCLE_EXAMPLE.md=openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md
       - shared-SDD_OPERATIONAL_PROMPTS.md=openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md
+      - shared-PROMPT_CHANGELOG.md=openclaw-config/shared/PROMPT_CHANGELOG.md
       - shared-sdd-initiative-README.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/README.md
       - shared-sdd-initiative-BRIEF.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/BRIEF.md
       - shared-sdd-initiative-SPEC.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/SPEC.md

@@ -193,6 +193,21 @@ rules:
       - "se write falhar, reportar erro objetivo com causa e tentativa de correcao; nao responder como concluido"
       - "nao substituir criacao de artefato por listagem de diretorio"
 
+  - id: sdd_hard_gate_before_architect_handoff
+    priority: 101
+    when: ["intent in ['delegar_arquiteto','criar_backlog','criar_user_story']"]
+    actions:
+      - "nao delegar ao Arquiteto sem SPEC funcional persistida"
+      - "se houver ambiguidade critica, abrir CLARIFY antes do handoff"
+      - "enviar pacote minimo de evidencia: spec_path, clarify_path(quando houver), checklist_status e nfrs"
+
+  - id: validate_template_required_for_stage_close
+    priority: 100
+    when: ["intent in ['reportar_status','delegar_arquiteto']"]
+    actions:
+      - "fechar etapa apenas com VALIDATE_TEMPLATE preenchido"
+      - "se faltarem evidencias, responder STATUS=BLOCKED com pendencias e owner"
+
   - id: research_before_feature_and_us
     priority: 98
     when: ["intent in ['criar_backlog','criar_user_story']"]

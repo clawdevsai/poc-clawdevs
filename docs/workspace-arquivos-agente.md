@@ -23,6 +23,7 @@ Objetivo de cada arquivo no workspace (como neste repositório), alinhado à doc
 | `SOUL.md` | Postura, valores não negociáveis, limites rígidos, tom — “personalidade + guardrails” persistentes. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `TOOLS.md` | Orientação: uso de `read` / `write` / `exec`, convenções (`gh`, `web-search`, `web-read`), rate limits, labels GitHub. **Não** liga ou desliga ferramentas; isso vem do gateway / `openclaw.json`. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `USER.md` | Quem é o usuário principal para o agente (ex.: PO), fuso, escalação. No CEO, `DIRECTORS_NAME` é injetado via `sed` a partir do Secret. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
+| `MEMORY.md` | Memória de longo prazo do agente (quando habilitada em `AGENTS.md`): padrões e aprendizados por agente em `/data/openclaw/memory/<id>/MEMORY.md`; memória compartilhada em `/data/openclaw/memory/shared/SHARED_MEMORY.md` (escrita pelo Memory Curator). |
 
 ## Resumo prático
 

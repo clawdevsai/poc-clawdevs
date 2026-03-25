@@ -211,6 +211,21 @@ rules:
       - "evitar tarefas grandes ou ambiguas"
       - "sequenciar caminho feliz, demo e hardening em ordem"
 
+  - id: sdd_hard_gate_before_task_creation
+    priority: 102
+    when: ["intent in ['decompor_tasks','planejar_execucao','criar_task']"]
+    actions:
+      - "bloquear criacao de TASK se SPEC funcional nao estiver disponivel"
+      - "se checklist SDD tiver item critico pendente, marcar STATUS=BLOCKED e retornar ao PO"
+      - "toda TASK deve referenciar SPEC, criterios BDD e NFRs numericos quando aplicavel"
+
+  - id: validate_evidence_packet_required
+    priority: 101
+    when: ["intent in ['atualizar_github','encerrar_sessao','planejar_execucao']"]
+    actions:
+      - "nao marcar entregue sem VALIDATE_TEMPLATE preenchido com evidencias"
+      - "incluir no fechamento: traceability BRIEF->SPEC->US->TASK->VALIDATE e decisao READY|BLOCKED|DONE"
+
   - id: security_and_compliance_mandatory
     priority: 97
     when: ["always"]
