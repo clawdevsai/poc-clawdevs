@@ -20,6 +20,7 @@ from app.api import memory as memory_api
 from app.api import crons as crons_api
 from app.api import cluster as cluster_api
 from app.api import metrics as metrics_api
+from app.api import activity_events as activity_events_api
 from app.api import ws as ws_api
 
 settings = get_settings()
@@ -83,6 +84,7 @@ app.include_router(memory_api.router, prefix="/memory", tags=["memory"])
 app.include_router(crons_api.router, prefix="/crons", tags=["crons"])
 app.include_router(cluster_api.router, prefix="/cluster", tags=["cluster"])
 app.include_router(metrics_api.router, prefix="/metrics", tags=["metrics"])
+app.include_router(activity_events_api.router, prefix="/activity-events", tags=["activity"])
 
 # WebSocket
 app.include_router(ws_api.router, tags=["websocket"])
@@ -91,3 +93,12 @@ app.include_router(ws_api.router, tags=["websocket"])
 @app.get("/healthz", tags=["health"])
 async def health():
     return {"status": "ok"}
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
