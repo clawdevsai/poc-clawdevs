@@ -1,5 +1,5 @@
 from typing import Annotated, Optional
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from sqlmodel import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel

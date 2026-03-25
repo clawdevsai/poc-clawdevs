@@ -14,15 +14,18 @@ AGENT_SLUGS = [
     "ux_designer", "dba_data_engineer", "memory_curator",
 ]
 
+import os
+
+# Load CRON expressions from environment or use defaults
 CRON_MAP = {
-    "dev_backend": "0 * * * *",
-    "dev_frontend": "0 * * * *",
-    "dev_mobile": "0 * * * *",
-    "qa_engineer": "0 */6 * * *",
-    "devops_sre": "0 */6 * * *",
-    "security_engineer": "0 */6 * * *",
-    "ux_designer": "0 */6 * * *",
-    "dba_data_engineer": "0 */6 * * *",
+    "dev_backend": os.getenv("DEV_BACKEND_CRON_EXPR", "0 */2 * * *"),
+    "dev_frontend": os.getenv("DEV_FRONTEND_CRON_EXPR", "15 */2 * * *"),
+    "dev_mobile": os.getenv("DEV_MOBILE_CRON_EXPR", "30 */2 * * *"),
+    "qa_engineer": os.getenv("QA_CRON_EXPR", "45 */2 * * *"),
+    "devops_sre": os.getenv("DEVOPS_SRE_CRON_EXPR", "0 * * * *"),
+    "security_engineer": os.getenv("SECURITY_ENGINEER_CRON_EXPR", "0 2 * * *"),
+    "ux_designer": os.getenv("UX_DESIGNER_CRON_EXPR", "0 9 * * 1"),
+    "dba_data_engineer": os.getenv("DBA_DATA_ENGINEER_CRON_EXPR", "30 9 * * 1"),
     "memory_curator": "0 2 * * *",
 }
 
@@ -41,7 +44,7 @@ ROLE_MAP = {
     "memory_curator": "Memory Curator",
 }
 
-# Display names for all agents (matching their personality/identity)
+# Display names for all agents (nomes em português)
 DISPLAY_NAME_MAP = {
     "ceo": "Victor",
     "po": "Lucas",
