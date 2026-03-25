@@ -595,6 +595,33 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
+# Otimizacao: Configuracoes de sessao para agentes de desenvolvimento (ambiente dev intenso).
+# Reduz acumulacao de sessoes de cron jobs que rodam a cada 30 minutos.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .session.maintenance = {
+        "mode": "enforce",
+        "pruneAfter": "7d",
+        "maxEntries": 200,
+        "rotateBytes": "10mb",
+        "maxDiskBytes": "1gb",
+        "highWaterBytes": "800mb",
+        "resetArchiveRetention": "3d"
+      }
+      | .cron.sessionRetention = "2h"
+      | .session.dmScope = "main"
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    echo "[bootstrap] openclaw.json otimizado para agentes de desenvolvimento"
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao otimizar openclaw.json para dev"
+  fi
+fi
+
 # Cada agente usa seu proprio workspace com identidade isolada (workspace definido por agente no JSON).
 
 # Exec approvals: ask=off para todos os agentes — sem socket (evita erro "approval not enabled on Telegram").
