@@ -576,3 +576,27 @@ render_agent_context "${OPENCLAW_STATE_DIR}/workspace-security_engineer"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ux_designer"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-memory_curator"
+# --- Skills no workspace compartilhado ---
+# Todos os agentes usam /data/openclaw/backlog/implementation como workspace.
+# As skills precisam estar em skills/ dentro desse workspace para serem encontradas pelo OpenClaw.
+SHARED_WORKSPACE="${OPENCLAW_STATE_DIR}/backlog/implementation"
+mkdir -p "${SHARED_WORKSPACE}/skills"
+for skill_src_dir in \
+  "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/ceo_orchestration" \
+  "${OPENCLAW_STATE_DIR}/workspace-po/skills/po_product_delivery" \
+  "${OPENCLAW_STATE_DIR}/workspace-arquiteto/skills/arquiteto_engineering" \
+  "${OPENCLAW_STATE_DIR}/workspace-dev_backend/skills/dev_backend_implementation" \
+  "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/skills/dev_frontend_implementation" \
+  "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/skills/dev_mobile_implementation" \
+  "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa_engineer_validation" \
+  "${OPENCLAW_STATE_DIR}/workspace-devops_sre/skills/devops_sre_operations" \
+  "${OPENCLAW_STATE_DIR}/workspace-security_engineer/skills/security_engineer_scan" \
+  "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_designer_artifacts" \
+  "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/skills/dba_data_engineer_schema" \
+  "${OPENCLAW_STATE_DIR}/workspace-memory_curator/skills/memory_curator_promotion"; do
+  skill_name="$(basename "${skill_src_dir}")"
+  dest_dir="${SHARED_WORKSPACE}/skills/${skill_name}"
+  mkdir -p "${dest_dir}"
+  cp -f "${skill_src_dir}/SKILL.md" "${dest_dir}/SKILL.md"
+done
+# --- Fim: Skills no workspace compartilhado ---

@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from typing import Optional
 from datetime import datetime, timezone
+from functools import lru_cache
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -40,11 +41,44 @@ ROLE_MAP = {
     "memory_curator": "Memory Curator",
 }
 
+# Display names for all agents (matching their personality/identity)
 DISPLAY_NAME_MAP = {
     "ceo": "Victor",
-    "memory_curator": "Mnemon",
+    "po": "Lucas",
+    "arquiteto": "Alexandre",
     "dev_backend": "Mateus",
+    "dev_frontend": "Rafael",
+    "dev_mobile": "Gabriel",
+    "qa_engineer": "Bruno",
+    "devops_sre": "Diego",
+    "security_engineer": "Thiago",
+    "ux_designer": "Felipe",
+    "dba_data_engineer": "Igor",
+    "memory_curator": "Mnemon",
 }
+
+
+@lru_cache(maxsize=1)
+def _get_openclaw_config() -> dict:
+    """Load OpenClaw configuration from JSON file."""
+    config_path = Path(settings.openclaw_data_path) / "openclaw.json"
+    try:
+        if config_path.exists():
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {}
+
+
+def _get_agent_config(slug: str) -> dict:
+    """Get agent configuration from openclaw.json."""
+    config = _get_openclaw_config()
+    agents = config.get("agents", {}).get("list", [])
+    for agent in agents:
+        if agent.get("id") == slug:
+            return agent
+    return {}
 
 
 def parse_identity(slug: str) -> dict:
@@ -53,6 +87,16 @@ def parse_identity(slug: str) -> dict:
     identity_file = base / "IDENTITY.md"
     display_name = DISPLAY_NAME_MAP.get(slug, slug.replace("_", " ").title())
     role = ROLE_MAP.get(slug, slug)
+    model = None
+
+    # Try to get model from openclaw.json
+    agent_config = _get_agent_config(slug)
+    if agent_config:
+        model = agent_config.get("model")
+        # If name is in config and not in our display name map, use it as fallback
+        config_name = agent_config.get("name")
+        if config_name and slug not in DISPLAY_NAME_MAP:
+            display_name = config_name.replace("_", " ").title()
 
     # Some agent folders/files can be mounted with restrictive ACLs.
     # Startup must not fail if identity metadata cannot be read.
@@ -68,7 +112,7 @@ def parse_identity(slug: str) -> dict:
     except (OSError, PermissionError):
         pass
 
-    return {"display_name": display_name, "role": role}
+    return {"display_name": display_name, "role": role, "model": model}
 
 
 async def sync_agents(session) -> None:
@@ -86,6 +130,7 @@ async def sync_agents(session) -> None:
                 slug=slug,
                 display_name=identity["display_name"],
                 role=identity["role"],
+                current_model=identity.get("model"),
                 avatar_url=f"/static/avatars/{slug}.png",
                 cron_expression=CRON_MAP.get(slug),
             )
@@ -93,6 +138,9 @@ async def sync_agents(session) -> None:
         else:
             agent.display_name = identity["display_name"]
             agent.role = identity["role"]
+            # Only update model if not set or empty
+            if not agent.current_model:
+                agent.current_model = identity.get("model")
 
     await session.commit()
 
@@ -146,6 +194,9 @@ async def sync_agents_runtime(session) -> None:
     agents = result.all()
     changed = False
 
+    # Clear cache to get fresh config
+    _get_openclaw_config.cache_clear()
+
     for agent in agents:
         sessions_file = (
             Path(settings.openclaw_data_path)
@@ -168,19 +219,13 @@ async def sync_agents_runtime(session) -> None:
             # Some mounted files can be unreadable under restrictive ACLs.
             pass
 
-        if not runtime_observed:
-            # Do not overwrite status with guessed values when runtime artifacts
-            # are inaccessible for this environment.
-            continue
+        # Get model from openclaw.json config (not from session files)
+        agent_config = _get_agent_config(agent.slug)
+        next_model = agent_config.get("model")
 
         next_session_id = (
             latest_item.get("sessionId")
             if isinstance(latest_item, dict) and isinstance(latest_item.get("sessionId"), str)
-            else None
-        )
-        next_model = (
-            latest_item.get("model")
-            if isinstance(latest_item, dict) and isinstance(latest_item.get("model"), str)
             else None
         )
         next_status = _status_from_heartbeat(latest_heartbeat)

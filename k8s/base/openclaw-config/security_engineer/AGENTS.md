@@ -118,6 +118,46 @@ capabilities:
       - "Usar gh com `--repo \"$ACTIVE_GITHUB_REPOSITORY\"`"
       - "Label `security` em todas as issues e PRs de segurança"
 
+project_workflow:
+  description: "Fluxo de contexto dinamico por projeto — sempre verificar qual projeto esta ativo antes de agir"
+
+  detect_active_project:
+    sources:
+      - "parametro active_project passado pelo CEO ou agente anterior na mensagem"
+      - "nome do projeto mencionado na task recebida (TASK-XXX.md)"
+      - "diretorio ativo em /data/openclaw/projects/ — verificar qual foi modificado mais recentemente"
+    fallback: "se nao conseguir inferir o projeto, perguntar ao CEO antes de prosseguir"
+
+  on_task_received:
+    actions:
+      - "extrair active_project da mensagem ou task"
+      - "verificar se /data/openclaw/projects/<active_project>/docs/backlogs/ existe"
+      - "se nao existir: notificar CEO para acionar DevOps antes de prosseguir"
+      - "carregar contexto existente: ler arquivos relevantes em /data/openclaw/projects/<active_project>/docs/backlogs/"
+
+  on_write_artifact:
+    rule: "SEMPRE escrever artefatos em /data/openclaw/projects/<active_project>/docs/backlogs/<tipo>/"
+    mapping:
+      briefs:           "/data/openclaw/projects/<active_project>/docs/backlogs/briefs/"
+      specs:            "/data/openclaw/projects/<active_project>/docs/backlogs/specs/"
+      tasks:            "/data/openclaw/projects/<active_project>/docs/backlogs/tasks/"
+      user_story:       "/data/openclaw/projects/<active_project>/docs/backlogs/user_story/"
+      status:           "/data/openclaw/projects/<active_project>/docs/backlogs/status/"
+      idea:             "/data/openclaw/projects/<active_project>/docs/backlogs/idea/"
+      ux:               "/data/openclaw/projects/<active_project>/docs/backlogs/ux/"
+      security:         "/data/openclaw/projects/<active_project>/docs/backlogs/security/scans/"
+      database:         "/data/openclaw/projects/<active_project>/docs/backlogs/database/"
+      session_finished: "/data/openclaw/projects/<active_project>/docs/backlogs/session_finished/"
+      implementation:   "/data/openclaw/projects/<active_project>/docs/backlogs/implementation/"
+
+  on_project_switch:
+    trigger: "mensagem indica projeto diferente do atual"
+    actions:
+      - "detectar novo active_project"
+      - "carregar backlog em /data/openclaw/projects/<novo-projeto>/docs/backlogs/"
+      - "continuar trabalho no contexto do novo projeto"
+
+
 rules:
   - id: six_hourly_operation
     description: "Operar em ciclos de 6 horas para varredura proativa"
@@ -168,6 +208,17 @@ rules:
     actions:
       - "aceitar: arquiteto, ceo (somente P0), dev_backend, dev_frontend, dev_mobile, qa_engineer, cron"
       - "rejeitar outros sources com log `unauthorized_source`"
+
+
+  - id: per_project_backlog
+    priority: 96
+    when: ["always"]
+    actions:
+      - "TODOS os artefatos de backlog (briefs, specs, tasks, user_story, status, idea, ux, security, database) vao em /data/openclaw/projects/<nome-do-projeto>/docs/backlogs/"
+      - "quando o contexto de projeto mudar, buscar e carregar backlog existente em /data/openclaw/projects/<projeto>/docs/backlogs/ antes de qualquer acao"
+      - "nunca escrever artefatos de projetos em /data/openclaw/backlog/ — esse diretorio e reservado apenas para operacoes internas da plataforma"
+      - "estrutura padrao por projeto: /data/openclaw/projects/<projeto>/docs/backlogs/{briefs,specs,tasks,user_story,status,idea,ux,security/scans,database,session_finished,implementation}"
+      - "se o diretorio /data/openclaw/projects/<projeto>/docs/backlogs/ nao existir, solicitar ao DevOps_SRE para inicializar o projeto antes de prosseguir"
 
   - id: input_schema_validation
     priority: 99
@@ -318,3 +369,8 @@ memory:
     - "Código completo ou diffs (muito volumoso)"
     - "Detalhes de issues específicas"
     - "Informações temporárias ou one-off"
+
+paths:
+  read_write_prefix: "/data/openclaw/"
+  backlog_root: "/data/openclaw/backlog"
+  projects_root: "/data/openclaw/projects"

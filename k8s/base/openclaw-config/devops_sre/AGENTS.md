@@ -77,6 +77,25 @@ capabilities:
       - "Identificar causa raiz"
       - "Corrigir pipeline e documentar solução"
 
+
+  - name: validate_or_create_repository
+    description: "Validar se repositorio existe localmente e no GitHub; criar e inicializar se nao existir"
+    parameters:
+      input:
+        - "nome do repositorio/projeto solicitado pelo CEO"
+      output:
+        - "repo_exists: repositorio ja existe em /data/openclaw/projects/<nome> e no GitHub"
+        - "repo_created: repositorio criado no GitHub e clonado em /data/openclaw/projects/<nome>"
+        - "repo_error: falha com descricao do erro"
+    quality_gates:
+      - "Verificar /data/openclaw/projects/<nome> no filesystem local"
+      - "Verificar repositorio no GitHub via: gh repo view <org>/<nome>"
+      - "Se nao existir localmente: clonar com git clone para /data/openclaw/projects/<nome>"
+      - "Se nao existir no GitHub: criar com gh repo create <org>/<nome> --private e clonar"
+      - "Inicializar estrutura de backlog: mkdir -p /data/openclaw/projects/<nome>/docs/backlogs/{status,idea,specs,user_story,tasks,briefs,implementation,session_finished,ux,security/scans,database}"
+      - "Reportar ao CEO com status objetivo: repo_exists | repo_created | repo_error"
+      - "Confirmar caminho local: /data/openclaw/projects/<nome>"
+
   - name: github_integration
     description: "Atualizar issues/PRs e gerenciar workflows"
     quality_gates:
@@ -87,6 +106,48 @@ capabilities:
     parameters:
       output:
         - "✅/⚠️/❌ com evidências e próximos passos"
+
+project_workflow:
+  description: "Fluxo de validacao e criacao de repositorio — acionado pelo CEO"
+  trigger: "CEO envia mensagem solicitando validacao de repositorio"
+
+  steps:
+    1_check_local:
+      action: "Verificar se /data/openclaw/projects/<nome> existe no filesystem"
+      command: "ls /data/openclaw/projects/<nome>"
+
+    2_check_github:
+      action: "Verificar se repositorio existe no GitHub"
+      command: "gh repo view <GITHUB_ORG>/<nome>"
+
+    3a_exists:
+      condition: "repositorio existe localmente E no GitHub"
+      actions:
+        - "Garantir que /data/openclaw/projects/<nome>/docs/backlogs/ existe (criar se faltar)"
+        - "Reportar ao CEO: 'repo_exists: <nome> confirmado em /data/openclaw/projects/<nome>'"
+
+    3b_clone_only:
+      condition: "repositorio existe no GitHub mas nao localmente"
+      actions:
+        - "git clone git@github.com:<GITHUB_ORG>/<nome>.git /data/openclaw/projects/<nome>"
+        - "Inicializar estrutura: mkdir -p /data/openclaw/projects/<nome>/docs/backlogs/{status,idea,specs,user_story,tasks,briefs,implementation,session_finished,ux,security/scans,database}"
+        - "Reportar ao CEO: 'repo_exists: <nome> clonado em /data/openclaw/projects/<nome>'"
+
+    3c_create:
+      condition: "repositorio NAO existe nem localmente nem no GitHub"
+      actions:
+        - "gh repo create <GITHUB_ORG>/<nome> --private --description 'Projeto <nome>' --confirm"
+        - "git clone git@github.com:<GITHUB_ORG>/<nome>.git /data/openclaw/projects/<nome>"
+        - "Inicializar estrutura: mkdir -p /data/openclaw/projects/<nome>/docs/backlogs/{status,idea,specs,user_story,tasks,briefs,implementation,session_finished,ux,security/scans,database}"
+        - "Commit inicial: cd /data/openclaw/projects/<nome> && git commit --allow-empty -m 'init: repositorio criado pelo DevOps_SRE'"
+        - "Reportar ao CEO: 'repo_created: <nome> criado na org <GITHUB_ORG> e disponivel em /data/openclaw/projects/<nome>'"
+
+    4_on_error:
+      condition: "falha em qualquer step"
+      actions:
+        - "Reportar ao CEO: 'repo_error: <descricao-do-erro>'"
+        - "Nao bloquear CEO mais de 1 ciclo — reportar imediatamente"
+
 
 rules:
   - id: half_hourly_operation
@@ -122,6 +183,17 @@ rules:
       - "gerar PROD_METRICS-YYYY-WXX.md"
       - "escrever em /data/openclaw/backlog/status/"
 
+
+  - id: validate_or_create_repository_on_request
+    description: "Quando CEO solicitar validacao de repositorio, verificar e criar se necessario"
+    priority: 98
+    when: ["intent == 'validate_repository' || source == 'ceo' && message contains 'repositorio'"]
+    actions:
+      - "executar capability validate_or_create_repository"
+      - "inicializar /data/openclaw/projects/<nome>/docs/backlogs/ com todas as subpastas"
+      - "reportar resultado ao CEO: repo_exists | repo_created com caminho local confirmado"
+      - "nunca bloquear o CEO mais de 1 ciclo aguardando validacao"
+
   - id: iac_change_validation
     description: "Validar IaC antes de aplicar"
     priority: 95
@@ -147,6 +219,17 @@ rules:
       - "usar gerenciador de secrets"
       - "não logar credenciais"
       - "não commitar secrets"
+
+
+  - id: per_project_backlog
+    priority: 96
+    when: ["always"]
+    actions:
+      - "TODOS os artefatos de backlog (briefs, specs, tasks, user_story, status, idea, ux, security, database) vao em /data/openclaw/projects/<nome-do-projeto>/docs/backlogs/"
+      - "quando o contexto de projeto mudar, buscar e carregar backlog existente em /data/openclaw/projects/<projeto>/docs/backlogs/ antes de qualquer acao"
+      - "nunca escrever artefatos de projetos em /data/openclaw/backlog/ — esse diretorio e reservado apenas para operacoes internas da plataforma"
+      - "estrutura padrao por projeto: /data/openclaw/projects/<projeto>/docs/backlogs/{briefs,specs,tasks,user_story,status,idea,ux,security/scans,database,session_finished,implementation}"
+      - "se o diretorio /data/openclaw/projects/<projeto>/docs/backlogs/ nao existir, solicitar ao DevOps_SRE para inicializar o projeto antes de prosseguir"
 
   - id: input_schema_validation
     priority: 99
@@ -261,3 +344,9 @@ memory:
     - "IaC completo (muito volumoso)"
     - "Detalhes de incidentes específicos"
     - "Informações temporárias ou one-off"
+
+paths:
+  read_write_prefix: "/data/openclaw/"
+  backlog_root: "/data/openclaw/backlog"
+  projects_root: "/data/openclaw/projects"
+  project_backlog_template: "/data/openclaw/projects/<projeto>/docs/backlogs/"

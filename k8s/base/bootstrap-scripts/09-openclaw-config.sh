@@ -16,7 +16,11 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
     "bind": "lan",
     "port": 18789,
     "controlUi": {
-      "dangerouslyAllowHostHeaderOriginFallback": true
+      "dangerouslyAllowHostHeaderOriginFallback": true,
+      "dangerouslyDisableDeviceAuth": true,
+      "allowedOrigins": [
+        "*"
+      ]
     },
     "auth": {
       "token": "__TOKEN__"
@@ -64,21 +68,22 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
     }
   },
   "tools": {
+    "profile": "coding",
     "sessions": {
       "visibility": "all"
     },
     "agentToAgent": {
       "enabled": true,
-      "allow": ["ceo", "po", "arquiteto", "dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "ux_designer", "dba_data_engineer"]
+      "allow": ["ceo", "po", "arquiteto", "dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "ux_designer", "dba_data_engineer", "memory_curator"]
     }
   },
   "session": {
     "dmScope": "per-channel-peer",
     "maintenance": {
       "mode": "enforce",
-      "pruneAfter": "30d",
-      "maxEntries": 1000,
-      "rotateBytes": "20mb",
+      "pruneAfter": "365d",
+      "maxEntries": 2000,
+      "rotateBytes": "50mb",
       "maxDiskBytes": "3gb",
       "highWaterBytes": "2.4gb"
     },
@@ -100,6 +105,12 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
   },
   "agents": {
     "defaults": {
+      "memorySearch": {
+        "enabled": true,
+        "provider": "ollama",
+        "model": "nomic-embed-text",
+        "baseUrl": "http://ollama:11434"
+      },
       "model": "ollama/nemotron-3-super:cloud",
       "bootstrapMaxChars": 25000,
       "thinkingDefault": "low",
@@ -107,7 +118,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       "typingIntervalSeconds": 4,
       "sandbox": {
         "mode": "off",
-        "sessionToolsVisibility": "spawned"
+        "sessionToolsVisibility": "all"
       },
       "subagents": {
         "runTimeoutSeconds": 1800,
@@ -128,6 +139,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3-vl:235b-cloud",
         "workspace": "/data/openclaw/workspace-ceo",
         "agentDir": "/data/openclaw/agents/ceo/agent",
+        "skills": ["ceo_orchestration"],
         "tools": {
           "allow": [
             "read",
@@ -160,6 +172,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/nemotron-3-super:cloud",
         "workspace": "/data/openclaw/workspace-po",
         "agentDir": "/data/openclaw/agents/po/agent",
+        "skills": ["po_product_delivery"],
         "tools": {
           "allow": [
             "read",
@@ -192,6 +205,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3.5:397b-cloud",
         "workspace": "/data/openclaw/workspace-arquiteto",
         "agentDir": "/data/openclaw/agents/arquiteto/agent",
+        "skills": ["arquiteto_engineering"],
         "tools": {
           "allow": [
             "read",
@@ -224,6 +238,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3-coder:480b-cloud",
         "workspace": "/data/openclaw/workspace-dev_backend",
         "agentDir": "/data/openclaw/agents/dev_backend/agent",
+        "skills": ["dev_backend_implementation"],
         "tools": {
           "allow": [
             "read",
@@ -255,6 +270,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3-coder:480b-cloud",
         "workspace": "/data/openclaw/workspace-dev_frontend",
         "agentDir": "/data/openclaw/agents/dev_frontend/agent",
+        "skills": ["dev_frontend_implementation"],
         "tools": {
           "allow": [
             "read",
@@ -286,6 +302,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3-coder:480b-cloud",
         "workspace": "/data/openclaw/workspace-dev_mobile",
         "agentDir": "/data/openclaw/agents/dev_mobile/agent",
+        "skills": ["dev_mobile_implementation"],
         "tools": {
           "allow": [
             "read",
@@ -317,6 +334,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/nemotron-3-super:cloud",
         "workspace": "/data/openclaw/workspace-qa_engineer",
         "agentDir": "/data/openclaw/agents/qa_engineer/agent",
+        "skills": ["qa_engineer_validation"],
         "tools": {
           "allow": [
             "read",
@@ -348,6 +366,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/nemotron-3-super:cloud",
         "workspace": "/data/openclaw/workspace-devops_sre",
         "agentDir": "/data/openclaw/agents/devops_sre/agent",
+        "skills": ["devops_sre_operations"],
         "tools": {
           "allow": [
             "read",
@@ -379,6 +398,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3.5:397b-cloud",
         "workspace": "/data/openclaw/workspace-security_engineer",
         "agentDir": "/data/openclaw/agents/security_engineer/agent",
+        "skills": ["security_engineer_scan"],
         "tools": {
           "allow": [
             "read",
@@ -410,6 +430,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/nemotron-3-super:cloud",
         "workspace": "/data/openclaw/workspace-ux_designer",
         "agentDir": "/data/openclaw/agents/ux_designer/agent",
+        "skills": ["ux_designer_artifacts"],
         "tools": {
           "allow": [
             "read",
@@ -441,6 +462,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3.5:397b-cloud",
         "workspace": "/data/openclaw/workspace-dba_data_engineer",
         "agentDir": "/data/openclaw/agents/dba_data_engineer/agent",
+        "skills": ["dba_data_engineer_schema"],
         "tools": {
           "allow": [
             "read",
@@ -472,14 +494,19 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3-coder:480b-cloud",
         "workspace": "/data/openclaw/workspace-memory_curator",
         "agentDir": "/data/openclaw/agents/memory_curator/agent",
+        "skills": ["memory_curator_promotion"],
         "tools": {
           "allow": [
             "read",
             "write",
             "exec",
             "message",
+            "agents_list",
             "sessions_list",
             "sessions_history",
+            "sessions_send",
+            "sessions_spawn",
+            "session_status",
             "group:plugins"
           ],
           "exec": {
@@ -503,6 +530,11 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       }
     }
   ],
+  "plugins": {
+    "slots": {
+      "memory": "memory-core"
+    }
+  },
   "commands": {
     "native": "auto",
     "nativeSkills": "auto",
@@ -563,20 +595,7 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
-# Workspace unico por projeto para todos os agentes (sem isolamento por agente).
-if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
-  _tmp_openclaw_json="$(mktemp)"
-  if jq '
-      (.agents.list[]?.workspace) = "/data/openclaw/backlog/implementation"
-    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
-    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
-    mkdir -p ~/.openclaw
-    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
-  else
-    rm -f "${_tmp_openclaw_json}"
-    echo "[bootstrap] falha ao aplicar workspace compartilhado no openclaw.json"
-  fi
-fi
+# Cada agente usa seu proprio workspace com identidade isolada (workspace definido por agente no JSON).
 
 # Exec approvals: ask=off para todos os agentes — sem socket (evita erro "approval not enabled on Telegram").
 # Todos os agentes aprovam automaticamente exec sem precisar de UI de aprovacao.
@@ -665,16 +684,15 @@ EOF
      "${sess_dir}/sessions.json" > "${sess_dir}/sessions.json.tmp"
   mv "${sess_dir}/sessions.json.tmp" "${sess_dir}/sessions.json"
 }
-SHARED_PROJECT_WORKSPACE="/data/openclaw/backlog/implementation"
-repair_main_session "ceo" "${SHARED_PROJECT_WORKSPACE}" "CEO pronto. Delegacao imediata na mesma sessao — sem fila com prazos em horas entre agentes. Pode acionar por aqui."
-repair_main_session "po" "${SHARED_PROJECT_WORKSPACE}" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
-repair_main_session "arquiteto" "${SHARED_PROJECT_WORKSPACE}" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
-repair_main_session "dev_backend" "${SHARED_PROJECT_WORKSPACE}" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
-repair_main_session "dev_frontend" "${SHARED_PROJECT_WORKSPACE}" "Dev_Frontend pronto. Pode me acionar para implementacao de tasks frontend, testes e atualizacao de status."
-repair_main_session "dev_mobile" "${SHARED_PROJECT_WORKSPACE}" "Dev_Mobile pronto. Pode me acionar para implementacao de tasks mobile, testes e atualizacao de status."
-repair_main_session "qa_engineer" "${SHARED_PROJECT_WORKSPACE}" "QA_Engineer pronto. Pode me acionar para validacao, testes BDD e relatorios de qualidade."
-repair_main_session "devops_sre" "${SHARED_PROJECT_WORKSPACE}" "DevOps_SRE pronto. Pode me acionar para pipelines, infra, SLOs e escalacao de incidentes."
-repair_main_session "security_engineer" "${SHARED_PROJECT_WORKSPACE}" "Security_Engineer pronto. Pode me acionar para scans de seguranca, CVEs e escalacao de vulnerabilidades."
-repair_main_session "ux_designer" "${SHARED_PROJECT_WORKSPACE}" "UX_Designer pronto. Pode me acionar para wireframes, fluxos de usuario e design tokens."
-repair_main_session "dba_data_engineer" "${SHARED_PROJECT_WORKSPACE}" "DBA_DataEngineer pronto. Pode me acionar para schemas, migrations, queries e compliance LGPD."
-repair_main_session "memory_curator" "${SHARED_PROJECT_WORKSPACE}" "Memory_Curator pronto. Executo curadoria diaria de padroes cross-agent e promocao para SHARED_MEMORY."
+repair_main_session "ceo"              "${OPENCLAW_STATE_DIR}/workspace-ceo"              "CEO pronto. Delegacao imediata na mesma sessao — sem fila com prazos em horas entre agentes. Pode acionar por aqui."
+repair_main_session "po"               "${OPENCLAW_STATE_DIR}/workspace-po"               "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
+repair_main_session "arquiteto"        "${OPENCLAW_STATE_DIR}/workspace-arquiteto"        "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
+repair_main_session "dev_backend"      "${OPENCLAW_STATE_DIR}/workspace-dev_backend"      "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
+repair_main_session "dev_frontend"     "${OPENCLAW_STATE_DIR}/workspace-dev_frontend"     "Dev_Frontend pronto. Pode me acionar para implementacao de tasks frontend, testes e atualizacao de status."
+repair_main_session "dev_mobile"       "${OPENCLAW_STATE_DIR}/workspace-dev_mobile"       "Dev_Mobile pronto. Pode me acionar para implementacao de tasks mobile, testes e atualizacao de status."
+repair_main_session "qa_engineer"      "${OPENCLAW_STATE_DIR}/workspace-qa_engineer"      "QA_Engineer pronto. Pode me acionar para validacao, testes BDD e relatorios de qualidade."
+repair_main_session "devops_sre"       "${OPENCLAW_STATE_DIR}/workspace-devops_sre"       "DevOps_SRE pronto. Pode me acionar para pipelines, infra, SLOs e escalacao de incidentes."
+repair_main_session "security_engineer" "${OPENCLAW_STATE_DIR}/workspace-security_engineer" "Security_Engineer pronto. Pode me acionar para scans de seguranca, CVEs e escalacao de vulnerabilidades."
+repair_main_session "ux_designer"      "${OPENCLAW_STATE_DIR}/workspace-ux_designer"      "UX_Designer pronto. Pode me acionar para wireframes, fluxos de usuario e design tokens."
+repair_main_session "dba_data_engineer" "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer" "DBA_DataEngineer pronto. Pode me acionar para schemas, migrations, queries e compliance LGPD."
+repair_main_session "memory_curator"   "${OPENCLAW_STATE_DIR}/workspace-memory_curator"   "Memory_Curator pronto. Executo curadoria diaria de padroes cross-agent e promocao para SHARED_MEMORY."
