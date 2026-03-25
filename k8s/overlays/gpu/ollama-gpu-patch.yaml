@@ -10,10 +10,10 @@ spec:
         - name: ollama
           resources:
             requests:
-              cpu: "2"
-              memory: 8Gi
+              cpu: "1"
+              memory: 2Gi
               nvidia.com/gpu: 1
             limits:
-              cpu: "8"
-              memory: 32Gi
+              cpu: "4"
+              memory: 16Gi
               nvidia.com/gpu: 1
