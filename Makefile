@@ -290,7 +290,7 @@ gpu-migrate-apply:
 
 clawdevs-up:
 	@set -e; \
-	steps="preflight minikube-up minikube-context minikube-addons storage-enable-expansion ollama-volume-apply secrets-apply stack-apply"; \
+	steps="preflight minikube-up minikube-context minikube-addons storage-enable-expansion ollama-volume-apply secrets-apply stack-apply panel-db-migrate"; \
 	total=8; \
 	i=1; \
 	for step in $$steps; do \
@@ -359,7 +359,7 @@ openclaw-dashboard:
 # Control Panel
 # ────────────────────────────────────────────────────────────────────────────
 
-panel-apply: image-mode-prepare
+panel-apply: image-mode-prepare 
 	kubectl apply -k k8s/base/control-panel/
 
 panel-status:
@@ -383,7 +383,7 @@ panel-destroy:
 	kubectl delete -k k8s/base/control-panel/ || true
 
 panel-forward:
-	minikube service clawdevs-panel-frontend --url -p clawdevs-a
+	minikube service clawdevs-panel-frontend --url -p clawdevs-ai
 
 services-expose:
 	@echo "════════════════════════════════════════════════════════════════"
