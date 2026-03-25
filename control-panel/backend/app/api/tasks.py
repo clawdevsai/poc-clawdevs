@@ -19,6 +19,7 @@ class TaskResponse(BaseModel):
     description: str | None
     status: str
     priority: str
+    label: str | None
     assigned_agent_id: str | None
     github_issue_number: int | None
     github_issue_url: str | None
@@ -33,12 +34,18 @@ class CreateTaskRequest(BaseModel):
     description: str | None = None
     priority: str = "medium"
     assigned_agent_id: str | None = None
+    label: str | None = None
+    github_repo: str | None = None
 
 
 class UpdateTaskRequest(BaseModel):
     status: str | None = None
     priority: str | None = None
     assigned_agent_id: str | None = None
+    title: str | None = None
+    description: str | None = None
+    label: str | None = None
+    github_repo: str | None = None
 
 
 class TasksListResponse(BaseModel):
@@ -51,16 +58,19 @@ async def list_tasks(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
     status: Optional[str] = Query(None),
+    label: Optional[str] = Query(None),
 ):
     query = select(Task).order_by(Task.created_at.desc())
     if status:
         query = query.where(Task.status == status)
+    if label:
+        query = query.where(Task.label == label)
     result = await session.exec(query)
     tasks = result.all()
     items = [
         TaskResponse(
             id=str(t.id), title=t.title, description=t.description,
-            status=t.status, priority=t.priority,
+            status=t.status, priority=t.priority, label=t.label,
             assigned_agent_id=str(t.assigned_agent_id) if t.assigned_agent_id else None,
             github_issue_number=t.github_issue_number,
             github_issue_url=t.github_issue_url,
@@ -84,6 +94,8 @@ async def create_task(
         description=body.description,
         priority=body.priority,
         assigned_agent_id=UUID(body.assigned_agent_id) if body.assigned_agent_id else None,
+        label=body.label,
+        github_repo=body.github_repo,
         updated_at=datetime.now(timezone.utc),
     )
     session.add(task)
@@ -91,7 +103,7 @@ async def create_task(
     await session.refresh(task)
     return TaskResponse(
         id=str(task.id), title=task.title, description=task.description,
-        status=task.status, priority=task.priority,
+        status=task.status, priority=task.priority, label=task.label,
         assigned_agent_id=str(task.assigned_agent_id) if task.assigned_agent_id else None,
         github_issue_number=task.github_issue_number,
         github_issue_url=task.github_issue_url,
@@ -118,12 +130,20 @@ async def update_task(
         task.priority = body.priority
     if body.assigned_agent_id is not None:
         task.assigned_agent_id = UUID(body.assigned_agent_id)
+    if body.title is not None:
+        task.title = body.title
+    if body.description is not None:
+        task.description = body.description
+    if body.label is not None:
+        task.label = body.label
+    if body.github_repo is not None:
+        task.github_repo = body.github_repo
     task.updated_at = datetime.now(timezone.utc)
     await session.commit()
     await session.refresh(task)
     return TaskResponse(
         id=str(task.id), title=task.title, description=task.description,
-        status=task.status, priority=task.priority,
+        status=task.status, priority=task.priority, label=task.label,
         assigned_agent_id=str(task.assigned_agent_id) if task.assigned_agent_id else None,
         github_issue_number=task.github_issue_number,
         github_issue_url=task.github_issue_url,
