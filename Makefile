@@ -373,8 +373,14 @@ panel-logs-frontend:
 	kubectl logs -l app=clawdevs-panel-frontend -f --tail=100
 
 panel-db-migrate:
-	kubectl exec -it $$(kubectl get pod -l app=clawdevs-panel-backend -o jsonpath='{.items[0].metadata.name}') \
-	-- alembic upgrade head
+	@set -eu; \
+	pod="$$(kubectl get pod -l app=clawdevs-panel-backend -o jsonpath='{range .items[?(@.status.phase=="Running")]}{.metadata.name}{"\n"}{end}' | head -n 1)"; \
+	if [ -z "$$pod" ]; then \
+		echo "Erro: nenhum pod backend em Running para executar migration."; \
+		kubectl get pods -l app=clawdevs-panel-backend; \
+		exit 1; \
+	fi; \
+	kubectl exec "$$pod" -c backend -- alembic upgrade head
 
 panel-restart:
 	kubectl rollout restart deployment/clawdevs-panel-backend deployment/clawdevs-panel-frontend deployment/clawdevs-panel-worker
