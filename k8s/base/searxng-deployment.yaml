@@ -19,12 +19,17 @@ spec:
           image: clawdevsai/searxng-runtime:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
           env:
             - name: SEARXNG_SETTINGS_PATH
               value: /etc/searxng/settings.yml
             - name: SEARXNG_SECRET
-              value: clawdevs-searxng-internal-secret-key
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: SEARXNG_SECRET
+                  optional: true
           resources:
             requests:
               memory: "128Mi"
@@ -32,32 +37,75 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 977
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
         - name: searxng-proxy
           image: clawdevsai/searxng-proxy:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 18080
+            - name: proxy
+              containerPort: 18080
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /healthz
               port: 18080
             initialDelaySeconds: 10
             periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /healthz
               port: 18080
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: searxng
+  labels:
+    app: searxng
 spec:
   selector:
     app: searxng
   ports:
-    - port: 8080
+    - name: proxy
+      port: 8080
       targetPort: 18080
   type: ClusterIP

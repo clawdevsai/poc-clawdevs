@@ -23,7 +23,14 @@ spec:
           args:
             - alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000
           ports:
-            - containerPort: 8000
+            - name: http
+              containerPort: 8000
+          # envFrom first so individual env vars can override if needed
+          envFrom:
+            - secretRef:
+                name: clawdevs-panel-auth
+            - secretRef:
+                name: openclaw-auth
           env:
             - name: PANEL_DB_PASSWORD
               valueFrom:
@@ -41,11 +48,6 @@ spec:
               value: "redis://:$(PANEL_REDIS_PASSWORD)@clawdevs-panel-redis:6379/0"
             - name: PANEL_OPENCLAW_GATEWAY_URL
               value: "http://clawdevs-ai:18789"
-          envFrom:
-            - secretRef:
-                name: clawdevs-panel-auth
-            - secretRef:
-                name: openclaw-auth
           resources:
             requests:
               cpu: 250m
@@ -59,12 +61,15 @@ spec:
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 15
+            timeoutSeconds: 5
             failureThreshold: 3
           securityContext:
             runAsNonRoot: true
@@ -80,4 +85,3 @@ spec:
         - name: openclaw-data
           persistentVolumeClaim:
             claimName: openclaw-data
-            readOnly: true

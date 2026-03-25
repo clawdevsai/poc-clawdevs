@@ -1,10 +1,42 @@
+# NetworkPolicy: permite egress irrestrito para todos os pods do namespace.
+# Necessário para: HTTPS externo (GitHub, Telegram, Anthropic API), DNS, Ollama, SearXNG.
+# Em produção, considere restringir por pod selector e adicionar ingress policies.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-all-egress
+  labels:
+    app: clawdevs-ai
 spec:
   podSelector: {}
   policyTypes:
     - Egress
   egress:
+    # Permite todo tráfego de saída (necessário para APIs externas e DNS)
     - {}
+---
+# NetworkPolicy: permite ingress no gateway OpenClaw apenas de dentro do namespace
+# e do control-panel backend/worker.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-ingress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: clawdevs-ai
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-backend
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-worker
+      ports:
+        - protocol: TCP
+          port: 18789

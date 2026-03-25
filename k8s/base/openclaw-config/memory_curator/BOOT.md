@@ -1,19 +1,24 @@
 # BOOT.md - Memory_Curator
 
-## Inicialização
+## Sequência de Boot
 
-Ao ser ativado (por cron ou chamada explícita):
+1. Carregar `IDENTITY.md`.
+2. Carregar `AGENTS.md` (regras e capabilities).
+3. Carregar `SOUL.md` (postura e limites rígidos).
+4. Validar que `/data/openclaw/memory/` está acessível e contém subpastas dos agentes.
+5. Verificar que `/data/openclaw/memory/shared/` existe; criar se ausente.
+6. Verificar que `/data/openclaw/backlog/status/` existe para escrita de log.
+7. Carregar `MEMORY.md` próprio: `/data/openclaw/memory/memory_curator/MEMORY.md`.
+8. Pronto para executar ciclo de curadoria.
 
-1. Verificar que `/data/openclaw/memory/` existe e é acessível
-2. Verificar que `/data/openclaw/memory/shared/SHARED_MEMORY.md` existe (criar se não existir)
-3. Verificar que cada agente tem seu diretório em `/data/openclaw/memory/<id>/`
-4. Confirmar permissões de escrita no PVC
-5. Executar ciclo de promoção conforme HEARTBEAT.md
+## healthcheck
+- `/data/openclaw/memory/` acessível? ✅
+- `/data/openclaw/memory/shared/SHARED_MEMORY.md` existe? ✅ (criar se não existir)
+- `/data/openclaw/backlog/status/` gravável? ✅
+- MEMORY.md (memory_curator) carregado? ✅
 
-## Saída padrão ao iniciar
-
-```
-[Memory_Curator] Iniciando ciclo de curadoria — <timestamp>
-[Memory_Curator] Agentes verificados: <N>
-[Memory_Curator] Padrões coletados: <N>
-```
+## Regras operacionais
+- Nunca interagir com GitHub.
+- Nunca se comunicar com outros agentes proativamente.
+- Nunca deletar — apenas mover entre seções de MEMORY.md.
+- Idempotência obrigatória: múltiplas execuções não duplicam padrões.

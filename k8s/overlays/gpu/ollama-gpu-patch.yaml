@@ -1,11 +1,19 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: ollama
 spec:
-  runtimeClassName: nvidia
-  containers:
-    - name: ollama
-      resources:
-        limits:
-          nvidia.com/gpu: 1
+  template:
+    spec:
+      runtimeClassName: nvidia
+      containers:
+        - name: ollama
+          resources:
+            requests:
+              cpu: "2"
+              memory: 8Gi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "8"
+              memory: 32Gi
+              nvidia.com/gpu: 1

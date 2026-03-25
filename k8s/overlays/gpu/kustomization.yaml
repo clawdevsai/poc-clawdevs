@@ -9,5 +9,5 @@ resources:
 patches:
   - path: ollama-gpu-patch.yaml
     target:
-      kind: Pod
+      kind: Deployment
       name: ollama

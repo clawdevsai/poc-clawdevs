@@ -5,3 +5,5 @@ k8s/.env
 NUL
 .claude
 control-panel/frontend/node_modules
+tmp-job*
+.clone/*

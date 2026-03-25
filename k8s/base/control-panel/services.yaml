@@ -13,21 +13,26 @@ spec:
       port: 5432
       targetPort: 5432
 ---
+# Acesso externo ao Postgres desabilitado por padrão (segurança).
+# Para habilitar em ambiente de desenvolvimento, use um overlay que adicione
+# um patch convertendo este Service para NodePort.
 apiVersion: v1
 kind: Service
 metadata:
   name: clawdevs-panel-db-external
   labels:
     app: clawdevs-panel-db
+  annotations:
+    # Exposto apenas para acesso interno entre pods (não é NodePort)
+    clawdevs.ai/access: "internal-only"
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: clawdevs-panel-db
   ports:
     - name: postgres
       port: 5432
       targetPort: 5432
-      nodePort: 31883
 ---
 apiVersion: v1
 kind: Service
@@ -43,21 +48,24 @@ spec:
       port: 6379
       targetPort: 6379
 ---
+# Acesso externo ao Redis desabilitado por padrão (segurança).
+# Para habilitar em ambiente de desenvolvimento, use um overlay.
 apiVersion: v1
 kind: Service
 metadata:
   name: clawdevs-panel-redis-external
   labels:
     app: clawdevs-panel-redis
+  annotations:
+    clawdevs.ai/access: "internal-only"
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: clawdevs-panel-redis
   ports:
     - name: redis
       port: 6379
       targetPort: 6379
-      nodePort: 31882
 ---
 apiVersion: v1
 kind: Service
@@ -70,7 +78,8 @@ spec:
   selector:
     app: clawdevs-panel-frontend
   ports:
-    - port: 3000
+    - name: http
+      port: 3000
       targetPort: 3000
       nodePort: 31880
 ---
@@ -85,6 +94,7 @@ spec:
   selector:
     app: clawdevs-panel-backend
   ports:
-    - port: 8000
+    - name: http
+      port: 8000
       targetPort: 8000
       nodePort: 31881

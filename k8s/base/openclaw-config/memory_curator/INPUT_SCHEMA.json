@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Memory_Curator Input Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent": {
+      "type": "string",
+      "enum": [
+        "promote_patterns",
+        "archive_stale",
+        "report_memory_health",
+        "force_cycle"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "cron",
+        "arquiteto",
+        "sistema"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "force": {
+          "type": "boolean",
+          "description": "Forçar ciclo mesmo que já tenha rodado hoje"
+        },
+        "agent_filter": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Filtrar quais agentes processar (vazio = todos)"
+        }
+      }
+    }
+  },
+  "required": ["intent", "source"]
+}

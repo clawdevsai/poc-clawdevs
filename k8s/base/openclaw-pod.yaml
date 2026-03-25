@@ -17,6 +17,7 @@ spec:
       labels:
         app: clawdevs-ai
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
         - name: openclaw
           image: clawdevsai/openclaw-runtime:latest
@@ -181,15 +182,23 @@ spec:
               cpu: "2"
               memory: 4Gi
           readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - "curl -sf http://127.0.0.1:18789/healthz"
+            httpGet:
+              path: /healthz
+              port: 18789
             initialDelaySeconds: 45
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 18789
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 4
+          securityContext:
+            allowPrivilegeEscalation: false
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config
@@ -224,7 +233,7 @@ spec:
         - name: bootstrap-scripts
           configMap:
             name: openclaw-bootstrap-scripts
-            defaultMode: 0444
+            defaultMode: 0555
 ---
 apiVersion: v1
 kind: Service
@@ -254,4 +263,4 @@ spec:
   storageClassName: standard
   resources:
     requests:
-      storage: 5Gi
+      storage: 20Gi

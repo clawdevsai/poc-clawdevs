@@ -131,7 +131,6 @@ configMapGenerator:
       - ux_designer-SECURITY_TEST_CASES.md=openclaw-config/ux_designer/SECURITY_TEST_CASES.md
       - ux_designer-USER.md=openclaw-config/ux_designer/USER.md
       - ux_designer-TOOLS.md=openclaw-config/ux_designer/TOOLS.md
-      - ux_designer-SKILL.md=openclaw-config/ux_designer/SKILL.md
       - ux_designer-skill-SKILL.md=openclaw-config/ux_designer/SKILL.md
       # dba_data_engineer
       - dba_data_engineer-IDENTITY.md=openclaw-config/dba_data_engineer/IDENTITY.md
@@ -144,14 +143,18 @@ configMapGenerator:
       - dba_data_engineer-SECURITY_TEST_CASES.md=openclaw-config/dba_data_engineer/SECURITY_TEST_CASES.md
       - dba_data_engineer-USER.md=openclaw-config/dba_data_engineer/USER.md
       - dba_data_engineer-TOOLS.md=openclaw-config/dba_data_engineer/TOOLS.md
-      - dba_data_engineer-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
       - dba_data_engineer-skill-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
       # memory_curator
       - memory_curator-AGENTS.md=openclaw-config/memory_curator/AGENTS.md
       - memory_curator-BOOT.md=openclaw-config/memory_curator/BOOT.md
+      - memory_curator-BOOTSTRAP.md=openclaw-config/memory_curator/BOOTSTRAP.md
       - memory_curator-HEARTBEAT.md=openclaw-config/memory_curator/HEARTBEAT.md
       - memory_curator-IDENTITY.md=openclaw-config/memory_curator/IDENTITY.md
+      - memory_curator-INPUT_SCHEMA.json=openclaw-config/memory_curator/INPUT_SCHEMA.json
       - memory_curator-SOUL.md=openclaw-config/memory_curator/SOUL.md
+      - memory_curator-SECURITY_TEST_CASES.md=openclaw-config/memory_curator/SECURITY_TEST_CASES.md
+      - memory_curator-USER.md=openclaw-config/memory_curator/USER.md
+      - memory_curator-TOOLS.md=openclaw-config/memory_curator/TOOLS.md
       - memory_curator-skill-SKILL.md=openclaw-config/memory_curator/SKILL.md
       - memory_curator-MEMORY.md=openclaw-config/memory_curator/MEMORY.md
       # memory baselines (por agente)

@@ -1,44 +1,73 @@
-# Pod standalone: para alterar resources, delete o Pod e reaplique (kubectl delete pod ollama && kubectl apply -k k8s).
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: ollama
   labels:
     app: ollama
 spec:
-  restartPolicy: Always
-  containers:
-    - name: ollama
-      image: clawdevsai/ollama-runtime:latest
-      imagePullPolicy: IfNotPresent
-      resources:
-        requests:
-          cpu: 500m
-          memory: 1Gi
-        limits:
-          cpu: "1"
-          memory: 2Gi
-      volumeMounts:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: ollama
+          image: clawdevsai/ollama-runtime:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "1"
+              memory: 4Gi
+            limits:
+              cpu: "4"
+              memory: 16Gi
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+          ports:
+            - name: http
+              containerPort: 11434
+          env:
+            - name: OLLAMA_HOST
+              value: 0.0.0.0:11434
+            - name: OLLAMA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ollama-auth
+                  key: OLLAMA_API_KEY
+            - name: OLLAMA_AUTO_PULL_MODELS
+              value: "false"
+            - name: OLLAMA_BOOT_MODELS
+              value: ""
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 4
+          securityContext:
+            allowPrivilegeEscalation: false
+      volumes:
         - name: ollama-data
-          mountPath: /root/.ollama
-      ports:
-        - containerPort: 11434
-      env:
-        - name: OLLAMA_HOST
-          value: 0.0.0.0:11434
-        - name: OLLAMA_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: ollama-auth
-              key: OLLAMA_API_KEY
-        - name: OLLAMA_AUTO_PULL_MODELS
-          value: "false"
-        - name: OLLAMA_BOOT_MODELS
-          value: ""
-  volumes:
-    - name: ollama-data
-      persistentVolumeClaim:
-        claimName: ollama-data
+          persistentVolumeClaim:
+            claimName: ollama-data
 ---
 apiVersion: v1
 kind: Service
@@ -53,4 +82,3 @@ spec:
     - name: http
       port: 11434
       targetPort: 11434
----
