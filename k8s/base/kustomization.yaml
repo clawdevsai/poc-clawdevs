@@ -26,7 +26,7 @@ configMapGenerator:
       - ceo-SECURITY_TEST_CASES.md=openclaw-config/ceo/SECURITY_TEST_CASES.md
       - ceo-USER.md=openclaw-config/ceo/USER.md
       - ceo-TOOLS.md=openclaw-config/ceo/TOOLS.md
-      - ceo-skill-SKILL.md=openclaw-config/ceo/SKILL.md
+      - ceo-skill-ceo_orchestration-SKILL.md=openclaw-config/agents/ceo/skills/ceo_orchestration/SKILL.md
       # po
       - po-AGENTS.md=openclaw-config/po/AGENTS.md
       - po-BOOT.md=openclaw-config/po/BOOT.md
@@ -38,7 +38,7 @@ configMapGenerator:
       - po-SECURITY_TEST_CASES.md=openclaw-config/po/SECURITY_TEST_CASES.md
       - po-USER.md=openclaw-config/po/USER.md
       - po-TOOLS.md=openclaw-config/po/TOOLS.md
-      - po-skill-SKILL.md=openclaw-config/po/SKILL.md
+      - po-skill-po_product_delivery-SKILL.md=openclaw-config/agents/po/skills/po_product_delivery/SKILL.md
       # arquiteto
       - arquiteto-AGENTS.md=openclaw-config/arquiteto/AGENTS.md
       - arquiteto-BOOT.md=openclaw-config/arquiteto/BOOT.md
@@ -50,7 +50,7 @@ configMapGenerator:
       - arquiteto-SECURITY_TEST_CASES.md=openclaw-config/arquiteto/SECURITY_TEST_CASES.md
       - arquiteto-USER.md=openclaw-config/arquiteto/USER.md
       - arquiteto-TOOLS.md=openclaw-config/arquiteto/TOOLS.md
-      - arquiteto-skill-SKILL.md=openclaw-config/arquiteto/SKILL.md
+      - arquiteto-skill-arquiteto_engineering-SKILL.md=openclaw-config/agents/arquiteto/skills/arquiteto_engineering/SKILL.md
       # dev_backend
       - dev_backend-AGENTS.md=openclaw-config/dev_backend/AGENTS.md
       - dev_backend-BOOT.md=openclaw-config/dev_backend/BOOT.md
@@ -62,7 +62,7 @@ configMapGenerator:
       - dev_backend-SECURITY_TEST_CASES.md=openclaw-config/dev_backend/SECURITY_TEST_CASES.md
       - dev_backend-USER.md=openclaw-config/dev_backend/USER.md
       - dev_backend-TOOLS.md=openclaw-config/dev_backend/TOOLS.md
-      - dev_backend-skill-SKILL.md=openclaw-config/dev_backend/SKILL.md
+      - dev_backend-skill-dev_backend_implementation-SKILL.md=openclaw-config/agents/dev_backend/skills/dev_backend_implementation/SKILL.md
       # dev_frontend
       - dev_frontend-AGENTS.md=openclaw-config/dev_frontend/AGENTS.md
       - dev_frontend-BOOT.md=openclaw-config/dev_frontend/BOOT.md
@@ -74,7 +74,7 @@ configMapGenerator:
       - dev_frontend-SECURITY_TEST_CASES.md=openclaw-config/dev_frontend/SECURITY_TEST_CASES.md
       - dev_frontend-USER.md=openclaw-config/dev_frontend/USER.md
       - dev_frontend-TOOLS.md=openclaw-config/dev_frontend/TOOLS.md
-      - dev_frontend-skill-SKILL.md=openclaw-config/dev_frontend/SKILL.md
+      - dev_frontend-skill-dev_frontend_implementation-SKILL.md=openclaw-config/agents/dev_frontend/skills/dev_frontend_implementation/SKILL.md
       # dev_mobile
       - dev_mobile-AGENTS.md=openclaw-config/dev_mobile/AGENTS.md
       - dev_mobile-BOOT.md=openclaw-config/dev_mobile/BOOT.md
@@ -86,7 +86,7 @@ configMapGenerator:
       - dev_mobile-SECURITY_TEST_CASES.md=openclaw-config/dev_mobile/SECURITY_TEST_CASES.md
       - dev_mobile-USER.md=openclaw-config/dev_mobile/USER.md
       - dev_mobile-TOOLS.md=openclaw-config/dev_mobile/TOOLS.md
-      - dev_mobile-skill-SKILL.md=openclaw-config/dev_mobile/SKILL.md
+      - dev_mobile-skill-dev_mobile_implementation-SKILL.md=openclaw-config/agents/dev_mobile/skills/dev_mobile_implementation/SKILL.md
       # qa_engineer
       - qa_engineer-AGENTS.md=openclaw-config/qa_engineer/AGENTS.md
       - qa_engineer-BOOT.md=openclaw-config/qa_engineer/BOOT.md
@@ -98,7 +98,10 @@ configMapGenerator:
       - qa_engineer-SECURITY_TEST_CASES.md=openclaw-config/qa_engineer/SECURITY_TEST_CASES.md
       - qa_engineer-USER.md=openclaw-config/qa_engineer/USER.md
       - qa_engineer-TOOLS.md=openclaw-config/qa_engineer/TOOLS.md
-      - qa_engineer-skill-SKILL.md=openclaw-config/qa_engineer/SKILL.md
+      - qa_engineer-skill-qa_engineer_validation-SKILL.md=openclaw-config/agents/qa_engineer/skills/qa_engineer_validation/SKILL.md
+      - qa_engineer-skill-test-specialist-SKILL.md=openclaw-config/agents/qa_engineer/skills/test-specialist/SKILL.md
+      - qa_engineer-skill-qa-bug-investigation-SKILL.md=openclaw-config/agents/qa_engineer/skills/qa-bug-investigation/SKILL.md
+      - qa_engineer-skill-self-improving-SKILL.md=openclaw-config/agents/qa_engineer/skills/self-improving/SKILL.md
       # devops_sre
       - devops_sre-AGENTS.md=openclaw-config/devops_sre/AGENTS.md
       - devops_sre-BOOT.md=openclaw-config/devops_sre/BOOT.md
@@ -110,7 +113,7 @@ configMapGenerator:
       - devops_sre-SECURITY_TEST_CASES.md=openclaw-config/devops_sre/SECURITY_TEST_CASES.md
       - devops_sre-USER.md=openclaw-config/devops_sre/USER.md
       - devops_sre-TOOLS.md=openclaw-config/devops_sre/TOOLS.md
-      - devops_sre-skill-SKILL.md=openclaw-config/devops_sre/SKILL.md
+      - devops_sre-skill-devops_sre_operations-SKILL.md=openclaw-config/agents/devops_sre/skills/devops_sre_operations/SKILL.md
       # security_engineer
       - security_engineer-AGENTS.md=openclaw-config/security_engineer/AGENTS.md
       - security_engineer-BOOT.md=openclaw-config/security_engineer/BOOT.md
@@ -122,7 +125,7 @@ configMapGenerator:
       - security_engineer-SECURITY_TEST_CASES.md=openclaw-config/security_engineer/SECURITY_TEST_CASES.md
       - security_engineer-USER.md=openclaw-config/security_engineer/USER.md
       - security_engineer-TOOLS.md=openclaw-config/security_engineer/TOOLS.md
-      - security_engineer-skill-SKILL.md=openclaw-config/security_engineer/SKILL.md
+      - security_engineer-skill-security_engineer_scan-SKILL.md=openclaw-config/agents/security_engineer/skills/security_engineer_scan/SKILL.md
       # ux_designer
       - ux_designer-IDENTITY.md=openclaw-config/ux_designer/IDENTITY.md
       - ux_designer-AGENTS.md=openclaw-config/ux_designer/AGENTS.md
@@ -134,7 +137,7 @@ configMapGenerator:
       - ux_designer-SECURITY_TEST_CASES.md=openclaw-config/ux_designer/SECURITY_TEST_CASES.md
       - ux_designer-USER.md=openclaw-config/ux_designer/USER.md
       - ux_designer-TOOLS.md=openclaw-config/ux_designer/TOOLS.md
-      - ux_designer-skill-SKILL.md=openclaw-config/ux_designer/SKILL.md
+      - ux_designer-skill-ux_designer_artifacts-SKILL.md=openclaw-config/agents/ux_designer/skills/ux_designer_artifacts/SKILL.md
       # dba_data_engineer
       - dba_data_engineer-IDENTITY.md=openclaw-config/dba_data_engineer/IDENTITY.md
       - dba_data_engineer-AGENTS.md=openclaw-config/dba_data_engineer/AGENTS.md
@@ -146,7 +149,7 @@ configMapGenerator:
       - dba_data_engineer-SECURITY_TEST_CASES.md=openclaw-config/dba_data_engineer/SECURITY_TEST_CASES.md
       - dba_data_engineer-USER.md=openclaw-config/dba_data_engineer/USER.md
       - dba_data_engineer-TOOLS.md=openclaw-config/dba_data_engineer/TOOLS.md
-      - dba_data_engineer-skill-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
+      - dba_data_engineer-skill-dba_data_engineer_schema-SKILL.md=openclaw-config/agents/dba_data_engineer/skills/dba_data_engineer_schema/SKILL.md
       # memory_curator
       - memory_curator-AGENTS.md=openclaw-config/memory_curator/AGENTS.md
       - memory_curator-BOOT.md=openclaw-config/memory_curator/BOOT.md
@@ -158,7 +161,7 @@ configMapGenerator:
       - memory_curator-SECURITY_TEST_CASES.md=openclaw-config/memory_curator/SECURITY_TEST_CASES.md
       - memory_curator-USER.md=openclaw-config/memory_curator/USER.md
       - memory_curator-TOOLS.md=openclaw-config/memory_curator/TOOLS.md
-      - memory_curator-skill-SKILL.md=openclaw-config/memory_curator/SKILL.md
+      - memory_curator-skill-memory_curator_promotion-SKILL.md=openclaw-config/agents/memory_curator/skills/memory_curator_promotion/SKILL.md
       - memory_curator-MEMORY.md=openclaw-config/memory_curator/MEMORY.md
       # memory baselines (por agente)
       - ceo-MEMORY.md=openclaw-config/ceo/MEMORY.md
