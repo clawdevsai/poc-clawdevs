@@ -8,6 +8,8 @@ resources:
   - networkpolicy-allow-egress.yaml
   - searxng-deployment.yaml
   - panel-agent-credentials-secret.yaml
+  - panel-admin-credentials-secret.yaml
+  - generate-agent-token-job.yaml
   - control-panel/
 
 configMapGenerator:
