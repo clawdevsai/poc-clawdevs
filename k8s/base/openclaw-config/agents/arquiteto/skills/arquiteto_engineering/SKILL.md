@@ -152,7 +152,7 @@ Use this document as your **unique skill** to guide architectural, engineering, 
 
 ---
 
-##Docker
+## Docker
 
 **When to use:** When defining images, local environments and hardening at runtime.
 

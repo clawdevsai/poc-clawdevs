@@ -15,16 +15,16 @@ Run on all detected manifests in the repository:
 
 ```bash
 # Node.js / npm
-npm audit --json > /data/openclaw/backlog/security/scans/npm-audit.json
+npm audit --json > $OPENCLAW_DATA/backlog/security/scans/npm-audit.json
 
 # Python
-pip-audit --json -o /data/openclaw/backlog/security/scans/pip-audit.json
+pip-audit --json -o $OPENCLAW_DATA/backlog/security/scans/pip-audit.json
 
 # Go, Rust, e outros (via OSV)
-osv-scanner --json --recursive . > /data/openclaw/backlog/security/scans/osv-scan.json
+osv-scanner --json --recursive . > $OPENCLAW_DATA/backlog/security/scans/osv-scan.json
 
 # Cobertura ampla com Trivy
-trivy fs --json --exit-code 0 . > /data/openclaw/backlog/security/scans/trivy-fs.json
+trivy fs --json --exit-code 0 . > $OPENCLAW_DATA/backlog/security/scans/trivy-fs.json
 ```
 
 Consolidate results: group CVEs by CVSS score, package and affected version.
@@ -36,15 +36,15 @@ Consolidate results: group CVEs by CVSS score, package and affected version.
 ```bash
 # Broad security rules (multi-language)
 semgrep --config=p/security-audit --config=p/owasp-top-ten \
-  --json -o /data/openclaw/backlog/security/scans/semgrep.json .
+  --json -o $OPENCLAW_DATA/backlog/security/scans/semgrep.json .
 
 # Python específico
-bandit -r . -f json -o /data/openclaw/backlog/security/scans/bandit.json
+bandit -r . -f json -o $OPENCLAW_DATA/backlog/security/scans/bandit.json
 
 # JavaScript/TypeScript (via ESLint security plugin)
 npx eslint --ext .js,.ts,.jsx,.tsx \
   --plugin security --rule '{"security/detect-object-injection": "error"}' \
-  --format json -o /data/openclaw/backlog/security/scans/eslint-security.json .
+  --format json -o $OPENCLAW_DATA/backlog/security/scans/eslint-security.json .
 ```
 
 Sort findings by severity: critical → high → medium → low.
@@ -57,7 +57,7 @@ Sort findings by severity: critical → high → medium → low.
 # OWASP ZAP em modo headless
 docker run --rm owasp/zap2docker-stable zap-baseline.py \
   -t "$TARGET_URL" \
-  -J /data/openclaw/backlog/security/scans/zap-baseline.json
+  -J $OPENCLAW_DATA/backlog/security/scans/zap-baseline.json
 ```
 
 Check:
@@ -72,12 +72,12 @@ Check:
 
 ```bash
 # Histórico completo do repositório
-trufflehog git file://. --json > /data/openclaw/backlog/security/scans/trufflehog.json
+trufflehog git file://. --json > $OPENCLAW_DATA/backlog/security/scans/trufflehog.json
 
 # Commits recentes (últimos 10)
 gitleaks detect --source . --log-opts HEAD~10..HEAD \
   --report-format json \
-  --report-path /data/openclaw/backlog/security/scans/gitleaks.json
+  --report-path $OPENCLAW_DATA/backlog/security/scans/gitleaks.json
 ```
 
 If secret found:
@@ -173,11 +173,11 @@ gh pr create \
 
 ```bash
 # Generate SBOM
-syft . -o cyclonedx-json > /data/openclaw/backlog/security/scans/sbom.json
+syft . -o cyclonedx-json > $OPENCLAW_DATA/backlog/security/scans/sbom.json
 
 # Check vulnerabilidades no SBOM
-grype sbom:/data/openclaw/backlog/security/scans/sbom.json \
-  --output json > /data/openclaw/backlog/security/scans/grype.json
+grype sbom:$OPENCLAW_DATA/backlog/security/scans/sbom.json \
+  --output json > $OPENCLAW_DATA/backlog/security/scans/grype.json
 ```
 
 Alert about:
@@ -231,7 +231,7 @@ Alert about:
 2. Incluir: CVE ID, CVSS score, sistemas afetados, vetor de ataque, impacto de negócio estimado
 3. Incluir: plano de mitigation imediata (patch em andamento ou workaround)
 4. Comunicar status a cada hora até resolução
-5. Post-mortem em /data/openclaw/backlog/security/incidents/
+5. Post-mortem em $OPENCLAW_DATA/backlog/security/incidents/
 ```
 
 ---

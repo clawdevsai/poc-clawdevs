@@ -23,7 +23,7 @@ Workflow:
 
 ## Appointment of 1 hour (Required)
 
-- Every 60 minutes (offset :30), query GitHub for issues with label `mobile`.
+- Every 60 minutes (offset :15), query GitHub for issues with label `mobile`.
 - Process only: `mobile`
 - Ignore: `back_end`, `front_end`, `tests`, `dba`, `devops`, `documentacao`
 
