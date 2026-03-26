@@ -3,7 +3,8 @@ Test package for services.
 """
 
 from .test_agent_sync import TestAgentSyncFunctions, TestParseIdentity, TestStatusFromHeartbeat, TestHasActiveSession, TestSyncAgents
-from .test_openclaw_client import TestOpenClawClient
+from .test_openclaw_client import TestOpenClawClient, TestK8sClients
+from .test_k8s_client import TestK8sClients as TestK8sClient
 from .test_session_sync import TestSessionSyncFunctions, TestParseTimestamp, TestSyncSessions, TestChannelExtraction
 from .test_task_sync import TestTaskSyncConstants, TestLabelMapping, TestStatusMapping, TestSyncTasks
 from .test_activity_sync import TestActivitySyncFunctions, TestActivityEventCreation, TestActivitySyncIntegration
@@ -18,6 +19,7 @@ __all__ = [
     "TestSyncAgents",
     # OpenClaw Client
     "TestOpenClawClient",
+    "TestK8sClients",
     # Session Sync
     "TestSessionSyncFunctions",
     "TestParseTimestamp",

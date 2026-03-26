@@ -27,7 +27,6 @@ class TestAppInitialization:
         """Test that docs URL is set based on settings."""
         from app.main import app, settings
         
-        # When debug is False, docs should be None
         assert app.docs_url is None or settings.debug is True
 
     def test_app_redoc_url(self):
@@ -50,12 +49,11 @@ class TestMiddleware:
         """Test CORS middleware is configured."""
         from app.main import app
         
-        # Check that CORSMiddleware is in the middleware list
         has_cors = any(
             'CORSMiddleware' in str(type(middleware))
             for middleware in app.user_middleware
         )
-        assert has_cors is True or has_cors is False  # May not be present in all versions
+        assert has_cors is True or has_cors is False
 
 
 class TestRoutes:
@@ -65,7 +63,6 @@ class TestRoutes:
         """Test that auth router is registered."""
         from app.main import app
         
-        # Check that auth router is included
         auth_routes = [r.path for r in app.routes if '/auth' in r.path]
         assert len(auth_routes) > 0
 
@@ -160,7 +157,6 @@ class TestExceptionHandlers:
         """Test that handler handles all exceptions."""
         from app.main import app
         
-        # Should have a handler for Exception
         assert Exception in app.exception_handlers or len(app.exception_handlers) > 0
 
 
@@ -171,12 +167,10 @@ class TestBootstrap:
     async def test_bootstrap_admin_creates_user(self):
         """Test that bootstrap_admin creates admin user if not exists."""
         from app.main import bootstrap_admin
-        from sqlmodel import select
         
-        # Mock session
         mock_session = AsyncMock()
         mock_result = AsyncMock()
-        mock_result.first.return_value = None  # User doesn't exist
+        mock_result.first.return_value = None
         mock_session.exec.return_value = mock_result
         
         with patch('app.main.AsyncSessionLocal') as mock_session_local:
@@ -188,8 +182,6 @@ class TestBootstrap:
                 
                 with patch('app.main.get_password_hash', return_value="hashed"):
                     await bootstrap_admin()
-                    
-                    # Verify user was created
                     pass
 
     @pytest.mark.asyncio
@@ -200,15 +192,13 @@ class TestBootstrap:
         mock_session = AsyncMock()
         mock_user = MagicMock()
         mock_result = AsyncMock()
-        mock_result.first.return_value = mock_user  # User exists
+        mock_result.first.return_value = mock_user
         mock_session.exec.return_value = mock_result
         
         with patch('app.main.AsyncSessionLocal') as mock_session_local:
             mock_session_local.return_value.__aenter__.return_value = mock_session
             
             await bootstrap_admin()
-            
-            # User already exists, shouldn't create
             pass
 
     @pytest.mark.asyncio
@@ -225,8 +215,6 @@ class TestBootstrap:
                 mock_sync.return_value = AsyncMock()
                 
                 await bootstrap_agents()
-                
-                # Should call sync_agents
                 pass
 
 
@@ -245,8 +233,7 @@ class TestLifespan:
             with patch('app.main.bootstrap_agents') as mock_agents:
                 mock_agents.return_value = AsyncMock()
                 
-                    # Lifespan should call bootstrap functions
-                    pass
+                pass
 
 
 class TestHealthEndpoint:
@@ -257,5 +244,4 @@ class TestHealthEndpoint:
         """Test that healthz endpoint returns ok."""
         from app.main import app
         
-        # This test documents the expected behavior
         pass
