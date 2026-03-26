@@ -21,7 +21,7 @@ class TestAgentEndpoints:
     @pytest.mark.asyncio
     async def test_list_agents_empty(self, client: AsyncClient):
         """Test listing agents when no agents exist."""
-        response = await client.get("/api/agents")
+        response = await client.get("/agents")
         assert response.status_code == 200
         data = response.json()
         assert "items" in data
@@ -30,9 +30,9 @@ class TestAgentEndpoints:
         assert isinstance(data["items"], list)
 
     @pytest.mark.asyncio
-    async def test_get_agent_not_found(self, client: AsyncClient):
+    async def test_get_agent_not_found(self, client: AsyncClient, auth_headers: dict):
         """Test getting a non-existent agent."""
-        response = await client.get("/api/agents/non-existent-slug")
+        response = await client.get("/agents/non-existent-slug", headers=auth_headers)
         assert response.status_code == 404
         data = response.json()
         assert "detail" in data
@@ -42,9 +42,9 @@ class TestSessionEndpoints:
     """Test Session API endpoints."""
 
     @pytest.mark.asyncio
-    async def test_list_sessions_empty(self, client: AsyncClient):
+    async def test_list_sessions_empty(self, client: AsyncClient, auth_headers: dict):
         """Test listing sessions when no sessions exist."""
-        response = await client.get("/api/sessions")
+        response = await client.get("/sessions", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert "items" in data
@@ -52,9 +52,9 @@ class TestSessionEndpoints:
         assert data["total"] == 0
 
     @pytest.mark.asyncio
-    async def test_get_session_not_found(self, client: AsyncClient):
+    async def test_get_session_not_found(self, client: AsyncClient, auth_headers: dict):
         """Test getting a non-existent session."""
-        response = await client.get("/api/sessions/non-existent-id")
+        response = await client.get("/sessions/non-existent-id", headers=auth_headers)
         assert response.status_code == 404
 
 
@@ -75,7 +75,7 @@ class TestClusterEndpoints:
     @pytest.mark.asyncio
     async def test_cluster_status(self, client: AsyncClient):
         """Test cluster status endpoint."""
-        response = await client.get("/api/cluster/status")
+        response = await client.get("/cluster/status")
         # May vary based on implementation
         assert response.status_code in [200, 404]
 
@@ -84,8 +84,8 @@ class TestRepositoryEndpoints:
     """Test Repository API endpoints."""
 
     @pytest.mark.asyncio
-    async def test_list_repositories(self, client: AsyncClient):
+    async def test_list_repositories(self, client: AsyncClient, auth_headers: dict):
         """Test listing repositories."""
-        response = await client.get("/api/repositories")
+        response = await client.get("/repositories", headers=auth_headers)
         # May vary based on implementation
         assert response.status_code in [200, 404]

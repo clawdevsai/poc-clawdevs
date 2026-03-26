@@ -11,6 +11,8 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+ALLOWED_CHANNELS = {"dashboard", "agents", "approvals", "cluster", "crons"}
+
 
 class ConnectionManager:
     def __init__(self):
@@ -47,7 +49,6 @@ async def websocket_endpoint(
     channel: str,
 ):
     settings = get_settings()
-    ALLOWED_CHANNELS = {"dashboard", "agents", "approvals", "cluster", "crons"}
 
     if channel not in ALLOWED_CHANNELS:
         await websocket.close(code=4000)

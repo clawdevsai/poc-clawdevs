@@ -10,7 +10,7 @@ from rq import Queue
 from rq_scheduler import Scheduler
 
 from app.core.config import get_settings
-from app.core.database import SessionLocal
+from app.core.database import AsyncSessionLocal
 from app.services.agent_sync import sync_agents_runtime
 from app.services.session_sync import sync_sessions
 from app.services.task_sync import sync_tasks
@@ -23,7 +23,7 @@ async def run_sync_agents():
     """Sync agent status from OpenClaw runtime."""
     logger.info("[periodic_sync] Starting agent sync")
     try:
-        async with SessionLocal() as session:
+        async with AsyncSessionLocal() as session:
             await sync_agents_runtime(session)
             logger.info("[periodic_sync] Agent sync completed")
     except Exception as e:
@@ -35,7 +35,7 @@ async def run_sync_sessions():
     """Sync sessions from OpenClaw runtime."""
     logger.info("[periodic_sync] Starting session sync")
     try:
-        async with SessionLocal() as session:
+        async with AsyncSessionLocal() as session:
             await sync_sessions(session)
             logger.info("[periodic_sync] Session sync completed")
     except Exception as e:
@@ -47,7 +47,7 @@ async def run_sync_tasks():
     """Sync tasks from GitHub issues."""
     logger.info("[periodic_sync] Starting task sync")
     try:
-        async with SessionLocal() as session:
+        async with AsyncSessionLocal() as session:
             await sync_tasks(session)
             logger.info("[periodic_sync] Task sync completed")
     except Exception as e:

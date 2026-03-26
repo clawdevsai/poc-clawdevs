@@ -54,18 +54,19 @@ class TestMe:
 
     @pytest.mark.asyncio
     async def test_me_without_token(self, client: AsyncClient):
-        """Test /auth/me without token returns 403."""
+        """Test /auth/me without token returns 401."""
         response = await client.get("/auth/me")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_me_with_valid_token(self, client: AsyncClient):
+    async def test_me_with_valid_token(self, client: AsyncClient, admin_user):
         """Test /auth/me with valid token."""
         # First get a token
         login_response = await client.post("/auth/login", json={
             "username": "admin",
             "password": "test-password"
         })
+        assert login_response.status_code == 200
         token = login_response.json()["access_token"]
         
         response = await client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
@@ -95,5 +96,5 @@ class TestAuthEndpointsExist:
     async def test_me_endpoint_exists(self, client: AsyncClient):
         """Test /auth/me endpoint exists."""
         response = await client.get("/auth/me")
-        # Should return 403 without token, but endpoint exists
-        assert response.status_code in [200, 403]
+        # Should return 401 without token, but endpoint exists
+        assert response.status_code in [200, 401]

@@ -179,7 +179,7 @@ class TestManagerInstance:
 
     def test_manager_instance(self):
         """Test that manager instance is created."""
-        from app.api.ws import manager
+        from app.api.ws import manager, ConnectionManager
         
         assert manager is not None
         assert isinstance(manager, ConnectionManager)

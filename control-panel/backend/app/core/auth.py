@@ -25,7 +25,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 
-def decode_token(token: str) -> Optional[dict]:
+def decode_token(token: str | None) -> Optional[dict]:
+    if not token:
+        return None
     try:
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except JWTError:

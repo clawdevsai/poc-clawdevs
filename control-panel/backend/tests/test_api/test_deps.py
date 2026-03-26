@@ -25,14 +25,14 @@ class TestGetCurrentUser:
         mock_user.is_active = True
         
         with patch('app.api.deps.decode_token', return_value={"sub": "testuser"}):
-            with patch('app.api.deps.select') as mock_select:
-                mock_result = AsyncMock()
-                mock_result.first.return_value = mock_user
-                mock_select.return_value.where.return_value.exec = AsyncMock(return_value=mock_result)
-                
-                user = await get_current_user(mock_credentials, AsyncMock())
-                
-                assert user.username == "testuser"
+            mock_result = MagicMock()
+            mock_result.first.return_value = mock_user
+
+            mock_session = AsyncMock()
+            mock_session.exec = AsyncMock(return_value=mock_result)
+
+            user = await get_current_user(mock_credentials, mock_session)
+            assert user.username == "testuser"
 
     @pytest.mark.asyncio
     async def test_get_current_user_no_credentials(self):
@@ -40,7 +40,8 @@ class TestGetCurrentUser:
         from app.api.deps import get_current_user
         
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_user(None, AsyncMock())
+            # get_current_user expects an HTTPAuthorizationCredentials-like object
+            await get_current_user(MagicMock(credentials=""), AsyncMock())
         
         assert exc_info.value.status_code == 401
 
@@ -82,15 +83,16 @@ class TestGetCurrentUser:
         mock_credentials.credentials = "token-for-nonexistent-user"
         
         with patch('app.api.deps.decode_token', return_value={"sub": "nobody"}):
-            with patch('app.api.deps.select') as mock_select:
-                mock_result = AsyncMock()
-                mock_result.first.return_value = None
-                mock_select.return_value.where.return_value.exec = AsyncMock(return_value=mock_result)
-                
-                with pytest.raises(HTTPException) as exc_info:
-                    await get_current_user(mock_credentials, AsyncMock())
-                
-                assert exc_info.value.status_code == 401
+            mock_result = MagicMock()
+            mock_result.first.return_value = None
+
+            mock_session = AsyncMock()
+            mock_session.exec = AsyncMock(return_value=mock_result)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(mock_credentials, mock_session)
+
+            assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_get_current_user_user_inactive(self):
@@ -105,15 +107,16 @@ class TestGetCurrentUser:
         mock_user.is_active = False
         
         with patch('app.api.deps.decode_token', return_value={"sub": "inactiveuser"}):
-            with patch('app.api.deps.select') as mock_select:
-                mock_result = AsyncMock()
-                mock_result.first.return_value = mock_user
-                mock_select.return_value.where.return_value.exec = AsyncMock(return_value=mock_result)
-                
-                with pytest.raises(HTTPException) as exc_info:
-                    await get_current_user(mock_credentials, AsyncMock())
-                
-                assert exc_info.value.status_code == 401
+            mock_result = MagicMock()
+            mock_result.first.return_value = mock_user
+
+            mock_session = AsyncMock()
+            mock_session.exec = AsyncMock(return_value=mock_result)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(mock_credentials, mock_session)
+
+            assert exc_info.value.status_code == 401
 
 
 class TestRequireAdmin:

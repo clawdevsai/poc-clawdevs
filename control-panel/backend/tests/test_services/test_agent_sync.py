@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock, AsyncMock
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.services.agent_sync import (
