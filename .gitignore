@@ -65,3 +65,4 @@ control-panel/backend/.venv/
 
 .opencode/
 .cache/
+.codex/
