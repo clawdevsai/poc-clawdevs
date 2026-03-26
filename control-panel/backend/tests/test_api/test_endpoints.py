@@ -146,7 +146,6 @@ class TestResponseModels:
             display_name="Test Agent",
             role="Tester",
             status="active",
-            status="active",
             current_model="gpt-4",
             cron_status="idle",
             created_at=datetime.utcnow(),

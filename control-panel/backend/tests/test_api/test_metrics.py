@@ -12,7 +12,7 @@ from uuid import uuid4
 class TestListMetrics:
     """Test GET /api/metrics endpoint."""
 
-    @pytest.mark.mark.asyncio
+    @pytest.mark.asyncio
     async def test_list_metrics_empty(self, client: AsyncClient):
         """Test listing metrics when none exist."""
         response = await client.get("/api/metrics")
