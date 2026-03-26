@@ -170,7 +170,16 @@ def _pick_latest_runtime_entry(payload: dict) -> tuple[dict | None, datetime | N
     return latest_item, dt_utc
 
 
-def _status_from_heartbeat(last_heartbeat_at: datetime | None) -> str:
+def _status_from_heartbeat(last_heartbeat_at: datetime | None, has_active_session: bool = False) -> str:
+    """Determine agent status based on heartbeat and session activity.
+    
+    Args:
+        last_heartbeat_at: Last known heartbeat timestamp
+        has_active_session: Whether agent has an active session (processing)
+        
+    Returns:
+        Status string: "working", "online", "idle", or "offline"
+    """
     if last_heartbeat_at is None:
         return "offline"
 
@@ -178,11 +187,51 @@ def _status_from_heartbeat(last_heartbeat_at: datetime | None) -> str:
         last_heartbeat_at = last_heartbeat_at.astimezone(timezone.utc).replace(tzinfo=None)
 
     age_seconds = (datetime.utcnow() - last_heartbeat_at).total_seconds()
+    
+    # If actively processing a session, mark as working
+    if has_active_session and age_seconds <= 5 * 60:
+        return "working"
+    
     if age_seconds <= 5 * 60:
         return "online"
     if age_seconds <= 60 * 60:
         return "idle"
     return "offline"
+
+
+def _has_active_session(payload: dict | None) -> bool:
+    """Check if any session is currently active (processing).
+    
+    A session is considered active if:
+    - status is "active" OR
+    - abortedLastRun is False AND updatedAt is recent (< 5 min)
+    """
+    if not isinstance(payload, dict):
+        return False
+    
+    for session_key, session_data in payload.items():
+        if not isinstance(session_data, dict):
+            continue
+            
+        # Check explicit status
+        if session_data.get("status") == "active":
+            return True
+        
+        # Check if session is running (not aborted and recent)
+        aborted = session_data.get("abortedLastRun", True)
+        updated_at = session_data.get("updatedAt")
+        
+        if not aborted and isinstance(updated_at, (int, float)):
+            # Check if updated in last 5 minutes
+            try:
+                session_time = datetime.fromtimestamp(updated_at / 1000, tz=timezone.utc).replace(tzinfo=None)
+                age_seconds = (datetime.utcnow() - session_time).total_seconds()
+                if age_seconds <= 5 * 60:
+                    return True
+            except (ValueError, OSError, OverflowError):
+                pass
+    
+    return False
 
 
 async def sync_agents_runtime(session) -> None:
@@ -212,12 +261,16 @@ async def sync_agents_runtime(session) -> None:
         latest_item: dict | None = None
         latest_heartbeat: datetime | None = None
         runtime_observed = False
+        has_active_session = False
+        payload = None
+        
         try:
             if sessions_file.exists():
                 runtime_observed = True
                 payload = json.loads(sessions_file.read_text(encoding="utf-8"))
                 if isinstance(payload, dict):
                     latest_item, latest_heartbeat = _pick_latest_runtime_entry(payload)
+                    has_active_session = _has_active_session(payload)
         except (OSError, PermissionError, json.JSONDecodeError):
             # Some mounted files can be unreadable under restrictive ACLs.
             pass
@@ -231,7 +284,7 @@ async def sync_agents_runtime(session) -> None:
             if isinstance(latest_item, dict) and isinstance(latest_item.get("sessionId"), str)
             else None
         )
-        next_status = _status_from_heartbeat(latest_heartbeat)
+        next_status = _status_from_heartbeat(latest_heartbeat, has_active_session)
 
         if (
             agent.last_heartbeat_at != latest_heartbeat

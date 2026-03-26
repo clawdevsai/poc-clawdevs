@@ -67,12 +67,28 @@ async def sync_sessions(db_session) -> None:
             channel_type = delivery.get("channel") or origin.get("provider") or origin.get("surface")
             channel_peer = delivery.get("to") or origin.get("to")
 
-            # Get message count from session file if exists
+            # Get message count and token metrics from session data
             message_count = 0
             token_count = 0
+            
+            # Try to get token metrics directly from session metadata
+            if "totalTokens" in oc_session:
+                token_count = oc_session.get("totalTokens", 0)
+            elif "inputTokens" in oc_session or "outputTokens" in oc_session:
+                token_count = oc_session.get("inputTokens", 0) + oc_session.get("outputTokens", 0)
+            elif "contextTokens" in oc_session:
+                token_count = oc_session.get("contextTokens", 0)
+            
+            # Count messages from session file if exists
             session_file = oc_session.get("sessionFile")
             if session_file:
-                message_count = _count_messages_in_session_file(Path(session_file))
+                # Handle both absolute and relative paths
+                if session_file.startswith("/"):
+                    session_path = Path(session_file)
+                else:
+                    session_path = base_path / session_file
+                
+                message_count = _count_messages_in_session_file(session_path)
 
             if existing:
                 # Update existing session

@@ -19,6 +19,7 @@ dependencies = [
     "fastapi-pagination==0.12.34",
     "sse-starlette==2.3.6",
     "rq==2.6.0",
+    "rq-scheduler==0.14.0",
     "python-multipart==0.0.22",
     "pydantic-settings==2.8.1",
 ]

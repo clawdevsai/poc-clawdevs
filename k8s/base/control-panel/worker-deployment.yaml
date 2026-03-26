@@ -19,9 +19,9 @@ spec:
         - name: worker
           image: clawdevsai/clawdevs-panel-backend:latest
           imagePullPolicy: IfNotPresent
-          command: ["sh", "-c"]
+          command: ["python", "-m"]
           args:
-            - exec rq worker --with-scheduler --url "redis://:${PANEL_REDIS_PASSWORD}@clawdevs-panel-redis:6379/0"
+            - scripts.worker
           # envFrom first so individual env vars can override
           envFrom:
             - secretRef:
