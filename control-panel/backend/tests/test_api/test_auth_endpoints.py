@@ -13,13 +13,13 @@ class TestLogin:
     """Test POST /auth/login endpoint."""
 
     @pytest.mark.asyncio
-    async def test_login_success(self, client: AsyncClient):
+    async def test_login_success(self, client: AsyncClient, admin_user):
         """Test successful login."""
         request_body = {
             "username": "admin",
             "password": "test-password"
         }
-        
+
         response = await client.post("/auth/login", json=request_body)
         assert response.status_code == 200
         data = response.json()
@@ -27,13 +27,13 @@ class TestLogin:
         assert data["token_type"] == "bearer"
 
     @pytest.mark.asyncio
-    async def test_login_wrong_password(self, client: AsyncClient):
+    async def test_login_wrong_password(self, client: AsyncClient, admin_user):
         """Test login with wrong password."""
         request_body = {
             "username": "admin",
             "password": "wrong-password"
         }
-        
+
         response = await client.post("/auth/login", json=request_body)
         assert response.status_code == 401
 

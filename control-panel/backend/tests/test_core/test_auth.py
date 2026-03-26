@@ -85,8 +85,8 @@ class TestGetPasswordHash:
         password = "test"
         hashed = get_password_hash(password)
         
-        # bcrypt hashes start with $2b$ or $2a$ or $2y$
-        assert hashed.startswith("$2")
+        # bcrypt_sha256 hashes start with $bcrypt-sha256$ or $2b$ or $2a$ or $2y$
+        assert hashed.startswith(("$bcrypt-sha256$", "$2"))
 
     def test_get_password_hash_hash_length(self):
         """Test that hash has expected length."""
@@ -95,8 +95,8 @@ class TestGetPasswordHash:
         password = "test"
         hashed = get_password_hash(password)
         
-        # bcrypt hash is typically 60 characters
-        assert len(hashed) == 60
+        # bcrypt hash is typically 60+ characters
+        assert len(hashed) >= 60
 
 
 class TestCreateAccessToken:

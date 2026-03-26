@@ -12,41 +12,7 @@ from app.core.database import get_session
 from app.models import Agent
 
 
-# Use in-memory SQLite for tests
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-
-@pytest.fixture(scope="function")
-async def db_session():
-    """Create an in-memory SQLite database for testing."""
-    from sqlalchemy import create_engine
-    from sqlmodel import SQLModel
-    
-    engine = create_engine(TEST_DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
-    SQLModel.metadata.create_all(engine)
-    
-    from sqlmodel.ext.asyncio.session import AsyncSession as AsyncSessionType
-    session = AsyncSessionType(engine)
-    
-    yield session
-    
-    await session.close()
-    SQLModel.metadata.drop_all(engine)
-
-
-@pytest.fixture(scope="function")
-async def client(db_session: AsyncSession):
-    """Create a test client with overridden database session."""
-    async def override_get_session():
-        yield db_session
-
-    app.dependency_overrides[get_session] = override_get_session
-    async with AsyncClient(
-        transport=None,
-        base_url="http://test"
-    ) as ac:
-        yield ac
-    app.dependency_overrides.clear()
+# Use fixtures from conftest.py
 
 
 class TestAgentEndpoints:

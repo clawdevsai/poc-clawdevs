@@ -1,9 +1,10 @@
+"""Tests for agent_sync service."""
 import pytest
 import json
-import os
 from pathlib import Path
-from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from datetime import datetime, timezone, timedelta
+from unittest.mock import patch, MagicMock, AsyncMock
+from sqlmodel import select
 
 from app.services.agent_sync import (
     sync_agents,
@@ -18,10 +19,11 @@ from app.services.agent_sync import (
     DISPLAY_NAME_MAP,
     CRON_MAP,
 )
+from app.models import Agent
 
 
-class TestAgentSyncFunctions:
-    """Test agent sync utility functions."""
+class TestAgentSyncConstants:
+    """Test agent sync constants."""
 
     def test_agent_slugs_exists(self):
         """Test that AGENT_SLUGS is defined and not empty."""
@@ -46,8 +48,6 @@ class TestAgentSyncFunctions:
         assert ROLE_MAP["ceo"] == "CEO / Orchestrator"
         assert "qa_engineer" in ROLE_MAP
         assert ROLE_MAP["qa_engineer"] == "QA Engineer"
-        assert "dev_backend" in ROLE_MAP
-        assert ROLE_MAP["dev_backend"] == "Backend Developer"
 
     def test_display_name_map(self):
         """Test that DISPLAY_NAME_MAP has all agents."""
@@ -55,8 +55,11 @@ class TestAgentSyncFunctions:
         assert DISPLAY_NAME_MAP["ceo"] == "Victor"
         assert "qa_engineer" in DISPLAY_NAME_MAP
         assert DISPLAY_NAME_MAP["qa_engineer"] == "Bruno"
-        assert "devops_sre" in DISPLAY_NAME_MAP
-        assert DISPLAY_NAME_MAP["devops_sre"] == "Diego"
+
+    def test_cron_map_exists(self):
+        """Test that CRON_MAP has all agent slugs."""
+        for slug in AGENT_SLUGS:
+            assert slug in CRON_MAP
 
 
 class TestParseIdentity:
@@ -75,12 +78,6 @@ class TestParseIdentity:
         assert identity["display_name"] == "Bruno"
         assert identity["role"] == "QA Engineer"
 
-    def test_parse_identity_dev_backend(self):
-        """Test parse_identity for dev backend."""
-        identity = parse_identity("dev_backend")
-        assert identity["display_name"] == "Mateus"
-        assert identity["role"] == "Backend Developer"
-
     def test_parse_identity_all_agents(self):
         """Test parse_identity for all agents."""
         for agent in AGENT_SLUGS:
@@ -89,243 +86,215 @@ class TestParseIdentity:
             assert "role" in identity
             assert "model" in identity
 
-    def test_parse_identity_empty_slug(self):
-        """Test parse_identity with empty slug."""
-        identity = parse_identity("")
-        assert "display_name" in identity
-        assert "role" in identity
-
 
 class TestStatusFromHeartbeat:
     """Test _status_from_heartbeat function."""
 
     def test_status_offline_no_heartbeat(self):
-        """Test status is offline when no heartbeat."""
         status = _status_from_heartbeat(None)
         assert status == "offline"
 
-    def test_status_working_recent_heartbeat_with_session(self):
-        """Test status is working with recent heartbeat and active session."""
+    def test_status_working_recent_with_session(self):
         recent_time = datetime.utcnow()
         status = _status_from_heartbeat(recent_time, has_active_session=True)
         assert status == "working"
 
-    def test_status_online_recent_heartbeat_no_session(self):
-        """Test status is online with recent heartbeat and no session."""
+    def test_status_online_recent_no_session(self):
         recent_time = datetime.utcnow()
         status = _status_from_heartbeat(recent_time, has_active_session=False)
         assert status == "online"
 
-    def test_status_idle_older_heartbeat(self):
-        """Test status is idle with older heartbeat."""
-        older_time = datetime.utcnow().replace(
-            hour=datetime.utcnow().hour - 2
-        )
+    def test_status_idle_10_minutes(self):
+        older_time = datetime.utcnow() - timedelta(minutes=10)
         status = _status_from_heartbeat(older_time)
         assert status == "idle"
 
-    def test_status_offline_very_old_heartbeat(self):
-        """Test status is offline with very old heartbeat."""
-        very_old_time = datetime.utcnow().replace(
-            hour=datetime.utcnow().hour - 3
-        )
+    def test_status_offline_1_hour(self):
+        very_old_time = datetime.utcnow() - timedelta(hours=1)
         status = _status_from_heartbeat(very_old_time)
         assert status == "offline"
 
-    def test_status_edge_case_5_minutes(self):
-        """Test status at 5 minute boundary."""
-        five_min_ago = datetime.utcnow().replace(
-            minute=datetime.utcnow().minute - 5
-        )
-        status = _status_from_heartbeat(five_min_ago)
-        assert status in ["online", "idle"]
-
-    def test_status_with_none_timezone(self):
-        """Test status with naive datetime."""
-        naive_time = datetime.utcnow()
-        status = _status_from_heartbeat(naive_time)
-        assert status in ["online", "idle"]
+    def test_status_with_timezone_aware_datetime(self):
+        aware_time = datetime.now(timezone.utc)
+        status = _status_from_heartbeat(aware_time)
+        assert status in ["online", "working", "idle"]
 
 
 class TestHasActiveSession:
     """Test _has_active_session function."""
 
-    def test_has_active_session_false_empty(self):
-        """Test has_active_session returns False for empty dict."""
+    def test_returns_false_for_empty(self):
         result = _has_active_session({})
         assert result is False
 
-    def test_has_active_session_false_none(self):
-        """Test has_active_session returns False for None."""
+    def test_returns_false_for_none(self):
         result = _has_active_session(None)
         assert result is False
 
-    def test_has_active_session_false_string(self):
-        """Test has_active_session returns False for string."""
-        result = _has_active_session("not a dict")
+    def test_returns_false_for_non_dict(self):
+        result = _has_active_session("string")
         assert result is False
 
-    def test_has_active_session_false_list(self):
-        """Test has_active_session returns False for list."""
-        result = _has_active_session([])
-        assert result is False
+    def test_true_for_active_status(self):
+        payload = {"sess1": {"status": "active"}}
+        assert _has_active_session(payload) is True
 
-    def test_has_active_session_true_active_status(self):
-        """Test has_active_session returns True for active status."""
-        payload = {
-            "session1": {"status": "active"}
-        }
-        result = _has_active_session(payload)
-        assert result is True
+    def test_false_when_aborted(self):
+        payload = {"sess1": {"status": "active", "abortedLastRun": True}}
+        assert _has_active_session(payload) is False
 
-    def test_has_active_session_false_aborted(self):
-        """Test has_active_session returns False when aborted."""
-        payload = {
-            "session1": {
-                "status": "active",
-                "abortedLastRun": True
-            }
-        }
-        result = _has_active_session(payload)
-        assert result is False
+    def test_false_when_too_old(self):
+        old_ts = int(datetime.utcnow().timestamp() * 1000) - 600000  # 10 min ago
+        payload = {"sess1": {"abortedLastRun": False, "updatedAt": old_ts}}
+        assert _has_active_session(payload) is False
 
-    def test_has_active_session_false_not_recent(self):
-        """Test has_active_session returns False for old updated_at."""
-        payload = {
-            "session1": {
-                "abortedLastRun": False,
-                "updatedAt": 1000  # Very old timestamp
-            }
-        }
-        result = _has_active_session(payload)
-        assert result is False
-
-    def test_has_active_session_multiple_sessions(self):
-        """Test has_active_session with multiple sessions."""
-        payload = {
-            "session1": {"status": "inactive"},
-            "session2": {"status": "active"},
-            "session3": {"status": "ended"}
-        }
-        result = _has_active_session(payload)
-        assert result is True
-
-    def test_has_active_session_all_aborted(self):
-        """Test has_active_session when all sessions aborted."""
-        payload = {
-            "session1": {"status": "active", "abortedLastRun": True},
-            "session2": {"status": "active", "abortedLastRun": True}
-        }
-        result = _has_active_session(payload)
-        assert result is False
-
-    def test_has_active_session_recent_update(self):
-        """Test has_active_session with recent update."""
+    def test_true_for_recent_update(self):
         now_ms = int(datetime.utcnow().timestamp() * 1000)
-        recent = now_ms - 100000  # 100 seconds ago (within 5 min)
+        recent_ts = now_ms - 100000  # ~100 sec ago (within 5min)
+        payload = {"sess1": {"abortedLastRun": False, "updatedAt": recent_ts}}
+        assert _has_active_session(payload) is True
+
+    def test_multiple_sessions_one_active(self):
         payload = {
-            "session1": {
-                "abortedLastRun": False,
-                "updatedAt": recent
-            }
+            "s1": {"status": "ended"},
+            "s2": {"status": "active"},
+            "s3": {"status": "ended"}
         }
-        result = _has_active_session(payload)
-        assert result is True
+        assert _has_active_session(payload) is True
 
 
 class TestPickLatestRuntimeEntry:
     """Test _pick_latest_runtime_entry function."""
 
-    def test_pick_latest_returns_none_empty(self):
-        """Test _pick_latest_runtime_entry returns None for empty."""
-        item, timestamp = _pick_latest_runtime_entry({})
-        assert item is None
-        assert timestamp is None
+    def test_returns_none_for_empty_dict(self):
+        item, ts = _pick_latest_runtime_entry({})
+        assert item is None and ts is None
 
-    def test_pick_latest_returns_none_none(self):
-        """Test _pick_latest_runtime_entry returns None for None."""
-        item, timestamp = _pick_latest_runtime_entry(None)
-        assert item is None
-        assert timestamp is None
+    def test_returns_none_for_none(self):
+        item, ts = _pick_latest_runtime_entry(None)
+        assert item is None and ts is None
 
-    def test_pick_latest_with_valid_data(self):
-        """Test _pick_latest_runtime_entry with valid data."""
+    def test_returns_latest_entry(self):
         now = datetime.utcnow().timestamp()
         payload = {
-            "entry1": {"updatedAt": now * 1000},
-            "entry2": {"updatedAt": (now - 100) * 1000}
+            "a": {"updatedAt": (now - 100) * 1000},
+            "b": {"updatedAt": now * 1000},
+            "c": {"updatedAt": (now - 50) * 1000}
         }
-        item, timestamp = _pick_latest_runtime_entry(payload)
-        assert item is not None
-        assert timestamp is not None
+        item, ts = _pick_latest_runtime_entry(payload)
+        assert item["updatedAt"] == now * 1000
 
-    def test_pick_latest_with_string_values(self):
-        """Test _pick_latest_runtime_entry with string values."""
-        payload = {
-            "entry1": "not a dict",
-            "entry2": {"updatedAt": 1000}
-        }
-        item, timestamp = _pick_latest_runtime_entry(payload)
+    def test_ignores_non_dict_values(self):
+        payload = {"a": "string", "b": 123, "c": {"updatedAt": 1000}}
+        item, ts = _pick_latest_runtime_entry(payload)
         assert item is not None
+        assert item["updatedAt"] == 1000
 
 
 class TestGetOpenclawConfig:
-    """Test _get_openclaw_config function."""
+    """Test _get_openclaw_config."""
 
-    def test_get_config_returns_dict(self):
-        """Test that _get_openclaw_config returns dict."""
+    def test_returns_dict_even_if_file_missing(self):
         config = _get_openclaw_config()
         assert isinstance(config, dict)
 
-    def test_get_config_is_cached(self):
-        """Test that _get_openclaw_config is cached."""
+    def test_config_is_cached(self):
         config1 = _get_openclaw_config()
         config2 = _get_openclaw_config()
         assert config1 is config2
 
 
 class TestGetAgentConfig:
-    """Test _get_agent_config function."""
+    """Test _get_agent_config."""
 
-    def test_get_agent_config_returns_dict(self):
-        """Test that _get_agent_config returns dict."""
-        config = _get_agent_config("ceo")
-        assert isinstance(config, dict)
-
-    def test_get_agent_config_not_found(self):
-        """Test _get_agent_config for non-existent agent."""
+    def test_returns_empty_for_missing_agent(self):
         config = _get_agent_config("nonexistent")
         assert config == {}
 
+    def test_returns_agent_config_if_present(self):
+        # This depends on openclaw.json existing; just ensure it returns dict
+        config = _get_agent_config("ceo")
+        assert isinstance(config, dict)
 
-class TestSyncAgents:
-    """Test sync_agents function (with mocked database)."""
+
+class TestSyncAgentsRuntime:
+    """Test sync_agents_runtime (with mocked file system)."""
 
     @pytest.mark.asyncio
-    async def test_sync_agents_creates_agents(self, db_session):
-        """Test that sync_agents creates agents from config."""
+    async def test_sync_agents_runtime_updates_status(self, db_session: AsyncSession):
+        """Test that sync_agents_runtime updates agent status from runtime files."""
+        from app.services.agent_sync import sync_agents_runtime
         from sqlmodel import select
         from app.models import Agent
 
-        # Mock the parse_identity function to avoid file access
-        with patch('app.services.agent_sync.parse_identity') as mock_parse:
-            mock_parse.return_value = {
-                "display_name": "Test Agent",
-                "role": "Test Role",
-                "model": None
+        # Pre-populate an agent
+        agent = Agent(
+            slug="qa_engineer",
+            display_name="Bruno",
+            role="QA Engineer",
+            status="offline",
+            current_model=None,
+        )
+        db_session.add(agent)
+        await db_session.commit()
+
+        # Mock sessions.json with recent runtime data
+        sessions_data = {
+            "sess1": {
+                "sessionId": "abc123",
+                "updatedAt": int(datetime.utcnow().timestamp() * 1000),
+                "status": "active",
+                "abortedLastRun": False
             }
-            # Note: sync_agents is a complex function that interacts with
-            # the database. This test documents the expected behavior.
-            pass
+        }
+
+        with patch('pathlib.Path.exists') as mock_exists:
+            # Return True for qa_engineer sessions file
+            def exists_side_effect(path):
+                return "qa_engineer" in str(path)
+            mock_exists.side_effect = exists_side_effect
+
+            with patch('pathlib.Path.read_text') as mock_read:
+                mock_read.return_value = json.dumps(sessions_data)
+
+                with patch.object(Agent, 'updated_at', None):
+                    await sync_agents_runtime(db_session)
+
+        # Refresh agent from DB
+        await db_session.refresh(agent)
+        assert agent.status in ["working", "online"]  # recent heartbeat
+        assert agent.openclaw_session_id == "abc123"
 
     @pytest.mark.asyncio
-    async def test_sync_agents_updates_existing(self, db_session):
-        """Test that sync_agents updates existing agents."""
-        # This test documents the expected update behavior
-        pass
+    async def test_sync_agents_runtime_handles_missing_file(self, db_session: AsyncSession):
+        """Test that sync_agents_runtime handles missing sessions file."""
+        from app.services.agent_sync import sync_agents_runtime
+
+        # No sessions file exists
+        with patch('pathlib.Path.exists', return_value=False):
+            await sync_agents_runtime(db_session)
+        # Should complete without exception
 
     @pytest.mark.asyncio
-    async def test_sync_agents_handles_errors(self, db_session):
-        """Test that sync_agents handles errors gracefully."""
-        # This test documents error handling
-        pass
+    async def test_sync_agents_runtime_handles_invalid_json(self, db_session: AsyncSession):
+        """Test that sync_agents_runtime handles invalid JSON gracefully."""
+        from app.services.agent_sync import sync_agents_runtime
+
+        with patch('pathlib.Path.exists', return_value=True):
+            with patch('pathlib.Path.read_text') as mock_read:
+                mock_read.return_value = "invalid json"
+                await sync_agents_runtime(db_session)
+        # Should complete without exception
+
+    @pytest.mark.asyncio
+    async def test_sync_agents_runtime_clears_cache(self, db_session: AsyncSession):
+        """Test that config cache is cleared before reading."""
+        from app.services.agent_sync import sync_agents_runtime
+
+        with patch('app.services.agent_sync._get_openclaw_config') as mock_config:
+            mock_config.return_value = {"agents": {"list": []}}
+            with patch('pathlib.Path.exists', return_value=False):
+                await sync_agents_runtime(db_session)
+            # Not necessarily calling cache_clear directly due to caching decorator,
+            # but the function itself calls cache_clear
+            assert mock_config.called

@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 from uuid import UUID, uuid4
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON
 
 
 class Approval(SQLModel, table=True):
@@ -14,11 +14,11 @@ class Approval(SQLModel, table=True):
     openclaw_approval_id: Optional[str] = Field(default=None, index=True)
     action_type: str
     payload: Optional[Dict[str, Any]] = Field(
-        default=None, sa_column=Column(JSONB)
+        default=None, sa_column=Column(JSON)
     )
     confidence: Optional[float] = None
     rubric_scores: Optional[Dict[str, Any]] = Field(
-        default=None, sa_column=Column(JSONB)
+        default=None, sa_column=Column(JSON)
     )
     status: str = Field(default="pending", index=True)  # pending|approved|rejected
     decided_by_id: Optional[UUID] = Field(default=None, foreign_key="users.id", index=True)

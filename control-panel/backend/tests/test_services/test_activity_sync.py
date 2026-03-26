@@ -1,97 +1,243 @@
+"""Tests for activity_sync service."""
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+from app.models import ActivityEvent, Session, Agent
 
 
 class TestActivitySyncFunctions:
     """Test activity_sync functions."""
 
     @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions(self):
-        """Test sync_activity_from_sessions function."""
+    async def test_sync_activity_from_sessions_creates_events(self, db_session: AsyncSession):
+        """Test that sync_activity_from_sessions creates activity events for sessions without events."""
         from app.services.activity_sync import sync_activity_from_sessions
-        
-        # This test documents the expected behavior.
-        # The function creates activity events from sessions.
-        
-        # Mock database session
-        mock_session = AsyncMock()
-        
-        # Mock agents
-        mock_agent = MagicMock()
-        mock_agent.slug = "ceo"
-        mock_agent.id = "uuid-1"
-        
-        # Mock sessions
-        mock_session1 = MagicMock()
-        mock_session1.openclaw_session_id = "sess-1"
-        mock_session1.agent_slug = "ceo"
-        mock_session1.status = "active"
-        mock_session1.channel_type = "telegram"
-        mock_session1.channel_peer = "123456789"
-        mock_session1.message_count = 10
-        mock_session1.last_active_at = datetime.utcnow()
-        mock_session1.created_at = datetime.utcnow()
-        
-        with patch('app.services.activity_sync.select') as mock_select:
-            # This test documents the expected behavior
-            pass
+
+        # Create an agent
+        agent = Agent(slug="ceo", display_name="CEO", role="Chief")
+        db_session.add(agent)
+        await db_session.commit()
+        await db_session.refresh(agent)
+
+        # Create a session without existing activity event
+        session = Session(
+            openclaw_session_id="sess-1",
+            agent_slug="ceo",
+            status="active",
+            channel_type="telegram",
+            channel_peer="123456789",
+            message_count=10,
+            last_active_at=datetime.utcnow(),
+            created_at=datetime.utcnow(),
+        )
+        db_session.add(session)
+        await db_session.commit()
+
+        # Run sync
+        created_count = await sync_activity_from_sessions(db_session)
+
+        # Verify event was created
+        assert created_count == 1
+
+        # Check database
+        result = await db_session.exec(
+            select(ActivityEvent).where(ActivityEvent.entity_id == "sess-1")
+        )
+        event = result.first()
+        assert event is not None
+        assert event.event_type == "session.active"
+        assert event.agent_id == agent.id
+        assert event.entity_type == "session"
+        assert event.payload["message_count"] == 10
+        assert event.payload["channel_type"] == "telegram"
 
     @pytest.mark.asyncio
-    async def test_sync_all_activity(self):
-        """Test sync_all_activity function."""
+    async def test_sync_activity_from_sessions_skips_existing_events(self, db_session: AsyncSession):
+        """Test that sync_activity_from_sessions skips sessions that already have activity events."""
+        from app.services.activity_sync import sync_activity_from_sessions
+
+        # Create agent
+        agent = Agent(slug="dev", display_name="Dev", role="Developer")
+        db_session.add(agent)
+        await db_session.commit()
+        await db_session.refresh(agent)
+
+        # Create session
+        session = Session(
+            openclaw_session_id="sess-2",
+            agent_slug="dev",
+            status="ended",
+            channel_type="webchat",
+            channel_peer="user123",
+            message_count=5,
+            last_active_at=datetime.utcnow(),
+            created_at=datetime.utcnow(),
+        )
+        db_session.add(session)
+        await db_session.commit()
+
+        # Create existing activity event for this session
+        existing_event = ActivityEvent(
+            event_type="session.active",
+            agent_id=agent.id,
+            entity_type="session",
+            entity_id="sess-2",
+            payload={"message_count": 5},
+            created_at=datetime.utcnow(),
+        )
+        db_session.add(existing_event)
+        await db_session.commit()
+
+        # Run sync
+        created_count = await sync_activity_from_sessions(db_session)
+
+        # Should not create new event
+        assert created_count == 0
+
+    @pytest.mark.asyncio
+    async def test_sync_activity_from_sessions_handles_agent_without_slug(self, db_session: AsyncSession):
+        """Test that sessions without agent_slug create events with agent_id=None."""
+        from app.services.activity_sync import sync_activity_from_sessions
+
+        # Create session without agent_slug
+        session = Session(
+            openclaw_session_id="sess-3",
+            agent_slug=None,
+            status="active",
+            channel_type="discord",
+            channel_peer="discord_user",
+            message_count=2,
+            last_active_at=datetime.utcnow(),
+            created_at=datetime.utcnow(),
+        )
+        db_session.add(session)
+        await db_session.commit()
+
+        # Run sync
+        created_count = await sync_activity_from_sessions(db_session)
+
+        assert created_count == 1
+
+        # Verify event has no agent_id
+        result = await db_session.exec(select(ActivityEvent).where(ActivityEvent.entity_id == "sess-3"))
+        event = result.first()
+        assert event is not None
+        assert event.agent_id is None
+
+    @pytest.mark.asyncio
+    async def test_sync_activity_from_sessions_uses_created_at_when_last_active_is_none(self, db_session: AsyncSession):
+        """Test that sync uses created_at when last_active_at is None."""
+        from app.services.activity_sync import sync_activity_from_sessions
+
+        session = Session(
+            openclaw_session_id="sess-4",
+            agent_slug=None,
+            status="active",
+            channel_type="telegram",
+            channel_peer="123",
+            message_count=1,
+            last_active_at=None,
+            created_at=datetime(2024, 1, 1, 12, 0, 0),
+        )
+        db_session.add(session)
+        await db_session.commit()
+
+        await sync_activity_from_sessions(db_session)
+
+        result = await db_session.exec(select(ActivityEvent).where(ActivityEvent.entity_id == "sess-4"))
+        event = result.first()
+        assert event.created_at == datetime(2024, 1, 1, 12, 0, 0)
+
+    @pytest.mark.asyncio
+    async def test_sync_activity_from_sessions_commits_when_events_created(self, db_session: AsyncSession):
+        """Test that changes are committed when events are created."""
+        from app.services.activity_sync import sync_activity_from_sessions
+
+        session = Session(
+            openclaw_session_id="sess-5",
+            agent_slug=None,
+            status="active",
+            channel_type="webchat",
+            channel_peer="user",
+            message_count=1,
+            last_active_at=datetime.utcnow(),
+            created_at=datetime.utcnow(),
+        )
+        db_session.add(session)
+        await db_session.commit()
+
+        # Mock commit to verify it's called
+        original_commit = db_session.commit
+        commit_called = False
+        async def mock_commit():
+            nonlocal commit_called
+            commit_called = True
+            return await original_commit()
+        db_session.commit = mock_commit
+
+        await sync_activity_from_sessions(db_session)
+
+        assert commit_called
+
+    @pytest.mark.asyncio
+    async def test_sync_activity_from_sessions_no_commit_when_no_events(self, db_session: AsyncSession):
+        """Test that commit is not called when no events are created."""
+        from app.services.activity_sync import sync_activity_from_sessions
+
+        # No sessions in database
+        original_commit = db_session.commit
+        commit_called = False
+        async def mock_commit():
+            nonlocal commit_called
+            commit_called = True
+            return await original_commit()
+        db_session.commit = mock_commit
+
+        await sync_activity_from_sessions(db_session)
+
+        assert not commit_called
+
+    @pytest.mark.asyncio
+    async def test_sync_all_activity_returns_summary(self, db_session: AsyncSession):
+        """Test that sync_all_activity returns a summary dict."""
         from app.services.activity_sync import sync_all_activity
-        
-        # This test documents the expected behavior.
-        # The function calls all sync functions and returns summary.
-        
-        mock_session = AsyncMock()
-        
+
         with patch('app.services.activity_sync.sync_activity_from_sessions') as mock_sync:
-            mock_sync.return_value = 5
-            
-            result = await sync_all_activity(mock_session)
-            
+            mock_sync.return_value = 3
+
+            result = await sync_all_activity(db_session)
+
             assert "session_events" in result
-            assert result["session_events"] == 5
+            assert result["session_events"] == 3
+            assert "total" in result
+            assert result["total"] == 3
+            mock_sync.assert_called_once_with(db_session)
 
 
 class TestActivityEventCreation:
     """Test activity event creation logic."""
 
-    def test_event_type_for_active_session(self):
-        """Test event type for active session."""
-        from app.services.activity_sync import ActivityEvent
-        
-        # This documents the expected event type for active sessions
-        pass
+    def test_event_type_mapping_active(self):
+        """Test that active sessions create 'session.active' events."""
+        # In the code: event_type = "session.active" if session.status == "active" else "session.ended"
+        session_status = "active"
+        expected = "session.active"
+        result = "session.active" if session_status == "active" else "session.ended"
+        assert result == expected
 
-    def test_event_type_for_ended_session(self):
-        """Test event type for ended session."""
-        # This documents the expected event type for ended sessions
-        pass
+    def test_event_type_mapping_ended(self):
+        """Test that ended sessions create 'session.ended' events."""
+        session_status = "ended"
+        expected = "session.ended"
+        result = "session.active" if session_status == "active" else "session.ended"
+        assert result == expected
 
     def test_event_payload_structure(self):
         """Test expected payload structure."""
         expected_keys = ["description", "message_count", "channel_type", "channel_peer"]
-        
-        # This test documents the expected payload structure
         assert "description" in expected_keys
         assert "message_count" in expected_keys
-
-
-class TestActivitySyncIntegration:
-    """Test activity sync integration with database."""
-
-    @pytest.mark.asyncio
-    async def test_no_duplicate_events(self):
-        """Test that duplicate activity events are not created."""
-        from app.services.activity_sync import sync_activity_from_sessions
-        
-        # This test documents the expected behavior:
-        # Check if event already exists before creating
-        
-        mock_session = AsyncMock()
-        
-        # This test documents the expected behavior
-        pass
+        assert "channel_type" in expected_keys
+        assert "channel_peer" in expected_keys

@@ -61,3 +61,4 @@ dmypy.json
 pytest-report.xml
 pytest_report.html
 junit-*.xml
+control-panel/backend/.venv/

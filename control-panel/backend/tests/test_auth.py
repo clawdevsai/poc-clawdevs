@@ -35,7 +35,7 @@ async def test_login_unknown_user(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_me_without_token(client: AsyncClient):
     response = await client.get("/auth/me")
-    assert response.status_code == 403  # HTTPBearer returns 403 when no token
+    assert response.status_code == 401  # HTTPBearer returns 401 when no token
 
 
 @pytest.mark.asyncio

@@ -106,9 +106,9 @@ class TestUserModel:
         password = "testpassword"
         hashed = get_password_hash(password)
         
-        # Bcrypt hash format: $2b$cost$salt+hash
-        assert hashed.startswith("$2")
-        assert len(hashed) == 60  # bcrypt hash is always 60 chars
+        # Passlib bcrypt_sha256 format: $bcrypt-sha256$... or $2b$...
+        assert hashed.startswith(("$bcrypt-sha256$", "$2"))
+        assert len(hashed) >= 60  # bcrypt hash is always 60+ chars
 
     def test_user_unique_username(self):
         """Test that username uniqueness is model constraint (not DB)."""
