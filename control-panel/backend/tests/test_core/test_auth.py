@@ -20,7 +20,8 @@
 
 from datetime import timedelta
 from unittest.mock import patch
-from jose import JWTError
+import jwt
+from jwt.exceptions import InvalidTokenError
 
 
 class TestVerifyPassword:
@@ -167,7 +168,6 @@ class TestCreateAccessToken:
     def test_create_access_token_expires_in_token(self):
         """Test that expiry is included in token."""
         from app.core.auth import create_access_token
-        from jose import jwt
         from app.core.config import get_settings
 
         settings = get_settings()
@@ -255,12 +255,12 @@ class TestJWTErrorHandling:
     """Test JWT error handling."""
 
     def test_decode_token_jwt_error(self):
-        """Test decode_token handles JWTError."""
+        """Test decode_token handles InvalidTokenError."""
         from app.core.auth import decode_token
         from unittest.mock import patch
 
         with patch("app.core.auth.jwt") as mock_jwt:
-            mock_jwt.decode.side_effect = JWTError("Invalid token")
+            mock_jwt.decode.side_effect = InvalidTokenError("Invalid token")
 
             result = decode_token("invalid_token")
             assert result is None
@@ -271,10 +271,30 @@ class TestJWTErrorHandling:
         from unittest.mock import patch
 
         with patch("app.core.auth.jwt") as mock_jwt:
-            mock_jwt.decode.side_effect = JWTError("Signature verification failed")
+            mock_jwt.decode.side_effect = InvalidTokenError(
+                "Signature verification failed"
+            )
 
             result = decode_token("invalid_token")
             assert result is None
+
+    def test_decode_token_rejects_unknown_critical_header(self):
+        """Test decode_token rejects unsupported critical headers."""
+        from app.core.auth import decode_token
+        from app.core.config import get_settings
+
+        settings = get_settings()
+        token = jwt.encode(
+            {
+                "sub": "user123",
+            },
+            settings.secret_key,
+            algorithm=settings.algorithm,
+            headers={"crit": ["x-custom-policy"], "x-custom-policy": "require-mfa"},
+        )
+
+        result = decode_token(token)
+        assert result is None
 
 
 class TestAuthFunctionsEdgeCases:
