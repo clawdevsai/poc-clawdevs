@@ -21,6 +21,7 @@
  */
 
 import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 // Deterministic color from slug string
 function slugColor(slug: string): string {
@@ -63,9 +64,25 @@ const sizeClasses: Record<AvatarSize, string> = {
   lg: "h-16 w-16 text-lg",
 }
 
+const avatarPathBySlug: Record<string, string> = {
+  ceo: "/avatars/CEO.png",
+  po: "/avatars/PO.png",
+  arquiteto: "/avatars/Architect.png",
+  dev_backend: "/avatars/Developer.png",
+  dev_frontend: "/avatars/Developer.png",
+  dev_mobile: "/avatars/Developer.png",
+  qa_engineer: "/avatars/QA.png",
+  devops_sre: "/avatars/DevOps.png",
+  security_engineer: "/avatars/CyberSec.png",
+  ux_designer: "/avatars/UX.png",
+  dba_data_engineer: "/avatars/DBA.png",
+  memory_curator: "/avatars/Developer.png",
+}
+
 interface AgentAvatarProps {
   slug: string
   displayName: string
+  avatarUrl?: string | null
   size?: AvatarSize
   className?: string
 }
@@ -73,11 +90,15 @@ interface AgentAvatarProps {
 export function AgentAvatar({
   slug,
   displayName,
+  avatarUrl,
   size = "md",
   className,
 }: AgentAvatarProps) {
+  const [imageError, setImageError] = useState(false)
   const color = slugColor(slug)
   const initials = getInitials(displayName || slug)
+  const normalizedAvatarUrl = avatarUrl?.trim() || avatarPathBySlug[slug] || null
+  const canRenderImage = Boolean(normalizedAvatarUrl) && !imageError
 
   return (
     <div
@@ -93,7 +114,17 @@ export function AgentAvatar({
       }}
       aria-label={displayName}
     >
-      {initials}
+      {canRenderImage ? (
+        <img
+          src={normalizedAvatarUrl as string}
+          alt={displayName}
+          onError={() => setImageError(true)}
+          className="h-full w-full rounded-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        initials
+      )}
     </div>
   )
 }

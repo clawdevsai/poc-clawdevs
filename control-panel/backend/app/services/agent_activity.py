@@ -120,13 +120,10 @@ def _extract_last_meaningful_text(session_file: Path) -> tuple[str | None, str |
         text = _extract_text_content(msg.get("content"))
         if not text:
             continue
-        if text.upper() in IGNORED_ACTIVITY_TEXTS:
+        full_text = text.strip()
+        if full_text.upper() in IGNORED_ACTIVITY_TEXTS:
             continue
-
-        compact = " ".join(text.split())
-        if len(compact) > 260:
-            compact = compact[:257] + "..."
-        return compact, role
+        return full_text, role
 
     return None, None
 

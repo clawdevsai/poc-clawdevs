@@ -73,9 +73,9 @@ class TestAgentSyncConstants:
     def test_display_name_map(self):
         """Test that DISPLAY_NAME_MAP has all agents."""
         assert "ceo" in DISPLAY_NAME_MAP
-        assert DISPLAY_NAME_MAP["ceo"] == "Victor"
+        assert DISPLAY_NAME_MAP["ceo"] == "Leonardo"
         assert "qa_engineer" in DISPLAY_NAME_MAP
-        assert DISPLAY_NAME_MAP["qa_engineer"] == "Bruno"
+        assert DISPLAY_NAME_MAP["qa_engineer"] == "Mateus"
 
     def test_cron_map_exists(self):
         """Test that CRON_MAP is defined for cron-enabled agents."""
@@ -94,14 +94,14 @@ class TestParseIdentity:
     def test_parse_identity_default_values(self):
         """Test parse_identity with default values (no IDENTITY.md)."""
         identity = parse_identity("ceo")
-        assert identity["display_name"] == "Victor"
+        assert identity["display_name"] == "Leonardo"
         assert identity["role"] == "CEO / Orchestrator"
         assert "model" in identity
 
     def test_parse_identity_qa_engineer(self):
         """Test parse_identity for QA engineer."""
         identity = parse_identity("qa_engineer")
-        assert identity["display_name"] == "Bruno"
+        assert identity["display_name"] == "Mateus"
         assert identity["role"] == "QA Engineer"
 
     def test_parse_identity_all_agents(self):
@@ -256,7 +256,7 @@ class TestSyncAgentsRuntime:
         # Pre-populate an agent
         agent = Agent(
             slug="qa_engineer",
-            display_name="Bruno",
+            display_name="Mateus",
             role="QA Engineer",
             status="offline",
             current_model=None,

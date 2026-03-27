@@ -664,3 +664,18 @@ else
   echo "[bootstrap] warning: canonical self-improving skill not found at ${SELF_IMPROVING_CANONICAL_SRC}"
 fi
 # --- Fim: rollout global da skill self-improving ---
+
+# --- Contrato obrigatorio de persistencia em MEMORY.md ---
+for mem_contract_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer; do
+  mem_contract_agents_file="${OPENCLAW_STATE_DIR}/workspace-${mem_contract_agent}/AGENTS.md"
+  if [ -f "${mem_contract_agents_file}" ] && ! grep -q "memory_write_contract_v1" "${mem_contract_agents_file}"; then
+    cat >> "${mem_contract_agents_file}" <<EOF
+
+## Memory Persistence Contract (memory_write_contract_v1)
+- At the end of every completed task/issue, append 1-3 lines to \`/data/openclaw/memory/${mem_contract_agent}/MEMORY.md\` under \`## Active Patterns\`.
+- Use format: \`- [PATTERN] <concise learning> | Discovered: YYYY-MM-DD | Source: TASK-XXX\`.
+- Before planning the next action, read \`/data/openclaw/memory/shared/SHARED_MEMORY.md\` and your agent memory file.
+EOF
+  fi
+done
+# --- Fim: contrato obrigatorio de persistencia em MEMORY.md ---

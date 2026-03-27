@@ -55,6 +55,7 @@ interface Agent {
   slug: string
   display_name: string
   role: string
+  avatar_url?: string | null
   status: string
 }
 
@@ -257,6 +258,7 @@ export default function MemoryPage() {
                   <AgentAvatar
                     slug={agent.slug}
                     displayName={agent.display_name}
+                    avatarUrl={agent.avatar_url}
                     size="sm"
                   />
                   <span className="truncate">{agent.display_name}</span>

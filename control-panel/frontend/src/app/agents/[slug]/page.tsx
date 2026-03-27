@@ -43,6 +43,7 @@ interface Agent {
   slug: string
   display_name: string
   role: string
+  avatar_url?: string | null
   status: "online" | "idle" | "offline" | string
   model?: string | null
   current_model?: string | null
@@ -60,6 +61,7 @@ interface Session {
   agent_slug: string
   status: string
   created_at: string
+  last_active_at?: string | null
   ended_at?: string | null
   task_description?: string | null
 }
@@ -366,9 +368,12 @@ function SessionsTab({ slug }: { slug: string }) {
                 {session.status}
               </Badge>
               <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                {formatDistanceToNow(parseApiDate(session.created_at), {
+                {formatDistanceToNow(
+                  parseApiDate((session.last_active_at ?? session.created_at) as string),
+                  {
                   addSuffix: true,
-                })}
+                  }
+                )}
               </span>
             </div>
           </div>
@@ -713,6 +718,7 @@ export default function AgentProfilePage({ params }: PageProps) {
             <AgentAvatar
               slug={agent.slug}
               displayName={agent.display_name}
+              avatarUrl={agent.avatar_url}
               size="lg"
             />
             <div className="flex flex-col gap-2 flex-1 min-w-0">

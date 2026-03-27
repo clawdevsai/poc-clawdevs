@@ -41,6 +41,7 @@ interface Agent {
   slug: string
   display_name: string
   role: string
+  avatar_url?: string | null
   status: string
   model: string
   cron_expression?: string | null
@@ -161,6 +162,7 @@ function CronCard({
         <AgentAvatar
           slug={agent.slug}
           displayName={agent.display_name}
+          avatarUrl={agent.avatar_url}
           size="md"
         />
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">

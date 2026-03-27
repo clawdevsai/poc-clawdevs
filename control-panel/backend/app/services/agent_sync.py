@@ -64,20 +64,35 @@ ROLE_MAP = {
     "memory_curator": "Memory Curator",
 }
 
-# Display names for all agents (nomes em português)
+# Display names aligned with avatar personas
 DISPLAY_NAME_MAP = {
-    "ceo": "Victor",
-    "po": "Lucas",
-    "arquiteto": "Alexandre",
-    "dev_backend": "Mateus",
-    "dev_frontend": "Rafael",
+    "ceo": "Leonardo",
+    "po": "Camila",
+    "arquiteto": "Henrique",
+    "dev_backend": "Arthur",
+    "dev_frontend": "Bruno",
     "dev_mobile": "Gabriel",
-    "qa_engineer": "Bruno",
+    "qa_engineer": "Mateus",
     "devops_sre": "Diego",
     "security_engineer": "Thiago",
-    "ux_designer": "Felipe",
+    "ux_designer": "Sofia",
     "dba_data_engineer": "Igor",
-    "memory_curator": "Memmo",
+    "memory_curator": "Caio",
+}
+
+AVATAR_URL_MAP = {
+    "ceo": "/avatars/CEO.png",
+    "po": "/avatars/PO.png",
+    "arquiteto": "/avatars/Architect.png",
+    "dev_backend": "/avatars/Developer.png",
+    "dev_frontend": "/avatars/Developer.png",
+    "dev_mobile": "/avatars/Developer.png",
+    "qa_engineer": "/avatars/QA.png",
+    "devops_sre": "/avatars/DevOps.png",
+    "security_engineer": "/avatars/CyberSec.png",
+    "ux_designer": "/avatars/UX.png",
+    "dba_data_engineer": "/avatars/DBA.png",
+    "memory_curator": "/avatars/Developer.png",
 }
 
 
@@ -148,19 +163,22 @@ async def sync_agents(session) -> None:
         agent = result.first()
         identity = parse_identity(slug)
 
+        avatar_url = AVATAR_URL_MAP.get(slug, "/avatars/Developer.png")
+
         if agent is None:
             agent = Agent(
                 slug=slug,
                 display_name=identity["display_name"],
                 role=identity["role"],
                 current_model=identity.get("model"),
-                avatar_url=f"/static/avatars/{slug}.png",
+                avatar_url=avatar_url,
                 cron_expression=CRON_MAP.get(slug),
             )
             session.add(agent)
         else:
             agent.display_name = identity["display_name"]
             agent.role = identity["role"]
+            agent.avatar_url = avatar_url
             # Only update model if not set or empty
             if not agent.current_model:
                 agent.current_model = identity.get("model")
@@ -274,6 +292,8 @@ async def sync_agents_runtime(session) -> None:
     _get_openclaw_config.cache_clear()
 
     for agent in agents:
+        identity = parse_identity(agent.slug)
+        expected_avatar_url = AVATAR_URL_MAP.get(agent.slug, "/avatars/Developer.png")
         sessions_file = (
             Path(settings.openclaw_data_path)
             / "agents"
@@ -315,11 +335,17 @@ async def sync_agents_runtime(session) -> None:
             or agent.openclaw_session_id != next_session_id
             or agent.current_model != next_model
             or agent.status != next_status
+            or agent.display_name != identity["display_name"]
+            or agent.role != identity["role"]
+            or agent.avatar_url != expected_avatar_url
         ):
             agent.last_heartbeat_at = latest_heartbeat
             agent.openclaw_session_id = next_session_id
             agent.current_model = next_model
             agent.status = next_status
+            agent.display_name = identity["display_name"]
+            agent.role = identity["role"]
+            agent.avatar_url = expected_avatar_url
             agent.updated_at = datetime.utcnow()
             changed = True
 

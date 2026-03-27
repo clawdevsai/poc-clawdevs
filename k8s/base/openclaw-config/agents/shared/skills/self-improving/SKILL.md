@@ -45,6 +45,8 @@ description: Capture corrections, failures and reusable learnings with strict sa
 - Preferred: `${workspace}/.learnings/LEARNINGS.md`
 - Preferred: `${workspace}/.learnings/ERRORS.md`
 - Preferred: `${workspace}/.learnings/FEATURE_REQUESTS.md`
+- Required mirror on task completion:
+  - `/data/openclaw/memory/<agent_id>/MEMORY.md` (section `## Active Patterns`)
 - Fallback when workspace write is restricted (example: `memory_curator`):
   - `/data/openclaw/memory/<agent_id>/MEMORY.md`
 - Never write learnings outside workspace `.learnings` or `/data/openclaw/memory/**`.
@@ -54,6 +56,10 @@ description: Capture corrections, failures and reusable learnings with strict sa
 2. Link related entries when recurrence exists.
 3. Promote only after repeated evidence (>= 3 times) or explicit user confirmation.
 4. Keep entries short, actionable, and traceable.
+5. When a task is completed/resolved, append 1-3 concise patterns to `/data/openclaw/memory/<agent_id>/MEMORY.md`.
+
+## MEMORY.md Line Format
+- `- [PATTERN] <concise learning> | Discovered: YYYY-MM-DD | Source: TASK-XXX`
 
 ## Minimum Entry Format
 - `id`: `LRN|ERR|FEAT-YYYYMMDD-XXX`

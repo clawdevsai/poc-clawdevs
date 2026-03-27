@@ -25,13 +25,14 @@ This makes Telegram and other channel sessions visible in the control panel.
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from sqlmodel import select
 from app.models import Session
 from app.core.config import get_settings
 
 settings = get_settings()
+ACTIVE_WINDOW = timedelta(minutes=20)
 
 AGENT_SLUGS = [
     "ceo", "po", "arquiteto", "dev_backend", "dev_frontend",
@@ -77,8 +78,7 @@ async def sync_sessions(db_session) -> None:
             updated_at = _parse_timestamp(oc_session.get("updatedAt"))
             last_active_at = updated_at  # Use updatedAt as lastActiveAt
 
-            # Determine status - sessions without recent updates are considered idle
-            status = "active"  # Default to active, we don't have explicit ended info
+            status = _derive_session_status(updated_at)
 
             # Extract channel info from deliveryContext or origin
             delivery = oc_session.get("deliveryContext", {})
@@ -125,6 +125,8 @@ async def sync_sessions(db_session) -> None:
                 existing.message_count = message_count
                 existing.token_count = token_count
                 existing.last_active_at = last_active_at or existing.last_active_at
+                if status == "completed" and existing.ended_at is None:
+                    existing.ended_at = last_active_at
             else:
                 # Create new session
                 new_session = Session(
@@ -137,6 +139,7 @@ async def sync_sessions(db_session) -> None:
                     token_count=token_count,
                     started_at=last_active_at,  # Use first seen as started
                     last_active_at=last_active_at,
+                    ended_at=last_active_at if status == "completed" else None,
                 )
                 db_session.add(new_session)
 
@@ -152,7 +155,7 @@ def _parse_timestamp(ts) -> datetime | None:
         # Assume milliseconds if > year 2000 in seconds
         if ts > 946684800000:
             ts = ts / 1000
-        return datetime.utcfromtimestamp(ts)
+        return datetime.fromtimestamp(ts, timezone.utc).replace(tzinfo=None)
 
     if isinstance(ts, str):
         try:
@@ -165,11 +168,21 @@ def _parse_timestamp(ts) -> datetime | None:
             ts_num = float(ts)
             if ts_num > 946684800000:
                 ts_num = ts_num / 1000
-            return datetime.utcfromtimestamp(ts_num)
+            return datetime.fromtimestamp(ts_num, timezone.utc).replace(tzinfo=None)
         except ValueError:
             pass
 
     return None
+
+
+def _derive_session_status(updated_at: datetime | None) -> str:
+    """Classify session status from its latest activity timestamp."""
+    if updated_at is None:
+        return "completed"
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    if now_utc - updated_at <= ACTIVE_WINDOW:
+        return "active"
+    return "completed"
 
 
 def _count_messages_in_session_file(session_file: Path) -> int:

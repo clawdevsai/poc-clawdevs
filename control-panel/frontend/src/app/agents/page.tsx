@@ -43,6 +43,7 @@ interface Agent {
   slug: string
   display_name: string
   role: string
+  avatar_url?: string | null
   status: "online" | "idle" | "offline" | string
   model?: string | null
   current_model?: string | null
@@ -206,6 +207,7 @@ export default function AgentsPage() {
                   <AgentAvatar
                     slug={agent.slug}
                     displayName={agent.display_name}
+                    avatarUrl={agent.avatar_url}
                     size="md"
                   />
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
