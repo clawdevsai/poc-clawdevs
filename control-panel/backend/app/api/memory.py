@@ -115,8 +115,10 @@ async def list_memory(
             content=e.body or "",
             title=e.title or "Memory entry",
             body=e.body or "",
-            tags=e.tags, source_agents=e.source_agents,
-            created_at=e.created_at, updated_at=e.updated_at,
+            tags=e.tags,
+            source_agents=e.source_agents,
+            created_at=e.created_at,
+            updated_at=e.updated_at,
         )
         for e in entries
     ]
@@ -175,12 +177,16 @@ async def promote_entry(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    result = await session.exec(select(MemoryEntry).where(MemoryEntry.id == UUID(entry_id)))
+    result = await session.exec(
+        select(MemoryEntry).where(MemoryEntry.id == UUID(entry_id))
+    )
     entry = result.first()
     if entry is None:
         raise HTTPException(status_code=404, detail="Memory entry not found")
     if entry.entry_type != "candidate":
-        raise HTTPException(status_code=400, detail="Only candidate entries can be promoted")
+        raise HTTPException(
+            status_code=400, detail="Only candidate entries can be promoted"
+        )
     entry.entry_type = "global"
     entry.updated_at = datetime.utcnow()
     await session.commit()

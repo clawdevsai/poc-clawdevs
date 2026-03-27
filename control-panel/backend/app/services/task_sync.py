@@ -65,7 +65,7 @@ STATUS_MAP = {
 
 async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
     """Sync tasks from GitHub issues to the database.
-    
+
     Args:
         session: Database session
         repo: GitHub repo in format "owner/repo". If None, uses default from settings.
@@ -73,17 +73,19 @@ async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
     if not settings.github_token:
         logger.warning("[task_sync] No GitHub token configured, skipping task sync")
         return
-    
+
     target_repo = repo or settings.github_default_repository
     if not target_repo:
-        logger.warning("[task_sync] No GitHub repository configured, skipping task sync")
+        logger.warning(
+            "[task_sync] No GitHub repository configured, skipping task sync"
+        )
         return
-    
+
     logger.info(f"[task_sync] Syncing tasks from GitHub repo: {target_repo}")
-    
+
     try:
         import httpx
-        
+
         async with httpx.AsyncClient() as client:
             # Fetch open issues
             headers = {"Authorization": f"token {settings.github_token}"}
@@ -92,19 +94,19 @@ async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
                 "state": "all",  # Get both open and closed
                 "per_page": 100,
             }
-            
+
             response = await client.get(url, headers=headers, params=params)
             response.raise_for_status()
-            
+
             issues = response.json()
             logger.info(f"[task_sync] Found {len(issues)} issues in GitHub")
-            
+
             for issue in issues:
                 await _sync_issue_to_task(session, issue, target_repo)
-            
+
             await session.commit()
             logger.info("[task_sync] Task sync completed")
-            
+
     except Exception as e:
         logger.error(f"[task_sync] Failed to sync tasks from GitHub: {e}")
         raise
@@ -112,7 +114,7 @@ async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
 
 async def _sync_issue_to_task(session, issue: dict, repo: str) -> None:
     """Sync a single GitHub issue to a Task.
-    
+
     Args:
         session: Database session
         issue: GitHub issue data
@@ -121,52 +123,59 @@ async def _sync_issue_to_task(session, issue: dict, repo: str) -> None:
     issue_number = issue.get("number")
     if not issue_number:
         return
-    
+
     # Check if task already exists
     result = await session.exec(
         select(Task).where(Task.github_issue_number == issue_number)
     )
     existing = result.first()
-    
+
     # Extract task data from issue
     title = issue.get("title", "Untitled")
     description = issue.get("body", "")
     state = issue.get("state", "open")
-    
+
     # Map status
     status = STATUS_MAP.get(state, "inbox")
     if state == "open":
         # Check labels for in_progress or review status
-        labels = [l.get("name", "").lower() for l in issue.get("labels", [])]
+        labels = [label.get("name", "").lower() for label in issue.get("labels", [])]
         if "in-progress" in labels or "in_progress" in labels:
             status = "in_progress"
         elif "review" in labels:
             status = "review"
-    
+
     # Map label
     task_label = None
     for gh_label, task_lbl in LABEL_MAP.items():
-        if gh_label in [l.get("name", "").lower() for l in issue.get("labels", [])]:
+        if gh_label in [
+            label.get("name", "").lower() for label in issue.get("labels", [])
+        ]:
             task_label = task_lbl
             break
-    
+
     # Try to find assigned agent
     assigned_agent_id = None
     assignee = issue.get("assignee")
     if assignee:
-        assignee_login = assignee.get("login", "")
+        assignee.get("login", "")
         # Try to match by GitHub username (would need to store github_username in Agent model)
         # For now, try to match by name in title/description
         agent_result = await session.exec(select(Agent))
         agents = agent_result.all()
         for agent in agents:
-            if agent.slug.lower() in title.lower() or agent.slug.lower() in description.lower():
+            if (
+                agent.slug.lower() in title.lower()
+                or agent.slug.lower() in description.lower()
+            ):
                 assigned_agent_id = agent.id
                 break
-    
+
     # Build GitHub URL
-    issue_url = issue.get("html_url", f"https://github.com/{repo}/issues/{issue_number}")
-    
+    issue_url = issue.get(
+        "html_url", f"https://github.com/{repo}/issues/{issue_number}"
+    )
+
     if existing:
         # Update existing task
         existing.title = title
@@ -197,15 +206,15 @@ async def _sync_issue_to_task(session, issue: dict, repo: str) -> None:
 
 async def sync_tasks(db_session) -> None:
     """Main entry point for task synchronization.
-    
+
     Syncs tasks from all configured repositories.
     """
     logger.info("[task_sync] Starting task synchronization")
-    
+
     # Sync from default repo
     await sync_tasks_from_github(db_session)
-    
+
     # Could add more repos here if needed
     # await sync_tasks_from_github(db_session, "owner/other-repo")
-    
+
     logger.info("[task_sync] Task synchronization completed")

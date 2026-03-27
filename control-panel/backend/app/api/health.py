@@ -115,7 +115,7 @@ async def get_health_summary(
             healthy_count += 1
 
     total = len(tasks)
-    health_percentage = (healthy_count / total * 100) if total > 0 else 0
+    (healthy_count / total * 100) if total > 0 else 0
 
     return {
         "healthy": healthy_count,
@@ -155,7 +155,9 @@ async def get_failed_tasks(
                 "failure_count": task.failure_count,
                 "consecutive_failures": task.consecutive_failures,
                 "last_error": task.last_error,
-                "last_failed_at": task.last_failed_at.isoformat() if task.last_failed_at else None,
+                "last_failed_at": (
+                    task.last_failed_at.isoformat() if task.last_failed_at else None
+                ),
                 "escalated": task.escalated_to_agent_id is not None,
             }
             for task in tasks
@@ -171,13 +173,15 @@ async def get_escalated_tasks(
     """Get list of escalated tasks."""
     statement = (
         select(Task)
-        .where(Task.escalated_to_agent_id != None)
+        .where(Task.escalated_to_agent_id is not None)
         .order_by(Task.escalated_at.desc())
         .limit(limit)
     )
 
     tasks = session.exec(statement).all()
-    total = session.exec(select(Task).where(Task.escalated_to_agent_id != None)).all()
+    total = session.exec(
+        select(Task).where(Task.escalated_to_agent_id is not None)
+    ).all()
 
     return {
         "total": len(total),
@@ -188,7 +192,9 @@ async def get_escalated_tasks(
                 "title": task.title,
                 "escalated_to_agent_id": str(task.escalated_to_agent_id),
                 "escalation_reason": task.escalation_reason,
-                "escalated_at": task.escalated_at.isoformat() if task.escalated_at else None,
+                "escalated_at": (
+                    task.escalated_at.isoformat() if task.escalated_at else None
+                ),
                 "failure_count": task.failure_count,
             }
             for task in tasks

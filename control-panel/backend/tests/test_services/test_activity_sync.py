@@ -31,7 +31,9 @@ class TestActivitySyncFunctions:
     """Test activity_sync functions."""
 
     @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_creates_events(self, db_session: AsyncSession):
+    async def test_sync_activity_from_sessions_creates_events(
+        self, db_session: AsyncSession
+    ):
         """Test that sync_activity_from_sessions creates activity events for sessions without events."""
         from app.services.activity_sync import sync_activity_from_sessions
 
@@ -74,7 +76,9 @@ class TestActivitySyncFunctions:
         assert event.payload["channel_type"] == "telegram"
 
     @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_skips_existing_events(self, db_session: AsyncSession):
+    async def test_sync_activity_from_sessions_skips_existing_events(
+        self, db_session: AsyncSession
+    ):
         """Test that sync_activity_from_sessions skips sessions that already have activity events."""
         from app.services.activity_sync import sync_activity_from_sessions
 
@@ -117,7 +121,9 @@ class TestActivitySyncFunctions:
         assert created_count == 0
 
     @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_handles_agent_without_slug(self, db_session: AsyncSession):
+    async def test_sync_activity_from_sessions_handles_agent_without_slug(
+        self, db_session: AsyncSession
+    ):
         """Test that sessions without agent_slug create events with agent_id=None."""
         from app.services.activity_sync import sync_activity_from_sessions
 
@@ -141,13 +147,17 @@ class TestActivitySyncFunctions:
         assert created_count == 1
 
         # Verify event has no agent_id
-        result = await db_session.exec(select(ActivityEvent).where(ActivityEvent.entity_id == "sess-3"))
+        result = await db_session.exec(
+            select(ActivityEvent).where(ActivityEvent.entity_id == "sess-3")
+        )
         event = result.first()
         assert event is not None
         assert event.agent_id is None
 
     @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_uses_created_at_when_last_active_is_none(self, db_session: AsyncSession):
+    async def test_sync_activity_from_sessions_uses_created_at_when_last_active_is_none(
+        self, db_session: AsyncSession
+    ):
         """Test that sync uses created_at when last_active_at is None."""
         from app.services.activity_sync import sync_activity_from_sessions
 
@@ -166,12 +176,16 @@ class TestActivitySyncFunctions:
 
         await sync_activity_from_sessions(db_session)
 
-        result = await db_session.exec(select(ActivityEvent).where(ActivityEvent.entity_id == "sess-4"))
+        result = await db_session.exec(
+            select(ActivityEvent).where(ActivityEvent.entity_id == "sess-4")
+        )
         event = result.first()
         assert event.created_at == datetime(2024, 1, 1, 12, 0, 0)
 
     @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_commits_when_events_created(self, db_session: AsyncSession):
+    async def test_sync_activity_from_sessions_commits_when_events_created(
+        self, db_session: AsyncSession
+    ):
         """Test that changes are committed when events are created."""
         from app.services.activity_sync import sync_activity_from_sessions
 
@@ -191,10 +205,12 @@ class TestActivitySyncFunctions:
         # Mock commit to verify it's called
         original_commit = db_session.commit
         commit_called = False
+
         async def mock_commit():
             nonlocal commit_called
             commit_called = True
             return await original_commit()
+
         db_session.commit = mock_commit
 
         await sync_activity_from_sessions(db_session)
@@ -202,17 +218,21 @@ class TestActivitySyncFunctions:
         assert commit_called
 
     @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_no_commit_when_no_events(self, db_session: AsyncSession):
+    async def test_sync_activity_from_sessions_no_commit_when_no_events(
+        self, db_session: AsyncSession
+    ):
         """Test that commit is not called when no events are created."""
         from app.services.activity_sync import sync_activity_from_sessions
 
         # No sessions in database
         original_commit = db_session.commit
         commit_called = False
+
         async def mock_commit():
             nonlocal commit_called
             commit_called = True
             return await original_commit()
+
         db_session.commit = mock_commit
 
         await sync_activity_from_sessions(db_session)
@@ -224,7 +244,9 @@ class TestActivitySyncFunctions:
         """Test that sync_all_activity returns a summary dict."""
         from app.services.activity_sync import sync_all_activity
 
-        with patch('app.services.activity_sync.sync_activity_from_sessions') as mock_sync:
+        with patch(
+            "app.services.activity_sync.sync_activity_from_sessions"
+        ) as mock_sync:
             mock_sync.return_value = 3
 
             result = await sync_all_activity(db_session)

@@ -119,9 +119,7 @@ class CostTracker:
         Returns:
             (is_available, warning_message)
         """
-        agent = self.db_session.exec(
-            select(Agent).where(Agent.id == agent_id)
-        ).first()
+        agent = self.db_session.exec(select(Agent).where(Agent.id == agent_id)).first()
 
         if not agent:
             return False, "Agent not found"
@@ -131,7 +129,7 @@ class CostTracker:
         statement = select(Task).where(
             (Task.assigned_agent_id == agent_id)
             & (Task.created_at >= month_ago)
-            & (Task.actual_cost != None)
+            & (Task.actual_cost is not None)
         )
 
         tasks = self.db_session.exec(statement).all()
@@ -202,7 +200,7 @@ class CostTracker:
         statement = select(Task).where(
             (Task.assigned_agent_id == agent_id)
             & (Task.created_at >= cutoff_date)
-            & (Task.actual_cost != None)
+            & (Task.actual_cost is not None)
         )
 
         tasks = self.db_session.exec(statement).all()
@@ -237,8 +235,7 @@ class CostTracker:
         """
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         statement = select(Task).where(
-            (Task.created_at >= cutoff_date)
-            & (Task.actual_cost != None)
+            (Task.created_at >= cutoff_date) & (Task.actual_cost is not None)
         )
 
         tasks = self.db_session.exec(statement).all()
@@ -273,7 +270,9 @@ class CostTracker:
             Cost in USD
         """
         settings = get_settings()
-        cost_per_1m = settings.token_costs_per_model.get(model, 0.003)  # Default to medium cost
+        cost_per_1m = settings.token_costs_per_model.get(
+            model, 0.003
+        )  # Default to medium cost
         cost = (tokens / 1_000_000) * cost_per_1m
         return round(cost, 4)
 
@@ -310,8 +309,7 @@ class CostTracker:
             "reasoning": reasoning,
             "estimated_costs": estimates,
             "warning": (
-                "Premium tier can be expensive. "
-                "Ensure complexity justifies cost."
+                "Premium tier can be expensive. " "Ensure complexity justifies cost."
                 if recommended_tier == "premium"
                 else None
             ),

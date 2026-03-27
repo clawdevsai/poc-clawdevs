@@ -364,8 +364,8 @@ class TestRAGRetriever:
         )
 
         # "User Auth System" should have boosted score
-        titles_before = [r["title"] for r in initial_results]
-        titles_after = [r["title"] for r in reranked]
+        [r["title"] for r in initial_results]
+        [r["title"] for r in reranked]
 
         # Order should potentially change due to reranking
         # (depends on implementation details)

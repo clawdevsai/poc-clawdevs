@@ -35,9 +35,18 @@ settings = get_settings()
 ACTIVE_WINDOW = timedelta(minutes=20)
 
 AGENT_SLUGS = [
-    "ceo", "po", "arquiteto", "dev_backend", "dev_frontend",
-    "dev_mobile", "qa_engineer", "devops_sre", "security_engineer",
-    "ux_designer", "dba_data_engineer", "memory_curator",
+    "ceo",
+    "po",
+    "arquiteto",
+    "dev_backend",
+    "dev_frontend",
+    "dev_mobile",
+    "qa_engineer",
+    "devops_sre",
+    "security_engineer",
+    "ux_designer",
+    "dba_data_engineer",
+    "memory_curator",
 ]
 
 
@@ -84,21 +93,27 @@ async def sync_sessions(db_session) -> None:
             delivery = oc_session.get("deliveryContext", {})
             origin = oc_session.get("origin", {})
 
-            channel_type = delivery.get("channel") or origin.get("provider") or origin.get("surface")
+            channel_type = (
+                delivery.get("channel")
+                or origin.get("provider")
+                or origin.get("surface")
+            )
             channel_peer = delivery.get("to") or origin.get("to")
 
             # Get message count and token metrics from session data
             message_count = 0
             token_count = 0
-            
+
             # Try to get token metrics directly from session metadata
             if "totalTokens" in oc_session:
                 token_count = oc_session.get("totalTokens", 0)
             elif "inputTokens" in oc_session or "outputTokens" in oc_session:
-                token_count = oc_session.get("inputTokens", 0) + oc_session.get("outputTokens", 0)
+                token_count = oc_session.get("inputTokens", 0) + oc_session.get(
+                    "outputTokens", 0
+                )
             elif "contextTokens" in oc_session:
                 token_count = oc_session.get("contextTokens", 0)
-            
+
             # Count messages from session file if exists
             session_file = oc_session.get("sessionFile")
             session_path: Path | None = None
@@ -111,7 +126,13 @@ async def sync_sessions(db_session) -> None:
             else:
                 # Some OpenClaw entries (cron/run session keys) omit sessionFile.
                 # Fallback to canonical session transcript path by sessionId.
-                session_path = base_path / "agents" / agent_slug / "sessions" / f"{session_id}.jsonl"
+                session_path = (
+                    base_path
+                    / "agents"
+                    / agent_slug
+                    / "sessions"
+                    / f"{session_id}.jsonl"
+                )
 
             if session_path is not None:
                 message_count = _count_messages_in_session_file(session_path)
@@ -120,7 +141,9 @@ async def sync_sessions(db_session) -> None:
                 # Update existing session
                 existing.agent_slug = agent_slug
                 existing.channel_type = channel_type or existing.channel_type
-                existing.channel_peer = str(channel_peer) if channel_peer else existing.channel_peer
+                existing.channel_peer = (
+                    str(channel_peer) if channel_peer else existing.channel_peer
+                )
                 existing.status = status
                 existing.message_count = message_count
                 existing.token_count = token_count
@@ -160,7 +183,9 @@ def _parse_timestamp(ts) -> datetime | None:
     if isinstance(ts, str):
         try:
             # Try ISO format
-            return datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
+            return datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(
+                tzinfo=None
+            )
         except ValueError:
             pass
         try:

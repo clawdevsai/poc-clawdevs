@@ -126,7 +126,11 @@ async def validate_code_change(
     return {
         "valid": is_valid,
         "violations": violations,
-        "message": "Code change approved" if is_valid else f"Found {len(violations)} violation(s)",
+        "message": (
+            "Code change approved"
+            if is_valid
+            else f"Found {len(violations)} violation(s)"
+        ),
     }
 
 

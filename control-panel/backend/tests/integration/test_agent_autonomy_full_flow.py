@@ -198,9 +198,7 @@ class TestAgentAutonomyFullFlow:
         assert escalated_agent_id is not None
 
     @pytest.mark.asyncio
-    async def test_05_exponential_backoff_retry_logic(
-        self, db_session: AsyncSession
-    ):
+    async def test_05_exponential_backoff_retry_logic(self, db_session: AsyncSession):
         """Test exponential backoff on retries."""
         detector = FailureDetector(db_session)
 
@@ -301,9 +299,7 @@ class TestAgentAutonomyFullFlow:
         assert error is not None
 
     @pytest.mark.asyncio
-    async def test_08_cost_estimation_and_tracking(
-        self, db_session: AsyncSession
-    ):
+    async def test_08_cost_estimation_and_tracking(self, db_session: AsyncSession):
         """Test cost estimation and tracking."""
         tracker = CostTracker(db_session)
 
@@ -323,9 +319,7 @@ class TestAgentAutonomyFullFlow:
         assert estimates["premium"] > estimates["medium"]
 
     @pytest.mark.asyncio
-    async def test_09_cost_budget_enforcement(
-        self, db_session: AsyncSession
-    ):
+    async def test_09_cost_budget_enforcement(self, db_session: AsyncSession):
         """Test cost budget limits per tier."""
         tracker = CostTracker(db_session)
 
@@ -393,9 +387,7 @@ class TestAgentAutonomyFullFlow:
         assert "health_percentage" in data
 
     @pytest.mark.asyncio
-    async def test_12_failure_recovery_workflow(
-        self, db_session: AsyncSession
-    ):
+    async def test_12_failure_recovery_workflow(self, db_session: AsyncSession):
         """Test complete failure detection and recovery."""
         detector = FailureDetector(db_session)
 
@@ -552,9 +544,7 @@ class TestAgentAutonomyFullFlow:
         assert len(entries) == 1
 
     @pytest.mark.asyncio
-    async def test_15_concurrent_agent_tasks(
-        self, db_session: AsyncSession
-    ):
+    async def test_15_concurrent_agent_tasks(self, db_session: AsyncSession):
         """Test multiple agents handling concurrent tasks."""
         # Create multiple agents
         agents = []

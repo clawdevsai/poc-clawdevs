@@ -53,9 +53,18 @@ class TestAgentSyncConstants:
         """Test that AGENT_SLUGS has all expected agents."""
         assert len(AGENT_SLUGS) >= 12
         expected_agents = [
-            "ceo", "po", "arquiteto", "dev_backend", "dev_frontend",
-            "dev_mobile", "qa_engineer", "devops_sre", "security_engineer",
-            "ux_designer", "dba_data_engineer", "memory_curator"
+            "ceo",
+            "po",
+            "arquiteto",
+            "dev_backend",
+            "dev_frontend",
+            "dev_mobile",
+            "qa_engineer",
+            "devops_sre",
+            "security_engineer",
+            "ux_designer",
+            "dba_data_engineer",
+            "memory_curator",
         ]
         for agent in expected_agents:
             assert agent in AGENT_SLUGS
@@ -167,7 +176,9 @@ class TestHasActiveSession:
         assert _has_active_session(payload) is False
 
     def test_false_when_too_old(self):
-        old_ts = int(datetime.now(timezone.utc).timestamp() * 1000) - 600000  # 10 min ago
+        old_ts = (
+            int(datetime.now(timezone.utc).timestamp() * 1000) - 600000
+        )  # 10 min ago
         payload = {"sess1": {"abortedLastRun": False, "updatedAt": old_ts}}
         assert _has_active_session(payload) is False
 
@@ -181,7 +192,7 @@ class TestHasActiveSession:
         payload = {
             "s1": {"status": "ended"},
             "s2": {"status": "active"},
-            "s3": {"status": "ended"}
+            "s3": {"status": "ended"},
         }
         assert _has_active_session(payload) is True
 
@@ -202,7 +213,7 @@ class TestPickLatestRuntimeEntry:
         payload = {
             "a": {"updatedAt": (now - 100) * 1000},
             "b": {"updatedAt": now * 1000},
-            "c": {"updatedAt": (now - 50) * 1000}
+            "c": {"updatedAt": (now - 50) * 1000},
         }
         item, ts = _pick_latest_runtime_entry(payload)
         assert item["updatedAt"] == now * 1000
@@ -265,15 +276,15 @@ class TestSyncAgentsRuntime:
                 "sessionId": "abc123",
                 "updatedAt": int(datetime.now(timezone.utc).timestamp() * 1000),
                 "status": "active",
-                "abortedLastRun": False
+                "abortedLastRun": False,
             }
         }
 
-        with patch('pathlib.Path.exists', return_value=True):
-            with patch('pathlib.Path.read_text') as mock_read:
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("pathlib.Path.read_text") as mock_read:
                 mock_read.return_value = json.dumps(sessions_data)
 
-                with patch.object(Agent, 'updated_at', None):
+                with patch.object(Agent, "updated_at", None):
                     await sync_agents_runtime(db_session)
 
         # Refresh agent from DB
@@ -282,22 +293,26 @@ class TestSyncAgentsRuntime:
         assert agent.openclaw_session_id == "abc123"
 
     @pytest.mark.asyncio
-    async def test_sync_agents_runtime_handles_missing_file(self, db_session: AsyncSession):
+    async def test_sync_agents_runtime_handles_missing_file(
+        self, db_session: AsyncSession
+    ):
         """Test that sync_agents_runtime handles missing sessions file."""
         from app.services.agent_sync import sync_agents_runtime
 
         # No sessions file exists
-        with patch('pathlib.Path.exists', return_value=False):
+        with patch("pathlib.Path.exists", return_value=False):
             await sync_agents_runtime(db_session)
         # Should complete without exception
 
     @pytest.mark.asyncio
-    async def test_sync_agents_runtime_handles_invalid_json(self, db_session: AsyncSession):
+    async def test_sync_agents_runtime_handles_invalid_json(
+        self, db_session: AsyncSession
+    ):
         """Test that sync_agents_runtime handles invalid JSON gracefully."""
         from app.services.agent_sync import sync_agents_runtime
 
-        with patch('pathlib.Path.exists', return_value=True):
-            with patch('pathlib.Path.read_text') as mock_read:
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("pathlib.Path.read_text") as mock_read:
                 mock_read.return_value = "invalid json"
                 await sync_agents_runtime(db_session)
         # Should complete without exception
@@ -307,7 +322,9 @@ class TestSyncAgentsRuntime:
         """Test that config cache is cleared before reading."""
         from app.services.agent_sync import sync_agents_runtime
 
-        with patch('app.services.agent_sync._get_openclaw_config.cache_clear') as mock_cache_clear:
-            with patch('pathlib.Path.exists', return_value=False):
+        with patch(
+            "app.services.agent_sync._get_openclaw_config.cache_clear"
+        ) as mock_cache_clear:
+            with patch("pathlib.Path.exists", return_value=False):
                 await sync_agents_runtime(db_session)
             mock_cache_clear.assert_called_once()

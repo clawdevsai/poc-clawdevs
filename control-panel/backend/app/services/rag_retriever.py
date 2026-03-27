@@ -38,7 +38,9 @@ logger = logging.getLogger(__name__)
 class RAGRetriever:
     """Retrieve relevant memories using semantic search."""
 
-    def __init__(self, db_session: Session, embedding_service: Optional[EmbeddingService] = None):
+    def __init__(
+        self, db_session: Session, embedding_service: Optional[EmbeddingService] = None
+    ):
         self.db_session = db_session
         self.embedding_service = embedding_service or EmbeddingService()
         self.min_similarity_threshold = 0.5  # Only return results above this threshold
@@ -69,13 +71,15 @@ class RAGRetriever:
         # Fetch all memories with valid embeddings
         statement = select(MemoryEntry).where(
             MemoryEntry.embedding.isnot(None),  # Only memories with embeddings
-            MemoryEntry.entry_type.in_(["active", "global"]),  # Skip archived/candidates
+            MemoryEntry.entry_type.in_(
+                ["active", "global"]
+            ),  # Skip archived/candidates
         )
 
         if agent_slug:
             statement = statement.where(
                 (MemoryEntry.agent_slug == agent_slug)
-                | (MemoryEntry.agent_slug == None)  # Include shared memories
+                | (MemoryEntry.agent_slug is None)  # Include shared memories
             )
 
         memories = self.db_session.exec(statement).all()
@@ -91,7 +95,7 @@ class RAGRetriever:
             embedding = memory.embedding
             if not embedding:
                 continue
-                
+
             similarity = self.embedding_service.cosine_similarity(
                 query_embedding, embedding
             )

@@ -151,7 +151,7 @@ class TestFailureDetectionAndEscalation:
             await detector.apply_exponential_backoff(task.id, attempt=attempt)
 
             # Calcular tempo de espera (1.5^attempt)
-            expected_backoff = 1.5 ** attempt
+            expected_backoff = 1.5**attempt
             backoff_times.append(expected_backoff)
             print(
                 f"  → Tentativa {attempt}: backoff = {expected_backoff:.2f}s (1.5^{attempt})"
@@ -163,9 +163,7 @@ class TestFailureDetectionAndEscalation:
         print("✅ Test 3 PASSED: Exponential backoff implementado (1.5x multiplier)")
 
     @pytest.mark.asyncio
-    async def test_domain_specific_escalation_routing(
-        self, db_session: AsyncSession
-    ):
+    async def test_domain_specific_escalation_routing(self, db_session: AsyncSession):
         """Teste 4: Escalação domain-específica por tipo."""
         detector = FailureDetector(db_session)
 
@@ -204,8 +202,12 @@ class TestFailureDetectionAndEscalation:
         routing_map = detector.domain_escalation_routing
         assert "backend" in routing_map, "Should have backend escalation route"
         assert "frontend" in routing_map, "Should have frontend escalation route"
-        assert routing_map["backend"] is not None, "Backend should escalate to Arquiteto"
-        assert routing_map["frontend"] is not None, "Frontend should escalate to Dev_Frontend"
+        assert (
+            routing_map["backend"] is not None
+        ), "Backend should escalate to Arquiteto"
+        assert (
+            routing_map["frontend"] is not None
+        ), "Frontend should escalate to Dev_Frontend"
         print("✅ Test 4 PASSED: Domain-specific escalation routing funcional")
 
     @pytest.mark.asyncio
@@ -233,9 +235,7 @@ class TestFailureDetectionAndEscalation:
         await db_session.refresh(task)
 
         # Verificar reset
-        assert (
-            task.consecutive_failures == 0
-        ), "Consecutive failures should reset to 0"
+        assert task.consecutive_failures == 0, "Consecutive failures should reset to 0"
         assert task.failure_count == 2, "Total failure count should remain unchanged"
         print("✅ Test 5 PASSED: Falhas consecutivas resetadas, histórico mantido")
 

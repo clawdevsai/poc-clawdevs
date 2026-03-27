@@ -75,9 +75,7 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
 
     # Get recent sessions
     result = await db_session.exec(
-        select(Session)
-        .order_by(Session.last_active_at.desc().nulls_last())
-        .limit(20)
+        select(Session).order_by(Session.last_active_at.desc().nulls_last()).limit(20)
     )
     sessions = result.all()
 
@@ -103,7 +101,9 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
             event_type=_event_type_from_session(session),
             description=desc,
             agent_id=agent_id,
-            created_at=session.last_active_at or session.created_at or datetime.utcnow(),
+            created_at=session.last_active_at
+            or session.created_at
+            or datetime.utcnow(),
         )
         items.append(event)
 

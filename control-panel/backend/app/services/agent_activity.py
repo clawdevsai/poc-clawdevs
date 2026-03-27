@@ -21,7 +21,11 @@ def get_agent_current_activity(
 ) -> tuple[str | None, str | None, datetime | None]:
     """Return short/full human-readable activity text for the latest agent session."""
     sessions_path = (
-        Path(settings.openclaw_data_path) / "agents" / agent_slug / "sessions" / "sessions.json"
+        Path(settings.openclaw_data_path)
+        / "agents"
+        / agent_slug
+        / "sessions"
+        / "sessions.json"
     )
     if not sessions_path.exists():
         return None, None, None

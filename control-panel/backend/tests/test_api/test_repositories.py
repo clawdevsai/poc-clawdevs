@@ -34,7 +34,9 @@ class TestListRepositories:
     """Test GET /api/repositories endpoint."""
 
     @pytest.mark.asyncio
-    async def test_list_repositories_empty(self, client: AsyncClient, auth_headers: dict):
+    async def test_list_repositories_empty(
+        self, client: AsyncClient, auth_headers: dict
+    ):
         """Test listing repositories when none exist."""
         response = await client.get("/repositories", headers=auth_headers)
         assert response.status_code == 200
@@ -97,13 +99,15 @@ class TestCreateRepository:
     """Test POST /api/repositories endpoint."""
 
     @pytest.mark.asyncio
-    async def test_create_repository_success(self, client: AsyncClient, auth_headers: dict):
+    async def test_create_repository_success(
+        self, client: AsyncClient, auth_headers: dict
+    ):
         """Test creating a repository successfully."""
         request_body = {
             "name": "new-repo",
             "full_name": "org/new-repo",
             "description": "New repository",
-            "default_branch": "main"
+            "default_branch": "main",
         }
 
         response = await client.post(
@@ -154,7 +158,9 @@ class TestUpdateRepository:
     """Test PATCH /api/repositories/{repo_id} endpoint."""
 
     @pytest.mark.asyncio
-    async def test_update_repository_not_found(self, client: AsyncClient, auth_headers: dict):
+    async def test_update_repository_not_found(
+        self, client: AsyncClient, auth_headers: dict
+    ):
         """Test updating a non-existent repository."""
         repo_id = str(uuid4())
         response = await client.patch(
@@ -171,7 +177,7 @@ class TestRepositoryResponseModels:
     def test_repository_response_structure(self):
         """Test RepositoryResponse model structure."""
         from app.api.repositories import RepositoryResponse
-        
+
         repo = RepositoryResponse(
             id=str(uuid4()),
             name="test-repo",
@@ -182,18 +188,15 @@ class TestRepositoryResponseModels:
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
-        
+
         assert repo.id is not None
         assert repo.name == "test-repo"
 
     def test_repositories_list_response_structure(self):
         """Test RepositoriesListResponse model structure."""
         from app.api.repositories import RepositoriesListResponse
-        
-        response = RepositoriesListResponse(
-            items=[],
-            total=0
-        )
-        
+
+        response = RepositoriesListResponse(items=[], total=0)
+
         assert response.items == []
         assert response.total == 0

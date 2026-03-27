@@ -48,7 +48,9 @@ class GovernanceEngine:
         self.cost_tiers = self._load_cost_tiers()
         self.multi_repo_rules = self._load_multi_repo_rules()
 
-    async def validate_task_creation(self, task_data: dict) -> Tuple[bool, Optional[str]]:
+    async def validate_task_creation(
+        self, task_data: dict
+    ) -> Tuple[bool, Optional[str]]:
         """
         Validate task creation against CONSTITUTION rules.
 
@@ -107,12 +109,18 @@ class GovernanceEngine:
         violations = []
 
         # Check role-based restrictions
-        if change_type == "auth" and agent_slug not in ["security_engineer", "dev_backend"]:
+        if change_type == "auth" and agent_slug not in [
+            "security_engineer",
+            "dev_backend",
+        ]:
             violations.append(
                 f"Only security_engineer or dev_backend can modify authentication (not {agent_slug})"
             )
 
-        if change_type == "database" and agent_slug not in ["dba_data_engineer", "dev_backend"]:
+        if change_type == "database" and agent_slug not in [
+            "dba_data_engineer",
+            "dev_backend",
+        ]:
             violations.append(
                 f"Only dba_data_engineer or dev_backend can modify database (not {agent_slug})"
             )
@@ -125,10 +133,15 @@ class GovernanceEngine:
         # Check affected areas for production protection
         if any("production" in area.lower() for area in affected_areas):
             if agent_slug != "devops_sre" and agent_slug != "ceo":
-                violations.append("Production changes require devops_sre or CEO approval")
+                violations.append(
+                    "Production changes require devops_sre or CEO approval"
+                )
 
         # Check for direct DB modification (forbidden)
-        if any("raw sql" in area.lower() or "direct query" in area.lower() for area in affected_areas):
+        if any(
+            "raw sql" in area.lower() or "direct query" in area.lower()
+            for area in affected_areas
+        ):
             violations.append("Direct SQL queries forbidden. Use ORM or migrations.")
 
         return len(violations) == 0, violations

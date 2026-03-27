@@ -32,11 +32,15 @@ class Task(SQLModel, table=True):
     description: Optional[str] = None
     status: str = Field(default="inbox", index=True)  # inbox|in_progress|review|done
     priority: str = Field(default="medium")  # low|medium|high
-    assigned_agent_id: Optional[UUID] = Field(default=None, foreign_key="agents.id", index=True)
+    assigned_agent_id: Optional[UUID] = Field(
+        default=None, foreign_key="agents.id", index=True
+    )
     github_issue_number: Optional[int] = None
     github_issue_url: Optional[str] = None
     github_repo: Optional[str] = None
-    label: Optional[str] = Field(default=None, index=True)  # back_end|front_end|mobile|tests|devops|dba|security|ux
+    label: Optional[str] = Field(
+        default=None, index=True
+    )  # back_end|front_end|mobile|tests|devops|dba|security|ux
     due_at: Optional[datetime] = None
 
     # Failure tracking fields
@@ -47,7 +51,9 @@ class Task(SQLModel, table=True):
     last_failed_at: Optional[datetime] = None
 
     # Escalation fields
-    escalated_to_agent_id: Optional[UUID] = Field(default=None, foreign_key="agents.id", index=True)
+    escalated_to_agent_id: Optional[UUID] = Field(
+        default=None, foreign_key="agents.id", index=True
+    )
     escalation_reason: Optional[str] = None
     escalated_at: Optional[datetime] = None
 

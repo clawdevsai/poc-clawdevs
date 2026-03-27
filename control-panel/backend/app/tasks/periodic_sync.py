@@ -76,23 +76,23 @@ async def run_sync_tasks():
 
 def schedule_periodic_tasks():
     """Schedule periodic sync tasks in RQ scheduler.
-    
+
     This should be called once when the worker starts.
     """
     redis_url = settings.redis_url
     redis_conn = Redis.from_url(redis_url)
     scheduler = Scheduler(connection=redis_conn, queue_name="default")
-    
+
     # Clear existing scheduled jobs for these tasks
     for job in scheduler.get_jobs():
         if job.func_name in [
             "app.tasks.periodic_sync.run_sync_agents",
             "app.tasks.periodic_sync.run_sync_sessions",
-            "app.tasks.periodic_sync.run_sync_tasks"
+            "app.tasks.periodic_sync.run_sync_tasks",
         ]:
             scheduler.cancel(job)
             logger.info(f"[periodic_sync] Cancelled existing job: {job.func_name}")
-    
+
     # Schedule agent sync every 60 seconds
     scheduler.schedule(
         scheduled_time=datetime.utcnow() + timedelta(seconds=10),
@@ -102,7 +102,7 @@ def schedule_periodic_tasks():
         result_ttl=0,  # don't keep results
     )
     logger.info("[periodic_sync] Scheduled agent sync every 60 seconds")
-    
+
     # Schedule session sync every 60 seconds (offset by 20s)
     scheduler.schedule(
         scheduled_time=datetime.utcnow() + timedelta(seconds=30),
@@ -112,7 +112,7 @@ def schedule_periodic_tasks():
         result_ttl=0,  # don't keep results
     )
     logger.info("[periodic_sync] Scheduled session sync every 60 seconds")
-    
+
     # Schedule task sync every 5 minutes (offset by 40s)
     scheduler.schedule(
         scheduled_time=datetime.utcnow() + timedelta(seconds=50),
@@ -122,5 +122,5 @@ def schedule_periodic_tasks():
         result_ttl=0,  # don't keep results
     )
     logger.info("[periodic_sync] Scheduled task sync every 5 minutes")
-    
+
     return scheduler

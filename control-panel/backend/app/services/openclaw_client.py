@@ -49,7 +49,9 @@ class OpenClawClient:
                 )
                 if r.status_code != 200:
                     return []
-                return r.json().get("items", r.json() if isinstance(r.json(), list) else [])
+                return r.json().get(
+                    "items", r.json() if isinstance(r.json(), list) else []
+                )
         except Exception:
             return []
 

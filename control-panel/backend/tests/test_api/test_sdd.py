@@ -52,9 +52,9 @@ class TestCreateSddArtifact:
         request_body = {
             "artifact_type": "BRIEF",
             "title": "Test Brief",
-            "content": "Test content"
+            "content": "Test content",
         }
-        
+
         response = await client.post("/api/sdd", json=request_body)
         # May return 404 if endpoint not implemented
         assert response.status_code in [200, 201, 404]

@@ -37,11 +37,11 @@ class TestRunSyncAgents:
     @pytest.mark.asyncio
     async def test_run_sync_agents_success(self):
         """Test run_sync_agents calls sync_agents_runtime."""
-        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
+        with patch("app.tasks.periodic_sync.AsyncSessionLocal") as mock_session_local:
             mock_session = AsyncMock()
             mock_session_local.return_value.__aenter__.return_value = mock_session
 
-            with patch('app.tasks.periodic_sync.sync_agents_runtime') as mock_sync:
+            with patch("app.tasks.periodic_sync.sync_agents_runtime") as mock_sync:
                 mock_sync.return_value = None
 
                 await run_sync_agents()
@@ -51,11 +51,11 @@ class TestRunSyncAgents:
     @pytest.mark.asyncio
     async def test_run_sync_agents_handles_exception(self):
         """Test run_sync_agents logs and raises exceptions."""
-        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
+        with patch("app.tasks.periodic_sync.AsyncSessionLocal") as mock_session_local:
             mock_session = AsyncMock()
             mock_session_local.return_value.__aenter__.return_value = mock_session
 
-            with patch('app.tasks.periodic_sync.sync_agents_runtime') as mock_sync:
+            with patch("app.tasks.periodic_sync.sync_agents_runtime") as mock_sync:
                 mock_sync.side_effect = Exception("Sync failed")
 
                 with pytest.raises(Exception, match="Sync failed"):
@@ -68,11 +68,11 @@ class TestRunSyncSessions:
     @pytest.mark.asyncio
     async def test_run_sync_sessions_success(self):
         """Test run_sync_sessions calls sync_sessions."""
-        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
+        with patch("app.tasks.periodic_sync.AsyncSessionLocal") as mock_session_local:
             mock_session = AsyncMock()
             mock_session_local.return_value.__aenter__.return_value = mock_session
 
-            with patch('app.tasks.periodic_sync.sync_sessions') as mock_sync:
+            with patch("app.tasks.periodic_sync.sync_sessions") as mock_sync:
                 mock_sync.return_value = None
 
                 await run_sync_sessions()
@@ -86,11 +86,11 @@ class TestRunSyncTasks:
     @pytest.mark.asyncio
     async def test_run_sync_tasks_success(self):
         """Test run_sync_tasks calls sync_tasks."""
-        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
+        with patch("app.tasks.periodic_sync.AsyncSessionLocal") as mock_session_local:
             mock_session = AsyncMock()
             mock_session_local.return_value.__aenter__.return_value = mock_session
 
-            with patch('app.tasks.periodic_sync.sync_tasks') as mock_sync:
+            with patch("app.tasks.periodic_sync.sync_tasks") as mock_sync:
                 mock_sync.return_value = None
 
                 await run_sync_tasks()
@@ -103,15 +103,17 @@ class TestSchedulePeriodicTasks:
 
     def test_schedule_creates_three_jobs(self):
         """Test that schedule_periodic_tasks schedules three sync jobs."""
-        with patch('app.tasks.periodic_sync.Redis') as mock_redis_class:
+        with patch("app.tasks.periodic_sync.Redis") as mock_redis_class:
             mock_redis = MagicMock()
             mock_redis_class.return_value = mock_redis
 
             mock_scheduler = MagicMock()
             mock_scheduler.get_jobs.return_value = []
 
-            with patch('app.tasks.periodic_sync.Scheduler', return_value=mock_scheduler):
-                with patch('app.tasks.periodic_sync.logger'):
+            with patch(
+                "app.tasks.periodic_sync.Scheduler", return_value=mock_scheduler
+            ):
+                with patch("app.tasks.periodic_sync.logger"):
                     schedule_periodic_tasks()
 
             # Should call schedule three times
@@ -119,7 +121,7 @@ class TestSchedulePeriodicTasks:
 
     def test_schedule_cancels_existing_jobs(self):
         """Test that existing jobs are cancelled before scheduling new ones."""
-        with patch('app.tasks.periodic_sync.Redis') as mock_redis_class:
+        with patch("app.tasks.periodic_sync.Redis") as mock_redis_class:
             mock_redis = MagicMock()
             mock_redis_class.return_value = mock_redis
 
@@ -133,10 +135,17 @@ class TestSchedulePeriodicTasks:
             mock_job3.func_name = "app.tasks.periodic_sync.run_sync_tasks"
             mock_job4 = MagicMock()
             mock_job4.func_name = "other.function"
-            mock_scheduler.get_jobs.return_value = [mock_job1, mock_job2, mock_job3, mock_job4]
+            mock_scheduler.get_jobs.return_value = [
+                mock_job1,
+                mock_job2,
+                mock_job3,
+                mock_job4,
+            ]
 
-            with patch('app.tasks.periodic_sync.Scheduler', return_value=mock_scheduler):
-                with patch('app.tasks.periodic_sync.logger'):
+            with patch(
+                "app.tasks.periodic_sync.Scheduler", return_value=mock_scheduler
+            ):
+                with patch("app.tasks.periodic_sync.logger"):
                     schedule_periodic_tasks()
 
             # Should cancel only the three sync jobs
@@ -149,15 +158,17 @@ class TestSchedulePeriodicTasks:
 
     def test_schedule_intervals_correct(self):
         """Test that jobs are scheduled with correct intervals."""
-        with patch('app.tasks.periodic_sync.Redis') as mock_redis_class:
+        with patch("app.tasks.periodic_sync.Redis") as mock_redis_class:
             mock_redis = MagicMock()
             mock_redis_class.return_value = mock_redis
 
             mock_scheduler = MagicMock()
             mock_scheduler.get_jobs.return_value = []
 
-            with patch('app.tasks.periodic_sync.Scheduler', return_value=mock_scheduler):
-                with patch('app.tasks.periodic_sync.logger'):
+            with patch(
+                "app.tasks.periodic_sync.Scheduler", return_value=mock_scheduler
+            ):
+                with patch("app.tasks.periodic_sync.logger"):
                     schedule_periodic_tasks()
 
             # Check schedule calls
@@ -180,45 +191,55 @@ class TestSchedulePeriodicTasks:
 
     def test_schedule_time_offsets(self):
         """Test that jobs are scheduled with appropriate time offsets."""
-        with patch('app.tasks.periodic_sync.Redis') as mock_redis_class:
+        with patch("app.tasks.periodic_sync.Redis") as mock_redis_class:
             mock_redis = MagicMock()
             mock_redis_class.return_value = mock_redis
 
             mock_scheduler = MagicMock()
             mock_scheduler.get_jobs.return_value = []
 
-            with patch('app.tasks.periodic_sync.datetime') as mock_datetime:
+            with patch("app.tasks.periodic_sync.datetime") as mock_datetime:
                 # Mock current time
                 mock_now = datetime(2024, 1, 1, 12, 0, 0)
                 mock_datetime.utcnow.return_value = mock_now
 
-                with patch('app.tasks.periodic_sync.Scheduler', return_value=mock_scheduler):
-                    with patch('app.tasks.periodic_sync.logger'):
+                with patch(
+                    "app.tasks.periodic_sync.Scheduler", return_value=mock_scheduler
+                ):
+                    with patch("app.tasks.periodic_sync.logger"):
                         schedule_periodic_tasks()
 
                 # Verify scheduled_time for each job
                 schedule_calls = mock_scheduler.schedule.call_args_list
 
                 # First job: now + 10 seconds
-                assert schedule_calls[0][1]["scheduled_time"] == mock_now + timedelta(seconds=10)
+                assert schedule_calls[0][1]["scheduled_time"] == mock_now + timedelta(
+                    seconds=10
+                )
 
                 # Second job: now + 30 seconds
-                assert schedule_calls[1][1]["scheduled_time"] == mock_now + timedelta(seconds=30)
+                assert schedule_calls[1][1]["scheduled_time"] == mock_now + timedelta(
+                    seconds=30
+                )
 
                 # Third job: now + 50 seconds
-                assert schedule_calls[2][1]["scheduled_time"] == mock_now + timedelta(seconds=50)
+                assert schedule_calls[2][1]["scheduled_time"] == mock_now + timedelta(
+                    seconds=50
+                )
 
     def test_schedule_return_scheduler(self):
         """Test that schedule_periodic_tasks returns the scheduler."""
-        with patch('app.tasks.periodic_sync.Redis') as mock_redis_class:
+        with patch("app.tasks.periodic_sync.Redis") as mock_redis_class:
             mock_redis = MagicMock()
             mock_redis_class.return_value = mock_redis
 
             mock_scheduler = MagicMock()
             mock_scheduler.get_jobs.return_value = []
 
-            with patch('app.tasks.periodic_sync.Scheduler', return_value=mock_scheduler):
-                with patch('app.tasks.periodic_sync.logger'):
+            with patch(
+                "app.tasks.periodic_sync.Scheduler", return_value=mock_scheduler
+            ):
+                with patch("app.tasks.periodic_sync.logger"):
                     result = schedule_periodic_tasks()
 
             assert result is mock_scheduler

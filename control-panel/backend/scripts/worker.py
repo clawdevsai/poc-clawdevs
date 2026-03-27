@@ -40,8 +40,7 @@ from app.core.config import get_settings
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -68,9 +67,9 @@ def main():
     """Start the worker with periodic task scheduling."""
     redis_url = settings.redis_url
     logger.info(f"[worker] Connecting to Redis at {redis_url}")
-    
+
     redis_conn = Redis.from_url(redis_url)
-    
+
     # Test connection
     try:
         redis_conn.ping()
@@ -78,18 +77,19 @@ def main():
     except Exception as e:
         logger.error(f"[worker] Redis connection failed: {e}")
         sys.exit(1)
-    
+
     # Schedule periodic tasks
     try:
         logger.info("[worker] Setting up periodic tasks...")
         from app.tasks.periodic_sync import schedule_periodic_tasks
+
         global scheduler
         scheduler = schedule_periodic_tasks()
         logger.info("[worker] Periodic tasks scheduled successfully")
     except Exception as e:
         logger.error(f"[worker] Failed to schedule periodic tasks: {e}")
         # Continue anyway - worker can still process jobs
-    
+
     # Start worker
     logger.info("[worker] Starting RQ worker...")
     queues = [Queue("default", connection=redis_conn)]

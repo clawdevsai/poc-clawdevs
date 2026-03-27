@@ -40,7 +40,9 @@ class ConnectionManager:
 
     def register(self, channel: str, websocket: WebSocket):
         self.active.setdefault(channel, []).append(websocket)
-        logger.info(f"WS connected: channel={channel}, total={len(self.active[channel])}")
+        logger.info(
+            f"WS connected: channel={channel}, total={len(self.active[channel])}"
+        )
 
     def disconnect(self, channel: str, websocket: WebSocket):
         if channel in self.active:
@@ -80,7 +82,9 @@ async def websocket_endpoint(
     origin_host = parsed.hostname if parsed else None
     is_local_browser = origin_host in {"127.0.0.1", "localhost"}
     if origin not in settings.allowed_origins and not is_local_browser:
-        logger.warning(f"WS rejected invalid origin: origin={origin!r}, channel={channel}")
+        logger.warning(
+            f"WS rejected invalid origin: origin={origin!r}, channel={channel}"
+        )
         await websocket.close(code=4003)
         return
 
@@ -91,14 +95,20 @@ async def websocket_endpoint(
     try:
         raw = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
         frame = json.loads(raw)
-        token = frame.get("token", "") if isinstance(frame, dict) and frame.get("type") == "auth" else ""
+        token = (
+            frame.get("token", "")
+            if isinstance(frame, dict) and frame.get("type") == "auth"
+            else ""
+        )
     except (asyncio.TimeoutError, json.JSONDecodeError, Exception):
         await websocket.close(code=4001)
         return
 
     payload = decode_token(token) if token else None
     if payload is None:
-        logger.warning(f"WS rejected unauthenticated connection: channel={channel}, ip={websocket.client}")
+        logger.warning(
+            f"WS rejected unauthenticated connection: channel={channel}, ip={websocket.client}"
+        )
         await websocket.close(code=4001)
         return
 

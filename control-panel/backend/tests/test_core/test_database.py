@@ -27,33 +27,33 @@ class TestDatabaseEngine:
     def test_engine_created(self):
         """Test that database engine is created."""
         from app.core.database import engine
-        
+
         assert engine is not None
         assert engine.url is not None
 
     def test_engine_url_contains_database_name(self):
         """Test that engine URL contains database name."""
         from app.core.database import engine
-        
+
         assert "clawdevs_panel" in str(engine.url)
 
     def test_engine_url_contains_username(self):
         """Test that engine URL contains username."""
         from app.core.database import engine
-        
+
         assert "panel" in str(engine.url)
 
     def test_engine_url_contains_host(self):
         """Test that engine URL contains host."""
         from app.core.database import engine
-        
+
         url_str = str(engine.url)
         assert "clawdevs-panel-db" in url_str or "localhost" in url_str
 
     def test_engine_echo_is_false(self):
         """Test that engine echo is disabled."""
         from app.core.database import engine
-        
+
         # Engine should not echo SQL
         assert engine.echo is False
 
@@ -61,7 +61,7 @@ class TestDatabaseEngine:
         """Test that engine uses SQLAlchemy 2.0 async engine."""
         from app.core.database import engine
         from sqlalchemy.ext.asyncio import AsyncEngine
-        
+
         assert isinstance(engine, AsyncEngine)
         assert engine.sync_engine is not None
 
@@ -72,20 +72,20 @@ class TestAsyncSessionLocal:
     def test_session_maker_exists(self):
         """Test that AsyncSessionLocal is created."""
         from app.core.database import AsyncSessionLocal
-        
+
         assert AsyncSessionLocal is not None
 
     def test_session_maker_class(self):
         """Test that AsyncSessionLocal is async session maker."""
         from app.core.database import AsyncSessionLocal
-        
+
         # AsyncSessionLocal should be a sessionmaker
         assert AsyncSessionLocal is not None
 
     def test_session_maker_expire_on_commit_is_false(self):
         """Test that expire_on_commit is disabled."""
         from app.core.database import AsyncSessionLocal
-        
+
         # Should not expire on commit for performance
         assert AsyncSessionLocal.kw.get("expire_on_commit") is False
 
@@ -96,7 +96,7 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_get_session_yields_session(self):
         """Test that get_session yields a session."""
-        
+
         # This test documents the expected behavior:
         # The function creates an async session and yields it
         pass
@@ -110,7 +110,7 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_get_session_handles_error(self):
         """Test that get_session handles errors."""
-        
+
         # This test documents error handling:
         # The function logs errors and raises them
         pass
@@ -119,10 +119,10 @@ class TestGetSession:
     async def test_get_session_is_coroutine(self):
         """Test that get_session is a coroutine function."""
         from app.core.database import get_session
-        
+
         # get_session should be an async generator
         import inspect
-        
+
         assert inspect.isasyncgenfunction(get_session)
 
 
@@ -132,7 +132,7 @@ class TestCreateDbAndTables:
     @pytest.mark.asyncio
     async def test_create_tables(self):
         """Test creating database tables."""
-        
+
         # This test documents the expected behavior:
         # Creates all tables defined in SQLModel metadata
         pass
@@ -146,7 +146,7 @@ class TestCreateDbAndTables:
     @pytest.mark.asyncio
     async def test_create_tables_creates_all_models(self):
         """Test that create_tables creates all model tables."""
-        
+
         # This test documents that all models are created
         # Tables created: users, agents, sessions, tasks, etc.
         pass
@@ -159,7 +159,7 @@ class TestDatabaseDependencies:
         """Test that engine uses settings for database URL."""
         from app.core.database import engine
         from app.core.config import get_settings
-        
+
         settings = get_settings()
         # The engine URL should match the settings
         url_str = str(engine.url)
@@ -169,7 +169,7 @@ class TestDatabaseDependencies:
         """Test that each module has independent settings."""
         from app.core.database import settings as db_settings
         from app.core.config import get_settings
-        
+
         # Both should use the same cached settings
         assert db_settings == get_settings()
 
@@ -177,10 +177,10 @@ class TestDatabaseDependencies:
         """Test that engine URL matches settings database_url."""
         from app.core.database import engine
         from app.core.config import get_settings
-        
-        settings = get_settings()
+
+        get_settings()
         url_str = str(engine.url)
-        
+
         # Check key components match
         assert "postgresql+asyncpg" in url_str or "sqlite" in url_str
 
@@ -192,14 +192,14 @@ class TestDatabaseFunctions:
         """Test that get_session returns an async generator."""
         import inspect
         from app.core.database import get_session
-        
+
         assert inspect.isasyncgenfunction(get_session)
 
     def test_create_db_and_tables_is_async(self):
         """Test that create_db_and_tables is async."""
         import inspect
         from app.core.database import create_db_and_tables
-        
+
         assert inspect.iscoroutinefunction(create_db_and_tables)
 
 
@@ -209,7 +209,7 @@ class TestDatabaseConfiguration:
     def test_engine_configuration(self):
         """Test engine configuration settings."""
         from app.core.database import engine
-        
+
         # Check configuration
         assert engine.url is not None
         assert engine.echo is False
@@ -218,7 +218,7 @@ class TestDatabaseConfiguration:
     def test_sessionmaker_configuration(self):
         """Test sessionmaker configuration."""
         from app.core.database import AsyncSessionLocal
-        
+
         # Check sessionmaker configuration
         assert AsyncSessionLocal.kw.get("expire_on_commit") is False
 
@@ -229,17 +229,17 @@ class TestDatabaseEdgeCases:
     def test_engine_has_dialect(self):
         """Test that engine has dialect."""
         from app.core.database import engine
-        
-        assert hasattr(engine, 'dialect')
+
+        assert hasattr(engine, "dialect")
 
     def test_engine_has_pool(self):
         """Test that engine has pool."""
         from app.core.database import engine
-        
-        assert hasattr(engine, 'pool')
+
+        assert hasattr(engine, "pool")
 
     def test_engine_has_execute(self):
         """Test that engine has execute method."""
         from app.core.database import engine
-        
-        assert hasattr(engine, 'connect')
+
+        assert hasattr(engine, "connect")

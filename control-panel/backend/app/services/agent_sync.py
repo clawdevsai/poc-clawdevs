@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 import json
+import os
 import re
 from pathlib import Path
 from datetime import datetime, timezone
@@ -28,12 +29,19 @@ from app.core.config import get_settings
 settings = get_settings()
 
 AGENT_SLUGS = [
-    "ceo", "po", "arquiteto", "dev_backend", "dev_frontend",
-    "dev_mobile", "qa_engineer", "devops_sre", "security_engineer",
-    "ux_designer", "dba_data_engineer", "memory_curator",
+    "ceo",
+    "po",
+    "arquiteto",
+    "dev_backend",
+    "dev_frontend",
+    "dev_mobile",
+    "qa_engineer",
+    "devops_sre",
+    "security_engineer",
+    "ux_designer",
+    "dba_data_engineer",
+    "memory_curator",
 ]
-
-import os
 
 # Load CRON expressions from environment or use defaults
 CRON_MAP = {
@@ -140,8 +148,12 @@ def parse_identity(slug: str) -> dict:
     try:
         if identity_file.exists():
             content = identity_file.read_text(encoding="utf-8")
-            name_match = re.search(r"(?:Nome|Name)[:\s]+([^\n]+)", content, re.IGNORECASE)
-            role_match = re.search(r"(?:Papel|Role)[:\s]+([^\n]+)", content, re.IGNORECASE)
+            name_match = re.search(
+                r"(?:Nome|Name)[:\s]+([^\n]+)", content, re.IGNORECASE
+            )
+            role_match = re.search(
+                r"(?:Papel|Role)[:\s]+([^\n]+)", content, re.IGNORECASE
+            )
             if name_match:
                 display_name = name_match.group(1).strip()
             if role_match:
@@ -185,7 +197,9 @@ async def sync_agents(session) -> None:
     await session.commit()
 
 
-def _pick_latest_runtime_entry(payload: dict | None) -> tuple[dict | None, datetime | None]:
+def _pick_latest_runtime_entry(
+    payload: dict | None,
+) -> tuple[dict | None, datetime | None]:
     if not isinstance(payload, dict):
         return None, None
     latest_item: dict | None = None
@@ -205,17 +219,21 @@ def _pick_latest_runtime_entry(payload: dict | None) -> tuple[dict | None, datet
         return None, None
 
     # Database columns are stored as naive UTC timestamps.
-    dt_utc = datetime.fromtimestamp(latest_ts / 1000, tz=timezone.utc).replace(tzinfo=None)
+    dt_utc = datetime.fromtimestamp(latest_ts / 1000, tz=timezone.utc).replace(
+        tzinfo=None
+    )
     return latest_item, dt_utc
 
 
-def _status_from_heartbeat(last_heartbeat_at: datetime | None, has_active_session: bool = False) -> str:
+def _status_from_heartbeat(
+    last_heartbeat_at: datetime | None, has_active_session: bool = False
+) -> str:
     """Determine agent status based on heartbeat and session activity.
-    
+
     Args:
         last_heartbeat_at: Last known heartbeat timestamp
         has_active_session: Whether agent has an active session (processing)
-        
+
     Returns:
         Status string: "working", "online", "idle", or "offline"
     """
@@ -223,14 +241,16 @@ def _status_from_heartbeat(last_heartbeat_at: datetime | None, has_active_sessio
         return "offline"
 
     if last_heartbeat_at.tzinfo is not None:
-        last_heartbeat_at = last_heartbeat_at.astimezone(timezone.utc).replace(tzinfo=None)
+        last_heartbeat_at = last_heartbeat_at.astimezone(timezone.utc).replace(
+            tzinfo=None
+        )
 
     age_seconds = (datetime.utcnow() - last_heartbeat_at).total_seconds()
-    
+
     # If actively processing a session, mark as working
     if has_active_session and age_seconds <= 5 * 60:
         return "working"
-    
+
     if age_seconds <= 5 * 60:
         return "online"
     if age_seconds <= 60 * 60:
@@ -240,38 +260,40 @@ def _status_from_heartbeat(last_heartbeat_at: datetime | None, has_active_sessio
 
 def _has_active_session(payload: dict | None) -> bool:
     """Check if any session is currently active (processing).
-    
+
     A session is considered active if:
     - status is "active" OR
     - abortedLastRun is False AND updatedAt is recent (< 5 min)
     """
     if not isinstance(payload, dict):
         return False
-    
+
     for session_key, session_data in payload.items():
         if not isinstance(session_data, dict):
             continue
-            
+
         # Check explicit status (but aborted sessions are not active)
         if session_data.get("status") == "active":
             if session_data.get("abortedLastRun", False) is True:
                 continue
             return True
-        
+
         # Check if session is running (not aborted and recent)
         aborted = session_data.get("abortedLastRun", True)
         updated_at = session_data.get("updatedAt")
-        
+
         if not aborted and isinstance(updated_at, (int, float)):
             # Check if updated in last 5 minutes
             try:
-                session_time = datetime.fromtimestamp(updated_at / 1000, tz=timezone.utc).replace(tzinfo=None)
+                session_time = datetime.fromtimestamp(
+                    updated_at / 1000, tz=timezone.utc
+                ).replace(tzinfo=None)
                 age_seconds = (datetime.utcnow() - session_time).total_seconds()
                 if age_seconds <= 5 * 60:
                     return True
             except (ValueError, OSError, OverflowError):
                 pass
-    
+
     return False
 
 
@@ -303,13 +325,11 @@ async def sync_agents_runtime(session) -> None:
 
         latest_item: dict | None = None
         latest_heartbeat: datetime | None = None
-        runtime_observed = False
         has_active_session = False
         payload = None
-        
+
         try:
             if sessions_file.exists():
-                runtime_observed = True
                 payload = json.loads(sessions_file.read_text(encoding="utf-8"))
                 if isinstance(payload, dict):
                     latest_item, latest_heartbeat = _pick_latest_runtime_entry(payload)
@@ -324,7 +344,8 @@ async def sync_agents_runtime(session) -> None:
 
         next_session_id = (
             latest_item.get("sessionId")
-            if isinstance(latest_item, dict) and isinstance(latest_item.get("sessionId"), str)
+            if isinstance(latest_item, dict)
+            and isinstance(latest_item.get("sessionId"), str)
             else None
         )
         next_status = _status_from_heartbeat(latest_heartbeat, has_active_session)

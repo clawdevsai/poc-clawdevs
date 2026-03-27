@@ -52,9 +52,9 @@ class TestCreateMemoryEntry:
         request_body = {
             "entry_type": "active",
             "content": "Test memory content",
-            "tags": ["test"]
+            "tags": ["test"],
         }
-        
+
         response = await client.post("/api/memory", json=request_body)
         # May return 404 if endpoint not implemented
         assert response.status_code in [200, 201, 404]

@@ -124,7 +124,9 @@ class TestRunner:
                             pass
 
             if process.returncode != 0:
-                result.errors.append(f"Tests failed with exit code {process.returncode}")
+                result.errors.append(
+                    f"Tests failed with exit code {process.returncode}"
+                )
                 logger.error(f"Test execution failed: {process.stderr}")
 
             logger.info(f"Unit tests: {result.passed} passed, {result.failed} failed")
@@ -141,7 +143,9 @@ class TestRunner:
 
         return result
 
-    async def run_integration_tests(self, test_path: str = "tests/integration/") -> TestResult:
+    async def run_integration_tests(
+        self, test_path: str = "tests/integration/"
+    ) -> TestResult:
         """
         Run integration tests.
 
@@ -187,7 +191,9 @@ class TestRunner:
             if process.returncode != 0:
                 result.errors.append("Integration tests failed")
 
-            logger.info(f"Integration tests: {result.passed} passed, {result.failed} failed")
+            logger.info(
+                f"Integration tests: {result.passed} passed, {result.failed} failed"
+            )
 
         except subprocess.TimeoutExpired:
             result.errors.append("Integration tests timed out (>10 minutes)")

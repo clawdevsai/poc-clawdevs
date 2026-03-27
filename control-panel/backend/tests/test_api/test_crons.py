@@ -53,9 +53,9 @@ class TestCreateCronExecution:
         request_body = {
             "agent_id": str(uuid4()),
             "started_at": "2024-01-01T00:00:00Z",
-            "trigger_type": "scheduled"
+            "trigger_type": "scheduled",
         }
-        
+
         response = await client.post("/api/crons", json=request_body)
         # May return 404 if endpoint not implemented
         assert response.status_code in [200, 201, 404]

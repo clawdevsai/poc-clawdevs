@@ -65,9 +65,14 @@ class RepositoriesListResponse(BaseModel):
 
 def _to_response(r: Repository) -> RepositoryResponse:
     return RepositoryResponse(
-        id=str(r.id), name=r.name, full_name=r.full_name,
-        description=r.description, default_branch=r.default_branch,
-        is_active=r.is_active, created_at=r.created_at, updated_at=r.updated_at,
+        id=str(r.id),
+        name=r.name,
+        full_name=r.full_name,
+        description=r.description,
+        default_branch=r.default_branch,
+        is_active=r.is_active,
+        created_at=r.created_at,
+        updated_at=r.updated_at,
     )
 
 
@@ -79,10 +84,12 @@ async def list_repositories(
 ):
     query = select(Repository).order_by(Repository.name)
     if not include_inactive:
-        query = query.where(Repository.is_active == True)
+        query = query.where(Repository.is_active)
     result = await session.exec(query)
     repos = result.all()
-    return RepositoriesListResponse(items=[_to_response(r) for r in repos], total=len(repos))
+    return RepositoriesListResponse(
+        items=[_to_response(r) for r in repos], total=len(repos)
+    )
 
 
 @router.post("", response_model=RepositoryResponse, status_code=201)
@@ -93,10 +100,13 @@ async def create_repository(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     from datetime import datetime
+
     normalized_full_name = body.full_name.strip()
     normalized_name = body.name.strip()
 
-    result = await session.exec(select(Repository).where(Repository.full_name == normalized_full_name))
+    result = await session.exec(
+        select(Repository).where(Repository.full_name == normalized_full_name)
+    )
     existing = result.first()
     if existing:
         existing.name = normalized_name or existing.name
@@ -130,7 +140,10 @@ async def update_repository(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     from datetime import datetime
-    result = await session.exec(select(Repository).where(Repository.id == UUID(repo_id)))
+
+    result = await session.exec(
+        select(Repository).where(Repository.id == UUID(repo_id))
+    )
     repo = result.first()
     if repo is None:
         raise HTTPException(status_code=404, detail="Repository not found")
@@ -154,7 +167,9 @@ async def delete_repository(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    result = await session.exec(select(Repository).where(Repository.id == UUID(repo_id)))
+    result = await session.exec(
+        select(Repository).where(Repository.id == UUID(repo_id))
+    )
     repo = result.first()
     if repo is None:
         raise HTTPException(status_code=404, detail="Repository not found")

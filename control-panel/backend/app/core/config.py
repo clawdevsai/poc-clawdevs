@@ -24,7 +24,9 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = "postgresql+asyncpg://panel:password@clawdevs-panel-db:5432/clawdevs_panel"
+    database_url: str = (
+        "postgresql+asyncpg://panel:password@clawdevs-panel-db:5432/clawdevs_panel"
+    )
 
     # Redis
     redis_url: str = "redis://:password@clawdevs-panel-redis:6379/0"

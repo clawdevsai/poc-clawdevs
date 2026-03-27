@@ -69,6 +69,7 @@ async def bootstrap_admin():
 
 async def bootstrap_agents():
     from app.services.agent_sync import sync_agents
+
     async with AsyncSessionLocal() as session:
         await sync_agents(session)
 
@@ -103,7 +104,9 @@ app.include_router(agents_api.router, prefix="/agents", tags=["agents"])
 app.include_router(approvals_api.router, prefix="/approvals", tags=["approvals"])
 app.include_router(sessions_api.router, prefix="/sessions", tags=["sessions"])
 app.include_router(tasks_api.router, prefix="/tasks", tags=["tasks"])
-app.include_router(repositories_api.router, prefix="/repositories", tags=["repositories"])
+app.include_router(
+    repositories_api.router, prefix="/repositories", tags=["repositories"]
+)
 app.include_router(settings_api.router, prefix="/settings", tags=["settings"])
 app.include_router(sdd_api.router, prefix="/sdd", tags=["sdd"])
 app.include_router(memory_api.router, prefix="/memory", tags=["memory"])
@@ -111,7 +114,9 @@ app.include_router(memory_rag_api.router, tags=["memory"])
 app.include_router(crons_api.router, prefix="/crons", tags=["crons"])
 app.include_router(cluster_api.router, prefix="/cluster", tags=["cluster"])
 app.include_router(metrics_api.router, prefix="/metrics", tags=["metrics"])
-app.include_router(activity_events_api.router, prefix="/activity-events", tags=["activity"])
+app.include_router(
+    activity_events_api.router, prefix="/activity-events", tags=["activity"]
+)
 app.include_router(health_api.router, tags=["health"])
 app.include_router(governance_api.router, tags=["governance"])
 

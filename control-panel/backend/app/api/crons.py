@@ -84,7 +84,7 @@ async def list_cron_statuses(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(
-        select(Agent).where(Agent.cron_expression != None).order_by(Agent.slug)
+        select(Agent).where(Agent.cron_expression is not None).order_by(Agent.slug)
     )
     agents = result.all()
 
@@ -99,26 +99,30 @@ async def list_cron_statuses(
         executions = exec_result.all()
         last_exit = executions[0].exit_code if executions else None
 
-        statuses.append(CronStatusResponse(
-            agent_id=str(agent.id),
-            agent_slug=agent.slug,
-            display_name=agent.display_name,
-            cron_expression=agent.cron_expression,
-            cron_status=agent.cron_status,
-            cron_last_run_at=agent.cron_last_run_at,
-            cron_next_run_at=agent.cron_next_run_at,
-            last_exit_code=last_exit,
-            recent_executions=[
-                {
-                    "id": str(e.id),
-                    "started_at": e.started_at.isoformat(),
-                    "finished_at": e.finished_at.isoformat() if e.finished_at else None,
-                    "exit_code": e.exit_code,
-                    "trigger_type": e.trigger_type,
-                }
-                for e in executions
-            ],
-        ))
+        statuses.append(
+            CronStatusResponse(
+                agent_id=str(agent.id),
+                agent_slug=agent.slug,
+                display_name=agent.display_name,
+                cron_expression=agent.cron_expression,
+                cron_status=agent.cron_status,
+                cron_last_run_at=agent.cron_last_run_at,
+                cron_next_run_at=agent.cron_next_run_at,
+                last_exit_code=last_exit,
+                recent_executions=[
+                    {
+                        "id": str(e.id),
+                        "started_at": e.started_at.isoformat(),
+                        "finished_at": (
+                            e.finished_at.isoformat() if e.finished_at else None
+                        ),
+                        "exit_code": e.exit_code,
+                        "trigger_type": e.trigger_type,
+                    }
+                    for e in executions
+                ],
+            )
+        )
     return statuses
 
 
@@ -148,7 +152,11 @@ async def list_cron_executions(
         CronExecutionResponse(
             id=str(execution.id),
             agent_id=str(execution.agent_id),
-            agent_slug=agent_by_id.get(execution.agent_id).slug if execution.agent_id in agent_by_id else None,
+            agent_slug=(
+                agent_by_id.get(execution.agent_id).slug
+                if execution.agent_id in agent_by_id
+                else None
+            ),
             started_at=execution.started_at,
             finished_at=execution.finished_at,
             exit_code=execution.exit_code,

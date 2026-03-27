@@ -84,8 +84,10 @@ async def list_metrics(
             count_by_day[bucket.replace(tzinfo=None)] = float(count)
 
         start_day = day_start
-        today = datetime.now(timezone.utc).replace(tzinfo=None).replace(
-            hour=0, minute=0, second=0, microsecond=0
+        today = (
+            datetime.now(timezone.utc)
+            .replace(tzinfo=None)
+            .replace(hour=0, minute=0, second=0, microsecond=0)
         )
         items: list[MetricResponse] = []
         cursor = start_day
@@ -112,7 +114,8 @@ async def list_metrics(
 
         # We only need sessions that could intersect the window.
         session_query = select(Session).where(
-            func.coalesce(Session.last_active_at, Session.created_at) >= (series_start - timedelta(hours=24))
+            func.coalesce(Session.last_active_at, Session.created_at)
+            >= (series_start - timedelta(hours=24))
         )
         session_rows = (await session.exec(session_query)).all()
 
@@ -163,7 +166,11 @@ async def list_metrics(
 
         return MetricsListResponse(items=items, total=len(items))
 
-    query = select(Metric).where(Metric.period_start >= since).order_by(Metric.period_start.asc())
+    query = (
+        select(Metric)
+        .where(Metric.period_start >= since)
+        .order_by(Metric.period_start.asc())
+    )
     if metric_type:
         query = query.where(Metric.metric_type == metric_type)
     if agent_id:

@@ -87,21 +87,23 @@ async def list_approvals(
 
     items = []
     for a in approvals:
-        items.append(ApprovalResponse(
-            id=str(a.id),
-            agent_id=str(a.agent_id) if a.agent_id else None,
-            agent_slug=agent_slugs.get(str(a.agent_id)) if a.agent_id else None,
-            openclaw_approval_id=a.openclaw_approval_id,
-            action_type=a.action_type,
-            payload=a.payload,
-            confidence=a.confidence,
-            rubric_scores=a.rubric_scores,
-            status=a.status,
-            decided_by_id=str(a.decided_by_id) if a.decided_by_id else None,
-            justification=a.justification,
-            decided_at=a.decided_at,
-            created_at=a.created_at,
-        ))
+        items.append(
+            ApprovalResponse(
+                id=str(a.id),
+                agent_id=str(a.agent_id) if a.agent_id else None,
+                agent_slug=agent_slugs.get(str(a.agent_id)) if a.agent_id else None,
+                openclaw_approval_id=a.openclaw_approval_id,
+                action_type=a.action_type,
+                payload=a.payload,
+                confidence=a.confidence,
+                rubric_scores=a.rubric_scores,
+                status=a.status,
+                decided_by_id=str(a.decided_by_id) if a.decided_by_id else None,
+                justification=a.justification,
+                decided_at=a.decided_at,
+                created_at=a.created_at,
+            )
+        )
     return ApprovalsListResponse(items=items, total=len(items))
 
 
@@ -126,6 +128,7 @@ async def get_approval(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     from uuid import UUID
+
     result = await session.exec(
         select(Approval).where(Approval.id == UUID(approval_id))
     )
@@ -161,7 +164,9 @@ async def decide_approval(
     from app.services.openclaw_client import openclaw_client
 
     if body.decision not in ("approved", "rejected"):
-        raise HTTPException(status_code=400, detail="decision must be 'approved' or 'rejected'")
+        raise HTTPException(
+            status_code=400, detail="decision must be 'approved' or 'rejected'"
+        )
 
     result = await session.exec(
         select(Approval).where(Approval.id == UUID(approval_id))

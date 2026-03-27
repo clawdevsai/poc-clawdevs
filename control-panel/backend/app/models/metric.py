@@ -29,7 +29,9 @@ class Metric(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     agent_id: Optional[UUID] = Field(default=None, foreign_key="agents.id", index=True)
-    metric_type: str = Field(index=True)  # tokens_used|tasks_completed|approvals_issued|errors
+    metric_type: str = Field(
+        index=True
+    )  # tokens_used|tasks_completed|approvals_issued|errors
     value: float
     period_start: datetime = Field(index=True)
     period_end: datetime

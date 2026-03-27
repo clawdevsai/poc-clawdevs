@@ -158,7 +158,8 @@ async def rag_health() -> dict:
         "ollama_available": ollama_healthy,
         "embedding_model": embedding_service.model,
         "message": (
-            "RAG system operational" if ollama_healthy
+            "RAG system operational"
+            if ollama_healthy
             else "Ollama service not available. Ensure Ollama is running."
         ),
     }
@@ -181,14 +182,15 @@ async def regenerate_embeddings(
     from datetime import datetime
     import json
 
-    retriever = RAGRetriever(session)
+    RAGRetriever(session)
     embedding_service = EmbeddingService()
 
     # Get memories without embeddings
-    statement = select(MemoryEntry).where(
-        (MemoryEntry.embedding == None) &
-        (MemoryEntry.body != None)
-    ).limit(limit)
+    statement = (
+        select(MemoryEntry)
+        .where((MemoryEntry.embedding is None) & (MemoryEntry.body is not None))
+        .limit(limit)
+    )
 
     memories = session.exec(statement).all()
 

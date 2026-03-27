@@ -106,7 +106,9 @@ class EmbeddingService:
             logger.error(f"Error generating embedding: {e}", exc_info=True)
             return None
 
-    async def batch_embed_chunks(self, chunks: List[str]) -> List[Optional[List[float]]]:
+    async def batch_embed_chunks(
+        self, chunks: List[str]
+    ) -> List[Optional[List[float]]]:
         """
         Generate embeddings for multiple text chunks.
 

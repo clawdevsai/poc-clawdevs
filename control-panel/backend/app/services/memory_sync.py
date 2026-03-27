@@ -53,9 +53,7 @@ async def sync_memory_entries(db_session) -> None:
         return
 
     agent_dirs = [
-        p.name
-        for p in base_path.iterdir()
-        if p.is_dir() and p.name != "shared"
+        p.name for p in base_path.iterdir() if p.is_dir() and p.name != "shared"
     ]
     changed = False
 

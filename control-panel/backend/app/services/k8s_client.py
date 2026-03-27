@@ -58,10 +58,16 @@ def list_pods(namespace: str = "default") -> list:
                 "restarts": sum(
                     c.restart_count for c in (p.status.container_statuses or [])
                 ),
-                "ready": all(
-                    c.ready for c in (p.status.container_statuses or [])
-                ) if p.status.container_statuses else False,
-                "age": p.metadata.creation_timestamp.isoformat() if p.metadata.creation_timestamp else None,
+                "ready": (
+                    all(c.ready for c in (p.status.container_statuses or []))
+                    if p.status.container_statuses
+                    else False
+                ),
+                "age": (
+                    p.metadata.creation_timestamp.isoformat()
+                    if p.metadata.creation_timestamp
+                    else None
+                ),
                 "node": p.spec.node_name,
             }
             for p in pods.items
@@ -88,7 +94,9 @@ def list_events(namespace: str = "default", limit: int = 50) -> list:
                 "message": e.message,
                 "involved_object": e.involved_object.name,
                 "count": e.count,
-                "last_timestamp": e.last_timestamp.isoformat() if e.last_timestamp else None,
+                "last_timestamp": (
+                    e.last_timestamp.isoformat() if e.last_timestamp else None
+                ),
             }
             for e in sorted(
                 events.items,
@@ -111,7 +119,9 @@ def list_pvcs(namespace: str = "default") -> list:
             {
                 "name": p.metadata.name,
                 "status": p.status.phase,
-                "capacity": p.status.capacity.get("storage") if p.status.capacity else None,
+                "capacity": (
+                    p.status.capacity.get("storage") if p.status.capacity else None
+                ),
                 "access_modes": p.spec.access_modes,
                 "storage_class": p.spec.storage_class_name,
             }

@@ -53,6 +53,7 @@ class TestParseTimestamp:
     def test_parse_timestamp_valid(self):
         """Test parsing valid timestamp."""
         from app.services.session_sync import _parse_timestamp
+
         result = _parse_timestamp("1234567890.123")
         assert result is not None
 

@@ -28,12 +28,13 @@ Categorizes files and prioritizes based on importance.
 import sys
 from pathlib import Path
 
+
 def find_untested_code(src_dir, pattern="test"):
     src_path = Path(src_dir)
     if not src_path.exists():
         print(f"❌ Source directory not found: {src_dir}")
         return
-    
+
     # Collect all Python source files
     source_files = []
     for py_file in src_path.rglob("*.py"):
@@ -41,30 +42,30 @@ def find_untested_code(src_dir, pattern="test"):
         if py_file.name == "__init__.py" or pattern in py_file.name:
             continue
         source_files.append(py_file)
-    
+
     # Collect all test files
     test_files = set()
     for py_file in src_path.rglob("*.py"):
         if pattern in py_file.name:
             test_files.add(py_file.stem)
-    
+
     # Identify untested files
     untested = []
     tested = []
-    
+
     for src in source_files:
         # Get relative path from src_dir
         rel_path = src.relative_to(src_path)
         parts = str(rel_path).split("/")
-        
+
         # Skip __init__.py in core/models/api directories if they're empty
         if src.name == "__init__.py":
             continue
-            
+
         # Check if test exists
         test_name = f"test_{src.name}"
         has_test = test_name in test_files
-        
+
         # Determine category
         if "api" in parts:
             category = "API"
@@ -76,12 +77,12 @@ def find_untested_code(src_dir, pattern="test"):
             category = "Script"
         else:
             category = "Other"
-        
+
         if has_test:
             tested.append((src, category))
         else:
             untested.append((src, category))
-    
+
     # Print results
     print("🔍 Análise de Cobertura de Testes")
     print(f"📊 Arquivos de origem: {len(source_files)}")
@@ -89,19 +90,19 @@ def find_untested_code(src_dir, pattern="test"):
     print(f"❌ Sem testes: {len(untested)}")
     print(f"📈 Cobertura atual: {len(tested) / len(source_files) * 100:.1f}%")
     print()
-    
+
     # Categorize untested files
     by_category = {}
     for f, cat in untested:
         if cat not in by_category:
             by_category[cat] = []
         by_category[cat].append(f)
-    
+
     print("📂 Arquivos sem teste por categoria:")
     for cat, files in sorted(by_category.items()):
         print(f"  - {cat}: {len(files)} arquivo(s)")
     print()
-    
+
     # Print detailed list
     print("📝 Detalhamento dos arquivos sem teste:")
     for cat, files in sorted(by_category.items()):
@@ -109,15 +110,16 @@ def find_untested_code(src_dir, pattern="test"):
         for f in sorted(files):
             rel = f.relative_to(src_path)
             print(f"    • {rel}")
-    
+
     # Priority recommendations
     print("\n🎯 Priorização sugerida:")
     print("  1. API (endpoints públicos - alto impacto)")
     print("  2. Models (lógica de dados - crítica)")
     print("  3. Core (lógica central - importante)")
     print("  4. Scripts (automatização - média)")
-    
+
     return untested
+
 
 if __name__ == "__main__":
     src_dir = sys.argv[1] if len(sys.argv) > 1 else "app"

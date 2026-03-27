@@ -50,11 +50,8 @@ class TestCreateApproval:
     @pytest.mark.asyncio
     async def test_create_approval(self, client: AsyncClient):
         """Test creating an approval."""
-        request_body = {
-            "action_type": "deploy",
-            "agent_id": str(uuid4())
-        }
-        
+        request_body = {"action_type": "deploy", "agent_id": str(uuid4())}
+
         response = await client.post("/api/approvals", json=request_body)
         # May return 404 if endpoint not implemented
         assert response.status_code in [200, 201, 404]

@@ -68,13 +68,17 @@ class TestListTasks:
         assert data["total"] == 1
 
     @pytest.mark.asyncio
-    async def test_list_tasks_with_status_filter(self, client: AsyncClient, auth_headers: dict):
+    async def test_list_tasks_with_status_filter(
+        self, client: AsyncClient, auth_headers: dict
+    ):
         """Test listing tasks filtered by status."""
         response = await client.get("/tasks?status=inbox", headers=auth_headers)
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_list_tasks_with_label_filter(self, client: AsyncClient, auth_headers: dict):
+    async def test_list_tasks_with_label_filter(
+        self, client: AsyncClient, auth_headers: dict
+    ):
         """Test listing tasks filtered by label."""
         response = await client.get("/tasks?label=back_end", headers=auth_headers)
         assert response.status_code == 200
@@ -90,7 +94,7 @@ class TestCreateTask:
             "title": "New Task",
             "description": "Task description",
             "priority": "high",
-            "label": "back_end"
+            "label": "back_end",
         }
 
         response = await client.post("/tasks", json=request_body, headers=auth_headers)
@@ -99,13 +103,12 @@ class TestCreateTask:
         assert data["title"] == "New Task"
 
     @pytest.mark.asyncio
-    async def test_create_task_with_agent(self, client: AsyncClient, auth_headers: dict):
+    async def test_create_task_with_agent(
+        self, client: AsyncClient, auth_headers: dict
+    ):
         """Test creating a task with assigned agent."""
         agent_id = str(uuid4())
-        request_body = {
-            "title": "Task with Agent",
-            "assigned_agent_id": agent_id
-        }
+        request_body = {"title": "Task with Agent", "assigned_agent_id": agent_id}
         response = await client.post("/tasks", json=request_body, headers=auth_headers)
         assert response.status_code == 201
 
@@ -117,7 +120,7 @@ class TestGetTask:
     async def test_get_task_not_found(self, client: AsyncClient, auth_headers: dict):
         """Test getting a non-existent task returns 404."""
         task_id = str(uuid4())
-        
+
         response = await client.get(f"/tasks/{task_id}", headers=auth_headers)
         # Endpoint may not be implemented (405) or may return 404
         assert response.status_code in [404, 405]
@@ -180,7 +183,7 @@ class TestTasksResponseModels:
     def test_task_response_structure(self):
         """Test TaskResponse model structure."""
         from app.api.tasks import TaskResponse
-        
+
         task = TaskResponse(
             id=str(uuid4()),
             title="Test Task",
@@ -196,7 +199,7 @@ class TestTasksResponseModels:
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
-        
+
         assert task.id is not None
         assert task.title == "Test Task"
         assert task.status == "inbox"
@@ -204,11 +207,8 @@ class TestTasksResponseModels:
     def test_tasks_list_response_structure(self):
         """Test TasksListResponse model structure."""
         from app.api.tasks import TasksListResponse
-        
-        response = TasksListResponse(
-            items=[],
-            total=0
-        )
-        
+
+        response = TasksListResponse(items=[], total=0)
+
         assert response.items == []
         assert response.total == 0

@@ -73,7 +73,9 @@ class FailureDetector:
         error_type: str = "execution_error",
     ) -> None:
         """Record a failure and check if escalation is needed."""
-        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        task = (
+            await self.db_session.exec(select(Task).where(Task.id == task_id))
+        ).first()
         if not task:
             logger.warning(f"Task {task_id} not found for failure recording")
             return
@@ -113,22 +115,28 @@ class FailureDetector:
             return
 
         if task.escalated_to_agent_id:
-            logger.info(f"Task {task_id} already escalated, skipping duplicate escalation")
+            logger.info(
+                f"Task {task_id} already escalated, skipping duplicate escalation"
+            )
             return
 
         # Determine escalation target based on task label
         escalation_agent_slug = self._get_escalation_target(task.label)
 
         # Find the escalation agent
-        escalation_agent = (await self.db_session.exec(
-            select(Agent).where(Agent.slug == escalation_agent_slug)
-        )).first()
+        escalation_agent = (
+            await self.db_session.exec(
+                select(Agent).where(Agent.slug == escalation_agent_slug)
+            )
+        ).first()
 
         if not escalation_agent:
             # Fallback to Arquiteto if domain-specific agent not found
-            escalation_agent = (await self.db_session.exec(
-                select(Agent).where(Agent.slug == "arquiteto")
-            )).first()
+            escalation_agent = (
+                await self.db_session.exec(
+                    select(Agent).where(Agent.slug == "arquiteto")
+                )
+            ).first()
 
         if not escalation_agent:
             logger.error("No escalation agent available (Arquiteto not found)")
@@ -140,15 +148,18 @@ class FailureDetector:
                 f"Agent {escalation_agent_slug} cannot escalate. "
                 "Using fallback agent (Arquiteto)"
             )
-            escalation_agent = (await self.db_session.exec(
-                select(Agent).where(Agent.slug == "arquiteto")
-            )).first()
+            escalation_agent = (
+                await self.db_session.exec(
+                    select(Agent).where(Agent.slug == "arquiteto")
+                )
+            ).first()
 
         if escalation_agent and escalation_agent.can_escalate:
             # Check escalation limit
             if (
                 escalation_agent.max_escalations > 0
-                and escalation_agent.escalations_handled >= escalation_agent.max_escalations
+                and escalation_agent.escalations_handled
+                >= escalation_agent.max_escalations
             ):
                 logger.warning(
                     f"Agent {escalation_agent.slug} has reached max escalations. "
@@ -158,7 +169,9 @@ class FailureDetector:
 
             # Perform escalation
             task.escalated_to_agent_id = escalation_agent.id
-            task.escalation_reason = f"Failed {task.consecutive_failures}x: {error_type}"
+            task.escalation_reason = (
+                f"Failed {task.consecutive_failures}x: {error_type}"
+            )
             task.escalated_at = datetime.utcnow()
             escalation_agent.escalations_handled += 1
 
@@ -177,9 +190,7 @@ class FailureDetector:
             self.db_session.add(escalation_agent)
             await self.db_session.commit()
 
-    async def apply_exponential_backoff(
-        self, task_id: UUID, attempt: int
-    ) -> timedelta:
+    async def apply_exponential_backoff(self, task_id: UUID, attempt: int) -> timedelta:
         """Calculate exponential backoff for retry."""
         delay_seconds = int(self.backoff_base ** (attempt - 1))
         # Cap at 5 minutes
@@ -188,7 +199,9 @@ class FailureDetector:
 
     async def reset_consecutive_failures(self, task_id: UUID) -> None:
         """Reset consecutive failure count on successful execution."""
-        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        task = (
+            await self.db_session.exec(select(Task).where(Task.id == task_id))
+        ).first()
         if task:
             task.consecutive_failures = 0
             task.updated_at = datetime.utcnow()
@@ -246,7 +259,9 @@ class FailureDetector:
 
     async def get_task_health(self, task_id: UUID) -> dict:
         """Get health status of a task."""
-        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        task = (
+            await self.db_session.exec(select(Task).where(Task.id == task_id))
+        ).first()
         if not task:
             return {"status": "unknown", "message": "Task not found"}
 
@@ -262,7 +277,11 @@ class FailureDetector:
             "failure_count": task.failure_count,
             "consecutive_failures": task.consecutive_failures,
             "last_error": task.last_error,
-            "last_failed_at": task.last_failed_at.isoformat() if task.last_failed_at else None,
-            "escalated_to_agent_id": str(task.escalated_to_agent_id) if task.escalated_to_agent_id else None,
+            "last_failed_at": (
+                task.last_failed_at.isoformat() if task.last_failed_at else None
+            ),
+            "escalated_to_agent_id": (
+                str(task.escalated_to_agent_id) if task.escalated_to_agent_id else None
+            ),
             "escalation_reason": task.escalation_reason,
         }

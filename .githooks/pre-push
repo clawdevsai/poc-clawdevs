@@ -15,6 +15,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="$SCRIPT_DIR/control-panel/backend"
 FRONTEND_DIR="$SCRIPT_DIR/control-panel/frontend"
 
+# Detect OS and set Poetry path
+if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ -n "$WINDIR" ]]; then
+    # Windows - use full path to Poetry
+    POETRY="/c/Users/Administrator/AppData/Roaming/Python/Scripts/poetry.exe"
+else
+    # Unix/Linux/Mac
+    POETRY="poetry"
+fi
+
 # Color output
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -38,7 +47,7 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
 
     # 1. Linting with ruff
     echo "→ Running linting (ruff)..."
-    if ! poetry run ruff check . --fix; then
+    if ! $POETRY run ruff check . --fix; then
         echo -e "${RED}✗ Linting failed. Fix issues and try again.${NC}"
         ((FAILED++))
     else
@@ -48,9 +57,9 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
 
     # 2. Code formatting with black
     echo "→ Checking code format (black)..."
-    if ! poetry run black . --check --quiet 2>/dev/null; then
+    if ! $POETRY run black . --check --quiet 2>/dev/null; then
         echo -e "${YELLOW}⚠ Code formatting issues found. Running black fix...${NC}"
-        poetry run black . --quiet
+        $POETRY run black . --quiet
         echo -e "${GREEN}✓ Code formatted${NC}"
     else
         echo -e "${GREEN}✓ Code formatting OK${NC}"
@@ -59,7 +68,7 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
 
     # 3. Type checking with mypy
     echo "→ Running type checking (mypy)..."
-    if poetry run mypy . --ignore-missing-imports 2>/dev/null; then
+    if $POETRY run mypy . --ignore-missing-imports 2>/dev/null; then
         echo -e "${GREEN}✓ Type checking passed${NC}"
     else
         echo -e "${YELLOW}⚠ Type checking issues (non-blocking)${NC}"
@@ -68,7 +77,7 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
 
     # 4. Unit tests
     echo "→ Running unit tests (pytest)..."
-    if ! poetry run pytest tests/test_services/ -v --tb=short 2>/dev/null; then
+    if ! $POETRY run pytest tests/test_services/ -v --tb=short 2>/dev/null; then
         echo -e "${RED}✗ Unit tests failed${NC}"
         ((FAILED++))
     else
@@ -78,7 +87,7 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
 
     # 5. Test coverage
     echo "→ Checking test coverage (>80%)..."
-    COVERAGE_OUTPUT=$(poetry run pytest tests/ --cov=app --cov-report=term-only 2>/dev/null || true)
+    COVERAGE_OUTPUT=$($POETRY run pytest tests/ --cov=app --cov-report=term-only 2>/dev/null || true)
     COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $NF}' | tr -d '%')
 
     if [ -z "$COVERAGE" ]; then

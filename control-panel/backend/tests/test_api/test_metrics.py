@@ -52,9 +52,9 @@ class TestCreateMetric:
             "metric_type": "tokens_used",
             "value": 1000.0,
             "period_start": "2024-01-01T00:00:00Z",
-            "period_end": "2024-01-01T01:00:00Z"
+            "period_end": "2024-01-01T01:00:00Z",
         }
-        
+
         response = await client.post("/api/metrics", json=request_body)
         assert response.status_code in [200, 201, 404]
 

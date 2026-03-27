@@ -37,9 +37,7 @@ async def sync_activity_from_sessions(db_session) -> int:
 
     # Get recent sessions
     result = await db_session.exec(
-        select(Session)
-        .order_by(Session.last_active_at.desc())
-        .limit(50)
+        select(Session).order_by(Session.last_active_at.desc()).limit(50)
     )
     sessions = result.all()
 
@@ -50,7 +48,7 @@ async def sync_activity_from_sessions(db_session) -> int:
         existing = await db_session.exec(
             select(ActivityEvent).where(
                 ActivityEvent.entity_id == session.openclaw_session_id,
-                ActivityEvent.event_type.in_(["session.created", "session.active"])
+                ActivityEvent.event_type.in_(["session.created", "session.active"]),
             )
         )
         if existing.first():

@@ -114,7 +114,9 @@ async def get_agent(
     agent = result.first()
     if agent is None:
         raise HTTPException(status_code=404, detail=f"Agent '{slug}' not found")
-    current_activity, current_activity_full, current_activity_at = get_agent_current_activity(agent.slug)
+    current_activity, current_activity_full, current_activity_at = (
+        get_agent_current_activity(agent.slug)
+    )
     return AgentResponse.from_orm(
         agent,
         current_activity=current_activity,
@@ -139,6 +141,7 @@ async def update_agent_status(
     if "current_model" in body:
         agent.current_model = body["current_model"]
     from datetime import datetime
+
     agent.updated_at = datetime.utcnow()
     await session.commit()
     await session.refresh(agent)

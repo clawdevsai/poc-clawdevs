@@ -165,7 +165,11 @@ async def get_session(
     # Parse messages if available
     messages = None
     if oc_session and isinstance(oc_session, dict):
-        msgs = oc_session.get("messages") or oc_session.get("history") or oc_session.get("conversation")
+        msgs = (
+            oc_session.get("messages")
+            or oc_session.get("history")
+            or oc_session.get("conversation")
+        )
         if msgs and isinstance(msgs, list):
             messages = [_parse_message(m) for m in msgs if isinstance(m, dict)]
 
@@ -216,13 +220,15 @@ def _parse_message(msg: dict) -> MessageResponse:
         tool_calls = []
         for tc in raw_tool_calls:
             if isinstance(tc, dict):
-                tool_calls.append({
-                    "id": tc.get("id"),
-                    "name": tc.get("name") or tc.get("function", {}).get("name"),
-                    "tool": tc.get("tool") or tc.get("function", {}).get("name"),
-                    "input": tc.get("input") or tc.get("arguments"),
-                    "result": tc.get("result"),
-                })
+                tool_calls.append(
+                    {
+                        "id": tc.get("id"),
+                        "name": tc.get("name") or tc.get("function", {}).get("name"),
+                        "tool": tc.get("tool") or tc.get("function", {}).get("name"),
+                        "input": tc.get("input") or tc.get("arguments"),
+                        "result": tc.get("result"),
+                    }
+                )
 
     return MessageResponse(role=role, content=content, tool_calls=tool_calls)
 

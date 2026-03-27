@@ -32,11 +32,11 @@ class TestActivityEventModel:
     def test_activity_event_creation(self):
         """Test basic activity event creation."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="user_login",
         )
-        
+
         assert event.event_type == "user_login"
         assert event.id is not None
         assert isinstance(event.id, UUID)
@@ -44,67 +44,67 @@ class TestActivityEventModel:
     def test_activity_event_with_agent(self):
         """Test activity event linked to agent."""
         from app.models.activity_event import ActivityEvent
-        
+
         agent_id = uuid4()
-        
+
         event = ActivityEvent(
             event_type="agent_start",
             agent_id=agent_id,
         )
-        
+
         assert event.agent_id == agent_id
 
     def test_activity_event_with_user(self):
         """Test activity event linked to user."""
         from app.models.activity_event import ActivityEvent
-        
+
         user_id = uuid4()
-        
+
         event = ActivityEvent(
             event_type="user_created",
             user_id=user_id,
         )
-        
+
         assert event.user_id == user_id
 
     def test_activity_event_with_payload(self):
         """Test activity event with JSON payload."""
         from app.models.activity_event import ActivityEvent
-        
+
         payload = {
             "ip_address": "192.168.1.1",
             "user_agent": "Mozilla/5.0",
             "location": "New York",
         }
-        
+
         event = ActivityEvent(
             event_type="api_call",
             payload=payload,
         )
-        
+
         assert event.payload == payload
 
     def test_activity_event_with_entity(self):
         """Test activity event with entity reference."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="entity_updated",
             entity_type="task",
             entity_id="task-123",
         )
-        
+
         assert event.entity_type == "task"
         assert event.entity_id == "task-123"
 
     def test_activity_event_timestamp(self):
         """Test automatic timestamp creation."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="test_event",
         )
-        
+
         assert event.created_at is not None
         assert isinstance(event.created_at, datetime)
 
@@ -115,49 +115,49 @@ class TestActivityEventEdgeCases:
     def test_event_id_is_uuid(self):
         """Test that event ID is UUID."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="uuid-event",
         )
-        
+
         assert isinstance(event.id, UUID)
         assert len(str(event.id)) == 36
 
     def test_event_empty_payload(self):
         """Test activity event with empty payload."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="empty-payload-event",
             payload={},
         )
-        
+
         assert event.payload == {}
 
     def test_event_none_values(self):
         """Test activity event with None values."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="none-values-event",
             agent_id=None,
             user_id=None,
         )
-        
+
         assert event.agent_id is None
         assert event.user_id is None
 
     def test_event_large_payload(self):
         """Test activity event with large payload."""
         from app.models.activity_event import ActivityEvent
-        
+
         payload = {"key": "x" * 10000 for _ in range(100)}
-        
+
         event = ActivityEvent(
             event_type="large-payload-event",
             payload=payload,
         )
-        
+
         assert len(event.payload) > 0
 
 
@@ -167,14 +167,21 @@ class TestActivityEventTypeValues:
     def test_valid_event_types(self):
         """Test various event types."""
         from app.models.activity_event import ActivityEvent
-        
+
         valid_types = [
-            "user_login", "user_logout", "user_created",
-            "agent_start", "agent_stop", "agent_error",
-            "api_call", "api_error",
-            "entity_created", "entity_updated", "entity_deleted",
+            "user_login",
+            "user_logout",
+            "user_created",
+            "agent_start",
+            "agent_stop",
+            "agent_error",
+            "api_call",
+            "api_error",
+            "entity_created",
+            "entity_updated",
+            "entity_deleted",
         ]
-        
+
         for event_type in valid_types:
             event = ActivityEvent(
                 event_type=event_type,
@@ -188,24 +195,24 @@ class TestActivityEventUpdate:
     def test_update_event_type(self):
         """Test updating event type."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="original_type",
         )
-        
+
         event.event_type = "updated_type"
-        
+
         assert event.event_type == "updated_type"
 
     def test_update_payload(self):
         """Test updating payload."""
         from app.models.activity_event import ActivityEvent
-        
+
         event = ActivityEvent(
             event_type="test-event",
             payload={"key": "value1"},
         )
-        
+
         event.payload = {"key": "value2"}
-        
+
         assert event.payload == {"key": "value2"}
