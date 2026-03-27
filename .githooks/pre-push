@@ -24,6 +24,13 @@ else
     POETRY="poetry"
 fi
 
+# Frontend package manager (prefer pnpm, fallback to npm)
+if command -v pnpm >/dev/null 2>&1; then
+    NPM_CMD="pnpm"
+else
+    NPM_CMD="npm"
+fi
+
 # Color output
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -113,7 +120,7 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/frontend"; t
 
     # 1. Linting
     echo "→ Running linting (eslint)..."
-    if [ -f ".eslintrc.json" ] && ! npm run lint 2>/dev/null; then
+    if grep -q '"lint"' package.json && ! $NPM_CMD run lint; then
         echo -e "${RED}✗ Linting failed${NC}"
         ((FAILED++))
     else
@@ -123,9 +130,11 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/frontend"; t
 
     # 2. Type checking
     echo "→ Running TypeScript check..."
-    if ! npm run type-check 2>/dev/null; then
+    if grep -q '"type-check"' package.json && ! $NPM_CMD run type-check; then
         echo -e "${RED}✗ Type checking failed${NC}"
         ((FAILED++))
+    elif ! grep -q '"type-check"' package.json; then
+        echo -e "${YELLOW}⚠ No type-check script configured${NC}"
     else
         echo -e "${GREEN}✓ Type checking passed${NC}"
     fi
@@ -133,7 +142,9 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/frontend"; t
 
     # 3. Unit tests
     echo "→ Running unit tests..."
-    if [ -f "package.json" ] && ! npm test 2>/dev/null; then
+    if grep -q '"test"' package.json && ! $NPM_CMD test; then
+        echo -e "${YELLOW}⚠ Tests not configured${NC}"
+    elif ! grep -q '"test"' package.json; then
         echo -e "${YELLOW}⚠ Tests not configured${NC}"
     else
         echo -e "${GREEN}✓ Tests passed${NC}"
