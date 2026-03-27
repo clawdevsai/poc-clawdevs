@@ -13,7 +13,7 @@ import signal
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from redis import Redis
-from rq import Worker, Queue, Connection
+from rq import Worker, Queue
 
 from app.core.config import get_settings
 
@@ -71,10 +71,9 @@ def main():
     
     # Start worker
     logger.info("[worker] Starting RQ worker...")
-    with Connection(redis_conn):
-        queues = [Queue("default")]
-        worker = Worker(queues)
-        worker.work(with_scheduler=True)
+    queues = [Queue("default", connection=redis_conn)]
+    worker = Worker(queues, connection=redis_conn)
+    worker.work(with_scheduler=True)
 
 
 if __name__ == "__main__":
