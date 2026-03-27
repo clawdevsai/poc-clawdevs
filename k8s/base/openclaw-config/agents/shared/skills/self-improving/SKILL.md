@@ -90,8 +90,8 @@ description: Capture corrections, failures and reusable learnings with strict sa
 2. Link related entries when recurrence exists.
 3. If the pattern requires a new skill, create candidate immediately in local scope.
 4. Promote to shared scope only after formal Security PASS.
-4. Keep entries short, actionable, and traceable.
-5. When a task is completed/resolved, append 1-3 concise patterns to `/data/openclaw/memory/<agent_id>/MEMORY.md`.
+5. Keep entries short, actionable, and traceable.
+6. When a task is completed/resolved, append 1-3 concise patterns to `/data/openclaw/memory/<agent_id>/MEMORY.md`.
 
 ## MEMORY.md Line Format
 - `- [PATTERN] <concise learning> | Discovered: YYYY-MM-DD | Source: TASK-XXX`

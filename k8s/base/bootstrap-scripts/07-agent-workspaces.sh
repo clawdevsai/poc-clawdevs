@@ -662,13 +662,6 @@ if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ] && [ -f "${SELF_IMPROVING_SECURITY_P
     if [ "${si_agent}" = "security_engineer" ] && [ ! -f "${si_learnings_dir}/SKILL_SECURITY_DECISIONS.md" ]; then
       printf '# SKILL SECURITY DECISIONS\n\n' > "${si_learnings_dir}/SKILL_SECURITY_DECISIONS.md"
     fi
-
-    # Hardening adicional: skills candidatas autonomas por agente nao podem carregar artefatos executaveis.
-    if [ -d "${si_ws}/skills" ]; then
-      find "${si_ws}/skills" -mindepth 1 -maxdepth 1 -type d -name "${si_agent}_*" | while read -r local_candidate_dir; do
-        sanitize_skill_artifacts "${local_candidate_dir}"
-      done
-    fi
   done
 
   # Expor a mesma skill no workspace compartilhado utilizado pelos agentes.
@@ -678,13 +671,6 @@ if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ] && [ -f "${SELF_IMPROVING_SECURITY_P
   mkdir -p "${shared_self_improving_dir}/references"
   cp -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" "${shared_self_improving_dir}/references/skill-security-policy.md"
   sanitize_skill_artifacts "${shared_self_improving_dir}"
-
-  # Hardening adicional: skills promovidas para o workspace compartilhado nao podem manter artefatos executaveis proibidos.
-  if [ -d "${SHARED_WORKSPACE}/skills" ]; then
-    find "${SHARED_WORKSPACE}/skills" -mindepth 1 -maxdepth 1 -type d | while read -r shared_skill_dir; do
-      sanitize_skill_artifacts "${shared_skill_dir}"
-    done
-  fi
 else
   echo "[bootstrap] warning: self-improving canonical files not found at ${SELF_IMPROVING_CANONICAL_SRC} / ${SELF_IMPROVING_SECURITY_POLICY_SRC}"
 fi
