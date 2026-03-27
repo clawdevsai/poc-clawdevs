@@ -22,8 +22,8 @@ from sqlmodel import SQLModel, Field
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlalchemy import Column, Text, JSON
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import Column, Text, JSON, TypeDecorator
+from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 
 try:
     from pgvector.sqlalchemy import Vector
@@ -33,6 +33,30 @@ except ImportError:
     # Fallback for non-PostgreSQL environments (testing)
     Vector = None
     HAS_PGVECTOR = False
+
+
+class ArrayOrJSON(TypeDecorator):
+    """Dialect-aware type that uses PostgreSQL ARRAY when available, JSON otherwise."""
+
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(PG_ARRAY(Text))
+        return dialect.type_descriptor(JSON)
+
+
+class VectorOrJSON(TypeDecorator):
+    """Dialect-aware type that uses pgvector Vector when available, JSON otherwise."""
+
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql" and HAS_PGVECTOR:
+            return dialect.type_descriptor(Vector(1536))
+        return dialect.type_descriptor(JSON)
 
 
 class MemoryEntry(SQLModel, table=True):
@@ -47,18 +71,18 @@ class MemoryEntry(SQLModel, table=True):
     )  # active|candidate|global|archived
     tags: Optional[List[str]] = Field(
         default=None,
-        sa_column=Column(ARRAY(Text) if HAS_PGVECTOR else JSON, nullable=True),
+        sa_column=Column(ArrayOrJSON(), nullable=True),
     )
     source_agents: Optional[List[str]] = Field(
         default=None,
-        sa_column=Column(ARRAY(Text) if HAS_PGVECTOR else JSON, nullable=True),
+        sa_column=Column(ArrayOrJSON(), nullable=True),
     )
 
     # Vector embedding fields (for RAG/semantic search)
     # Note: For PostgreSQL, use pgvector.sqlalchemy.Vector; for testing use JSON
     embedding: Optional[List[float]] = Field(
         default=None,
-        sa_column=Column(Vector(1536) if HAS_PGVECTOR else JSON),
+        sa_column=Column(VectorOrJSON()),
     )
     embedding_model: str = Field(
         default="mistral"
