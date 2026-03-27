@@ -23,6 +23,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import { useEffect, useMemo, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { RefreshCw } from "lucide-react"
 import type { AxiosError } from "axios"
@@ -59,32 +60,86 @@ interface K8sEvent {
   last_seen: string
 }
 
-interface PodsResponse {
-  items: Pod[]
-}
-
-interface PVCsResponse {
-  items: PVC[]
-}
-
-interface EventsResponse {
-  items: K8sEvent[]
-}
-
 interface ApiErrorResponse {
   detail?: string
 }
 
+interface ApiPod {
+  name?: string
+  namespace?: string
+  status?: string
+  ready?: boolean
+  restarts?: number
+  age?: string
+}
+
+interface ApiPVC {
+  name?: string
+  namespace?: string
+  status?: string
+  capacity?: string
+  storage_class?: string
+  age?: string
+}
+
+interface ApiEvent {
+  type?: string
+  reason?: string
+  message?: string
+  object?: string
+  involved_object?: string
+  last_seen?: string
+  last_timestamp?: string
+}
+
 // ---- Fetchers -------------------------------------------------------------
 
-const fetchPods = () =>
-  customInstance<PodsResponse>({ url: "/cluster/pods", method: "GET" })
+const fetchPods = async (): Promise<Pod[]> => {
+  const data = await customInstance<ApiPod[] | { items?: ApiPod[] }>({
+    url: "/cluster/pods",
+    method: "GET",
+  })
+  const items = Array.isArray(data) ? data : (data.items ?? [])
+  return items.map((p) => ({
+    name: p.name ?? "—",
+    namespace: p.namespace ?? "—",
+    status: p.status ?? "Unknown",
+    ready: p.ready === undefined ? "—" : p.ready ? "Ready" : "Not Ready",
+    restarts: p.restarts ?? 0,
+    age: p.age ?? "—",
+  }))
+}
 
-const fetchPVCs = () =>
-  customInstance<PVCsResponse>({ url: "/cluster/pvcs", method: "GET" })
+const fetchPVCs = async (): Promise<PVC[]> => {
+  const data = await customInstance<ApiPVC[] | { items?: ApiPVC[] }>({
+    url: "/cluster/pvcs",
+    method: "GET",
+  })
+  const items = Array.isArray(data) ? data : (data.items ?? [])
+  return items.map((p) => ({
+    name: p.name ?? "—",
+    namespace: p.namespace ?? "default",
+    status: p.status ?? "Unknown",
+    capacity: p.capacity ?? "—",
+    storage_class: p.storage_class ?? "—",
+    age: p.age ?? "—",
+  }))
+}
 
-const fetchEvents = () =>
-  customInstance<EventsResponse>({ url: "/cluster/events", method: "GET" })
+const fetchEvents = async (): Promise<K8sEvent[]> => {
+  const data = await customInstance<ApiEvent[] | { items?: ApiEvent[] }>({
+    url: "/cluster/events",
+    method: "GET",
+  })
+  const items = Array.isArray(data) ? data : (data.items ?? [])
+  return items.map((e) => ({
+    type: e.type ?? "Normal",
+    reason: e.reason ?? "—",
+    message: e.message ?? "—",
+    object: e.object ?? e.involved_object ?? "—",
+    last_seen: e.last_seen ?? e.last_timestamp ?? "—",
+  }))
+}
 
 // ---- Helpers --------------------------------------------------------------
 
@@ -185,8 +240,11 @@ function SectionHeader({
 // ---- Page -----------------------------------------------------------------
 
 const REFETCH_INTERVAL = 30_000
+const EVENTS_PER_PAGE = 10
 
 export default function ClusterPage() {
+  const [eventsPage, setEventsPage] = useState(1)
+
   const {
     data: podsData,
     isLoading: podsLoading,
@@ -223,9 +281,21 @@ export default function ClusterPage() {
     refetchInterval: REFETCH_INTERVAL,
   })
 
-  const pods = podsData?.items ?? []
-  const pvcs = pvcsData?.items ?? []
-  const events = eventsData?.items ?? []
+  const pods = podsData ?? []
+  const pvcs = pvcsData ?? []
+  const events = eventsData ?? []
+  const totalEventPages = Math.max(1, Math.ceil(events.length / EVENTS_PER_PAGE))
+
+  useEffect(() => {
+    if (eventsPage > totalEventPages) {
+      setEventsPage(totalEventPages)
+    }
+  }, [eventsPage, totalEventPages])
+
+  const pagedEvents = useMemo(() => {
+    const start = (eventsPage - 1) * EVENTS_PER_PAGE
+    return events.slice(start, start + EVENTS_PER_PAGE)
+  }, [events, eventsPage])
 
   return (
     <AppLayout>
@@ -449,9 +519,9 @@ export default function ClusterPage() {
                       </td>
                     </tr>
                   ) : (
-                    events.map((event, i) => (
+                    pagedEvents.map((event, i) => (
                       <tr
-                        key={i}
+                        key={`${eventsPage}-${i}-${event.reason}-${event.last_seen}`}
                         className="border-b border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/10 transition-colors"
                       >
                         <td className="px-4 py-3">
@@ -477,6 +547,35 @@ export default function ClusterPage() {
                 </tbody>
               </table>
             </div>
+            {!eventsLoading && !eventsIsError && events.length > 0 && (
+              <div className="flex items-center justify-between border-t border-[hsl(var(--border))] px-4 py-3">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                  Showing {(eventsPage - 1) * EVENTS_PER_PAGE + 1}-
+                  {Math.min(eventsPage * EVENTS_PER_PAGE, events.length)} of {events.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEventsPage((p) => Math.max(1, p - 1))}
+                    disabled={eventsPage <= 1}
+                    className="px-2.5 py-1 text-xs rounded-md border border-[hsl(var(--border))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                    Page {eventsPage} of {totalEventPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEventsPage((p) => Math.min(totalEventPages, p + 1))}
+                    disabled={eventsPage >= totalEventPages}
+                    className="px-2.5 py-1 text-xs rounded-md border border-[hsl(var(--border))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -416,7 +416,7 @@ export default function SettingsPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-5xl w-full flex flex-col gap-8">
+      <div className="max-w-5xl w-full mx-auto flex flex-col gap-8">
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
