@@ -41,24 +41,26 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
+    env:
+      HAS_KUBECONFIG: ${{ secrets.KUBECONFIG != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up kubectl
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         uses: azure/k8s-set-context@v1
         with:
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
       - name: Wait for pods to be ready
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         run: |
           kubectl wait --for=condition=Ready pod/ollama --timeout=300s || true
           kubectl wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=300s || true
 
       - name: Test OpenClaw connectivity
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         run: |
           kubectl port-forward svc/ollama 11434:11434 &
           sleep 5
@@ -66,7 +68,7 @@ jobs:
           pkill -f "port-forward"
 
       - name: Skip integration tests when kubeconfig is not configured
-        if: secrets.KUBECONFIG == ''
+        if: env.HAS_KUBECONFIG != 'true'
         run: |
           echo "KUBECONFIG secret is not configured. Skipping integration tests."
           echo "## Integration Tests" >> "$GITHUB_STEP_SUMMARY"
