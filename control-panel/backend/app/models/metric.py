@@ -20,7 +20,7 @@
 
 from sqlmodel import SQLModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
 
@@ -35,4 +35,4 @@ class Metric(SQLModel, table=True):
     value: float
     period_start: datetime = Field(index=True)
     period_end: datetime
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

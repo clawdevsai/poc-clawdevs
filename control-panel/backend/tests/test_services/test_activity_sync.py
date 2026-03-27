@@ -21,7 +21,7 @@
 """Tests for activity_sync service."""
 import pytest
 from unittest.mock import patch
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from app.models import ActivityEvent, Session, Agent
@@ -51,8 +51,8 @@ class TestActivitySyncFunctions:
             channel_type="telegram",
             channel_peer="123456789",
             message_count=10,
-            last_active_at=datetime.utcnow(),
-            created_at=datetime.utcnow(),
+            last_active_at=datetime.now(UTC),
+            created_at=datetime.now(UTC),
         )
         db_session.add(session)
         await db_session.commit()
@@ -97,8 +97,8 @@ class TestActivitySyncFunctions:
             channel_type="webchat",
             channel_peer="user123",
             message_count=5,
-            last_active_at=datetime.utcnow(),
-            created_at=datetime.utcnow(),
+            last_active_at=datetime.now(UTC),
+            created_at=datetime.now(UTC),
         )
         db_session.add(session)
         await db_session.commit()
@@ -110,7 +110,7 @@ class TestActivitySyncFunctions:
             entity_type="session",
             entity_id="sess-2",
             payload={"message_count": 5},
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         db_session.add(existing_event)
         await db_session.commit()
@@ -136,8 +136,8 @@ class TestActivitySyncFunctions:
             channel_type="discord",
             channel_peer="discord_user",
             message_count=2,
-            last_active_at=datetime.utcnow(),
-            created_at=datetime.utcnow(),
+            last_active_at=datetime.now(UTC),
+            created_at=datetime.now(UTC),
         )
         db_session.add(session)
         await db_session.commit()

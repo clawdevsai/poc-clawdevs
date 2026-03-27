@@ -20,7 +20,7 @@
 
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class TestK8sClients:
@@ -76,7 +76,7 @@ class TestK8sClients:
         mock_pod.metadata.namespace = "default"
         mock_pod.status.phase = "Running"
         mock_pod.status.container_statuses = [MagicMock(restart_count=0, ready=True)]
-        mock_pod.metadata.creation_timestamp = datetime.utcnow()
+        mock_pod.metadata.creation_timestamp = datetime.now(UTC)
         mock_pod.spec.node_name = "node-1"
 
         with patch("app.services.k8s_client.get_k8s_clients") as mock_get_clients:
@@ -111,7 +111,7 @@ class TestK8sClients:
         mock_event.message = "Successfully assigned"
         mock_event.involved_object.name = "test-pod"
         mock_event.count = 1
-        mock_event.last_timestamp = datetime.utcnow()
+        mock_event.last_timestamp = datetime.now(UTC)
 
         with patch("app.services.k8s_client.get_k8s_clients") as mock_get_clients:
             mock_core = MagicMock()

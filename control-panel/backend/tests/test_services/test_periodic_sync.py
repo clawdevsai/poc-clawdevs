@@ -201,7 +201,7 @@ class TestSchedulePeriodicTasks:
             with patch("app.tasks.periodic_sync.datetime") as mock_datetime:
                 # Mock current time
                 mock_now = datetime(2024, 1, 1, 12, 0, 0)
-                mock_datetime.utcnow.return_value = mock_now
+                mock_datetime.now.return_value = mock_now
 
                 with patch(
                     "app.tasks.periodic_sync.Scheduler", return_value=mock_scheduler

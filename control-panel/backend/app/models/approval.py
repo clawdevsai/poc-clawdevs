@@ -20,7 +20,7 @@
 
 from sqlmodel import SQLModel, Field
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 from sqlalchemy import Column
 from sqlalchemy import JSON
@@ -44,4 +44,4 @@ class Approval(SQLModel, table=True):
     )
     justification: Optional[str] = None
     decided_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

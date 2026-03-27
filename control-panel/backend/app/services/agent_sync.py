@@ -22,12 +22,17 @@ import json
 import os
 import re
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from functools import lru_cache
 from typing import Any, cast
 from app.core.config import get_settings
 
 settings = get_settings()
+
+
+def _now_utc_naive() -> datetime:
+    """Return current UTC time as naive datetime for DB-compatible comparisons."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 AGENT_SLUGS = [
     "ceo",
@@ -249,7 +254,7 @@ def _status_from_heartbeat(
             tzinfo=None
         )
 
-    age_seconds = (datetime.utcnow() - last_heartbeat_at).total_seconds()
+    age_seconds = (_now_utc_naive() - last_heartbeat_at).total_seconds()
 
     # If actively processing a session, mark as working
     if has_active_session and age_seconds <= 5 * 60:
@@ -292,7 +297,7 @@ def _has_active_session(payload: dict | None) -> bool:
                 session_time = datetime.fromtimestamp(
                     updated_at / 1000, tz=timezone.utc
                 ).replace(tzinfo=None)
-                age_seconds = (datetime.utcnow() - session_time).total_seconds()
+                age_seconds = (_now_utc_naive() - session_time).total_seconds()
                 if age_seconds <= 5 * 60:
                     return True
             except (ValueError, OSError, OverflowError):
@@ -370,7 +375,7 @@ async def sync_agents_runtime(session) -> None:
             agent.display_name = identity["display_name"]
             agent.role = identity["role"]
             agent.avatar_url = expected_avatar_url
-            agent.updated_at = datetime.utcnow()
+            agent.updated_at = _now_utc_naive()
             changed = True
 
     if changed:

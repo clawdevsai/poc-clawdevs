@@ -24,7 +24,7 @@ These tasks run on the worker to keep the control panel in sync with OpenClaw ru
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from redis import Redis
 from rq_scheduler import Scheduler
 
@@ -95,7 +95,7 @@ def schedule_periodic_tasks():
 
     # Schedule agent sync every 60 seconds
     scheduler.schedule(
-        scheduled_time=datetime.utcnow() + timedelta(seconds=10),
+        scheduled_time=datetime.now(UTC) + timedelta(seconds=10),
         func="app.tasks.periodic_sync:run_sync_agents",
         interval=60,  # seconds
         repeat=None,  # repeat forever
@@ -105,7 +105,7 @@ def schedule_periodic_tasks():
 
     # Schedule session sync every 60 seconds (offset by 20s)
     scheduler.schedule(
-        scheduled_time=datetime.utcnow() + timedelta(seconds=30),
+        scheduled_time=datetime.now(UTC) + timedelta(seconds=30),
         func="app.tasks.periodic_sync:run_sync_sessions",
         interval=60,  # seconds
         repeat=None,  # repeat forever
@@ -115,7 +115,7 @@ def schedule_periodic_tasks():
 
     # Schedule task sync every 5 minutes (offset by 40s)
     scheduler.schedule(
-        scheduled_time=datetime.utcnow() + timedelta(seconds=50),
+        scheduled_time=datetime.now(UTC) + timedelta(seconds=50),
         func="app.tasks.periodic_sync:run_sync_tasks",
         interval=300,  # 5 minutes
         repeat=None,  # repeat forever

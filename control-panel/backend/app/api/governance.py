@@ -176,7 +176,7 @@ async def validate_multi_repo_change(
 @router.post("/cost/estimate")
 async def estimate_cost(
     task_type: str = Query(...),
-    complexity: str = Query(..., regex="^(simple|medium|complex)$"),
+    complexity: str = Query(..., pattern="^(simple|medium|complex)$"),
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
@@ -237,7 +237,7 @@ async def track_cost(
 @router.get("/cost/budget/{agent_id}")
 async def check_budget(
     agent_id: UUID,
-    tier: str = Query("medium", regex="^(local|medium|premium)$"),
+    tier: str = Query("medium", pattern="^(local|medium|premium)$"),
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """

@@ -20,7 +20,7 @@
 
 from sqlmodel import SQLModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
 
@@ -36,5 +36,5 @@ class SddArtifact(SQLModel, table=True):
     github_issue_number: Optional[int] = None
     github_issue_url: Optional[str] = None
     file_path: Optional[str] = None  # path on PVC if synced from file
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
