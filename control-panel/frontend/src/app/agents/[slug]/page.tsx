@@ -94,9 +94,14 @@ const fetchMemory = (slug: string) =>
 function statusBadgeVariant(status: string) {
   switch (status) {
     case "online":
+    case "working":
       return "success"
     case "idle":
       return "warning"
+    case "error":
+      return "error"
+    case "stopped":
+      return "secondary"
     default:
       return "secondary"
   }
@@ -111,6 +116,8 @@ function StatusDot({ status }: { status: string }) {
           ? "bg-green-400 shadow-[0_0_6px_#4ade80]"
           : status === "idle"
           ? "bg-yellow-400"
+          : status === "error"
+          ? "bg-red-400 shadow-[0_0_6px_#f87171]"
           : "bg-white/30"
       )}
     />
@@ -521,6 +528,7 @@ export default function AgentProfilePage({ params }: PageProps) {
                     statusBadgeVariant(agent.status) as
                       | "success"
                       | "warning"
+                      | "error"
                       | "secondary"
                   }
                 >

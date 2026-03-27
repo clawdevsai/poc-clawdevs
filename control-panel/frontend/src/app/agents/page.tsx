@@ -49,6 +49,10 @@ function statusBadgeVariant(status: string) {
       return "success"
     case "idle":
       return "warning"
+    case "error":
+      return "error"
+    case "stopped":
+      return "secondary"
     default:
       return "secondary"
   }
@@ -195,6 +199,7 @@ export default function AgentsPage() {
                       statusBadgeVariant(agent.status) as
                         | "success"
                         | "warning"
+                        | "error"
                         | "secondary"
                     }
                   >
@@ -205,6 +210,8 @@ export default function AgentsPage() {
                           ? "bg-green-400"
                           : agent.status === "idle"
                           ? "bg-yellow-400"
+                          : agent.status === "error"
+                          ? "bg-red-400"
                           : "bg-white/30"
                       )}
                     />

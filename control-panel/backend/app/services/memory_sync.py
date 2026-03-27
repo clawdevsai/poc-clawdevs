@@ -11,7 +11,7 @@ from pathlib import Path
 from sqlmodel import select
 
 from app.core.config import get_settings
-from app.models import Agent, MemoryEntry
+from app.models import MemoryEntry
 
 settings = get_settings()
 
@@ -32,12 +32,15 @@ async def sync_memory_entries(db_session) -> None:
     if not base_path.exists():
         return
 
-    result = await db_session.exec(select(Agent))
-    agents = {a.slug: a for a in result.all()}
+    agent_dirs = [
+        p.name
+        for p in base_path.iterdir()
+        if p.is_dir() and p.name != "shared"
+    ]
     changed = False
 
     # Per-agent MEMORY.md
-    for slug, agent in agents.items():
+    for slug in agent_dirs:
         memory_file = base_path / slug / "MEMORY.md"
         if not memory_file.exists():
             continue
@@ -53,26 +56,28 @@ async def sync_memory_entries(db_session) -> None:
         title = _extract_title(content, f"{slug} memory")
         result_entry = await db_session.exec(
             select(MemoryEntry)
-            .where(MemoryEntry.agent_id == agent.id)
+            .where(MemoryEntry.agent_slug == slug)
             .where(MemoryEntry.entry_type == "active")
             .order_by(MemoryEntry.updated_at.desc())
         )
         existing = result_entry.first()
 
         if existing:
-            if existing.content != content or existing.tags != [title]:
-                existing.content = content
-                existing.tags = [title]
+            if existing.body != content or existing.title != title:
+                existing.title = title
+                existing.body = content
+                existing.tags = [slug]
                 existing.source_agents = [slug]
                 existing.updated_at = datetime.utcnow()
                 changed = True
         else:
             db_session.add(
                 MemoryEntry(
-                    agent_id=agent.id,
+                    agent_slug=slug,
+                    title=title,
+                    body=content,
                     entry_type="active",
-                    content=content,
-                    tags=[title],
+                    tags=[slug],
                     source_agents=[slug],
                 )
             )
@@ -90,26 +95,28 @@ async def sync_memory_entries(db_session) -> None:
             title = _extract_title(content, "Shared memory")
             shared_result = await db_session.exec(
                 select(MemoryEntry)
-                .where(MemoryEntry.agent_id.is_(None))
+                .where(MemoryEntry.agent_slug.is_(None))
                 .where(MemoryEntry.entry_type == "global")
                 .order_by(MemoryEntry.updated_at.desc())
             )
             shared_existing = shared_result.first()
 
             if shared_existing:
-                if shared_existing.content != content or shared_existing.tags != [title]:
-                    shared_existing.content = content
-                    shared_existing.tags = [title]
+                if shared_existing.body != content or shared_existing.title != title:
+                    shared_existing.title = title
+                    shared_existing.body = content
+                    shared_existing.tags = ["shared"]
                     shared_existing.source_agents = ["shared"]
                     shared_existing.updated_at = datetime.utcnow()
                     changed = True
             else:
                 db_session.add(
                     MemoryEntry(
-                        agent_id=None,
+                        agent_slug=None,
+                        title=title,
+                        body=content,
                         entry_type="global",
-                        content=content,
-                        tags=[title],
+                        tags=["shared"],
                         source_agents=["shared"],
                     )
                 )

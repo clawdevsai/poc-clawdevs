@@ -39,6 +39,10 @@ function statusBadgeVariant(status: string) {
       return "success"
     case "idle":
       return "warning"
+    case "error":
+      return "error"
+    case "stopped":
+      return "secondary"
     default:
       return "secondary"
   }
@@ -97,7 +101,7 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
                 {agent.role}
               </span>
             </div>
-            <Badge variant={statusBadgeVariant(agent.status) as "success" | "warning" | "secondary"}>
+            <Badge variant={statusBadgeVariant(agent.status) as "success" | "warning" | "error" | "secondary"}>
               <span
                 className={cn(
                   "mr-1 h-1.5 w-1.5 rounded-full inline-block",
@@ -105,6 +109,8 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
                     ? "bg-green-400"
                     : agent.status === "idle"
                     ? "bg-yellow-400"
+                    : agent.status === "error"
+                    ? "bg-red-400"
                     : "bg-white/30"
                 )}
               />

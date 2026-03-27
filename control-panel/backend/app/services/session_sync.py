@@ -81,13 +81,19 @@ async def sync_sessions(db_session) -> None:
             
             # Count messages from session file if exists
             session_file = oc_session.get("sessionFile")
-            if session_file:
+            session_path: Path | None = None
+            if isinstance(session_file, str) and session_file:
                 # Handle both absolute and relative paths
                 if session_file.startswith("/"):
                     session_path = Path(session_file)
                 else:
                     session_path = base_path / session_file
-                
+            else:
+                # Some OpenClaw entries (cron/run session keys) omit sessionFile.
+                # Fallback to canonical session transcript path by sessionId.
+                session_path = base_path / "agents" / agent_slug / "sessions" / f"{session_id}.jsonl"
+
+            if session_path is not None:
                 message_count = _count_messages_in_session_file(session_path)
 
             if existing:
@@ -158,9 +164,17 @@ def _count_messages_in_session_file(session_file: Path) -> int:
                 line = line.strip()
                 if line:
                     try:
-                        msg = json.loads(line)
-                        # Count only user and assistant messages
-                        role = msg.get("role", "").lower()
+                        evt = json.loads(line)
+                        if not isinstance(evt, dict):
+                            continue
+                        # OpenClaw JSONL stores chat turns as:
+                        # {"type":"message", "message":{"role":"user|assistant|..."}}
+                        if evt.get("type") != "message":
+                            continue
+                        message_obj = evt.get("message")
+                        if not isinstance(message_obj, dict):
+                            continue
+                        role = str(message_obj.get("role", "")).lower()
                         if role in ("user", "assistant"):
                             count += 1
                     except json.JSONDecodeError:
