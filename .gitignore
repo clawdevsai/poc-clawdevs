@@ -68,3 +68,4 @@ control-panel/backend/.venv/
 .cache/
 .codex/
 **/.next/*
+.task

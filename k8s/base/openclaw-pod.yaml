@@ -230,26 +230,34 @@ spec:
                   key: PANEL_TOKEN
           resources:
             requests:
-              cpu: 500m
-              memory: 2Gi
-            limits:
-              cpu: "2"
+              cpu: "1"
               memory: 4Gi
+            limits:
+              cpu: "4"
+              memory: 8Gi
+
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 18789
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /healthz
               port: 18789
-            initialDelaySeconds: 45
+            initialDelaySeconds: 120
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 18789
-            initialDelaySeconds: 90
+            initialDelaySeconds: 180
             periodSeconds: 30
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 4
           securityContext:
             allowPrivilegeEscalation: false
@@ -311,7 +319,8 @@ spec:
 
               echo "[bootstrap] starting openclaw gateway"
               echo "[bootstrap] running openclaw doctor --fix"
-              openclaw doctor --fix || echo "[bootstrap] warning: openclaw doctor --fix failed, proceeding with existing config"
+              timeout 30s openclaw doctor --fix || echo "[bootstrap] warning: openclaw doctor --fix timeout or failed, proceeding with existing config"
+              echo "[bootstrap] compat fix: enforcing openrouter.baseUrl after doctor"
               # Doctor --fix pode reescrever config; reforca compat antes de subir o gateway.
               if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
                 _tmp_openclaw_json="$(mktemp)"

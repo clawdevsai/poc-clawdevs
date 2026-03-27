@@ -43,11 +43,12 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: "1"
-              memory: 2Gi
+              cpu: "2"
+              memory: 4Gi
             limits:
-              cpu: "4"
-              memory: 16Gi
+              cpu: "8"
+              memory: 20Gi
+
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
