@@ -14,17 +14,12 @@ def upgrade() -> None:
     # Note: Requires pgvector extension to be enabled
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
-    # Drop the old column and create new one
-    # Since pgvector type is different, we need to recreate the column
+    # Add new vector column (column didn't exist in previous schema)
     with op.batch_alter_table("memory_entries") as batch_op:
-        # First, we need to drop the existing embedding column
-        batch_op.drop_column("embedding")
-        # Add new vector column
         batch_op.add_column(sa.Column("embedding", Vector(1536), nullable=True))
 
 
 def downgrade() -> None:
-    # Revert back to TEXT (JSON string)
+    # Remove the vector column (back to original state without embedding column)
     with op.batch_alter_table("memory_entries") as batch_op:
         batch_op.drop_column("embedding")
-        batch_op.add_column(sa.Column("embedding", sa.Text(), nullable=True))
