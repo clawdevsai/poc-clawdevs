@@ -23,7 +23,7 @@ from fastapi import APIRouter, Query, Depends
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
@@ -105,7 +105,7 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
             agent_id=agent_id,
             created_at=session.last_active_at
             or session.created_at
-            or datetime.utcnow(),
+            or datetime.now(UTC),
         )
         items.append(event)
 

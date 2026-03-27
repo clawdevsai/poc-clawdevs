@@ -25,7 +25,7 @@ This enables tracking what agents are working on.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional
 from sqlmodel import select
 
@@ -183,7 +183,7 @@ async def _sync_issue_to_task(session, issue: dict, repo: str) -> None:
         existing.status = status
         existing.label = task_label or existing.label
         existing.github_issue_url = issue_url
-        existing.updated_at = datetime.utcnow()
+        existing.updated_at = datetime.now(UTC)
         if assigned_agent_id:
             existing.assigned_agent_id = assigned_agent_id
         logger.debug(f"[task_sync] Updated task for issue #{issue_number}")

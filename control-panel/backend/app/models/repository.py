@@ -20,7 +20,7 @@
 
 from sqlmodel import SQLModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
 
@@ -33,5 +33,5 @@ class Repository(SQLModel, table=True):
     description: Optional[str] = None
     default_branch: str = Field(default="main")
     is_active: bool = Field(default=True, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

@@ -26,7 +26,7 @@ entries into the panel database so the UI can display per-agent memory.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from sqlmodel import col, select
 
@@ -86,7 +86,7 @@ async def sync_memory_entries(db_session) -> None:
                 existing.body = content
                 existing.tags = [slug]
                 existing.source_agents = [slug]
-                existing.updated_at = datetime.utcnow()
+                existing.updated_at = datetime.now(UTC)
                 changed = True
         else:
             db_session.add(
@@ -125,7 +125,7 @@ async def sync_memory_entries(db_session) -> None:
                     shared_existing.body = content
                     shared_existing.tags = ["shared"]
                     shared_existing.source_agents = ["shared"]
-                    shared_existing.updated_at = datetime.utcnow()
+                    shared_existing.updated_at = datetime.now(UTC)
                     changed = True
             else:
                 db_session.add(

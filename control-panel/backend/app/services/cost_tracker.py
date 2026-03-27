@@ -28,7 +28,7 @@ tier-based budgets per agent and task.
 import logging
 from typing import Any, Optional, Dict, Tuple
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -130,7 +130,7 @@ class CostTracker:
             return False, "Agent not found"
 
         # Get agent's tasks from this month
-        month_ago = datetime.utcnow() - timedelta(days=30)
+        month_ago = datetime.now(UTC) - timedelta(days=30)
         statement = select(Task).where(
             (col(Task.assigned_agent_id) == agent_id)
             & (col(Task.created_at) >= month_ago)
@@ -203,7 +203,7 @@ class CostTracker:
         Returns:
             Dict with spending by tier and total
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days)
         statement = select(Task).where(
             (col(Task.assigned_agent_id) == agent_id)
             & (col(Task.created_at) >= cutoff_date)
@@ -240,7 +240,7 @@ class CostTracker:
         Returns:
             Dict with total spending and breakdown
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days)
         statement = select(Task).where(
             (col(Task.created_at) >= cutoff_date) & (col(Task.actual_cost).is_not(None))
         )

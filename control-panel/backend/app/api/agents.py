@@ -23,7 +23,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
@@ -142,7 +142,7 @@ async def update_agent_status(
         agent.current_model = body["current_model"]
     from datetime import datetime
 
-    agent.updated_at = datetime.utcnow()
+    agent.updated_at = datetime.now(UTC)
     await session.commit()
     await session.refresh(agent)
     return AgentResponse.from_orm(agent)

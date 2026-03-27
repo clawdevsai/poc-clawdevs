@@ -27,7 +27,7 @@ Runs tests before task completion and stores results in task history.
 import logging
 import subprocess
 from typing import List, Tuple
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID
 
 from sqlmodel import Session, select
@@ -340,7 +340,7 @@ class TestRunner:
         else:
             task.description = test_summary
 
-        task.updated_at = datetime.utcnow()
+        task.updated_at = datetime.now(UTC)
         self.db_session.add(task)
         self.db_session.commit()
 

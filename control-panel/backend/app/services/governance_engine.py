@@ -374,7 +374,7 @@ class GovernanceEngine:
         from datetime import datetime
 
         audit_entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "agent_id": str(agent_id),
             "action": action,
             "resource": resource,

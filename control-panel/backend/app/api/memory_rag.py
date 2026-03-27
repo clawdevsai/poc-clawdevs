@@ -208,7 +208,7 @@ async def regenerate_embeddings(
 
         if embedding:
             memory.embedding = embedding
-            memory.embedding_generated_at = datetime.utcnow()
+            memory.embedding_generated_at = datetime.now(UTC)
             regenerated += 1
         else:
             failed += 1

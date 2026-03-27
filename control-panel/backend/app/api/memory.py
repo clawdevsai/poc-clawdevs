@@ -24,7 +24,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Response
 from sqlmodel import col, select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID
 
 from app.core.database import get_session
@@ -188,6 +188,6 @@ async def promote_entry(
             status_code=400, detail="Only candidate entries can be promoted"
         )
     entry.entry_type = "global"
-    entry.updated_at = datetime.utcnow()
+    entry.updated_at = datetime.now(UTC)
     await session.commit()
     return {"status": "promoted", "id": entry_id}

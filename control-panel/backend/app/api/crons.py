@@ -23,7 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
@@ -179,7 +179,7 @@ async def trigger_cron_now(
     if agent is None:
         raise HTTPException(status_code=404, detail=f"Agent '{agent_slug}' not found")
 
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     execution = CronExecution(
         agent_id=agent.id,
         started_at=now,

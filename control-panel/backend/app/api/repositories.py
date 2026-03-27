@@ -23,7 +23,7 @@ from fastapi import APIRouter, HTTPException, Depends, Response, status
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID
 
 from app.core.database import get_session
@@ -113,7 +113,7 @@ async def create_repository(
         existing.description = body.description
         existing.default_branch = body.default_branch
         existing.is_active = True
-        existing.updated_at = datetime.utcnow()
+        existing.updated_at = datetime.now(UTC)
         await session.commit()
         await session.refresh(existing)
         response.status_code = status.HTTP_200_OK
@@ -124,7 +124,7 @@ async def create_repository(
         full_name=normalized_full_name,
         description=body.description,
         default_branch=body.default_branch,
-        updated_at=datetime.utcnow(),
+        updated_at=datetime.now(UTC),
     )
     session.add(repo)
     await session.commit()
@@ -155,7 +155,7 @@ async def update_repository(
         repo.default_branch = body.default_branch
     if body.is_active is not None:
         repo.is_active = body.is_active
-    repo.updated_at = datetime.utcnow()
+    repo.updated_at = datetime.now(UTC)
     await session.commit()
     await session.refresh(repo)
     return _to_response(repo)

@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from pgvector.sqlalchemy import Vector
 
 # revision identifiers, used by Alembic.
-revision = "20260327_update_memory_embedding_type"
+revision = "0008"
 down_revision = "0007"
 branch_labels = None
 depends_on = None
