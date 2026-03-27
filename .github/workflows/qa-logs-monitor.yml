@@ -17,19 +17,21 @@ jobs:
     permissions:
       contents: read
       issues: write
+    env:
+      HAS_KUBECONFIG: ${{ secrets.KUBECONFIG != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up kubectl
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         uses: azure/k8s-set-context@v1
         with:
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
       - name: Get OpenClaw pod logs
         id: openclaw-logs
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         run: |
           POD=$(kubectl get pods -l app=clawdevs-ai -o jsonpath='{.items[0].metadata.name}' | cut -d' ' -f1)
           if [ -n "$POD" ]; then
@@ -42,7 +44,7 @@ jobs:
 
       - name: Analyze logs for errors
         id: analyze-errors
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         run: |
           if [ -f /tmp/openclaw-logs.txt ]; then
             ERROR_COUNT=$(grep -ci "error\|exception\|failed\|fatal" /tmp/openclaw-logs.txt || echo "0")
@@ -59,7 +61,7 @@ jobs:
 
       - name: Check Ollama logs
         id: ollama-logs
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         run: |
           POD=$(kubectl get pods -l app=ollama -o jsonpath='{.items[0].metadata.name}' | cut -d' ' -f1)
           if [ -n "$POD" ]; then
@@ -69,7 +71,7 @@ jobs:
           fi
 
       - name: Report summary
-        if: secrets.KUBECONFIG != ''
+        if: env.HAS_KUBECONFIG == 'true'
         run: |
           echo "## QA Logs Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -87,7 +89,7 @@ jobs:
           fi
 
       - name: "Report summary (skipped: no kubeconfig)"
-        if: secrets.KUBECONFIG == ''
+        if: env.HAS_KUBECONFIG != 'true'
         run: |
           echo "KUBECONFIG secret is not configured. Skipping log monitoring steps."
           echo "## QA Logs Summary" >> $GITHUB_STEP_SUMMARY
@@ -95,7 +97,7 @@ jobs:
           echo "- Skipped because \`KUBECONFIG\` secret is not configured." >> $GITHUB_STEP_SUMMARY
 
       - name: Create issue on critical errors
-        if: secrets.KUBECONFIG != '' && steps.analyze-errors.outputs.error_count > 5
+        if: env.HAS_KUBECONFIG == 'true' && steps.analyze-errors.outputs.error_count > 5
         run: |
           curl -X POST https://api.github.com/repos/${{ github.repository }}/issues \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
