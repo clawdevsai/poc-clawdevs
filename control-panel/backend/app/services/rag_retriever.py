@@ -27,7 +27,6 @@ provides context for agent decision-making.
 
 import logging
 from typing import List, Optional
-from uuid import UUID
 
 from sqlmodel import Session, select
 from app.models.memory_entry import MemoryEntry

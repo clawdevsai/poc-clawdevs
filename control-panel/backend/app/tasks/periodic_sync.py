@@ -26,7 +26,6 @@ These tasks run on the worker to keep the control panel in sync with OpenClaw ru
 import logging
 from datetime import datetime, timedelta
 from redis import Redis
-from rq import Queue
 from rq_scheduler import Scheduler
 
 from app.core.config import get_settings

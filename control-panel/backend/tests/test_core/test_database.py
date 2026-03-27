@@ -19,8 +19,6 @@
 # SOFTWARE.
 
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-from sqlalchemy.ext.asyncio import create_async_engine
 
 
 class TestDatabaseEngine:
@@ -80,7 +78,6 @@ class TestAsyncSessionLocal:
     def test_session_maker_class(self):
         """Test that AsyncSessionLocal is async session maker."""
         from app.core.database import AsyncSessionLocal
-        from sqlmodel.ext.asyncio.session import AsyncSession
         
         # AsyncSessionLocal should be a sessionmaker
         assert AsyncSessionLocal is not None
@@ -99,7 +96,6 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_get_session_yields_session(self):
         """Test that get_session yields a session."""
-        from app.core.database import get_session
         
         # This test documents the expected behavior:
         # The function creates an async session and yields it
@@ -114,7 +110,6 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_get_session_handles_error(self):
         """Test that get_session handles errors."""
-        from app.core.database import get_session
         
         # This test documents error handling:
         # The function logs errors and raises them
@@ -137,8 +132,6 @@ class TestCreateDbAndTables:
     @pytest.mark.asyncio
     async def test_create_tables(self):
         """Test creating database tables."""
-        from app.core.database import create_db_and_tables
-        from sqlmodel import SQLModel
         
         # This test documents the expected behavior:
         # Creates all tables defined in SQLModel metadata
@@ -153,8 +146,6 @@ class TestCreateDbAndTables:
     @pytest.mark.asyncio
     async def test_create_tables_creates_all_models(self):
         """Test that create_tables creates all model tables."""
-        from app.core.database import create_db_and_tables
-        from sqlmodel import SQLModel
         
         # This test documents that all models are created
         # Tables created: users, agents, sessions, tasks, etc.

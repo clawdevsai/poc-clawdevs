@@ -23,7 +23,7 @@ Unit tests for Failure Detection Service
 """
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import timedelta
 from uuid import uuid4
 
 from sqlmodel import Session, create_engine, SQLModel

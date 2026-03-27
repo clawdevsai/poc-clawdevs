@@ -18,9 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import pytest
-from datetime import timedelta, datetime
-from unittest.mock import patch, MagicMock
+from datetime import timedelta
+from unittest.mock import patch
 from jose import JWTError
 
 

@@ -234,7 +234,7 @@ class FailureDetector:
             task_id=task_id,
             event_type="task_escalated",
             severity="warning",
-            description=f"Task escalated to senior agent",
+            description="Task escalated to senior agent",
             details={
                 "escalated_to_agent_id": str(agent_id),
                 "reason": reason,

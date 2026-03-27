@@ -24,10 +24,8 @@
 Script to verify that all tests are fully mocked (no external access).
 """
 
-import ast
 import os
 import sys
-from pathlib import Path
 
 
 def check_test_file(filepath):

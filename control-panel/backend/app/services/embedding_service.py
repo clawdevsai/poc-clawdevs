@@ -26,10 +26,8 @@ No API keys or external dependencies required.
 """
 
 import logging
-import json
 import httpx
 from typing import List, Optional
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

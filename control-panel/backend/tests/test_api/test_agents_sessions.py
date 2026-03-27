@@ -24,12 +24,7 @@ Test suite for API endpoints.
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
 
-from app.main import app
-from app.core.database import get_session
-from app.models import Agent
 
 
 # Use fixtures from conftest.py

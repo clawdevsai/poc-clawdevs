@@ -120,7 +120,6 @@ class TestWebSocketEndpoint:
     @pytest.mark.asyncio
     async def test_websocket_invalid_channel(self):
         """Test WebSocket with invalid channel gets rejected."""
-        from app.api.ws import websocket_endpoint
         
         mock_ws = MagicMock(spec=WebSocket)
         # Simulate invalid channel
@@ -135,9 +134,6 @@ class TestWebSocketEndpoint:
     @pytest.mark.asyncio
     async def test_websocket_auth_success(self):
         """Test WebSocket with valid token accepts connection."""
-        from app.api.ws import websocket_endpoint, manager
-        from app.core.auth import decode_token
-        from app.core.config import get_settings
         
         mock_ws = MagicMock(spec=WebSocket)
         mock_ws.headers = {"origin": "http://localhost"}
@@ -161,7 +157,6 @@ class TestWebSocketEndpoint:
     @pytest.mark.asyncio
     async def test_websocket_ping_pong(self):
         """Test WebSocket ping/pong handling."""
-        from app.api.ws import manager
         mock_ws = MagicMock(spec=WebSocket)
         mock_ws.receive_text = AsyncMock(side_effect=["ping", WebSocketDisconnect()])
         mock_ws.send_text = AsyncMock()

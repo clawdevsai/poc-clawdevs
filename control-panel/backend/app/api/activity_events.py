@@ -20,15 +20,14 @@
 
 from typing import Annotated, Optional
 from fastapi import APIRouter, Query, Depends
-from sqlmodel import select, desc
+from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
-from app.models import ActivityEvent, Agent, Session
+from app.models import Agent, Session
 
 router = APIRouter()
 

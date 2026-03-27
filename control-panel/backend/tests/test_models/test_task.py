@@ -22,7 +22,6 @@
 Unit tests for Task model - 100% mocked, no external access.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -49,7 +48,6 @@ class TestTaskModel:
     def test_task_with_all_fields(self):
         """Test task with all fields populated."""
         from app.models.task import Task
-        from datetime import timedelta
         
         now = datetime.utcnow()
         

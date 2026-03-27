@@ -4,7 +4,6 @@ Script to analyze code coverage based on test files.
 """
 
 import os
-import sys
 from pathlib import Path
 import ast
 
@@ -113,7 +112,7 @@ def analyze_coverage():
                 print(f"     Testes: {len(test_classes)} classes")
             else:
                 print(f"  ❌ {rel_path}")
-                print(f"     Sem testes!")
+                print("     Sem testes!")
         
         print()
     

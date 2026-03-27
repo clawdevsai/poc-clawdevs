@@ -22,7 +22,6 @@
 Unit tests for MemoryEntry model - 100% mocked, no external access.
 """
 
-import pytest
 from datetime import datetime
 from uuid import UUID, uuid4
 

@@ -3,7 +3,6 @@
 Script to analyze test coverage and identify gaps.
 """
 
-import sys
 import os
 from pathlib import Path
 
@@ -32,7 +31,7 @@ def analyze_coverage():
                 filepath = Path(root) / file
                 test_files.append(filepath)
     
-    print(f"🔍 Análise de Cobertura de Código")
+    print("🔍 Análise de Cobertura de Código")
     print(f"📊 Arquivos de origem: {len(files_to_check)}")
     print(f"📊 Arquivos de teste: {len(test_files)}")
     print()

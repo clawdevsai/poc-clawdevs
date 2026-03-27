@@ -22,7 +22,6 @@
 Unit tests for Metric model - 100% mocked, no external access.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 

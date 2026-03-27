@@ -24,9 +24,6 @@ Test suite for SDD Artifacts API endpoints.
 
 import pytest
 from httpx import AsyncClient
-from unittest.mock import patch, MagicMock, AsyncMock
-from datetime import datetime
-from uuid import uuid4
 
 
 class TestListSddArtifacts:

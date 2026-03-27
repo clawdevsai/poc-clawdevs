@@ -19,11 +19,10 @@
 # SOFTWARE.
 
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
 
 from app.core.database import get_session

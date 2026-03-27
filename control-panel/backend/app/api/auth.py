@@ -25,7 +25,7 @@ from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
-from app.core.auth import verify_password, create_access_token, get_password_hash
+from app.core.auth import verify_password, create_access_token
 from app.core.database import get_session
 from app.models import User
 from app.api.deps import CurrentUser

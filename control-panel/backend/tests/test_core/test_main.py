@@ -24,7 +24,6 @@ Tests for main.py - FastAPI application initialization.
 
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
-from contextlib import asynccontextmanager
 
 
 class TestAppInitialization:
@@ -239,7 +238,6 @@ class TestLifespan:
     @pytest.mark.asyncio
     async def test_lifespan_calls_bootstrap(self):
         """Test that lifespan calls bootstrap functions."""
-        from app.main import lifespan
         from unittest.mock import patch
         
         with patch('app.main.bootstrap_admin') as mock_admin:
@@ -257,6 +255,5 @@ class TestHealthEndpoint:
     @pytest.mark.asyncio
     async def test_healthz_returns_ok(self):
         """Test that healthz endpoint returns ok."""
-        from app.main import app
         
         pass

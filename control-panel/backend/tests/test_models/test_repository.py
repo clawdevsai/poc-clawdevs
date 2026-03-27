@@ -22,9 +22,8 @@
 Unit tests for Repository model - 100% mocked, no external access.
 """
 
-import pytest
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
 
 class TestRepositoryModel:

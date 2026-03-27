@@ -26,7 +26,6 @@ Tests semantic search, embedding generation, and context retrieval.
 
 import pytest
 import json
-from datetime import datetime
 
 from sqlmodel import Session, create_engine, SQLModel
 from sqlmodel.pool import StaticPool

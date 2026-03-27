@@ -20,7 +20,7 @@
 
 """Tests for activity_sync service."""
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select

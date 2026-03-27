@@ -25,8 +25,7 @@ Tests for API dependencies.
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi import HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlmodel import select
+from fastapi.security import HTTPBearer
 
 
 class TestGetCurrentUser:

@@ -24,8 +24,6 @@ Test suite for Approvals API endpoints.
 
 import pytest
 from httpx import AsyncClient
-from unittest.mock import patch, MagicMock, AsyncMock
-from datetime import datetime
 from uuid import uuid4
 
 

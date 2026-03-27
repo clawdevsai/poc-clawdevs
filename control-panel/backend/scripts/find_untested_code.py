@@ -25,7 +25,6 @@ Script to identify source files without corresponding test files.
 Categorizes files and prioritizes based on importance.
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -84,7 +83,7 @@ def find_untested_code(src_dir, pattern="test"):
             untested.append((src, category))
     
     # Print results
-    print(f"🔍 Análise de Cobertura de Testes")
+    print("🔍 Análise de Cobertura de Testes")
     print(f"📊 Arquivos de origem: {len(source_files)}")
     print(f"✅ Com testes: {len(tested)}")
     print(f"❌ Sem testes: {len(untested)}")

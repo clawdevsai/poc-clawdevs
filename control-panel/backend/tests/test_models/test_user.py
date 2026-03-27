@@ -22,9 +22,8 @@
 Unit tests for User model - 100% mocked, no external access.
 """
 
-import pytest
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
 
 class TestUserModel:
@@ -120,7 +119,6 @@ class TestUserModel:
 
     def test_user_password_hash_format(self):
         """Test that password hash follows bcrypt format."""
-        from app.models.user import User
         from app.core.auth import get_password_hash
         
         password = "testpassword"
@@ -169,7 +167,6 @@ class TestUserRelationships:
         """Test that user can be serialized to dict."""
         from app.models.user import User
         from app.core.auth import get_password_hash
-        from datetime import datetime
         
         user = User(
             username="serializeuser",

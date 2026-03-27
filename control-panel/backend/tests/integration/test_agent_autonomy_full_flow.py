@@ -33,11 +33,8 @@ Tests complete workflows:
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
-from datetime import datetime, timedelta
 
-from app.models import Task, Agent, MemoryEntry, User
-from app.core.auth import get_password_hash
+from app.models import Task, Agent, MemoryEntry
 from app.services.failure_detector import FailureDetector
 from app.services.rag_retriever import RAGRetriever
 from app.services.governance_engine import GovernanceEngine

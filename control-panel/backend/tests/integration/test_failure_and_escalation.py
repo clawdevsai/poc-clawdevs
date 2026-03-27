@@ -30,7 +30,6 @@ Injeta falhas deliberadas e valida:
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, timedelta
 
 from app.models import Task, Agent
 from app.services.failure_detector import FailureDetector

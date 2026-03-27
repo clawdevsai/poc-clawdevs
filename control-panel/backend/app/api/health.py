@@ -26,7 +26,7 @@ Provides task health monitoring, failure tracking, and escalation status.
 
 import logging
 from uuid import UUID
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select

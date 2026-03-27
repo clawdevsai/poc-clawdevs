@@ -20,11 +20,8 @@
 
 """Tests for periodic_sync tasks."""
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock, call
+from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime, timedelta
-from redis import Redis
-from rq import Queue
-from rq_scheduler import Scheduler
 
 from app.tasks.periodic_sync import (
     run_sync_agents,

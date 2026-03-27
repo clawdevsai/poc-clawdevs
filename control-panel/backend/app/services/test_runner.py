@@ -26,8 +26,7 @@ Runs tests before task completion and stores results in task history.
 
 import logging
 import subprocess
-import json
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 from datetime import datetime
 from uuid import UUID
 
@@ -186,7 +185,7 @@ class TestRunner:
                         pass
 
             if process.returncode != 0:
-                result.errors.append(f"Integration tests failed")
+                result.errors.append("Integration tests failed")
 
             logger.info(f"Integration tests: {result.passed} passed, {result.failed} failed")
 

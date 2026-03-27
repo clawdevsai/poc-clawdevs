@@ -22,7 +22,6 @@
 Generates activity events from existing sessions and other data sources
 to populate the Recent Activity feed.
 """
-from datetime import datetime
 from sqlmodel import select
 from app.models import ActivityEvent, Session, Agent
 

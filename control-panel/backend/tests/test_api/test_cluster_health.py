@@ -24,7 +24,6 @@ Test suite for Clusters API endpoints.
 
 import pytest
 from httpx import AsyncClient
-from unittest.mock import patch, MagicMock, AsyncMock
 
 
 class TestClusterStatus:

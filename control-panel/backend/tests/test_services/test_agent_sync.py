@@ -21,14 +21,11 @@
 """Tests for agent_sync service."""
 import pytest
 import json
-from pathlib import Path
 from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from app.services.agent_sync import (
-    sync_agents,
     parse_identity,
     _status_from_heartbeat,
     _has_active_session,
@@ -250,8 +247,6 @@ class TestSyncAgentsRuntime:
     async def test_sync_agents_runtime_updates_status(self, db_session: AsyncSession):
         """Test that sync_agents_runtime updates agent status from runtime files."""
         from app.services.agent_sync import sync_agents_runtime
-        from sqlmodel import select
-        from app.models import Agent
 
         # Pre-populate an agent
         agent = Agent(

@@ -21,7 +21,6 @@
 import json
 import re
 from pathlib import Path
-from typing import Optional
 from datetime import datetime, timezone
 from functools import lru_cache
 from app.core.config import get_settings
