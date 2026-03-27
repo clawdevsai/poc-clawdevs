@@ -20,9 +20,7 @@ def upgrade() -> None:
         # First, we need to drop the existing embedding column
         batch_op.drop_column("embedding")
         # Add new vector column
-        batch_op.add_column(
-            sa.Column("embedding", Vector(1536), nullable=True)
-        )
+        batch_op.add_column(sa.Column("embedding", Vector(1536), nullable=True))
 
 
 def downgrade() -> None:
