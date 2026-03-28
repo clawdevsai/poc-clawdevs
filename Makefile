@@ -188,9 +188,27 @@ images-build: \
 
 up: preflight build network-create volumes-create containers-clean
 	@set -euo pipefail; \
-	set -a; . <(sed 's/\r$$//' "$(ENV_FILE)"); set +a; \
+	load_env_file() { \
+		local env_file="$$1"; \
+		while IFS= read -r raw_line || [ -n "$$raw_line" ]; do \
+			line="$${raw_line%$$'\r'}"; \
+			case "$$line" in \
+				''|\#*) continue ;; \
+			esac; \
+			key="$${line%%=*}"; \
+			value="$${line#*=}"; \
+			key="$$(printf '%s' "$$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//')"; \
+			key="$${key#export }"; \
+			if ! printf '%s' "$$key" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*$$'; then \
+				echo "[up] ERRO: chave invalida no .env: $$key"; \
+				return 1; \
+			fi; \
+			export "$$key=$$value"; \
+		done < "$$env_file"; \
+	}; \
+	load_env_file "$(ENV_FILE)"; \
 	wait_for_health() { \
-		local name="$$1"; local timeout="$$2"; local elapsed=0; local status=""; \
+		local name="$${1:-}"; local timeout="$${2:-120}"; local elapsed=0; local status=""; \
 		while true; do \
 			status="$$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$$name" 2>/dev/null || true)"; \
 			if [ "$$status" = "healthy" ] || [ "$$status" = "running" ]; then \
@@ -212,7 +230,7 @@ up: preflight build network-create volumes-create containers-clean
 		done; \
 	}; \
 	wait_for_running() { \
-		local name="$$1"; local timeout="$$2"; local elapsed=0; local status=""; \
+		local name="$${1:-}"; local timeout="$${2:-120}"; local elapsed=0; local status=""; \
 		while true; do \
 			status="$$(docker inspect -f '{{.State.Status}}' "$$name" 2>/dev/null || true)"; \
 			if [ "$$status" = "running" ]; then \
@@ -234,7 +252,7 @@ up: preflight build network-create volumes-create containers-clean
 		done; \
 	}; \
 	wait_for_exit_success() { \
-		local name="$$1"; local timeout="$$2"; local elapsed=0; local status=""; local code=""; \
+		local name="$${1:-}"; local timeout="$${2:-180}"; local elapsed=0; local status=""; local code=""; \
 		while true; do \
 			status="$$(docker inspect -f '{{.State.Status}}' "$$name" 2>/dev/null || true)"; \
 			if [ "$$status" = "exited" ]; then \
@@ -299,7 +317,7 @@ up: preflight build network-create volumes-create containers-clean
 	wait_for_health clawdevs-ollama 600; \
 	echo "[up] iniciando clawdevs-searxng"; \
 	docker run -d --name clawdevs-searxng --network $(STACK_NETWORK) --network-alias searxng \
-		-e SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml \
+		-e SEARXNG_SETTINGS_PATH=//etc/searxng/settings.yml \
 		-e SEARXNG_SECRET="$$SEARXNG_SECRET" \
 		--health-cmd="wget -qO- http://localhost:8080/healthz" \
 		--health-interval=10s --health-timeout=3s --health-retries=6 --health-start-period=15s \
