@@ -1,0 +1,252 @@
+# Copyright (c) 2026 Diego Silva Morais <lukewaresoftwarehouse@gmail.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - openclaw-pod.yaml
+  - ollama-pod.yaml
+  - ollama-pvc.yaml
+  - networkpolicy-allow-egress.yaml
+  - searxng-deployment.yaml
+  - panel-agent-credentials-secret.yaml
+  - panel-admin-credentials-secret.yaml
+  - generate-agent-token-job.yaml
+  - control-panel/
+
+configMapGenerator:
+  - name: openclaw-agent-config
+    files:
+      # ceo
+      - ceo-AGENTS.md=openclaw-config/ceo/AGENTS.md
+      - ceo-BOOT.md=openclaw-config/ceo/BOOT.md
+      - ceo-BOOTSTRAP.md=openclaw-config/ceo/BOOTSTRAP.md
+      - ceo-HEARTBEAT.md=openclaw-config/ceo/HEARTBEAT.md
+      - ceo-IDENTITY.md=openclaw-config/ceo/IDENTITY.md
+      - ceo-INPUT_SCHEMA.json=openclaw-config/ceo/INPUT_SCHEMA.json
+      - ceo-SOUL.md=openclaw-config/ceo/SOUL.md
+      - ceo-SECURITY_TEST_CASES.md=openclaw-config/ceo/SECURITY_TEST_CASES.md
+      - ceo-USER.md=openclaw-config/ceo/USER.md
+      - ceo-TOOLS.md=openclaw-config/ceo/TOOLS.md
+      - ceo-skill-ceo_orchestration-SKILL.md=openclaw-config/agents/ceo/skills/ceo_orchestration/SKILL.md
+      - ceo-skill-markdown_converter-SKILL.md=openclaw-config/agents/ceo/skills/markdown_converter/SKILL.md
+      - ceo-skill-market_research-SKILL.md=openclaw-config/agents/ceo/skills/market_research/SKILL.md
+      # po
+      - po-AGENTS.md=openclaw-config/po/AGENTS.md
+      - po-BOOT.md=openclaw-config/po/BOOT.md
+      - po-BOOTSTRAP.md=openclaw-config/po/BOOTSTRAP.md
+      - po-HEARTBEAT.md=openclaw-config/po/HEARTBEAT.md
+      - po-IDENTITY.md=openclaw-config/po/IDENTITY.md
+      - po-INPUT_SCHEMA.json=openclaw-config/po/INPUT_SCHEMA.json
+      - po-SOUL.md=openclaw-config/po/SOUL.md
+      - po-SECURITY_TEST_CASES.md=openclaw-config/po/SECURITY_TEST_CASES.md
+      - po-USER.md=openclaw-config/po/USER.md
+      - po-TOOLS.md=openclaw-config/po/TOOLS.md
+      - po-skill-po_product_delivery-SKILL.md=openclaw-config/agents/po/skills/po_product_delivery/SKILL.md
+      - po-skill-prompt_engineering_expert-SKILL.md=openclaw-config/agents/po/skills/prompt_engineering_expert/SKILL.md
+      - po-skill-clawddocs-SKILL.md=openclaw-config/agents/po/skills/clawddocs/SKILL.md
+      # arquiteto
+      - arquiteto-AGENTS.md=openclaw-config/arquiteto/AGENTS.md
+      - arquiteto-BOOT.md=openclaw-config/arquiteto/BOOT.md
+      - arquiteto-BOOTSTRAP.md=openclaw-config/arquiteto/BOOTSTRAP.md
+      - arquiteto-HEARTBEAT.md=openclaw-config/arquiteto/HEARTBEAT.md
+      - arquiteto-IDENTITY.md=openclaw-config/arquiteto/IDENTITY.md
+      - arquiteto-INPUT_SCHEMA.json=openclaw-config/arquiteto/INPUT_SCHEMA.json
+      - arquiteto-SOUL.md=openclaw-config/arquiteto/SOUL.md
+      - arquiteto-SECURITY_TEST_CASES.md=openclaw-config/arquiteto/SECURITY_TEST_CASES.md
+      - arquiteto-USER.md=openclaw-config/arquiteto/USER.md
+      - arquiteto-TOOLS.md=openclaw-config/arquiteto/TOOLS.md
+      - arquiteto-skill-arquiteto_engineering-SKILL.md=openclaw-config/agents/arquiteto/skills/arquiteto_engineering/SKILL.md
+      # dev_backend
+      - dev_backend-AGENTS.md=openclaw-config/dev_backend/AGENTS.md
+      - dev_backend-BOOT.md=openclaw-config/dev_backend/BOOT.md
+      - dev_backend-BOOTSTRAP.md=openclaw-config/dev_backend/BOOTSTRAP.md
+      - dev_backend-HEARTBEAT.md=openclaw-config/dev_backend/HEARTBEAT.md
+      - dev_backend-IDENTITY.md=openclaw-config/dev_backend/IDENTITY.md
+      - dev_backend-INPUT_SCHEMA.json=openclaw-config/dev_backend/INPUT_SCHEMA.json
+      - dev_backend-SOUL.md=openclaw-config/dev_backend/SOUL.md
+      - dev_backend-SECURITY_TEST_CASES.md=openclaw-config/dev_backend/SECURITY_TEST_CASES.md
+      - dev_backend-USER.md=openclaw-config/dev_backend/USER.md
+      - dev_backend-TOOLS.md=openclaw-config/dev_backend/TOOLS.md
+      - dev_backend-skill-dev_backend_implementation-SKILL.md=openclaw-config/agents/dev_backend/skills/dev_backend_implementation/SKILL.md
+      # dev_frontend
+      - dev_frontend-AGENTS.md=openclaw-config/dev_frontend/AGENTS.md
+      - dev_frontend-BOOT.md=openclaw-config/dev_frontend/BOOT.md
+      - dev_frontend-BOOTSTRAP.md=openclaw-config/dev_frontend/BOOTSTRAP.md
+      - dev_frontend-HEARTBEAT.md=openclaw-config/dev_frontend/HEARTBEAT.md
+      - dev_frontend-IDENTITY.md=openclaw-config/dev_frontend/IDENTITY.md
+      - dev_frontend-INPUT_SCHEMA.json=openclaw-config/dev_frontend/INPUT_SCHEMA.json
+      - dev_frontend-SOUL.md=openclaw-config/dev_frontend/SOUL.md
+      - dev_frontend-SECURITY_TEST_CASES.md=openclaw-config/dev_frontend/SECURITY_TEST_CASES.md
+      - dev_frontend-USER.md=openclaw-config/dev_frontend/USER.md
+      - dev_frontend-TOOLS.md=openclaw-config/dev_frontend/TOOLS.md
+      - dev_frontend-skill-dev_frontend_implementation-SKILL.md=openclaw-config/agents/dev_frontend/skills/dev_frontend_implementation/SKILL.md
+      # dev_mobile
+      - dev_mobile-AGENTS.md=openclaw-config/dev_mobile/AGENTS.md
+      - dev_mobile-BOOT.md=openclaw-config/dev_mobile/BOOT.md
+      - dev_mobile-BOOTSTRAP.md=openclaw-config/dev_mobile/BOOTSTRAP.md
+      - dev_mobile-HEARTBEAT.md=openclaw-config/dev_mobile/HEARTBEAT.md
+      - dev_mobile-IDENTITY.md=openclaw-config/dev_mobile/IDENTITY.md
+      - dev_mobile-INPUT_SCHEMA.json=openclaw-config/dev_mobile/INPUT_SCHEMA.json
+      - dev_mobile-SOUL.md=openclaw-config/dev_mobile/SOUL.md
+      - dev_mobile-SECURITY_TEST_CASES.md=openclaw-config/dev_mobile/SECURITY_TEST_CASES.md
+      - dev_mobile-USER.md=openclaw-config/dev_mobile/USER.md
+      - dev_mobile-TOOLS.md=openclaw-config/dev_mobile/TOOLS.md
+      - dev_mobile-skill-dev_mobile_implementation-SKILL.md=openclaw-config/agents/dev_mobile/skills/dev_mobile_implementation/SKILL.md
+      # shared skills
+      - shared-skill-self-improving-SKILL.md=openclaw-config/agents/shared/skills/self-improving/SKILL.md
+      - shared-skill-self-improving-skill-security-policy.md=openclaw-config/agents/shared/skills/self-improving/references/skill-security-policy.md
+      - shared-skill-moltguard-SKILL.md=openclaw-config/agents/shared/skills/moltguard/SKILL.md
+      - shared-skill-memory_setup-SKILL.md=openclaw-config/agents/shared/skills/memory_setup/SKILL.md
+      # qa_engineer
+      - qa_engineer-AGENTS.md=openclaw-config/qa_engineer/AGENTS.md
+      - qa_engineer-BOOT.md=openclaw-config/qa_engineer/BOOT.md
+      - qa_engineer-BOOTSTRAP.md=openclaw-config/qa_engineer/BOOTSTRAP.md
+      - qa_engineer-HEARTBEAT.md=openclaw-config/qa_engineer/HEARTBEAT.md
+      - qa_engineer-IDENTITY.md=openclaw-config/qa_engineer/IDENTITY.md
+      - qa_engineer-INPUT_SCHEMA.json=openclaw-config/qa_engineer/INPUT_SCHEMA.json
+      - qa_engineer-SOUL.md=openclaw-config/qa_engineer/SOUL.md
+      - qa_engineer-SECURITY_TEST_CASES.md=openclaw-config/qa_engineer/SECURITY_TEST_CASES.md
+      - qa_engineer-USER.md=openclaw-config/qa_engineer/USER.md
+      - qa_engineer-TOOLS.md=openclaw-config/qa_engineer/TOOLS.md
+      - qa_engineer-skill-qa_engineer_validation-SKILL.md=openclaw-config/agents/qa_engineer/skills/qa_engineer_validation/SKILL.md
+      - qa_engineer-skill-test-specialist-SKILL.md=openclaw-config/agents/qa_engineer/skills/test-specialist/SKILL.md
+      - qa_engineer-skill-qa-bug-investigation-SKILL.md=openclaw-config/agents/qa_engineer/skills/qa-bug-investigation/SKILL.md
+      # devops_sre
+      - devops_sre-AGENTS.md=openclaw-config/devops_sre/AGENTS.md
+      - devops_sre-BOOT.md=openclaw-config/devops_sre/BOOT.md
+      - devops_sre-BOOTSTRAP.md=openclaw-config/devops_sre/BOOTSTRAP.md
+      - devops_sre-HEARTBEAT.md=openclaw-config/devops_sre/HEARTBEAT.md
+      - devops_sre-IDENTITY.md=openclaw-config/devops_sre/IDENTITY.md
+      - devops_sre-INPUT_SCHEMA.json=openclaw-config/devops_sre/INPUT_SCHEMA.json
+      - devops_sre-SOUL.md=openclaw-config/devops_sre/SOUL.md
+      - devops_sre-SECURITY_TEST_CASES.md=openclaw-config/devops_sre/SECURITY_TEST_CASES.md
+      - devops_sre-USER.md=openclaw-config/devops_sre/USER.md
+      - devops_sre-TOOLS.md=openclaw-config/devops_sre/TOOLS.md
+      - devops_sre-skill-devops_sre_operations-SKILL.md=openclaw-config/agents/devops_sre/skills/devops_sre_operations/SKILL.md
+      - devops_sre-skill-docker_essentials-SKILL.md=openclaw-config/agents/devops_sre/skills/docker_essentials/SKILL.md
+      # security_engineer
+      - security_engineer-AGENTS.md=openclaw-config/security_engineer/AGENTS.md
+      - security_engineer-BOOT.md=openclaw-config/security_engineer/BOOT.md
+      - security_engineer-BOOTSTRAP.md=openclaw-config/security_engineer/BOOTSTRAP.md
+      - security_engineer-HEARTBEAT.md=openclaw-config/security_engineer/HEARTBEAT.md
+      - security_engineer-IDENTITY.md=openclaw-config/security_engineer/IDENTITY.md
+      - security_engineer-INPUT_SCHEMA.json=openclaw-config/security_engineer/INPUT_SCHEMA.json
+      - security_engineer-SOUL.md=openclaw-config/security_engineer/SOUL.md
+      - security_engineer-SECURITY_TEST_CASES.md=openclaw-config/security_engineer/SECURITY_TEST_CASES.md
+      - security_engineer-USER.md=openclaw-config/security_engineer/USER.md
+      - security_engineer-TOOLS.md=openclaw-config/security_engineer/TOOLS.md
+      - security_engineer-skill-security_engineer_scan-SKILL.md=openclaw-config/agents/security_engineer/skills/security_engineer_scan/SKILL.md
+      # ux_designer
+      - ux_designer-IDENTITY.md=openclaw-config/ux_designer/IDENTITY.md
+      - ux_designer-AGENTS.md=openclaw-config/ux_designer/AGENTS.md
+      - ux_designer-BOOT.md=openclaw-config/ux_designer/BOOT.md
+      - ux_designer-BOOTSTRAP.md=openclaw-config/ux_designer/BOOTSTRAP.md
+      - ux_designer-HEARTBEAT.md=openclaw-config/ux_designer/HEARTBEAT.md
+      - ux_designer-INPUT_SCHEMA.json=openclaw-config/ux_designer/INPUT_SCHEMA.json
+      - ux_designer-SOUL.md=openclaw-config/ux_designer/SOUL.md
+      - ux_designer-SECURITY_TEST_CASES.md=openclaw-config/ux_designer/SECURITY_TEST_CASES.md
+      - ux_designer-USER.md=openclaw-config/ux_designer/USER.md
+      - ux_designer-TOOLS.md=openclaw-config/ux_designer/TOOLS.md
+      - ux_designer-skill-ux_designer_artifacts-SKILL.md=openclaw-config/agents/ux_designer/skills/ux_designer_artifacts/SKILL.md
+      - ux_designer-skill-ux_ui_pro_rules-SKILL.md=openclaw-config/agents/ux_designer/skills/ux_ui_pro_rules/SKILL.md
+      # dba_data_engineer
+      - dba_data_engineer-IDENTITY.md=openclaw-config/dba_data_engineer/IDENTITY.md
+      - dba_data_engineer-AGENTS.md=openclaw-config/dba_data_engineer/AGENTS.md
+      - dba_data_engineer-BOOT.md=openclaw-config/dba_data_engineer/BOOT.md
+      - dba_data_engineer-BOOTSTRAP.md=openclaw-config/dba_data_engineer/BOOTSTRAP.md
+      - dba_data_engineer-HEARTBEAT.md=openclaw-config/dba_data_engineer/HEARTBEAT.md
+      - dba_data_engineer-INPUT_SCHEMA.json=openclaw-config/dba_data_engineer/INPUT_SCHEMA.json
+      - dba_data_engineer-SOUL.md=openclaw-config/dba_data_engineer/SOUL.md
+      - dba_data_engineer-SECURITY_TEST_CASES.md=openclaw-config/dba_data_engineer/SECURITY_TEST_CASES.md
+      - dba_data_engineer-USER.md=openclaw-config/dba_data_engineer/USER.md
+      - dba_data_engineer-TOOLS.md=openclaw-config/dba_data_engineer/TOOLS.md
+      - dba_data_engineer-skill-dba_data_engineer_schema-SKILL.md=openclaw-config/agents/dba_data_engineer/skills/dba_data_engineer_schema/SKILL.md
+      # memory_curator
+      - memory_curator-AGENTS.md=openclaw-config/memory_curator/AGENTS.md
+      - memory_curator-BOOT.md=openclaw-config/memory_curator/BOOT.md
+      - memory_curator-BOOTSTRAP.md=openclaw-config/memory_curator/BOOTSTRAP.md
+      - memory_curator-HEARTBEAT.md=openclaw-config/memory_curator/HEARTBEAT.md
+      - memory_curator-IDENTITY.md=openclaw-config/memory_curator/IDENTITY.md
+      - memory_curator-INPUT_SCHEMA.json=openclaw-config/memory_curator/INPUT_SCHEMA.json
+      - memory_curator-SOUL.md=openclaw-config/memory_curator/SOUL.md
+      - memory_curator-SECURITY_TEST_CASES.md=openclaw-config/memory_curator/SECURITY_TEST_CASES.md
+      - memory_curator-USER.md=openclaw-config/memory_curator/USER.md
+      - memory_curator-TOOLS.md=openclaw-config/memory_curator/TOOLS.md
+      - memory_curator-skill-memory_curator_promotion-SKILL.md=openclaw-config/agents/memory_curator/skills/memory_curator_promotion/SKILL.md
+      - memory_curator-MEMORY.md=openclaw-config/memory_curator/MEMORY.md
+      # memory baselines (por agente)
+      - ceo-MEMORY.md=openclaw-config/ceo/MEMORY.md
+      - po-MEMORY.md=openclaw-config/po/MEMORY.md
+      - arquiteto-MEMORY.md=openclaw-config/arquiteto/MEMORY.md
+      - dev_backend-MEMORY.md=openclaw-config/dev_backend/MEMORY.md
+      - dev_frontend-MEMORY.md=openclaw-config/dev_frontend/MEMORY.md
+      - dev_mobile-MEMORY.md=openclaw-config/dev_mobile/MEMORY.md
+      - qa_engineer-MEMORY.md=openclaw-config/qa_engineer/MEMORY.md
+      - security_engineer-MEMORY.md=openclaw-config/security_engineer/MEMORY.md
+      - devops_sre-MEMORY.md=openclaw-config/devops_sre/MEMORY.md
+      - ux_designer-MEMORY.md=openclaw-config/ux_designer/MEMORY.md
+      - dba_data_engineer-MEMORY.md=openclaw-config/dba_data_engineer/MEMORY.md
+      # shared memory
+      - shared-SHARED_MEMORY.md=openclaw-config/shared/SHARED_MEMORY.md
+      # shared
+      - shared-BRIEF_TEMPLATE.md=openclaw-config/shared/BRIEF_TEMPLATE.md
+      - shared-CLARIFY_TEMPLATE.md=openclaw-config/shared/CLARIFY_TEMPLATE.md
+      - shared-CONSTITUTION.md=openclaw-config/shared/CONSTITUTION.md
+      - shared-SDD_CHECKLIST.md=openclaw-config/shared/SDD_CHECKLIST.md
+      - shared-SDD_FULL_CYCLE_EXAMPLE.md=openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md
+      - shared-SDD_OPERATIONAL_PROMPTS.md=openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md
+      - shared-SOURCE_VALIDATION.md=openclaw-config/shared/SOURCE_VALIDATION.md
+      - shared-PROMPT_CHANGELOG.md=openclaw-config/shared/PROMPT_CHANGELOG.md
+      - shared-sdd-initiative-README.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/README.md
+      - shared-sdd-initiative-BRIEF.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/BRIEF.md
+      - shared-sdd-initiative-SPEC.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/SPEC.md
+      - shared-sdd-initiative-CLARIFY.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/CLARIFY.md
+      - shared-sdd-initiative-PLAN.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/PLAN.md
+      - shared-sdd-initiative-TASK.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/TASK.md
+      - shared-sdd-initiative-VALIDATE.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/VALIDATE.md
+      - shared-PLAN_TEMPLATE.md=openclaw-config/shared/PLAN_TEMPLATE.md
+      - shared-TASK_TEMPLATE.md=openclaw-config/shared/TASK_TEMPLATE.md
+      - shared-VALIDATE_TEMPLATE.md=openclaw-config/shared/VALIDATE_TEMPLATE.md
+      - shared-SPEC_TEMPLATE.md=openclaw-config/shared/SPEC_TEMPLATE.md
+      - shared-VIBE_CODING_PLAYBOOK.md=openclaw-config/shared/VIBE_CODING_PLAYBOOK.md
+      - shared-SDD_OPERATING_MODEL.md=openclaw-config/shared/SDD_OPERATING_MODEL.md
+      - shared-SPECKIT_ADAPTATION.md=openclaw-config/shared/SPECKIT_ADAPTATION.md
+      # repo
+      - project-README.md=openclaw-config/shared/PROJECT_README.md
+
+  - name: openclaw-bootstrap-scripts
+    files:
+      - bootstrap-scripts/00-env.sh
+      - bootstrap-scripts/01-deps.sh
+      - bootstrap-scripts/02-web-tools.sh
+      - bootstrap-scripts/03-gh-auth.sh
+      - bootstrap-scripts/04-repo-tools.sh
+      - bootstrap-scripts/05-install-openclaw.sh
+      - bootstrap-scripts/06-dirs.sh
+      - bootstrap-scripts/07-agent-workspaces.sh
+      - bootstrap-scripts/08-git-hooks.sh
+      - bootstrap-scripts/09-openclaw-config.sh
+      - bootstrap-scripts/10-background-services.sh
+      - bootstrap-scripts/11-start-gateway.sh
+
+generatorOptions:
+  disableNameSuffixHash: true
