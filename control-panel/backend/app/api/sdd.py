@@ -20,10 +20,10 @@
 
 from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlmodel import col, select
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID
 
 from app.core.database import get_session
@@ -73,31 +73,43 @@ async def list_artifacts(
     session: Annotated[AsyncSession, Depends(get_session)],
     artifact_type: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
 ):
-    query = select(SddArtifact).order_by(col(SddArtifact.created_at).desc())
+    query = select(SddArtifact)
     if artifact_type:
         query = query.where(SddArtifact.artifact_type == artifact_type.upper())
     if status:
         query = query.where(SddArtifact.status == status)
     result = await session.exec(query)
-    artifacts = result.all()
+    artifacts = sorted(
+        result.all(),
+        key=lambda item: item.created_at or datetime.min.replace(tzinfo=None),
+        reverse=True,
+    )
+
+    total = len(artifacts)
+    start = (page - 1) * page_size
+    end = start + page_size
+    paged_items = artifacts[start:end]
+
     items = [
         SddArtifactResponse(
             id=str(a.id),
-            agent_id=str(a.agent_id) if a.agent_id else None,
+            agent_id=None,
             artifact_type=a.artifact_type,
             title=a.title,
             content=a.content,
             status=a.status,
-            github_issue_number=a.github_issue_number,
-            github_issue_url=a.github_issue_url,
+            github_issue_number=None,
+            github_issue_url=None,
             file_path=a.file_path,
             created_at=a.created_at,
             updated_at=a.updated_at,
         )
-        for a in artifacts
+        for a in paged_items
     ]
-    return SddArtifactsListResponse(items=items, total=len(items))
+    return SddArtifactsListResponse(items=items, total=total)
 
 
 @router.post("", response_model=SddArtifactResponse, status_code=201)
@@ -106,8 +118,6 @@ async def create_artifact(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    from datetime import datetime, timezone
-
     if body.artifact_type.upper() not in ARTIFACT_TYPES:
         raise HTTPException(
             status_code=400,
@@ -117,21 +127,20 @@ async def create_artifact(
         artifact_type=body.artifact_type.upper(),
         title=body.title,
         content=body.content,
-        agent_id=UUID(body.agent_id) if body.agent_id else None,
-        updated_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(UTC).replace(tzinfo=None),
     )
     session.add(artifact)
     await session.commit()
     await session.refresh(artifact)
     return SddArtifactResponse(
         id=str(artifact.id),
-        agent_id=str(artifact.agent_id) if artifact.agent_id else None,
+        agent_id=None,
         artifact_type=artifact.artifact_type,
         title=artifact.title,
         content=artifact.content,
         status=artifact.status,
-        github_issue_number=artifact.github_issue_number,
-        github_issue_url=artifact.github_issue_url,
+        github_issue_number=None,
+        github_issue_url=None,
         file_path=artifact.file_path,
         created_at=artifact.created_at,
         updated_at=artifact.updated_at,
@@ -152,13 +161,13 @@ async def get_artifact(
         raise HTTPException(status_code=404, detail="Artifact not found")
     return SddArtifactResponse(
         id=str(artifact.id),
-        agent_id=str(artifact.agent_id) if artifact.agent_id else None,
+        agent_id=None,
         artifact_type=artifact.artifact_type,
         title=artifact.title,
         content=artifact.content,
         status=artifact.status,
-        github_issue_number=artifact.github_issue_number,
-        github_issue_url=artifact.github_issue_url,
+        github_issue_number=None,
+        github_issue_url=None,
         file_path=artifact.file_path,
         created_at=artifact.created_at,
         updated_at=artifact.updated_at,
@@ -172,8 +181,6 @@ async def update_artifact(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    from datetime import datetime, timezone
-
     result = await session.exec(
         select(SddArtifact).where(SddArtifact.id == UUID(artifact_id))
     )
@@ -186,18 +193,18 @@ async def update_artifact(
         artifact.status = body.status
     if body.title is not None:
         artifact.title = body.title
-    artifact.updated_at = datetime.now(timezone.utc)
+    artifact.updated_at = datetime.now(UTC).replace(tzinfo=None)
     await session.commit()
     await session.refresh(artifact)
     return SddArtifactResponse(
         id=str(artifact.id),
-        agent_id=str(artifact.agent_id) if artifact.agent_id else None,
+        agent_id=None,
         artifact_type=artifact.artifact_type,
         title=artifact.title,
         content=artifact.content,
         status=artifact.status,
-        github_issue_number=artifact.github_issue_number,
-        github_issue_url=artifact.github_issue_url,
+        github_issue_number=None,
+        github_issue_url=None,
         file_path=artifact.file_path,
         created_at=artifact.created_at,
         updated_at=artifact.updated_at,

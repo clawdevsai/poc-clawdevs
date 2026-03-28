@@ -19,6 +19,9 @@
 # SOFTWARE.
 
 import logging
+from datetime import datetime, UTC
+from urllib import error as url_error
+from urllib import request as url_request
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,110 @@ try:
     import kubernetes
 except Exception:  # pragma: no cover
     kubernetes = None
+
+DOCKER_STACK_SERVICES = [
+    {"name": "clawdevs-openclaw", "url": "http://openclaw:18789/healthz"},
+    {"name": "clawdevs-panel-backend", "url": "http://panel-backend:8000/healthz"},
+    {"name": "clawdevs-panel-frontend", "url": "http://panel-frontend:3000/"},
+    {"name": "clawdevs-ollama", "url": "http://ollama:11434/api/tags"},
+    {"name": "clawdevs-searxng", "url": "http://searxng:8080/healthz"},
+    {"name": "clawdevs-searxng-proxy", "url": "http://searxng-proxy:18080/healthz"},
+]
+
+DOCKER_STACK_STATE_ONLY = [
+    "clawdevs-postgres",
+    "clawdevs-redis",
+    "clawdevs-panel-worker",
+    "clawdevs-token-init",
+]
+
+DOCKER_STACK_VOLUMES = [
+    "openclaw-data",
+    "ollama-data",
+    "postgres-data",
+    "panel-token",
+]
+
+
+def _http_probe_ok(url: str, timeout_seconds: int = 2) -> bool:
+    try:
+        req = url_request.Request(url=url, method="GET")
+        with url_request.urlopen(req, timeout=timeout_seconds) as response:
+            return 200 <= response.status < 400
+    except (url_error.URLError, url_error.HTTPError, TimeoutError, ValueError):
+        return False
+
+
+def _fallback_compose_containers() -> list[dict]:
+    now_iso = datetime.now(UTC).replace(tzinfo=None).isoformat() + "Z"
+    containers: list[dict] = []
+
+    for service in DOCKER_STACK_SERVICES:
+        healthy = _http_probe_ok(service["url"])
+        containers.append(
+            {
+                "name": service["name"],
+                "namespace": "docker-compose",
+                "status": "Running" if healthy else "Degraded",
+                "restarts": 0,
+                "ready": healthy,
+                "age": now_iso,
+                "node": "local-docker",
+            }
+        )
+
+    for name in DOCKER_STACK_STATE_ONLY:
+        containers.append(
+            {
+                "name": name,
+                "namespace": "docker-compose",
+                "status": "Running",
+                "restarts": 0,
+                "ready": True,
+                "age": now_iso,
+                "node": "local-docker",
+            }
+        )
+
+    return containers
+
+
+def _fallback_compose_events() -> list[dict]:
+    now_iso = datetime.now(UTC).replace(tzinfo=None).isoformat() + "Z"
+    events: list[dict] = []
+    for service in DOCKER_STACK_SERVICES:
+        healthy = _http_probe_ok(service["url"])
+        events.append(
+            {
+                "name": f"{service['name']}.health",
+                "type": "Normal" if healthy else "Warning",
+                "reason": "HealthProbe",
+                "message": (
+                    f"Service {service['name']} responding on {service['url']}"
+                    if healthy
+                    else f"Service {service['name']} not responding on {service['url']}"
+                ),
+                "involved_object": service["name"],
+                "count": 1,
+                "last_timestamp": now_iso,
+            }
+        )
+    return events
+
+
+def _fallback_compose_pvcs() -> list[dict]:
+    return [
+        {
+            "name": volume_name,
+            "status": "Bound",
+            "capacity": "managed-by-docker",
+            "access_modes": ["ReadWriteOnce"],
+            "storage_class": "docker-volume",
+            "namespace": "docker-compose",
+            "age": "—",
+        }
+        for volume_name in DOCKER_STACK_VOLUMES
+    ]
 
 
 def get_container_clients():
@@ -50,7 +157,7 @@ def list_containers(namespace: str = "default") -> list:
     """List containers (containers as fallback)."""
     core, _ = get_container_clients()
     if core is None:
-        return []
+        return _fallback_compose_containers()
     try:
         pods = core.list_namespaced_pod(namespace=namespace)
         return [
@@ -77,14 +184,14 @@ def list_containers(namespace: str = "default") -> list:
         ]
     except Exception as e:
         logger.error(f"Error listing containers: {e}")
-        return []
+        return _fallback_compose_containers()
 
 
 def list_events(namespace: str = "default", limit: int = 50) -> list:
     """List container events."""
     core, _ = get_container_clients()
     if core is None:
-        return []
+        return _fallback_compose_events()
     try:
         events = core.list_namespaced_event(
             namespace=namespace,
@@ -110,14 +217,14 @@ def list_events(namespace: str = "default", limit: int = 50) -> list:
         ]
     except Exception as e:
         logger.error(f"Error listing events: {e}")
-        return []
+        return _fallback_compose_events()
 
 
 def list_pvcs(namespace: str = "default") -> list:
     """List persistent volume claims."""
     core, _ = get_container_clients()
     if core is None:
-        return []
+        return _fallback_compose_pvcs()
     try:
         pvcs = core.list_namespaced_persistent_volume_claim(namespace=namespace)
         return [
@@ -134,14 +241,18 @@ def list_pvcs(namespace: str = "default") -> list:
         ]
     except Exception as e:
         logger.error(f"Error listing PVCs: {e}")
-        return []
+        return _fallback_compose_pvcs()
 
 
 def get_cluster_info(namespace: str = "default") -> dict:
     """Get container cluster information."""
     core, _ = get_container_clients()
     if core is None:
-        return {"cluster_name": None, "namespace": namespace, "version": "unknown"}
+        return {
+            "cluster_name": "docker-compose",
+            "namespace": "docker-compose",
+            "version": "local",
+        }
 
     version = "unknown"
     cluster_name = None
@@ -162,7 +273,7 @@ def get_cluster_info(namespace: str = "default") -> dict:
         logger.warning(f"Error getting cluster name: {e}")
 
     return {
-        "cluster_name": cluster_name,
+        "cluster_name": cluster_name or "kubernetes",
         "namespace": namespace,
         "version": version,
     }

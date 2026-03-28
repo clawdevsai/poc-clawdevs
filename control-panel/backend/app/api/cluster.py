@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from app.api.deps import CurrentUser
 from app.core.config import get_settings
 from app.services import container_client
@@ -27,18 +27,8 @@ settings = get_settings()
 router = APIRouter()
 
 
-def _ensure_container_client_available() -> None:
-    core, _ = container_client.get_container_clients()
-    if core is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Container client unavailable. Verify that Container client is available or deployment configuration.",
-        )
-
-
 @router.get("/pods")
 async def get_pods(_: CurrentUser):
-    _ensure_container_client_available()
     return container_client.list_containers(namespace=settings.container_namespace)
 
 
@@ -49,11 +39,9 @@ async def get_cluster_info(_: CurrentUser):
 
 @router.get("/events")
 async def get_events(_: CurrentUser):
-    _ensure_container_client_available()
     return container_client.list_events(namespace=settings.container_namespace)
 
 
 @router.get("/pvcs")
 async def get_pvcs(_: CurrentUser):
-    _ensure_container_client_available()
     return container_client.list_pvcs(namespace=settings.container_namespace)

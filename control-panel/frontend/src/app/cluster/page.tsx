@@ -303,17 +303,17 @@ export default function ClusterPage() {
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-            Cluster Status
+            Infra Containers
           </h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
-            Kubernetes resources — auto-refreshes every 30s
+            Docker Compose services and storage — auto-refreshes every 30s
           </p>
         </div>
 
         {/* Pods table */}
         <div className="flex flex-col gap-3">
           <SectionHeader
-            title="Pods"
+            title="Containers"
             count={pods.length}
             isLoading={podsLoading}
             lastUpdated={podsUpdated ? new Date(podsUpdated) : undefined}
@@ -353,7 +353,7 @@ export default function ClusterPage() {
                         colSpan={6}
                         className="px-4 py-10 text-center text-sm text-[hsl(var(--muted-foreground))]"
                       >
-                        No pods found.
+                        No containers found.
                       </td>
                     </tr>
                   ) : (
@@ -394,7 +394,7 @@ export default function ClusterPage() {
         {/* PVCs table */}
         <div className="flex flex-col gap-3">
           <SectionHeader
-            title="Persistent Volume Claims"
+            title="Volumes"
             count={pvcs.length}
             isLoading={pvcsLoading}
             lastUpdated={pvcsUpdated ? new Date(pvcsUpdated) : undefined}
@@ -434,7 +434,7 @@ export default function ClusterPage() {
                         colSpan={6}
                         className="px-4 py-10 text-center text-sm text-[hsl(var(--muted-foreground))]"
                       >
-                        No PVCs found.
+                        No volumes found.
                       </td>
                     </tr>
                   ) : (
@@ -515,7 +515,7 @@ export default function ClusterPage() {
                         colSpan={5}
                         className="px-4 py-10 text-center text-sm text-[hsl(var(--muted-foreground))]"
                       >
-                        No events found.
+                        No infra events found.
                       </td>
                     </tr>
                   ) : (
