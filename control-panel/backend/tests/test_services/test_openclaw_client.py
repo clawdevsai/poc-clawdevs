@@ -24,26 +24,26 @@ from datetime import datetime, UTC
 
 
 class TestK8sClients:
-    """Test k8s_client functions (with mocking)."""
+    """Test container_client functions (with mocking)."""
 
-    def test_get_k8s_clients_no_cluster(self):
-        """Test get_k8s_clients when no cluster config is available."""
-        with patch("app.services.k8s_client.kubernetes") as mock_k8s:
+    def test_get_container_clients_no_cluster(self):
+        """Test get_container_clients when no cluster config is available."""
+        with patch("app.services.container_client.kubernetes") as mock_k8s:
             mock_k8s.client = MagicMock()
             mock_k8s.config = MagicMock()
             mock_k8s.config.load_incluster_config.side_effect = Exception("No config")
             mock_k8s.config.load_kube_config.side_effect = Exception("No kubeconfig")
 
             core, apps = __import__(
-                "app.services.k8s_client", fromlist=["get_k8s_clients"]
-            ).get_k8s_clients()
+                "app.services.container_client", fromlist=["get_container_clients"]
+            ).get_container_clients()
 
             assert core is None
             assert apps is None
 
-    def test_get_k8s_clients_with_cluster(self):
-        """Test get_k8s_clients when cluster config is available."""
-        with patch("app.services.k8s_client.kubernetes") as mock_k8s:
+    def test_get_container_clients_with_cluster(self):
+        """Test get_container_clients when cluster config is available."""
+        with patch("app.services.container_client.kubernetes") as mock_k8s:
             mock_core = MagicMock()
             mock_apps = MagicMock()
             mock_k8s.client.CoreV1Api.return_value = mock_core
@@ -51,25 +51,25 @@ class TestK8sClients:
             mock_k8s.config.load_incluster_config = MagicMock()
 
             core, apps = __import__(
-                "app.services.k8s_client", fromlist=["get_k8s_clients"]
-            ).get_k8s_clients()
+                "app.services.container_client", fromlist=["get_container_clients"]
+            ).get_container_clients()
 
             assert core is not None
             assert apps is not None
 
-    def test_list_pods_no_core(self):
-        """Test list_pods when k8s client is not available."""
-        from app.services.k8s_client import list_pods
+    def test_list_containers_no_core(self):
+        """Test list_containers when k8s client is not available."""
+        from app.services.container_client import list_containers
 
         with patch(
-            "app.services.k8s_client.get_k8s_clients", return_value=(None, None)
+            "app.services.container_client.get_container_clients", return_value=(None, None)
         ):
-            pods = list_pods(namespace="default")
+            pods = list_containers(namespace="default")
             assert pods == []
 
-    def test_list_pods_with_pods(self):
-        """Test list_pods when pods exist."""
-        from app.services.k8s_client import list_pods
+    def test_list_containers_with_pods(self):
+        """Test list_containers when pods exist."""
+        from app.services.container_client import list_containers
 
         mock_pod = MagicMock()
         mock_pod.metadata.name = "test-pod"
@@ -79,30 +79,30 @@ class TestK8sClients:
         mock_pod.metadata.creation_timestamp = datetime.now(UTC)
         mock_pod.spec.node_name = "node-1"
 
-        with patch("app.services.k8s_client.get_k8s_clients") as mock_get_clients:
+        with patch("app.services.container_client.get_container_clients") as mock_get_clients:
             mock_core = MagicMock()
             mock_pods_list = MagicMock()
             mock_pods_list.items = [mock_pod]
             mock_core.list_namespaced_pod.return_value = mock_pods_list
             mock_get_clients.return_value = (mock_core, None)
 
-            pods = list_pods(namespace="default")
+            pods = list_containers(namespace="default")
             assert len(pods) == 1
             assert pods[0]["name"] == "test-pod"
 
     def test_list_events_no_core(self):
         """Test list_events when k8s client is not available."""
-        from app.services.k8s_client import list_events
+        from app.services.container_client import list_events
 
         with patch(
-            "app.services.k8s_client.get_k8s_clients", return_value=(None, None)
+            "app.services.container_client.get_container_clients", return_value=(None, None)
         ):
             events = list_events(namespace="default")
             assert events == []
 
     def test_list_events_with_events(self):
         """Test list_events when events exist."""
-        from app.services.k8s_client import list_events
+        from app.services.container_client import list_events
 
         mock_event = MagicMock()
         mock_event.metadata.name = "test-event"
@@ -113,7 +113,7 @@ class TestK8sClients:
         mock_event.count = 1
         mock_event.last_timestamp = datetime.now(UTC)
 
-        with patch("app.services.k8s_client.get_k8s_clients") as mock_get_clients:
+        with patch("app.services.container_client.get_container_clients") as mock_get_clients:
             mock_core = MagicMock()
             mock_events_list = MagicMock()
             mock_events_list.items = [mock_event]
@@ -126,10 +126,10 @@ class TestK8sClients:
 
     def test_list_pvcs_no_core(self):
         """Test list_pvcs when k8s client is not available."""
-        from app.services.k8s_client import list_pvcs
+        from app.services.container_client import list_pvcs
 
         with patch(
-            "app.services.k8s_client.get_k8s_clients", return_value=(None, None)
+            "app.services.container_client.get_container_clients", return_value=(None, None)
         ):
             pvcs = list_pvcs(namespace="default")
             assert pvcs == []
