@@ -22,6 +22,13 @@
 
 # Documentação operacional (clawdevs-ai)
 
+## 📋 Referências Principais
+
+- **Análise Completa do Projeto:** [analise-projeto.md](./analise-projeto.md) — Sumário executivo, arquitetura de alto nível, stack tecnológico e operação
+- **Arquitetura Técnica Detalhada:** [arquitetura-tecnica.md](./arquitetura-tecnica.md) — Implementação técnica, topologia de rede, fluxos de dados e troubleshooting
+
+## 📚 Documentação Operacional
+
 - **O que a aplicação faz e exemplos de uso:** [aplicacao-e-exemplos.md](./aplicacao-e-exemplos.md)
 - **Papel de cada agente (um arquivo por agente):** [agentes/README.md](./agentes/README.md)
 - **Arquivos do workspace do agente (OpenClaw + ClawDevs):** [workspace-arquivos-agente.md](./workspace-arquivos-agente.md)

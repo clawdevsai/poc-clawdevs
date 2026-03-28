@@ -27,6 +27,11 @@
 - Wireframes (`UX-XXX.md`); mapa de fluxo (Mermaid); design tokens; spec de componentes.
 - Revisão de implementação vs UX; pesquisa de boas práticas (WCAG, HIG, etc.).
 
+## Skills
+
+- `ux_designer_artifacts`: produção de artefato UX (`UX-XXX.md`) com fluxo, wireframe, tokens e especificação.
+- `ux_ui_pro_rules`: critérios profissionais de qualidade visual/UX para decisão e review de UI (somente prompt, sem `search.py`).
+
 **Papel:** US → artefatos de design para frontend/mobile.
 
 **Faz:**
