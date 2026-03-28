@@ -52,8 +52,8 @@ class Settings(BaseSettings):
     # OpenClaw data path (PVC mounted read-only)
     openclaw_data_path: str = "/data/openclaw"
 
-    # Kubernetes
-    k8s_namespace: str = "default"
+    # Container orchestration
+    container_namespace: str = "default"
 
     # Cost tracking - Token costs per 1M tokens for each model
     token_costs_per_model: dict[str, float] = {
