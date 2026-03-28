@@ -31,8 +31,15 @@ settings = get_settings()
 
 
 def _now_utc_naive() -> datetime:
-    """Return current UTC time as naive datetime for DB-compatible comparisons."""
+    """Return current UTC time as timezone-aware datetime."""
     return datetime.now(UTC)
+
+
+def _to_utc_aware(value: datetime) -> datetime:
+    """Normalize datetime values to timezone-aware UTC."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 AGENT_SLUGS = [
@@ -228,10 +235,7 @@ def _pick_latest_runtime_entry(
     if latest_ts is None:
         return None, None
 
-    # Database columns are stored as naive UTC timestamps.
-    dt_utc = datetime.fromtimestamp(latest_ts / 1000, tz=timezone.utc).replace(
-        tzinfo=None
-    )
+    dt_utc = datetime.fromtimestamp(latest_ts / 1000, tz=timezone.utc)
     return latest_item, dt_utc
 
 
@@ -250,10 +254,7 @@ def _status_from_heartbeat(
     if last_heartbeat_at is None:
         return "offline"
 
-    if last_heartbeat_at.tzinfo is not None:
-        last_heartbeat_at = last_heartbeat_at.astimezone(timezone.utc).replace(
-            tzinfo=None
-        )
+    last_heartbeat_at = _to_utc_aware(last_heartbeat_at)
 
     age_seconds = (_now_utc_naive() - last_heartbeat_at).total_seconds()
 
@@ -295,9 +296,7 @@ def _has_active_session(payload: dict | None) -> bool:
         if not aborted and isinstance(updated_at, (int, float)):
             # Check if updated in last 5 minutes
             try:
-                session_time = datetime.fromtimestamp(
-                    updated_at / 1000, tz=timezone.utc
-                ).replace(tzinfo=None)
+                session_time = datetime.fromtimestamp(updated_at / 1000, tz=timezone.utc)
                 age_seconds = (_now_utc_naive() - session_time).total_seconds()
                 if age_seconds <= 5 * 60:
                     return True
