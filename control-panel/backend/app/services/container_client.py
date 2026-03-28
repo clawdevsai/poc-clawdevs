@@ -35,11 +35,11 @@ def get_container_clients():
             logger.warning("Container management requires kubernetes package")
             return None, None
         client = kubernetes.client
-        k8s_config = kubernetes.config
+        config_manager = kubernetes.config
         try:
-            k8s_config.load_incluster_config()
+            config_manager.load_incluster_config()
         except Exception:
-            k8s_config.load_kube_config()
+            config_manager.load_kube_config()
         return client.CoreV1Api(), client.AppsV1Api()
     except Exception as e:
         logger.warning(f"Container client not available: {e}")

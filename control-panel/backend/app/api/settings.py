@@ -30,11 +30,11 @@ router = APIRouter()
 
 @router.get("/info")
 async def get_settings_info(_: CurrentUser):
-    cluster_info = k8s_client.get_cluster_info(namespace=settings.container_namespace)
+    cluster_info = container_client.get_cluster_info(namespace=settings.container_namespace)
     return {
         "gateway_url": settings.openclaw_gateway_url,
         "cluster_namespace": cluster_info.get("namespace") or settings.container_namespace,
-        "k8s_version": cluster_info.get("k8s_version") or "unknown",
+        "container_version": cluster_info.get("version") or "unknown",
     }
 
 

@@ -76,8 +76,8 @@ class TestSettings:
         settings = Settings()
         assert settings.openclaw_data_path == "/data/openclaw"
 
-    def test_settings_kubernetes_namespace(self):
-        """Test Kubernetes namespace."""
+    def test_settings_container_namespace(self):
+        """Test container namespace setting."""
         from app.core.config import Settings
 
         settings = Settings()
