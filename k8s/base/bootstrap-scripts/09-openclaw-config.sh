@@ -760,6 +760,29 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
+# Garantir skills compartilhadas para todos os agentes sem remover skills existentes.
+# Requisito: adicao idempotente (nao duplica entradas).
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .agents.list |= map(
+        .skills = (
+          (.skills // [])
+          | if index("moltguard") then . else . + ["moltguard"] end
+          | if index("memory_setup") then . else . + ["memory_setup"] end
+        )
+      )
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    echo "[bootstrap] skills compartilhadas (moltguard, memory_setup) garantidas em agents.list[].skills"
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao aplicar patch das skills compartilhadas em openclaw.json"
+  fi
+fi
+
 # Cada agente usa seu proprio workspace com identidade isolada (workspace definido por agente no JSON).
 
 # Exec approvals zero trust:

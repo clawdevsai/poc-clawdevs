@@ -114,6 +114,8 @@ configMapGenerator:
       # shared skills
       - shared-skill-self-improving-SKILL.md=openclaw-config/agents/shared/skills/self-improving/SKILL.md
       - shared-skill-self-improving-skill-security-policy.md=openclaw-config/agents/shared/skills/self-improving/references/skill-security-policy.md
+      - shared-skill-moltguard-SKILL.md=openclaw-config/agents/shared/skills/moltguard/SKILL.md
+      - shared-skill-memory_setup-SKILL.md=openclaw-config/agents/shared/skills/memory_setup/SKILL.md
       # qa_engineer
       - qa_engineer-AGENTS.md=openclaw-config/qa_engineer/AGENTS.md
       - qa_engineer-BOOT.md=openclaw-config/qa_engineer/BOOT.md
