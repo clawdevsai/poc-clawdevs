@@ -21,7 +21,7 @@
 """Tests for agent_sync service."""
 import pytest
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, UTC
 from unittest.mock import patch
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -127,22 +127,22 @@ class TestStatusFromHeartbeat:
         assert status == "offline"
 
     def test_status_working_recent_with_session(self):
-        recent_time = datetime.utcnow()
+        recent_time = datetime.now(UTC)
         status = _status_from_heartbeat(recent_time, has_active_session=True)
         assert status == "working"
 
     def test_status_online_recent_no_session(self):
-        recent_time = datetime.utcnow()
+        recent_time = datetime.now(UTC)
         status = _status_from_heartbeat(recent_time, has_active_session=False)
         assert status == "online"
 
     def test_status_idle_10_minutes(self):
-        older_time = datetime.utcnow() - timedelta(minutes=10)
+        older_time = datetime.now(UTC) - timedelta(minutes=10)
         status = _status_from_heartbeat(older_time)
         assert status == "idle"
 
     def test_status_offline_2_hours(self):
-        very_old_time = datetime.utcnow() - timedelta(hours=2)
+        very_old_time = datetime.now(UTC) - timedelta(hours=2)
         status = _status_from_heartbeat(very_old_time)
         assert status == "offline"
 

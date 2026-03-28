@@ -296,7 +296,9 @@ def _has_active_session(payload: dict | None) -> bool:
         if not aborted and isinstance(updated_at, (int, float)):
             # Check if updated in last 5 minutes
             try:
-                session_time = datetime.fromtimestamp(updated_at / 1000, tz=timezone.utc)
+                session_time = datetime.fromtimestamp(
+                    updated_at / 1000, tz=timezone.utc
+                )
                 age_seconds = (_now_utc_naive() - session_time).total_seconds()
                 if age_seconds <= 5 * 60:
                     return True
