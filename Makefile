@@ -73,7 +73,8 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: help
 .PHONY: preflight sync-agent-config
 .PHONY: build images-build pull
-.PHONY: up up-gpu down restart status logs
+.PHONY: up up-all up-gpu down restart status logs
+.PHONY: up-postgres up-redis up-ollama up-searxng up-searxng-proxy up-panel-backend up-panel-worker up-panel-frontend up-token-init up-openclaw
 .PHONY: openclaw-logs backend-logs ollama-logs frontend-logs
 .PHONY: logs-follow ps top
 .PHONY: env-check panel-url panel-db-migrate panel-logs openclaw-shell push release clean prune
@@ -100,8 +101,9 @@ help:
 	@echo "  ClawDevs AI — Makefile (docker run)"
 	@echo "════════════════════════════════════════════════════════════════"
 	@echo ""
-	@echo "make up            Build local + sobe todos os 10 containers"
-	@echo "make up-gpu        Mesmo fluxo do up com --gpus all no Ollama"
+	@echo "make up-all        Build local + sobe todos os 10 containers"
+	@echo "make up-gpu        Mesmo fluxo do up-all com --gpus all no Ollama"
+	@echo "make up-<service>  Sobe container individual (ex.: up-postgres)"
 	@echo "make down          Remove todos os containers da stack"
 	@echo "make status        Lista status dos containers da stack"
 	@echo "make logs          Logs agregados dos containers em execucao"
@@ -134,6 +136,7 @@ preflight:
 		$(SEARXNG_PROXY_CONF) \
 		$(BOOTSTRAP_SCRIPTS_DIR)/11-start-gateway.sh \
 		scripts/docker/run-openclaw.sh \
+		scripts/docker/up-service.sh \
 		scripts/docker/generate-panel-token.sh; do \
 		if [ ! -f "$$file" ]; then \
 			echo "ERRO: arquivo obrigatorio ausente: $$file"; \
@@ -187,7 +190,12 @@ images-build: \
 	panel-frontend-image-build \
 	openclaw-image-build
 
-up: preflight build network-create volumes-create containers-clean
+up:
+	@echo "Use make up-all para subir a stack completa."
+	@echo "Para subir um container: make up-postgres | up-redis | up-ollama | up-searxng | up-searxng-proxy | up-panel-backend | up-panel-worker | up-panel-frontend | up-token-init | up-openclaw"
+	@exit 1
+
+up-all: preflight build network-create volumes-create containers-clean
 	@set -euo pipefail; \
 	load_env_file() { \
 		local env_file="$$1"; \
@@ -394,14 +402,44 @@ up: preflight build network-create volumes-create containers-clean
 	@echo "  http://localhost:11434       Ollama API"
 	@echo "  http://localhost:18080       SearXNG Proxy"
 
+up-postgres: preflight network-create volumes-create postgres-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" POSTGRES_IMAGE="$(POSTGRES_IMAGE)" bash scripts/docker/up-service.sh postgres
+
+up-redis: preflight network-create volumes-create redis-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" REDIS_IMAGE="$(REDIS_IMAGE)" bash scripts/docker/up-service.sh redis
+
+up-ollama: preflight network-create volumes-create ollama-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OLLAMA_IMAGE="$(OLLAMA_IMAGE)" bash scripts/docker/up-service.sh ollama
+
+up-searxng: preflight network-create searxng-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" SEARXNG_IMAGE="$(SEARXNG_IMAGE)" bash scripts/docker/up-service.sh searxng
+
+up-searxng-proxy: preflight network-create searxng-proxy-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" SEARXNG_PROXY_IMAGE="$(SEARXNG_PROXY_IMAGE)" SEARXNG_PROXY_CONF="$(SEARXNG_PROXY_CONF)" bash scripts/docker/up-service.sh searxng-proxy
+
+up-panel-backend: preflight network-create volumes-create panel-backend-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" PANEL_BACKEND_IMAGE="$(PANEL_BACKEND_IMAGE)" bash scripts/docker/up-service.sh panel-backend
+
+up-panel-worker: preflight network-create volumes-create panel-worker-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" PANEL_WORKER_IMAGE="$(PANEL_WORKER_IMAGE)" bash scripts/docker/up-service.sh panel-worker
+
+up-panel-frontend: preflight network-create panel-frontend-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" PANEL_FRONTEND_IMAGE="$(PANEL_FRONTEND_IMAGE)" bash scripts/docker/up-service.sh panel-frontend
+
+up-token-init: preflight network-create volumes-create token-init-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" TOKEN_INIT_IMAGE="$(TOKEN_INIT_IMAGE)" bash scripts/docker/up-service.sh token-init
+
+up-openclaw: preflight network-create volumes-create openclaw-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OPENCLAW_IMAGE="$(OPENCLAW_IMAGE)" AGENT_CONFIG_FLAT_DIR="$(AGENT_CONFIG_FLAT_DIR)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh openclaw
+
 up-gpu:
-	@$(MAKE) up OLLAMA_GPU_FLAGS="--gpus all"
+	@$(MAKE) up-all OLLAMA_GPU_FLAGS="--gpus all"
 
 down: containers-clean
 
 restart:
 	@$(MAKE) down
-	@$(MAKE) up
+	@$(MAKE) up-all
 
 status:
 	@docker ps -a --filter "name=^/clawdevs-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
