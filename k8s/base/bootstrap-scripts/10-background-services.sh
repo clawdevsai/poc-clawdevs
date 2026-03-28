@@ -70,9 +70,37 @@ openclaw_cron_list_json() {
   timeout "${timeout_seconds}"s openclaw cron list --json > "${output_file}" 2>/dev/null
 }
 
+run_security_audit_deep_once() {
+  local audit_log="${OPENCLAW_STATE_DIR}/backlog/status/security-audit-deep.log"
+  local retries="${OPENCLAW_SECURITY_AUDIT_MAX_RETRIES:-60}"
+  local interval_seconds="${OPENCLAW_SECURITY_AUDIT_RETRY_INTERVAL_SECONDS:-5}"
+  local timeout_seconds="${OPENCLAW_SECURITY_AUDIT_TIMEOUT_SECONDS:-45}"
+
+  mkdir -p "$(dirname "${audit_log}")"
+  for _ in $(seq 1 "${retries}"); do
+    if openclaw_gateway_is_ready; then
+      echo "[bootstrap] running openclaw security audit --deep"
+      if timeout "${timeout_seconds}"s openclaw security audit --deep >> "${audit_log}" 2>&1; then
+        echo "[bootstrap] openclaw security audit --deep concluido (log: ${audit_log})"
+      else
+        echo "[bootstrap] warning: openclaw security audit --deep falhou/timeout (log: ${audit_log})"
+      fi
+      return 0
+    fi
+    sleep "${interval_seconds}"
+  done
+
+  echo "[bootstrap] warning: gateway nao ficou pronto a tempo para rodar openclaw security audit --deep"
+  return 0
+}
+
 if [ "${PANEL_PERMISSION_SYNC_ENABLED:-true}" = "true" ]; then
   echo "[bootstrap] enabling panel permission sync for sessions.json"
   ( set +e; ensure_panel_read_permissions ) &
+fi
+
+if [ "${OPENCLAW_SECURITY_AUDIT_DEEP_ON_START:-true}" = "true" ]; then
+  ( set +e; run_security_audit_deep_once ) &
 fi
 
 if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then
