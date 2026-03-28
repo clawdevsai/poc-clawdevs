@@ -81,7 +81,7 @@ class TestSettings:
         from app.core.config import Settings
 
         settings = Settings()
-        assert settings.k8s_namespace == "default"
+        assert settings.container_namespace == "default"
 
     def test_settings_debug_false(self):
         """Test debug mode is disabled by default."""
@@ -110,7 +110,7 @@ class TestSettings:
         assert hasattr(settings, "github_org")
         assert hasattr(settings, "github_default_repository")
         assert hasattr(settings, "openclaw_data_path")
-        assert hasattr(settings, "k8s_namespace")
+        assert hasattr(settings, "container_namespace")
         assert hasattr(settings, "debug")
         assert hasattr(settings, "allowed_origins")
 
@@ -267,7 +267,7 @@ class TestSettingsEdgeCases:
         assert isinstance(settings.admin_username, str)
         assert isinstance(settings.admin_password, str)
         assert isinstance(settings.openclaw_gateway_url, str)
-        assert isinstance(settings.k8s_namespace, str)
+        assert isinstance(settings.container_namespace, str)
         assert isinstance(settings.debug, bool)
         assert isinstance(settings.allowed_origins, list)
         assert isinstance(settings.access_token_expire_minutes, int)
