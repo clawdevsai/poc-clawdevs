@@ -42,7 +42,7 @@ def _to_utc_naive(value: datetime) -> datetime:
     return value.astimezone(UTC).replace(tzinfo=None)
 
 
-AGENT_SLUGS = [
+DEFAULT_AGENT_SLUGS = [
     "ceo",
     "po",
     "arquiteto",
@@ -85,22 +85,6 @@ ROLE_MAP = {
     "memory_curator": "Memory Curator",
 }
 
-# Display names aligned with avatar personas
-DISPLAY_NAME_MAP = {
-    "ceo": "Leonardo",
-    "po": "Camila",
-    "arquiteto": "Henrique",
-    "dev_backend": "Arthur",
-    "dev_frontend": "Bruno",
-    "dev_mobile": "Gabriel",
-    "qa_engineer": "Mateus",
-    "devops_sre": "Diego",
-    "security_engineer": "Thiago",
-    "ux_designer": "Sofia",
-    "dba_data_engineer": "Igor",
-    "memory_curator": "Caio",
-}
-
 AVATAR_URL_MAP = {
     "ceo": "/avatars/CEO.png",
     "po": "/avatars/PO.png",
@@ -115,6 +99,58 @@ AVATAR_URL_MAP = {
     "dba_data_engineer": "/avatars/DBA.png",
     "memory_curator": "/avatars/Developer.png",
 }
+
+
+def _fallback_display_name(slug: str) -> str:
+    return slug.replace("_", " ").replace("-", " ").title()
+
+
+def _normalize_label(value: str) -> str:
+    return re.sub(r"\s+", " ", value.replace("_", " ").replace("-", " ")).strip()
+
+
+def _iter_config_agents() -> list[dict[str, Any]]:
+    config = _get_openclaw_config()
+    agents_group = config.get("agents", {})
+    raw_agents = agents_group.get("list", []) if isinstance(agents_group, dict) else []
+    return [cast(dict[str, Any], item) for item in raw_agents if isinstance(item, dict)]
+
+
+def _discover_agent_slugs() -> list[str]:
+    slugs: list[str] = []
+    seen: set[str] = set()
+
+    for agent in _iter_config_agents():
+        slug = agent.get("id")
+        if isinstance(slug, str) and slug and slug not in seen:
+            slugs.append(slug)
+            seen.add(slug)
+
+    agents_dir = Path(settings.openclaw_data_path) / "agents"
+    try:
+        if agents_dir.exists():
+            for entry in sorted(agents_dir.iterdir(), key=lambda item: item.name):
+                if not entry.is_dir():
+                    continue
+                # Ignore runtime helper folders that are not real agents.
+                if not (entry / "sessions").is_dir() and not (entry / "IDENTITY.md").exists():
+                    continue
+                slug = entry.name.strip()
+                if slug and slug not in seen:
+                    slugs.append(slug)
+                    seen.add(slug)
+    except OSError:
+        pass
+
+    if not slugs:
+        return DEFAULT_AGENT_SLUGS.copy()
+    return slugs
+
+
+def get_discovered_agent_slugs() -> list[str]:
+    """Discover agent slugs from OpenClaw config and runtime directories."""
+    _get_openclaw_config.cache_clear()
+    return _discover_agent_slugs()
 
 
 @lru_cache(maxsize=1)
@@ -134,12 +170,9 @@ def _get_openclaw_config() -> dict[str, Any]:
 
 def _get_agent_config(slug: str) -> dict[str, Any]:
     """Get agent configuration from openclaw.json."""
-    config = _get_openclaw_config()
-    agents_group = config.get("agents", {})
-    agents = agents_group.get("list", []) if isinstance(agents_group, dict) else []
-    for agent in agents:
-        if isinstance(agent, dict) and agent.get("id") == slug:
-            return cast(dict[str, Any], agent)
+    for agent in _iter_config_agents():
+        if agent.get("id") == slug:
+            return agent
     return {}
 
 
@@ -151,7 +184,7 @@ def parse_identity(slug: str) -> dict:
 
     base = Path(settings.openclaw_data_path) / "agents" / slug
     identity_file = base / "IDENTITY.md"
-    display_name = DISPLAY_NAME_MAP.get(slug, slug.replace("_", " ").title())
+    display_name = _fallback_display_name(slug)
     role = ROLE_MAP.get(slug, slug)
     model = None
 
@@ -159,11 +192,16 @@ def parse_identity(slug: str) -> dict:
     try:
         agent_config = _get_agent_config(slug)
         if agent_config:
-            model = agent_config.get("model")
-            # If name is in config and not in our display name map, use it as fallback
+            if isinstance(agent_config.get("model"), str):
+                model = cast(str, agent_config.get("model"))
+
             config_name = agent_config.get("name")
-            if config_name and slug not in DISPLAY_NAME_MAP:
-                display_name = config_name.replace("_", " ").title()
+            if isinstance(config_name, str) and config_name.strip():
+                display_name = _normalize_label(config_name)
+
+            config_role = agent_config.get("role")
+            if isinstance(config_role, str) and config_role.strip():
+                role = _normalize_label(config_role)
     except Exception as e:
         logger.warning(f"Failed to read agent config for {slug}: {e}")
 
@@ -196,22 +234,29 @@ def parse_identity(slug: str) -> dict:
 
 
 async def sync_agents(session) -> None:
-    """Upsert all 12 agents from config. Called at startup."""
+    """Upsert agents discovered from OpenClaw config/runtime into the panel DB."""
     import logging
-    from sqlmodel import select
+    from sqlmodel import delete, select
     from app.models import Agent
 
     logger = logging.getLogger(__name__)
     created_count = 0
     updated_count = 0
+    deleted_count = 0
 
     try:
-        logger.info(f"Starting sync_agents for {len(AGENT_SLUGS)} agents")
+        _get_openclaw_config.cache_clear()
+        discovered_slugs = _discover_agent_slugs()
+        logger.info(f"Starting sync_agents for {len(discovered_slugs)} discovered agents")
 
-        for slug in AGENT_SLUGS:
+        result = await session.exec(select(Agent))
+        existing_agents = {agent.slug: agent for agent in result.all()}
+        discovered_set = set(discovered_slugs)
+        changed = False
+
+        for slug in discovered_slugs:
             try:
-                result = await session.exec(select(Agent).where(Agent.slug == slug))
-                agent = result.first()
+                agent = existing_agents.get(slug)
                 identity = parse_identity(slug)
 
                 avatar_url = AVATAR_URL_MAP.get(slug, "/avatars/Developer.png")
@@ -227,34 +272,60 @@ async def sync_agents(session) -> None:
                     )
                     session.add(agent)
                     created_count += 1
+                    changed = True
                     logger.info(
                         f"  ✓ Created agent: {slug} ({identity['display_name']})"
                     )
                 else:
-                    agent.display_name = identity["display_name"]
-                    agent.role = identity["role"]
-                    agent.avatar_url = avatar_url
-                    # Only update model if not set or empty
-                    if not agent.current_model:
-                        agent.current_model = identity.get("model")
-                    updated_count += 1
-                    logger.info(
-                        f"  ✓ Updated agent: {slug} ({identity['display_name']})"
+                    next_model = (
+                        identity.get("model")
+                        if isinstance(identity.get("model"), str)
+                        else agent.current_model
                     )
+                    next_cron_expression = CRON_MAP.get(slug, agent.cron_expression)
+
+                    if (
+                        agent.display_name != identity["display_name"]
+                        or agent.role != identity["role"]
+                        or agent.avatar_url != avatar_url
+                        or agent.current_model != next_model
+                        or agent.cron_expression != next_cron_expression
+                    ):
+                        agent.display_name = identity["display_name"]
+                        agent.role = identity["role"]
+                        agent.avatar_url = avatar_url
+                        agent.current_model = next_model
+                        agent.cron_expression = next_cron_expression
+                        agent.updated_at = _now_utc_naive()
+                        updated_count += 1
+                        changed = True
+                        logger.info(
+                            f"  ✓ Updated agent: {slug} ({identity['display_name']})"
+                        )
             except Exception as e:
                 logger.error(f"Error syncing agent {slug}: {e}", exc_info=True)
                 raise
 
+        stale_slugs = sorted(set(existing_agents.keys()) - discovered_set)
+        if stale_slugs:
+            await session.exec(delete(Agent).where(Agent.slug.in_(stale_slugs)))
+            deleted_count = len(stale_slugs)
+            changed = True
+            logger.info(f"  ✓ Removed stale agents: {', '.join(stale_slugs)}")
+
         logger.info(
-            f"Committing {created_count} new agents and {updated_count} updates..."
+            f"Committing {created_count} new agents, {updated_count} updates, "
+            f"{deleted_count} removals..."
         )
-        await session.commit()
+        if changed:
+            await session.commit()
 
         # Verify the sync worked
         result = await session.exec(select(Agent))
         final_agents = result.all()
         logger.info(
-            f"✓ Agent sync completed: {created_count} created, {updated_count} updated"
+            "✓ Agent sync completed: "
+            f"{created_count} created, {updated_count} updated, {deleted_count} removed"
         )
         logger.info(f"✓ Total agents in database: {len(final_agents)}")
         for agent in final_agents:
@@ -368,6 +439,8 @@ async def sync_agents_runtime(session) -> None:
     """
     from sqlmodel import select
     from app.models import Agent
+
+    await sync_agents(session)
 
     result = await session.exec(select(Agent))
     agents = result.all()

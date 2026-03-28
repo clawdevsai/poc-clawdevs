@@ -39,7 +39,16 @@ normalize_repo_ref() {
 }
 resolve_repo_id() {
   ref="$1"
-  gh api "repos/${ref}" --jq '.id' 2>/dev/null || true
+  raw_repo_id="$(gh api "repos/${ref}" --jq '.id // empty' 2>/dev/null || true)"
+  raw_repo_id="$(printf '%s' "${raw_repo_id}" | awk 'NR==1{print; exit}')"
+  case "${raw_repo_id}" in
+    ''|*[!0-9]*)
+      printf '%s\n' ""
+      ;;
+    *)
+      printf '%s\n' "${raw_repo_id}"
+      ;;
+  esac
 }
 write_repo_context_file() {
   ref="$1"

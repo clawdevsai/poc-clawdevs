@@ -30,6 +30,55 @@ if [ -z "${_allowed_origins_json}" ]; then
     --arg o3 "http://openclaw:18789" \
     '[$o1,$o2,$o3] | unique')"
 fi
+
+is_valid_telegram_bot_token() {
+  case "${1:-}" in
+    ''|*' '*|*'	'*)
+      return 1
+      ;;
+    *)
+      ;;
+  esac
+  printf '%s' "${1}" | grep -Eq '^[0-9]{6,}:[A-Za-z0-9_-]{20,}$'
+}
+
+is_valid_telegram_chat_id() {
+  printf '%s' "${1:-}" | grep -Eq '^-?[0-9]{5,}$'
+}
+
+_telegram_bot_token="${TELEGRAM_BOT_TOKEN_CEO:-}"
+_telegram_chat_id="${TELEGRAM_CHAT_ID:-}"
+_telegram_enabled="true"
+if ! is_valid_telegram_bot_token "${_telegram_bot_token}" || ! is_valid_telegram_chat_id "${_telegram_chat_id}"; then
+  _telegram_enabled="false"
+  echo "[bootstrap] Telegram desabilitado: TELEGRAM_BOT_TOKEN_CEO/TELEGRAM_CHAT_ID invalidos ou placeholders"
+fi
+if [ "${_telegram_enabled}" = "true" ]; then
+  _telegram_probe_http_code="$(curl -sS --max-time 8 -o /tmp/telegram-getme-probe.json -w "%{http_code}" "https://api.telegram.org/bot${_telegram_bot_token}/getMe" 2>/dev/null || true)"
+  if [ "${_telegram_probe_http_code}" = "401" ]; then
+    _telegram_enabled="false"
+    echo "[bootstrap] Telegram desabilitado: bot token rejeitado pela API do Telegram"
+  elif [ "${_telegram_probe_http_code}" != "200" ]; then
+    echo "[bootstrap] Telegram probe inconclusivo (HTTP ${_telegram_probe_http_code:-n/a}); mantendo configuracao atual"
+  fi
+fi
+
+_sandbox_mode="${OPENCLAW_SANDBOX_MODE:-off}"
+case "${_sandbox_mode}" in
+  off|non-main|all) ;;
+  *)
+    echo "[bootstrap] OPENCLAW_SANDBOX_MODE='${_sandbox_mode}' invalido; usando 'off'"
+    _sandbox_mode="off"
+    ;;
+esac
+_sandbox_session_tools_visibility="${OPENCLAW_SANDBOX_SESSION_TOOLS_VISIBILITY:-all}"
+case "${_sandbox_session_tools_visibility}" in
+  all|spawned) ;;
+  *)
+    _sandbox_session_tools_visibility="all"
+    ;;
+esac
+
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ]; then
   echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
   mkdir -p ~/.openclaw
@@ -200,7 +249,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -235,7 +283,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -270,7 +317,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -304,7 +350,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -338,7 +383,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -372,7 +416,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -406,7 +449,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -440,7 +482,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -474,7 +515,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -508,7 +548,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -542,7 +581,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -575,7 +613,6 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "host": "gateway",
             "security": "allowlist",
             "ask": "on-miss",
-            "askFallback": "deny",
             "strictInlineEval": true
           }
         },
@@ -669,12 +706,41 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
+# Telegram opcional: remove canal/bindings se token/chat id estiverem invalidos.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if [ "${_telegram_enabled}" = "true" ]; then
+    if jq '
+        .channels.telegram.enabled = true
+      ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+      mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+      mkdir -p ~/.openclaw
+      cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    else
+      rm -f "${_tmp_openclaw_json}"
+      echo "[bootstrap] falha ao habilitar canal Telegram no openclaw.json"
+    fi
+  else
+    if jq '
+        del(.channels.telegram)
+        | .bindings = ((.bindings // []) | map(select((.match.channel // "") != "telegram")))
+      ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+      mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+      mkdir -p ~/.openclaw
+      cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    else
+      rm -f "${_tmp_openclaw_json}"
+      echo "[bootstrap] falha ao desabilitar canal Telegram no openclaw.json"
+    fi
+  fi
+fi
+
 # Zero Trust baseline: sandbox global, exec allowlist + prompt on miss + deny fallback.
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_openclaw_json="$(mktemp)"
-  if jq '
-      .agents.defaults.sandbox.mode = "all"
-      | .agents.defaults.sandbox.sessionToolsVisibility = "all"
+  if jq --arg sandboxMode "${_sandbox_mode}" --arg sandboxVisibility "${_sandbox_session_tools_visibility}" '
+      .agents.defaults.sandbox.mode = $sandboxMode
+      | .agents.defaults.sandbox.sessionToolsVisibility = $sandboxVisibility
       | .tools.exec.strictInlineEval = true
       | .agents.list |= map(
           .tools.exec = (
@@ -683,7 +749,6 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
               "host": "gateway",
               "security": "allowlist",
               "ask": "on-miss",
-              "askFallback": "deny",
               "strictInlineEval": true
             }
           )
@@ -791,7 +856,7 @@ fi
 # Exec approvals zero trust:
 # - allowlist explicita
 # - ask=on-miss
-# - askFallback=deny (sem bypass quando UI de aprovacao indisponivel)
+# - sem askFallback (schema atual do OpenClaw nao aceita essa chave)
 # - autoAllowSkills=false para evitar trust implicito
 EXEC_APPROVALS_FILE=~/.openclaw/exec-approvals.json
 cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
@@ -800,7 +865,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
   "defaults": {
     "security": "allowlist",
     "ask": "on-miss",
-    "askFallback": "deny",
     "autoAllowSkills": false,
     "allowlist": []
   },
@@ -808,7 +872,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "ceo": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -836,7 +899,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "po": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -864,7 +926,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "arquiteto": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -894,7 +955,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "dev_backend": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -924,7 +984,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "dev_frontend": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -954,7 +1013,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "dev_mobile": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -984,7 +1042,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "qa_engineer": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -1014,7 +1071,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "security_engineer": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -1046,7 +1102,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "ux_designer": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -1075,7 +1130,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "devops_sre": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -1106,7 +1160,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "dba_data_engineer": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -1135,7 +1188,6 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
     "memory_curator": {
       "security": "allowlist",
       "ask": "on-miss",
-      "askFallback": "deny",
       "autoAllowSkills": false,
       "allowlist": [
         { "pattern": "/usr/bin/cat" },
@@ -1163,7 +1215,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
   }
 }
 EOFAPPROVALS
-echo "[bootstrap] zero-trust exec approvals aplicadas (allowlist + ask=on-miss + askFallback=deny + autoAllowSkills=false)"
+echo "[bootstrap] zero-trust exec approvals aplicadas (allowlist + ask=on-miss + autoAllowSkills=false)"
 # Repair agent main sessions when the persisted transcript is missing, invalid,
 # or contains no assistant text messages that the chat UI can render.
 repair_main_session() {
@@ -1331,3 +1383,5 @@ repair_main_session "security_engineer" "${OPENCLAW_STATE_DIR}/workspace-securit
 repair_main_session "ux_designer"      "${OPENCLAW_STATE_DIR}/workspace-ux_designer"      "UX_Designer pronto. Pode me acionar para wireframes, fluxos de usuario e design tokens."
 repair_main_session "dba_data_engineer" "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer" "DBA_DataEngineer pronto. Pode me acionar para schemas, migrations, queries e compliance LGPD."
 repair_main_session "memory_curator"   "${OPENCLAW_STATE_DIR}/workspace-memory_curator"   "Memory_Curator pronto. Executo curadoria diaria de padroes cross-agent e promocao para SHARED_MEMORY."
+
+

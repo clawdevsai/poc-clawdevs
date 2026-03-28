@@ -54,12 +54,26 @@ export LANGUAGE="${LANGUAGE:-pt-BR}"
 # Alinhar GH CLI caso GH_TOKEN venha em outro nome
 export GH_TOKEN="${GH_TOKEN:-${GIT_TOKEN:-}}"
 mkdir -p "${OPENCLAW_STATE_DIR}/contexts/repos"
+resolve_repo_id_safe() {
+  repo_ref="$1"
+  # gh pode devolver payload JSON de erro no stdout (ex.: 401). Aceitamos apenas ID numerico.
+  raw_repo_id="$(gh api "repos/${repo_ref}" --jq '.id // empty' 2>/dev/null || true)"
+  raw_repo_id="$(printf '%s' "${raw_repo_id}" | awk 'NR==1{print; exit}')"
+  case "${raw_repo_id}" in
+    ''|*[!0-9]*)
+      printf '%s\n' ""
+      ;;
+    *)
+      printf '%s\n' "${raw_repo_id}"
+      ;;
+  esac
+}
 write_repository_context() {
   repo_ref="$1"
   repo_branch="$2"
   repo_slug="${repo_ref#*/}"
   repo_safe="$(printf '%s' "${repo_slug}" | tr '/' '_' | tr -cd '[:alnum:]_.-')"
-  repo_id="$(gh api "repos/${repo_ref}" --jq '.id' 2>/dev/null || true)"
+  repo_id="$(resolve_repo_id_safe "${repo_ref}")"
   if [ -z "${repo_id}" ]; then
     repo_id="unknown"
   fi

@@ -38,13 +38,28 @@ stream_agent_sessions() {
 }
 
 ensure_panel_read_permissions() {
-  local config_mode="${OPENCLAW_CONFIG_FILE_MODE:-600}"
-  local sessions_mode="${OPENCLAW_SESSIONS_FILE_MODE:-600}"
+  local dir_mode="${OPENCLAW_PANEL_DIR_MODE:-755}"
+  local config_mode="${OPENCLAW_CONFIG_FILE_MODE:-644}"
+  local sessions_mode="${OPENCLAW_SESSIONS_FILE_MODE:-644}"
+  local transcripts_mode="${OPENCLAW_SESSION_TRANSCRIPT_FILE_MODE:-644}"
+  local identity_mode="${OPENCLAW_IDENTITY_FILE_MODE:-644}"
   while true; do
+    chmod "${dir_mode}" "${OPENCLAW_STATE_DIR}" 2>/dev/null || true
+    chmod "${dir_mode}" "${OPENCLAW_STATE_DIR}/agents" 2>/dev/null || true
     chmod "${config_mode}" "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true
-    for _session_file in "${OPENCLAW_STATE_DIR}"/agents/*/sessions/sessions.json; do
-      [ -f "${_session_file}" ] || continue
-      chmod "${sessions_mode}" "${_session_file}" 2>/dev/null || true
+    for _agent_dir in "${OPENCLAW_STATE_DIR}"/agents/*; do
+      [ -d "${_agent_dir}" ] || continue
+      chmod "${dir_mode}" "${_agent_dir}" 2>/dev/null || true
+      chmod "${identity_mode}" "${_agent_dir}/IDENTITY.md" 2>/dev/null || true
+      chmod "${dir_mode}" "${_agent_dir}/sessions" 2>/dev/null || true
+      for _session_file in "${_agent_dir}"/sessions/sessions.json; do
+        [ -f "${_session_file}" ] || continue
+        chmod "${sessions_mode}" "${_session_file}" 2>/dev/null || true
+      done
+      for _transcript_file in "${_agent_dir}"/sessions/*.jsonl; do
+        [ -f "${_transcript_file}" ] || continue
+        chmod "${transcripts_mode}" "${_transcript_file}" 2>/dev/null || true
+      done
     done
     sleep "${PANEL_PERMISSION_SYNC_INTERVAL_SECONDS:-5}"
   done

@@ -119,11 +119,13 @@ services:
     networks: [clawdevs]
     ports:
       - "18080:18080"
+    volumes:
+      - ./docker/searxng-proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       searxng:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:18080/healthz || curl -sf http://localhost:18080/healthz || exit 1"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:18080/healthz"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -287,6 +289,7 @@ services:
       PANEL_API_URL: http://panel-backend:8000
       NODE_OPTIONS: --max-old-space-size=1024
       OPENCLAW_NO_RESPAWN: "1"
+      OPENCLAW_SANDBOX_MODE: ${OPENCLAW_SANDBOX_MODE:-off}
       NODE_COMPILE_CACHE: /var/tmp/openclaw-compile-cache
       OPENCLAW_LOG_LEVEL: ${OPENCLAW_LOG_LEVEL:-error}
       DEBUG_LOG_ENABLED: ${DEBUG_LOG_ENABLED:-false}

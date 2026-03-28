@@ -30,31 +30,18 @@ from pathlib import Path
 from sqlmodel import select
 from app.models import Session
 from app.core.config import get_settings
+from app.services.agent_sync import get_discovered_agent_slugs
 
 settings = get_settings()
 ACTIVE_WINDOW = timedelta(minutes=20)
-
-AGENT_SLUGS = [
-    "ceo",
-    "po",
-    "arquiteto",
-    "dev_backend",
-    "dev_frontend",
-    "dev_mobile",
-    "qa_engineer",
-    "devops_sre",
-    "security_engineer",
-    "ux_designer",
-    "dba_data_engineer",
-    "memory_curator",
-]
 
 
 async def sync_sessions(db_session) -> None:
     """Fetch sessions from OpenClaw filesystem and upsert them into the database."""
     base_path = Path(settings.openclaw_data_path)
+    agent_slugs = get_discovered_agent_slugs()
 
-    for agent_slug in AGENT_SLUGS:
+    for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
 
         if not sessions_file.exists():
