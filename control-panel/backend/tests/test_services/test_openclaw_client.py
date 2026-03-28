@@ -420,6 +420,32 @@ class TestOpenClawClient:
             )
             assert result is None
 
+    @pytest.mark.asyncio
+    async def test_stream_chat_upstream_error(self):
+        """Stream chat returns error event when upstream is not reachable."""
+        from app.services.openclaw_client import OpenClawClient
+
+        client = OpenClawClient()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.aread = AsyncMock(return_value=b"boom")
+        mock_stream_ctx = AsyncMock()
+        mock_stream_ctx.__aenter__.return_value = mock_response
+
+        with patch("httpx.AsyncClient") as mock_async_client:
+            mock_instance = AsyncMock()
+            mock_instance.__aenter__.return_value.stream = AsyncMock(
+                return_value=mock_stream_ctx
+            )
+            mock_async_client.return_value = mock_instance
+
+            events = []
+            async for evt in client.stream_chat("ceo", "hi"):
+                events.append(evt)
+            assert events[0]["event"] == "error"
+            assert "boom" in events[0]["data"]
+
 
 class TestOpenClawClientIntegration:
     """Test OpenClawClient with config mocking."""

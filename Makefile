@@ -387,6 +387,10 @@ panel-backend-apply:
 	minikube image build -p clawdevs-ai -t clawdevsai/clawdevs-panel-backend:latest control-panel/backend/
 	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/control-panel/backend-deployment.yaml --server-side --force-conflicts
 
+panel-frontend-apply:
+	minikube image build -p clawdevs-ai -t clawdevsai/clawdevs-panel-frontend:latest control-panel/frontend/
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/control-panel/frontend-deployment.yaml --server-side --force-conflicts
+
 panel-status:
 	kubectl get pods -l app.kubernetes.io/part-of=clawdevs-panel 2>/dev/null || \
 	kubectl get pods | grep clawdevs-panel

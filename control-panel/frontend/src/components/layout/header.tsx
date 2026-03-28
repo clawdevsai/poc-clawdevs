@@ -9,6 +9,7 @@ import { customInstance } from "@/lib/axios-instance";
 const BREADCRUMBS: Record<string, string> = {
   "/": "Dashboard",
   "/agents": "Agentes",
+  "/chat": "Chat",
   "/sessions": "Sessões",
   "/approvals": "Aprovações",
   "/tasks": "Tarefas",

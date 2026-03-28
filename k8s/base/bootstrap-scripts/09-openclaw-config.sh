@@ -43,9 +43,16 @@ echo "[bootstrap] escrevendo openclaw.json (primeira execucao ou token mudou)"
 cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
 {
   "gateway": {
-    "mode": "local",
-    "bind": "lan",
-    "port": 18789,
+      "mode": "local",
+      "bind": "lan",
+      "port": 18789,
+      "http": {
+        "endpoints": {
+          "chatCompletions": {
+            "enabled": true
+          }
+        }
+      },
     "controlUi": {
       "dangerouslyAllowHostHeaderOriginFallback": false,
       "dangerouslyDisableDeviceAuth": false,

@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Bot,
   MessageSquare,
+  MessagesSquare,
   ShieldCheck,
   CheckSquare,
   FileText,
@@ -25,6 +26,7 @@ import {
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agents", label: "Agentes", icon: Bot },
+  { href: "/chat", label: "Chat", icon: MessagesSquare },
   { href: "/sessions", label: "Sessões", icon: MessageSquare },
   { href: "/approvals", label: "Aprovações", icon: ShieldCheck, badge: "approvals" },
   { href: "/tasks", label: "Tarefas", icon: CheckSquare },

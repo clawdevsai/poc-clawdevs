@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 import httpx
-from typing import Any, Optional
+from typing import Any, Optional, AsyncGenerator, Dict
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -106,6 +106,52 @@ class OpenClawClient:
                 return payload if isinstance(payload, dict) else None
         except Exception:
             return None
+
+
+    async def stream_chat(
+        self, agent_slug: str, message: str
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        """
+        Stream chat completions from the gateway.
+        Yields dict events: {"event": "delta"|"done"|"error", "data": str}
+        """
+        session_key = f"agent:{agent_slug}:main"
+        payload = {
+            "model": f"openclaw/{agent_slug}",
+            "messages": [{"role": "user", "content": message}],
+            "stream": True,
+        }
+        headers = {
+            **self.headers,
+            "Content-Type": "application/json",
+            "x-openclaw-session-key": session_key,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                async with client.stream(
+                    "POST",
+                    f"{self.base_url}/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                ) as r:
+                    if r.status_code != 200:
+                        text = await r.aread()
+                        yield {
+                            "event": "error",
+                            "data": text.decode("utf-8", errors="ignore") or "upstream error",
+                        }
+                        return
+
+                    async for line in r.aiter_lines():
+                        if not line or not line.startswith("data:"):
+                            continue
+                        data = line[5:].strip()
+                        if data == "[DONE]":
+                            yield {"event": "done"}
+                            return
+                        yield {"event": "delta", "data": data}
+        except Exception as exc:  # noqa: BLE001
+            yield {"event": "error", "data": str(exc)}
 
 
 openclaw_client = OpenClawClient()
