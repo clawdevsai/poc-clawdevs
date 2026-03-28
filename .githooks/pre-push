@@ -115,9 +115,9 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
     elif ! [[ "$COVERAGE" =~ ^[0-9]+$ ]]; then
         printf "${YELLOW}⚠ Invalid coverage format: $COVERAGE${NC}\n"
     elif [ "$COVERAGE" -lt 80 ]; then
-        printf "${YELLOW}⚠ Coverage ${COVERAGE}% < 80%% threshold${NC}\n"
+        printf "${YELLOW}⚠ Coverage %s%% < 80%% threshold${NC}\n" "$COVERAGE"
     else
-        printf "${GREEN}✓ Coverage OK (${COVERAGE}%%)${NC}\n"
+        printf "${GREEN}✓ Coverage OK (%s%%)${NC}\n" "$COVERAGE"
     fi
     echo ""
 
