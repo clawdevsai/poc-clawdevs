@@ -5,8 +5,8 @@ on:
     - cron: '*/15 * * * *'  # Every 15 minutes
   workflow_dispatch:
     inputs:
-      pod_name:
-        description: "Specific pod to monitor (optional)"
+      service_name:
+        description: "Specific service to monitor (optional)"
         required: false
         type: string
 
@@ -17,41 +17,51 @@ jobs:
     permissions:
       contents: read
       issues: write
-    env:
-      HAS_KUBECONFIG: ${{ secrets.KUBECONFIG != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up kubectl
-        if: env.HAS_KUBECONFIG == 'true'
-        uses: azure/k8s-set-context@v1
-        with:
-          kubeconfig: ${{ secrets.KUBECONFIG }}
-
-      - name: Get OpenClaw pod logs
-        id: openclaw-logs
-        if: env.HAS_KUBECONFIG == 'true'
+      - name: Create .env file
         run: |
-          POD=$(kubectl get pods -l app=clawdevs-ai -o jsonpath='{.items[0].metadata.name}' | cut -d' ' -f1)
-          if [ -n "$POD" ]; then
-            kubectl logs "$POD" --tail=100 > /tmp/openclaw-logs.txt
-            echo "pod_name=$POD" >> $GITHUB_OUTPUT
-          else
-            echo "No OpenClaw pod found"
-            echo "pod_name=" >> $GITHUB_OUTPUT
-          fi
+          cat > .env <<ENVEOF
+          OPENCLAW_GATEWAY_TOKEN=test-token
+          TELEGRAM_BOT_TOKEN_CEO=test
+          TELEGRAM_CHAT_ID_CEO=test
+          GIT_TOKEN=${{ secrets.GIT_TOKEN }}
+          GIT_ORG=${{ secrets.GIT_ORG }}
+          PANEL_SECRET_KEY=test-secret-key
+          PANEL_ADMIN_USERNAME=admin
+          PANEL_ADMIN_PASSWORD=test
+          PANEL_DB_PASSWORD=test
+          PANEL_REDIS_PASSWORD=test
+          SEARXNG_SECRET=test
+          PROVEDOR_LLM=ollama
+          OPENCLAW_LOG_LEVEL=info
+          DEBUG_LOG_ENABLED=false
+          ENVEOF
+
+      - name: Start Docker Compose services
+        run: docker-compose up -d
+
+      - name: Wait for services to start
+        run: sleep 15
+
+      - name: Get OpenClaw container logs
+        id: openclaw-logs
+        run: |
+          OPENCLAW_LOGS=$(docker-compose logs openclaw --tail=100 2>&1 || echo "Container not found")
+          echo "$OPENCLAW_LOGS" > /tmp/openclaw-logs.txt
+          echo "logs_collected=true" >> $GITHUB_OUTPUT
 
       - name: Analyze logs for errors
         id: analyze-errors
-        if: env.HAS_KUBECONFIG == 'true'
         run: |
           if [ -f /tmp/openclaw-logs.txt ]; then
             ERROR_COUNT=$(grep -ci "error\|exception\|failed\|fatal" /tmp/openclaw-logs.txt || echo "0")
             echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
-            
+
             # Extract last 5 errors
-            LAST_ERRORS=$(grep -i "error\|exception\|failed\|fatal" /tmp/openclaw-logs.txt | tail -5)
+            LAST_ERRORS=$(grep -i "error\|exception\|failed\|fatal" /tmp/openclaw-logs.txt | tail -5 || echo "No errors found")
             echo "last_errors<<EOF" >> $GITHUB_OUTPUT
             echo "$LAST_ERRORS" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
@@ -61,49 +71,40 @@ jobs:
 
       - name: Check Ollama logs
         id: ollama-logs
-        if: env.HAS_KUBECONFIG == 'true'
         run: |
-          POD=$(kubectl get pods -l app=ollama -o jsonpath='{.items[0].metadata.name}' | cut -d' ' -f1)
-          if [ -n "$POD" ]; then
-            kubectl logs "$POD" --tail=50 > /tmp/ollama-logs.txt
-            OLLAMA_ERRORS=$(grep -ci "error\|exception" /tmp/ollama-logs.txt || echo "0")
-            echo "ollama_errors=$OLLAMA_ERRORS" >> $GITHUB_OUTPUT
-          fi
+          OLLAMA_LOGS=$(docker-compose logs ollama --tail=50 2>&1 || echo "Container not found")
+          OLLAMA_ERRORS=$(echo "$OLLAMA_LOGS" | grep -ci "error\|exception" || echo "0")
+          echo "ollama_errors=$OLLAMA_ERRORS" >> $GITHUB_OUTPUT
 
       - name: Report summary
-        if: env.HAS_KUBECONFIG == 'true'
         run: |
-          echo "## QA Logs Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## QA Logs Summary (Docker Compose)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Errors Found |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------------|" >> $GITHUB_STEP_SUMMARY
           echo "| OpenClaw | ${{ steps.analyze-errors.outputs.error_count }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Ollama | ${{ steps.ollama-logs.outputs.ollama_errors || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ steps.analyze-errors.outputs.error_count }}" -gt "0" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Last Errors" >> $GITHUB_STEP_SUMMARY
+            echo "### Last Errors in OpenClaw" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "${{ steps.analyze-errors.outputs.last_errors }}" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: "Report summary (skipped: no kubeconfig)"
-        if: env.HAS_KUBECONFIG != 'true'
-        run: |
-          echo "KUBECONFIG secret is not configured. Skipping log monitoring steps."
-          echo "## QA Logs Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Skipped because \`KUBECONFIG\` secret is not configured." >> $GITHUB_STEP_SUMMARY
-
       - name: Create issue on critical errors
-        if: env.HAS_KUBECONFIG == 'true' && steps.analyze-errors.outputs.error_count > 5
+        if: steps.analyze-errors.outputs.error_count > 5
         run: |
           curl -X POST https://api.github.com/repos/${{ github.repository }}/issues \
             -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
               "title": "[QA Alert] High error count in OpenClaw logs",
-              "body": "OpenClaw pod reported ${{ steps.analyze-errors.outputs.error_count }} errors in the last 100 log lines.\n\nLast errors:\n```\n${{ steps.analyze-errors.outputs.last_errors }}\n```\n\nPlease investigate.",
+              "body": "OpenClaw reported ${{ steps.analyze-errors.outputs.error_count }} errors in the last 100 log lines.\n\nLast errors:\n```\n${{ steps.analyze-errors.outputs.last_errors }}\n```\n\nPlease investigate.",
               "labels": ["qa", "bug"]
             }'
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose down

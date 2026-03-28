@@ -1,4 +1,4 @@
-<!-- 
+<!--
   Copyright (c) 2026 Diego Silva Morais <lukewaresoftwarehouse@gmail.com>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,46 +20,45 @@
   SOFTWARE.
  -->
 
-# clawdevs-ai (Windows only)
+# clawdevs-ai (Docker Compose)
 
-Fluxo para subir Kubernetes local com Minikube no Docker Desktop (Windows), expor GPU real e rodar o stack (`ollama` + `openclaw` + `control-panel`).
+Fluxo para subir a stack completa (`ollama` + `openclaw` + `control-panel`) localmente com Docker Compose, com suporte a GPU via Docker e NVIDIA Container Runtime.
 
-## Novidades (2026-03-24)
+## Novidades (2026-03-28)
 
-- **Makefile reorganizado** em 3 seções: Preparação de Ambiente, Deploy e Operação, Logs e Monitoramento
-- **Control Panel integrado** ao fluxo principal (`make clawdevs-up` agora inclui o painel)
-- **Comandos consolidados**: removidos comandos duplicados e ambíguos
-- **Formatação compacta**: arquivo 43% menor e mais legível
-- **Help melhorado**: `make help` agora mostra interface visual organizada
-- **Suporte a build local e remoto**: configure via `PUSH_IMAGE` em `k8s/.env`
+- **Migração de Kubernetes para Docker Compose** - Simplificação do deployment
+- **Control Panel integrado** ao fluxo principal via docker-compose.yaml
+- **Comandos simplificados**: `make up`, `make down`, `make logs`
+- **Suporte a GPU nativo** via Docker Compose + NVIDIA Container Runtime
+- **Ambiente local otimizado**: sem necessidade de Minikube/Kubernetes
 
 ## Fluxo de spec
 
-Antes de implementar uma mudanca, o fluxo recomendado neste repositorio e:
+Antes de implementar uma mudança, o fluxo recomendado neste repositório é:
 
-0. `CONSTITUTION` com principios e guardrails
+0. `CONSTITUTION` com princípios e guardrails
 1. `BRIEF` com contexto e objetivo executivo
-2. `SPEC` com comportamento observavel, contratos e criterios de aceite
+2. `SPEC` com comportamento observável, contratos e critérios de aceite
 3. `CLARIFY` quando houver ambiguidade
-4. `PLAN` tecnico e arquitetura
-5. `TASK` tecnica e issues
+4. `PLAN` técnico e arquitetura
+5. `TASK` técnica e issues
 6. `FEATURE` e `USER STORY` quando fizer sentido para o fluxo de produto
-7. implementacao e validacao
+7. implementação e validação
 
 Templates e artefatos:
 
-- `k8s/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/PLAN_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/TASK_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/VALIDATE_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
-- `k8s/base/openclaw-config/shared/SPEC_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/CONSTITUTION.md`
-- `k8s/base/openclaw-config/shared/SDD_CHECKLIST.md`
-- `k8s/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
-- `k8s/base/openclaw-config/shared/SPECKIT_ADAPTATION.md`
-- `k8s/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/`
+- `container/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
+- `container/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
+- `container/base/openclaw-config/shared/PLAN_TEMPLATE.md`
+- `container/base/openclaw-config/shared/TASK_TEMPLATE.md`
+- `container/base/openclaw-config/shared/VALIDATE_TEMPLATE.md`
+- `container/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
+- `container/base/openclaw-config/shared/SPEC_TEMPLATE.md`
+- `container/base/openclaw-config/shared/CONSTITUTION.md`
+- `container/base/openclaw-config/shared/SDD_CHECKLIST.md`
+- `container/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
+- `container/base/openclaw-config/shared/SPECKIT_ADAPTATION.md`
+- `container/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/`
 - `/data/openclaw/backlog/specs/`
 - `/data/openclaw/backlog/briefs/`
 - `/data/openclaw/backlog/user_story/`
@@ -71,34 +70,34 @@ O mesmo contrato vale para:
 
 Em ambos os casos, a SPEC é a fonte de verdade do comportamento pretendido.
 Quando houver ambiguidade, o passo correto é `clarify` antes de `plan` e `tasks`.
-Use o `SDD_CHECKLIST.md` como gate de prontidao antes de mover uma entrega para a proxima etapa.
-Use os templates para manter o fluxo repetivel entre plataforma interna e projetos.
-Use `SDD_OPERATIONAL_PROMPTS.md` para iniciar conversas e execucoes com os agentes.
-Use `SDD_FULL_CYCLE_EXAMPLE.md` como molde de referencia para novas iniciativas.
-Use `shared/initiatives/internal-sdd-operationalization/` como iniciativa real pronta para execucao.
+Use o `SDD_CHECKLIST.md` como gate de prontidão antes de mover uma entrega para a próxima etapa.
+Use os templates para manter o fluxo repetível entre plataforma interna e projetos.
+Use `SDD_OPERATIONAL_PROMPTS.md` para iniciar conversas e execuções com os agentes.
+Use `SDD_FULL_CYCLE_EXAMPLE.md` como molde de referência para novas iniciativas.
+Use `shared/initiatives/internal-sdd-operationalization/` como iniciativa real pronta para execução.
 
 ## Modo Vibe Coding
 
-ClawDevs AI deve operar em ciclos curtos e demonstraveis:
+ClawDevs AI deve operar em ciclos curtos e demonstráveis:
 
-1. definir um resultado visivel
-2. escrever a spec minima
+1. definir um resultado visível
+2. escrever a spec mínima
 3. entregar um slice vertical funcional
 4. validar com demo
 5. endurecer com testes, logs e observabilidade
 
-Regra pratica:
-- se a mudanca nao cabe em uma demo curta, ela esta grande demais
-- se o fluxo ficar invisivel por muito tempo, ele precisa ser fatiado
-- se a solução nao for reversivel, ela precisa de mais cuidado antes de subir
+Regra prática:
+- se a mudança não cabe em uma demo curta, ela está grande demais
+- se o fluxo ficar invisível por muito tempo, ele precisa ser fatiado
+- se a solução não for reversível, ela precisa de mais cuidado antes de subir
 
 ## Requisitos
 
-- Windows 11
-- Docker Desktop com suporte a GPU
+- Windows 11, macOS, ou Linux
+- Docker Desktop (com GPU support para NVIDIA)
+- NVIDIA Container Runtime (se usar GPU)
 - Driver NVIDIA atualizado
-- `minikube`, `kubectl` e `make` no PATH
-- Docker Desktop rodando, com GPU exposta aos containers do driver Docker
+- `.env` configurado com variáveis de ambiente (veja `.env.example`)
 
 ## Makefile - Comandos Disponíveis
 
@@ -110,269 +109,134 @@ make help
 
 ### SEÇÃO 1: PREPARAÇÃO DE AMBIENTE
 
-Comandos para setup inicial e configuração do cluster:
+Comandos para setup inicial e configuração:
 
 ```bash
-make clawdevs-up              # Setup completo (não destrutivo)
-make minikube-up              # Inicia Minikube com GPU
-make minikube-context         # Configura contexto k8s
-make minikube-addons          # Habilita addons necessários
-make storage-enable-expansion # Habilita expansão de volumes
-make preflight                # Valida k8s/.env
-make manifests-validate       # Valida manifests kustomize
-```
-
-**GPU (Docker Desktop Kubernetes):**
-```bash
-make gpu-doctor               # Diagnóstico completo GPU
-make docker-k8s-check         # Valida contexto docker-desktop
-make docker-k8s-context       # Muda para contexto docker-desktop
-make gpu-plugin-apply         # Aplica NVIDIA device plugin
-make gpu-node-check           # Verifica GPU no node
-make gpu-migrate-apply        # Aplica stack com GPU
+make up                       # Inicia stack completa (Docker Compose)
+make down                     # Para e remove containers
+make build                    # Build de todas as imagens localmente
+make env-check                # Valida arquivo .env
 ```
 
 ### SEÇÃO 2: DEPLOY E OPERAÇÃO
 
-**Deploy Completo:**
+**Stack Completa:**
 ```bash
-make stack-apply              # Deploy completo (ollama+openclaw+panel)
-make stack-status             # Status de todos os pods
+make up                       # Inicia stack (ollama + openclaw + panel)
+make down                     # Para stack
+make restart                  # Reinicia stack
 ```
 
 **Ollama:**
 ```bash
-make ollama-volume-apply      # Cria PVC ollama-data
-make ollama-apply             # Deploy Ollama pod
-make ollama-sign              # Login no Ollama
-make ollama-list              # Lista modelos Ollama
+make ollama-logs              # Logs do Ollama
+make ollama-list              # Lista modelos disponíveis
 ```
 
 **OpenClaw:**
 ```bash
-make openclaw-apply           # Deploy OpenClaw
-make openclaw-apply-gpu       # Deploy OpenClaw com GPU
-make openclaw-restart         # Restart preservando PVC
-make openclaw-dashboard       # Abre dashboard OpenClaw
+make openclaw-logs            # Logs do OpenClaw
+make openclaw-shell           # Executa shell no container OpenClaw
 ```
 
 **Control Panel:**
 ```bash
-make panel-apply              # Deploy control panel
+make panel-logs               # Logs do panel (backend + frontend)
 make panel-url                # Mostra URLs de acesso
-make panel-forward            # Port-forward para localhost:3000
-make panel-status             # Status dos pods
 make panel-db-migrate         # Executa migrations Alembic
-make panel-restart            # Restart panel pods
 ```
 
 **Build de Imagens:**
 ```bash
-make images-build             # Build todas as imagens
-make images-push              # Push todas as imagens
-make images-release           # Build + Push todas
-make openclaw-image-release   # Build + Push OpenClaw
-```
-
-**Reset/Destrutivo:**
-```bash
-make reset-all                # Recria stack do zero
-make destroy-all              # Limpeza completa
-make clawdevs-down            # Para e remove tudo
-make minikube-down            # Para Minikube
-make panel-destroy            # Remove control panel
+make build                    # Build local de todas as imagens
+make push                     # Push imagens para Docker Hub
+make release                  # Build + Push
 ```
 
 ### SEÇÃO 3: LOGS E MONITORAMENTO
 
 ```bash
-make minikube-status          # Status do Minikube
-make minikube-logs            # Logs do Minikube
-make ollama-logs              # Logs do Ollama
-make openclaw-logs            # Logs do OpenClaw
-make panel-logs-backend       # Logs do backend
-make panel-logs-frontend      # Logs do frontend
-```
-
-**Templates SDD:**
-```bash
-make spec-template            # Template SPEC
-make vibe-playbook            # Playbook vibe coding
-make sdd-contract             # Contrato SDD
-make constitution-template    # Constitution
-make sdd-checklist            # Checklist SDD
-make brief-template           # Template BRIEF
-make clarify-template         # Template CLARIFY
-make plan-template            # Template PLAN
-make task-template            # Template TASK
-make validate-template        # Template VALIDATE
+make logs                     # Todos os logs em tempo real
+make logs-follow              # Segue logs (como docker-compose logs -f)
+make ps                       # Status dos containers
+make top                      # Recursos (CPU, memória) dos containers
 ```
 
 ## Ordem de execução — subindo toda a aplicação
 
 ### 1. Pré-requisitos
 
-Copie e preencha o arquivo de segredos antes de qualquer coisa:
+Copie e preencha o arquivo de variáveis de ambiente:
 
 ```bash
-cp k8s/.env.example k8s/.env
-# edite k8s/.env com os valores reais
+cp .env.example .env
+# edite .env com os valores reais (GIT_TOKEN, PANEL_ADMIN_PASSWORD, etc)
 ```
 
-### 2. Validar segredos e manifests
+### 2. Validar configuração
 
 ```bash
-make preflight           # valida que os segredos obrigatórios estão em k8s/.env
-make manifests-validate  # valida renderização do kustomize (dry-run)
+make env-check           # valida que as variáveis obrigatórias estão em .env
 ```
 
-### 3. Subir o cluster e o stack principal (OpenClaw + Ollama + Control Panel)
+### 3. Subir a stack completa (OpenClaw + Ollama + Control Panel)
 
 ```bash
-make clawdevs-up
+make up
 ```
 
-Esse único target executa, em sequência:
-
-| Passo | Target interno | O que faz |
-|-------|---------------|-----------|
-| 1 | `preflight` | Valida segredos obrigatórios em k8s/.env |
-| 2 | `minikube-up` | Sobe o cluster Minikube no Docker com GPU |
-| 3 | `minikube-context` | Ajusta kubeconfig e seta o contexto `clawdevs-ai` |
-| 4 | `minikube-addons` | Habilita dashboard, metrics-server, storage e nvidia-device-plugin |
-| 5 | `storage-enable-expansion` | Habilita expansão de volumes no storageclass |
-| 6 | `ollama-volume-apply` | Cria PVC ollama-data |
-| 7 | `stack-apply` | Aplica ollama + openclaw + control-panel |
-
-### 3.1 Startup rápido (imagem pré-configurada + sem pull automático)
-
-O `openclaw` agora usa a imagem `clawdevsai/openclaw-runtime:latest`, com `gh` e `openclaw` já instalados.
-Isso remove o `apt-get`/`install.sh` do boot e reduz o tempo de subida do pod.
-
-No `ollama`, o pull automático de modelos está desativado por padrão para evitar boot demorado.
-Se quiser fazer warm-up no startup, ative no manifest:
-
-```yaml
-OLLAMA_AUTO_PULL_MODELS=true
-OLLAMA_BOOT_MODELS="nemotron-3-super:cloud qwen3-next:80b-cloud"
-```
-
-### 3.2 Modo de Build de Imagens (Local vs Remote)
-
-O projeto suporta dois modos de build de imagens, configurado via `PUSH_IMAGE` em `k8s/.env`:
-
-**Modo Remote (padrão):**
-```bash
-# Em k8s/.env
-PUSH_IMAGE=remote
-```
-- Faz pull das imagens do Docker Hub (`clawdevsai/*`)
-- Mais rápido para desenvolvimento
-- Requer imagens publicadas no Docker Hub
-
-**Modo Local:**
-```bash
-# Em k8s/.env
-PUSH_IMAGE=local
-```
-- Faz build das imagens localmente no contexto do Minikube
-- Útil para desenvolvimento e testes
-- Não requer acesso ao Docker Hub
-
-Para publicar imagens no Docker Hub (`clawdevsAI`):
-
-```bash
-docker login -u clawdevsAI
-
-# Publicar apenas OpenClaw
-make openclaw-image-release OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22
-
-# Publicar todas as imagens do projeto
-make images-release STACK_IMAGE_TAG=latest
-```
+Esse único target:
+1. Valida `.env`
+2. Build das imagens (se necessário)
+3. Inicia todos os serviços (postgres, redis, ollama, openclaw, panel-backend, panel-frontend)
+4. Aguarda health checks passarem
 
 ### 4. Acessar o Control Panel
 
-O Control Panel já foi deployado pelo `make clawdevs-up`. Para acessá-lo:
+O Control Panel já foi iniciado. Para acessá-lo:
 
 ```bash
 make panel-url          # exibe as URLs de acesso (frontend, backend, API docs)
-make panel-forward      # port-forward para http://localhost:3000
 ```
 
-Para executar migrations do banco de dados:
+Para executar migrations do banco de dados na **primeira** subida:
 
 ```bash
 make panel-db-migrate   # executa as migrations Alembic no backend
 ```
 
-### 5. Acessar o dashboard Minikube
+### 5. Acessar o OpenClaw Gateway
 
-```bash
-make dashboard          # abre o dashboard Minikube no browser
-make dashboard-url      # mostra apenas a URL
-```
+OpenClaw está rodando em `http://localhost:18789` (port-forward automático).
 
----
+## Acesso aos Serviços
 
-O arquivo `k8s/.env` deve conter apenas valores preenchidos localmente. Antes de aplicar o stack, rode `make preflight` para validar os segredos obrigatorios.
-Para manter o pod estavel e ainda ter logs úteis, use `OPENCLAW_LOG_LEVEL=info` em `k8s/.env`. Deixe `DEBUG_LOG_ENABLED=true` apenas para rastrear o bootstrap e espelhar sessoes dos agentes no log principal, porque esse modo gera muito mais ruido e pode atrapalhar o fluxo normal.
-
-O `make minikube-up` já sobe o profile com `--gpus=all`, então o node passa a anunciar `nvidia.com/gpu` sem passo manual extra.
-
-O deploy padrao `kubectl apply -k k8s --server-side --force-conflicts` usa so o `base` (CPU no manifest do `ollama`). Para GPU no Ollama, use o overlay `k8s/overlays/gpu` (por exemplo `make openclaw-apply-gpu` ou `make gpu-migrate-apply` no fluxo Docker Desktop).
-
-## Fluxo Alternativo: Docker Desktop Kubernetes
-
-Se você quiser usar o contexto `docker-desktop` em vez do Minikube, siga este caminho:
-
-### 1. Diagnóstico e Validação
-
-```bash
-make gpu-doctor           # Valida NVIDIA host + Docker Desktop + contextos
-make docker-k8s-check     # Valida acesso ao contexto docker-desktop
-```
-
-### 2. Aplicar NVIDIA Device Plugin
-
-```bash
-make gpu-plugin-apply     # Aplica RuntimeClass + NVIDIA device plugin
-make gpu-node-check       # Verifica se nvidia.com/gpu está disponível
-```
-
-Quando o `gpu-node-check` mostrar `GPU_ALLOC` diferente de `<none>`, o cluster está pronto para usar GPU.
-
-### 3. Deploy do Stack com GPU
-
-```bash
-make gpu-migrate-apply    # Aplica stack no contexto docker-desktop com GPU
-```
-
-Este comando aplica o overlay `k8s/overlays/gpu` que inclui:
-- RuntimeClass NVIDIA
-- NVIDIA device plugin
-- Patch do Ollama para usar GPU
-
-**Nota:** O fluxo validado e recomendado usa Minikube com `--gpus=all`. O caminho `docker-desktop` é uma alternativa para quem prefere usar o Kubernetes integrado do Docker Desktop.
+| Serviço | URL Local | Porta |
+|---------|-----------|-------|
+| **Control Panel** (Frontend) | http://localhost:3000 | 3000 |
+| **Control Panel** (Backend API) | http://localhost:8000 | 8000 |
+| **Control Panel** (API Docs) | http://localhost:8000/docs | 8000 |
+| **OpenClaw** Gateway | http://localhost:18789 | 18789 |
+| **Ollama** | http://localhost:11434 | 11434 |
+| **PostgreSQL** | localhost:5432 | 5432 |
+| **Redis** | localhost:6379 | 6379 |
 
 ## Logs e Monitoramento
 
 Para acompanhar os logs dos componentes:
 
 ```bash
-make minikube-logs        # Logs do Minikube
-make ollama-logs          # Logs do Ollama
-make openclaw-logs        # Logs do OpenClaw
-make panel-logs-backend   # Logs do backend do Control Panel
-make panel-logs-frontend  # Logs do frontend do Control Panel
+make logs                     # Todos os logs em tempo real
+make panel-logs               # Apenas Panel
+make openclaw-logs            # Apenas OpenClaw
+make ollama-logs              # Apenas Ollama
 ```
 
 Para verificar status:
 
 ```bash
-make minikube-status      # Status do Minikube
-make stack-status         # Status de todos os pods e services
-make panel-status         # Status específico do Control Panel
+make ps                       # Status dos containers
+make top                      # CPU, memória por container
 ```
 
 ## Reset e Limpeza
@@ -380,114 +244,110 @@ make panel-status         # Status específico do Control Panel
 Para reiniciar ou limpar o ambiente:
 
 ```bash
-make reset-all            # Recria stack do zero (mantém Minikube)
-make destroy-all          # Limpeza completa (remove tudo)
-make clawdevs-down        # Para e remove tudo (alias para destroy-all)
-make minikube-down        # Para apenas o Minikube
-make panel-destroy        # Remove apenas o Control Panel
+make restart                  # Para e reinicia stack (preserva volumes)
+make down                     # Para e remove containers
+make clean                    # Remove containers, volumes, redes
+make prune                    # Docker system prune (limpeza profunda)
+```
+
+## Modo GPU (NVIDIA)
+
+Para usar GPU com Docker:
+
+### 1. Validar GPU
+
+```bash
+docker run --rm --gpus all nvidia/cuda:11.8.0-base nvidia-smi
+```
+
+Se rodar sem erros, GPU está configurada.
+
+### 2. Usar overlay de GPU (se usar Compose separado)
+
+```bash
+docker-compose -f docker-compose.yaml -f docker-compose.gpu.yaml up -d
+```
+
+O arquivo `docker-compose.yaml` já vem com suporte condicional a GPU via `deploy.resources.reservations.devices`.
+
+## Estrutura de Configuração
+
+```text
+.env                              # Variáveis de ambiente (git-ignored)
+.env.example                      # Template de .env
+docker-compose.yaml               # Configuração principal
+Makefile                          # Targets de conveniência
+container/
+  base/
+    bootstrap-scripts/            # Scripts de inicialização
+    openclaw-config/              # Config dos agentes
+      agents/
+      shared/
+      initiatives/
 ```
 
 ## Conclusão para o desenvolvedor
 
-Resumo do caminho **mínimo** para subir a stack completa e ter **acesso fora dos pods** (NodePort no node do cluster — o mesmo mecanismo que expõe o serviço para outra máquina na LAN que alcance o IP do node).
+Resumo do caminho **mínimo** para subir a stack completa:
 
 ### Ordem dos comandos (básico)
 
-1. Copiar e preencher segredos: `cp k8s/.env.example k8s/.env` e editar.
-2. (Recomendado) Validar: `make preflight` e, se quiser, `make manifests-validate`.
-3. Subir tudo de uma vez: `make clawdevs-up`  
-   Isso já inclui Minikube, contexto `clawdevs-ai`, addons, expansão de volume, PVC do Ollama e `stack-apply` (**Ollama + OpenClaw + Control Panel**).
-4. Na **primeira** subida com banco novo do painel: `make panel-db-migrate`.
-5. Conferir saúde: `make stack-status` e `make panel-status`.
+1. Copiar e preencher variáveis: `cp .env.example .env` e editar com valores reais.
+2. (Recomendado) Validar: `make env-check`.
+3. Subir tudo de uma vez: `make up`
+   Isso já inclui postgres, redis, ollama, openclaw e control panel.
+4. Na **primeira** subida com banco novo: `make panel-db-migrate`.
+5. Conferir saúde: `make ps` e `make logs`.
 
-### Acesso externo ao Kubernetes (UI)
+### Acesso externo
 
-Os serviços expõem **NodePort** no manifest atual. A URL típica usa o IP do node Minikube (`minikube ip`) na mesma rede que a VM/host:
+Todos os serviços estão disponíveis em `localhost`:
 
-| O quê | Porta NodePort | URL (substitua `MINIKUBE_IP` por `minikube ip`) |
-|--------|----------------|--------------------------------------------------|
-| OpenClaw gateway / **control UI** (porta do serviço `clawdevs-ai`) | 31879 | `http://MINIKUBE_IP:31879` |
-| **Control Panel** — frontend | 31880 | `http://MINIKUBE_IP:31880` |
-| **Control Panel** — backend (API; `/docs` para OpenAPI) | 31881 | `http://MINIKUBE_IP:31881` e `http://MINIKUBE_IP:31881/docs` |
-
-Para listar e confirmar portas no cluster:
-
-```bash
-kubectl --context=clawdevs-ai get svc clawdevs-ai clawdevs-panel-frontend clawdevs-panel-backend
-```
-
-**Minikube Dashboard** (Kubernetes: pods, deployments, eventos — não é a UI do OpenClaw):
-
-```bash
-make dashboard
-# ou só a URL:
-make dashboard-url
-```
-
-### Windows + driver `docker` do Minikube
-
-Em muitos setups o `minikube ip` **não abre no navegador da máquina host**. Nesse caso o acesso “externo” ao processo na sua máquina é via **port-forward**:
-
-- Painel na máquina local: `make panel-forward` → [http://localhost:3000](http://localhost:3000)
-- OpenClaw (control UI) na máquina local:
-
-```bash
-kubectl --context=clawdevs-ai port-forward svc/clawdevs-ai 18789:18789
-```
-
-Depois abra [http://localhost:18789](http://localhost:18789) (deixe o terminal aberto).
-
-### Ordem mental rápida
-
-Segredos → `make clawdevs-up` → (primeira vez) `make panel-db-migrate` → validar com `make stack-status` / `make panel-status` → acessar **control UI** (NodePort 31879 ou port-forward 18789), **control panel** (31880/31881 ou `panel-forward`), e **dashboard** do cluster com `make dashboard`.
+- **Control Panel Frontend**: http://localhost:3000
+- **Control Panel Backend**: http://localhost:8000 (API: `/docs`)
+- **OpenClaw Gateway**: http://localhost:18789
+- **Ollama**: http://localhost:11434
 
 ## GitHub (gh CLI)
 
-- A organização padrão para ações GitHub dos agentes deve vir de `GIT_ORG` (definido em `k8s/.env` e injetado no pod).
+- A organização padrão para ações GitHub dos agentes vem de `GIT_ORG` (definido em `.env` e injetado no container).
 - Opcionalmente, `GIT_DEFAULT_REPOSITORY` define o primeiro repositório ativo na inicialização.
-- O token deve vir de `GIT_TOKEN` (também definido em `k8s/.env` e injetado no pod).
+- O token vem de `GIT_TOKEN` (também definido em `.env` e injetado no container).
 - O repositório ativo por sessão fica em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`).
 - Para comandos `gh` fora de um checkout local, usar `--repo "$ACTIVE_GIT_REPOSITORY"` (ou `"$GIT_REPOSITORY"` para compatibilidade).
-- Utilitários de contexto multi-repo no pod:
+- Utilitários de contexto multi-repo no container:
   - `claw-repo-discover [filtro]` para descobrir repositórios da organização
   - `claw-repo-ensure <repo> [--create]` para validar existência e criar quando autorizado
   - `claw-repo-switch <repo> [branch]` para trocar contexto de todos os agentes/workspaces
 - Documentação oficial: https://cli.github.com/manual/gh
 
-## Estrutura K8s
+## Estrutura Docker Compose
 
 ```text
-k8s/
-  .env
-  .env.example
-  kustomization.yaml
-  base/
-    kustomization.yaml
-    openclaw-pod.yaml
-    ollama-pod.yaml
-    ollama-pvc.yaml
-    networkpolicy-allow-egress.yaml
-    searxng-deployment.yaml
-    openclaw-config/
-      ceo/
-      po/
-      arquiteto/
-      dev_backend/
-  overlays/
-    gpu/
-      kustomization.yaml
-      ollama-gpu-patch.yaml
-      nvidia-device-plugin.yaml
-      nvidia-runtimeclass.yaml
+docker-compose.yaml
+  networks:
+    clawdevs/                     # Rede interna dos containers
+  volumes:
+    openclaw-data/                # Dados persistentes do OpenClaw
+    ollama-data/                  # Modelos do Ollama
+    postgres-data/                # Banco de dados PostgreSQL
+    panel-token/                  # Token temporário Panel
+  services:
+    postgres/                     # Banco de dados (PostgreSQL)
+    redis/                        # Cache (Redis)
+    ollama/                       # LLM Backend
+    searxng/                      # Busca web
+    panel-backend/                # Control Panel API
+    panel-frontend/               # Control Panel UI
+    openclaw/                     # Gateway de agentes
 ```
 
 O comando padrão de deploy continua sendo:
 
 ```bash
-kubectl apply -k k8s --server-side --force-conflicts
+docker-compose up -d
 ```
 
-O `base` concentra o stack comum e os agentes. O overlay `gpu` adiciona `RuntimeClass`, device plugin e o patch do `ollama` para GPU; nao entra no `kubectl apply -k k8s --server-side --force-conflicts` ate voce aplicar explicitamente esse overlay ou os targets Make que o usam. Detalhes: `docs/README.md`.
-
+---
 
 https://clawhub.ai/pskoett/self-improving-agent
