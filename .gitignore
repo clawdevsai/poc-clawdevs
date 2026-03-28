@@ -1,6 +1,7 @@
 .openclaw-forward.pid
 .env
 k8s/.env
+k8s/.env.local
 .worktrees/
 NUL
 .claude

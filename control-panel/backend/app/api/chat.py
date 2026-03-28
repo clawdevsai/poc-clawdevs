@@ -19,7 +19,6 @@
 # SOFTWARE.
 
 from typing import Annotated, Any, AsyncGenerator, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sse_starlette.sse import EventSourceResponse
@@ -101,11 +100,15 @@ async def _ensure_agent(session: AsyncSession, slug: str) -> Agent:
     result = await session.exec(select(Agent).where(Agent.slug == slug))
     agent = result.first()
     if agent is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found"
+        )
     return agent
 
 
-async def _latest_session_for_agent(db: AsyncSession, slug: str) -> Optional[SessionModel]:
+async def _latest_session_for_agent(
+    db: AsyncSession, slug: str
+) -> Optional[SessionModel]:
     stmt = (
         select(SessionModel)
         .where(SessionModel.agent_slug == slug)
@@ -151,7 +154,9 @@ async def chat_history(
 
 
 async def _stream_sse(agent_slug: str, prompt: str) -> AsyncGenerator[str, None]:
-    async for event in openclaw_client.stream_chat(agent_slug=agent_slug, message=prompt):
+    async for event in openclaw_client.stream_chat(
+        agent_slug=agent_slug, message=prompt
+    ):
         if event.get("event") == "delta":
             yield f"data: {event['data']}\n\n"
         elif event.get("event") == "done":

@@ -107,7 +107,6 @@ class OpenClawClient:
         except Exception:
             return None
 
-
     async def stream_chat(
         self, agent_slug: str, message: str
     ) -> AsyncGenerator[Dict[str, Any], None]:
@@ -138,7 +137,8 @@ class OpenClawClient:
                         text = await r.aread()
                         yield {
                             "event": "error",
-                            "data": text.decode("utf-8", errors="ignore") or "upstream error",
+                            "data": text.decode("utf-8", errors="ignore")
+                            or "upstream error",
                         }
                         return
 

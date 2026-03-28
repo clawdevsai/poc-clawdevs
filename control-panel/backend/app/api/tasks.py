@@ -116,6 +116,7 @@ async def create_task(
 ):
     from datetime import datetime, timezone
 
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     task = Task(
         title=body.title,
         description=body.description,
@@ -125,7 +126,8 @@ async def create_task(
         ),
         label=body.label,
         github_repo=body.github_repo,
-        updated_at=datetime.now(timezone.utc),
+        updated_at=now,
+        created_at=now,
     )
     session.add(task)
     await session.commit()
@@ -176,7 +178,7 @@ async def update_task(
         task.label = body.label
     if body.github_repo is not None:
         task.github_repo = body.github_repo
-    task.updated_at = datetime.now(timezone.utc)
+    task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     await session.refresh(task)
     return TaskResponse(
