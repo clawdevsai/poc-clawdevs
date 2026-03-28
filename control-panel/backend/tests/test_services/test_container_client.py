@@ -45,15 +45,9 @@ class TestContainerClient:
             assert core is not None
             assert apps is not None
 
-<<<<<<< HEAD
     def test_get_container_clients_fallback_to_config(self):
         """Test fallback to config file when incluster fails."""
-        with patch("app.services.container_client.kubernetes") as mock_k8s:
-=======
-    def test_get_container_clients_fallback_to_kubeconfig(self):
-        """Test fallback to kubeconfig when incluster fails."""
         with patch("app.services.container_client.kubernetes") as mock_container:
->>>>>>> 3b363068aa95ea545ea20d1f6fe7477d3b65ab78
             mock_core = MagicMock()
             mock_apps = MagicMock()
             mock_container.client.CoreV1Api.return_value = mock_core

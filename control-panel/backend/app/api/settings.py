@@ -34,11 +34,7 @@ async def get_settings_info(_: CurrentUser):
     return {
         "gateway_url": settings.openclaw_gateway_url,
         "cluster_namespace": cluster_info.get("namespace") or settings.container_namespace,
-<<<<<<< HEAD
         "container_version": cluster_info.get("version") or "unknown",
-=======
-        "container_version": cluster_info.get("container_version") or "unknown",
->>>>>>> 3b363068aa95ea545ea20d1f6fe7477d3b65ab78
     }
 
 
