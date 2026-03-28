@@ -430,14 +430,12 @@ class TestOpenClawClient:
         mock_response = MagicMock()
         mock_response.status_code = 500
         mock_response.aread = AsyncMock(return_value=b"boom")
-        mock_stream_ctx = AsyncMock()
+        mock_stream_ctx = MagicMock()
         mock_stream_ctx.__aenter__.return_value = mock_response
 
         with patch("httpx.AsyncClient") as mock_async_client:
             mock_instance = AsyncMock()
-            mock_instance.__aenter__.return_value.stream = AsyncMock(
-                return_value=mock_stream_ctx
-            )
+            mock_instance.__aenter__.return_value.stream = MagicMock(return_value=mock_stream_ctx)
             mock_async_client.return_value = mock_instance
 
             events = []
