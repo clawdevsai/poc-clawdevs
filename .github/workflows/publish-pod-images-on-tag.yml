@@ -40,8 +40,8 @@ jobs:
             {"pod":"ollama","image":"ollama-runtime","context":".","file":"docker/clawdevs-ollama/Dockerfile","is_openclaw":"false"},
             {"pod":"searxng","image":"searxng-runtime","context":".","file":"docker/clawdevs-searxng/Dockerfile","is_openclaw":"false"},
             {"pod":"searxng-proxy","image":"searxng-proxy","context":".","file":"docker/clawdevs-searxng-proxy/Dockerfile","is_openclaw":"false"},
-            {"pod":"panel-backend","image":"clawdevs-panel-backend","context":"control-panel/backend","file":"control-panel/backend/Dockerfile","is_openclaw":"false"},
-            {"pod":"panel-frontend","image":"clawdevs-panel-frontend","context":"control-panel/frontend","file":"control-panel/frontend/Dockerfile","is_openclaw":"false"},
+            {"pod":"panel-backend","image":"clawdevs-panel-backend","context":"control-panel/backend","file":"docker/clawdevs-panel-backend/Dockerfile","is_openclaw":"false"},
+            {"pod":"panel-frontend","image":"clawdevs-panel-frontend","context":"control-panel/frontend","file":"docker/clawdevs-panel-frontend/Dockerfile","is_openclaw":"false"},
             {"pod":"panel-db","image":"postgres-runtime","context":".","file":"docker/clawdevs-postgres/Dockerfile","is_openclaw":"false"},
             {"pod":"panel-redis","image":"redis-runtime","context":".","file":"docker/clawdevs-redis/Dockerfile","is_openclaw":"false"}
           ]'

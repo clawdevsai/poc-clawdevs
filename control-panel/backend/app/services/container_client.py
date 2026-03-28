@@ -72,7 +72,7 @@ def _fallback_compose_containers() -> list[dict]:
         containers.append(
             {
                 "name": service["name"],
-                "namespace": "docker-compose",
+                "namespace": "docker-run",
                 "status": "Running" if healthy else "Degraded",
                 "restarts": 0,
                 "ready": healthy,
@@ -85,7 +85,7 @@ def _fallback_compose_containers() -> list[dict]:
         containers.append(
             {
                 "name": name,
-                "namespace": "docker-compose",
+                "namespace": "docker-run",
                 "status": "Running",
                 "restarts": 0,
                 "ready": True,
@@ -128,7 +128,7 @@ def _fallback_compose_pvcs() -> list[dict]:
             "capacity": "managed-by-docker",
             "access_modes": ["ReadWriteOnce"],
             "storage_class": "docker-volume",
-            "namespace": "docker-compose",
+            "namespace": "docker-run",
             "age": "—",
         }
         for volume_name in DOCKER_STACK_VOLUMES
@@ -136,7 +136,7 @@ def _fallback_compose_pvcs() -> list[dict]:
 
 
 def get_container_clients():
-    """Get container management clients (deprecated kubernetes fallback (Docker Compose))."""
+    """Get container management clients (deprecated kubernetes fallback (docker run))."""
     try:
         if kubernetes is None:
             logger.warning("Container management requires kubernetes package")
@@ -249,8 +249,8 @@ def get_cluster_info(namespace: str = "default") -> dict:
     core, _ = get_container_clients()
     if core is None:
         return {
-            "cluster_name": "docker-compose",
-            "namespace": "docker-compose",
+            "cluster_name": "docker-run",
+            "namespace": "docker-run",
             "version": "local",
         }
 

@@ -20,16 +20,16 @@
   SOFTWARE.
  -->
 
-# clawdevs-ai (Docker Compose)
+# clawdevs-ai (docker run)
 
-Fluxo para subir a stack completa (`ollama` + `openclaw` + `control-panel`) localmente com Docker Compose, com suporte a GPU via Docker e NVIDIA Container Runtime.
+Fluxo para subir a stack completa (`ollama` + `openclaw` + `control-panel`) localmente com `make up` (build local + `docker run`), com suporte a GPU via Docker e NVIDIA Container Runtime.
 
 ## Novidades (2026-03-28)
 
-- **Migração de Kubernetes para Docker Compose** - Simplificação do deployment
-- **Control Panel integrado** ao fluxo principal via docker-compose.yaml
+- **Migração de Kubernetes para stack local via docker run** - Simplificação do deployment
+- **Control Panel integrado** ao fluxo principal via `make up`
 - **Comandos simplificados**: `make up`, `make down`, `make logs`
-- **Suporte a GPU nativo** via Docker Compose + NVIDIA Container Runtime
+- **Suporte a GPU nativo** via `make up-gpu` + NVIDIA Container Runtime
 - **Ambiente local otimizado**: sem necessidade de Minikube/Kubernetes
 
 ## Fluxo de spec
@@ -112,7 +112,7 @@ make help
 Comandos para setup inicial e configuração:
 
 ```bash
-make up                       # Inicia stack completa (Docker Compose)
+make up                       # Inicia stack completa (docker run)
 make down                     # Para e remove containers
 make build                    # Build de todas as imagens localmente
 make env-check                # Valida arquivo .env
@@ -157,7 +157,7 @@ make release                  # Build + Push
 
 ```bash
 make logs                     # Todos os logs em tempo real
-make logs-follow              # Segue logs (como docker-compose logs -f)
+make logs-follow              # Segue logs agregados da stack
 make ps                       # Status dos containers
 make top                      # Recursos (CPU, memória) dos containers
 ```
@@ -262,28 +262,29 @@ docker run --rm --gpus all nvidia/cuda:11.8.0-base nvidia-smi
 
 Se rodar sem erros, GPU está configurada.
 
-### 2. Usar overlay de GPU (se usar Compose separado)
+### 2. Subir stack com GPU
 
 ```bash
-docker-compose -f docker-compose.yaml -f docker-compose.gpu.yaml up -d
+make up-gpu
 ```
 
-O arquivo `docker-compose.yaml` já vem com suporte condicional a GPU via `deploy.resources.reservations.devices`.
+O target `make up-gpu` sobe o container `clawdevs-ollama` com `--gpus all`.
 
 ## Estrutura de Configuração
 
 ```text
 .env                              # Variáveis de ambiente (git-ignored)
 .env.example                      # Template de .env
-docker-compose.yaml               # Configuração principal
 Makefile                          # Targets de conveniência
-container/
+docker/
   base/
     bootstrap-scripts/            # Scripts de inicialização
     openclaw-config/              # Config dos agentes
-      agents/
-      shared/
-      initiatives/
+  clawdevs-openclaw/              # Dockerfile do OpenClaw
+  clawdevs-ollama/                # Dockerfile do Ollama
+  clawdevs-panel-backend/         # Dockerfile do backend
+  clawdevs-panel-worker/          # Dockerfile do worker
+  clawdevs-panel-frontend/        # Dockerfile do frontend
 ```
 
 ## Conclusão para o desenvolvedor
@@ -321,31 +322,34 @@ Todos os serviços estão disponíveis em `localhost`:
   - `claw-repo-switch <repo> [branch]` para trocar contexto de todos os agentes/workspaces
 - Documentação oficial: https://cli.github.com/manual/gh
 
-## Estrutura Docker Compose
+## Estrutura da Stack Local
 
 ```text
-docker-compose.yaml
-  networks:
-    clawdevs/                     # Rede interna dos containers
+make up
+  network:
+    clawdevs                      # Rede interna dos containers
   volumes:
-    openclaw-data/                # Dados persistentes do OpenClaw
-    ollama-data/                  # Modelos do Ollama
-    postgres-data/                # Banco de dados PostgreSQL
-    panel-token/                  # Token temporário Panel
-  services:
-    postgres/                     # Banco de dados (PostgreSQL)
-    redis/                        # Cache (Redis)
-    ollama/                       # LLM Backend
-    searxng/                      # Busca web
-    panel-backend/                # Control Panel API
-    panel-frontend/               # Control Panel UI
-    openclaw/                     # Gateway de agentes
+    openclaw-data                 # Dados persistentes do OpenClaw
+    ollama-data                   # Modelos do Ollama
+    postgres-data                 # Banco de dados PostgreSQL
+    panel-token                   # Token temporário Panel
+  containers:
+    clawdevs-postgres
+    clawdevs-redis
+    clawdevs-ollama
+    clawdevs-searxng
+    clawdevs-searxng-proxy
+    clawdevs-panel-backend
+    clawdevs-panel-worker
+    clawdevs-panel-frontend
+    clawdevs-token-init
+    clawdevs-openclaw
 ```
 
-O comando padrão de deploy continua sendo:
+O comando padrão de deploy é:
 
 ```bash
-docker-compose up -d
+make up
 ```
 
 ---

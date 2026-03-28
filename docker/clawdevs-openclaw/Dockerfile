@@ -51,4 +51,9 @@ ENV OPENCLAW_NO_ONBOARD=1 \
     OPENCLAW_STATE_DIR=/data/openclaw \
     GH_CONFIG_DIR=/data/openclaw/.config/gh
 
+COPY docker/clawdevs-openclaw/entrypoint.sh /usr/local/bin/openclaw-entrypoint.sh
+RUN chmod +x /usr/local/bin/openclaw-entrypoint.sh
+
 WORKDIR /data/openclaw
+
+ENTRYPOINT ["/usr/local/bin/openclaw-entrypoint.sh"]

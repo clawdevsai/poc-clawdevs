@@ -35,14 +35,14 @@ jobs:
           SEARXNG_SECRET=${{ secrets.SEARXNG_SECRET }}
           ENVEOF
 
-      - name: Validate Docker Compose config
-        run: docker-compose config > /dev/null
+      - name: Validate stack preflight
+        run: make preflight
 
       - name: Check for hardcoded secrets
         run: |
           echo "Checking for hardcoded secrets..."
-          grep -r "password\|secret\|token" docker-compose.yaml .env.example || true
-          grep -r "api_key\|apikey" docker-compose.yaml .env.example || true
+          grep -r "password\|secret\|token" Makefile .env.example docker/ || true
+          grep -r "api_key\|apikey" Makefile .env.example docker/ || true
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -63,9 +63,6 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
-    services:
-      docker-compose:
-        image: docker/compose:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -77,8 +74,8 @@ jobs:
         run: |
           cat > .env <<ENVEOF
           OPENCLAW_GATEWAY_TOKEN=test-token
-          TELEGRAM_BOT_TOKEN_CEO=test
-          TELEGRAM_CHAT_ID_CEO=test
+          TELEGRAM_BOT_TOKEN_CEO=123456:test-token
+          TELEGRAM_CHAT_ID_CEO=123456
           GIT_TOKEN=test
           GIT_ORG=test
           PANEL_SECRET_KEY=test-secret-key-32-chars-min-length
@@ -92,15 +89,22 @@ jobs:
           DEBUG_LOG_ENABLED=false
           ENVEOF
 
-      - name: Start Docker Compose services
-        run: docker-compose up -d
+      - name: Start services
+        run: make up
 
       - name: Wait for services to be healthy
         run: |
-          for i in {1..30}; do
-            docker-compose ps | grep -q "healthy" && break
-            sleep 10
+          for i in {1..60}; do
+            OK=1
+            curl -sf http://localhost:8000/healthz > /dev/null || OK=0
+            curl -sf http://localhost:18789/healthz > /dev/null || OK=0
+            curl -sf http://localhost:18080/healthz > /dev/null || OK=0
+            [ "$OK" = "1" ] && break
+            sleep 5
           done
+          curl -sf http://localhost:8000/healthz > /dev/null
+          curl -sf http://localhost:18789/healthz > /dev/null
+          curl -sf http://localhost:18080/healthz > /dev/null
 
       - name: Test Ollama connectivity
         run: |
@@ -108,11 +112,25 @@ jobs:
 
       - name: Collect Docker logs on failure
         if: failure()
-        run: docker-compose logs
+        run: |
+          for c in \
+            clawdevs-token-init \
+            clawdevs-postgres \
+            clawdevs-searxng \
+            clawdevs-ollama \
+            clawdevs-redis \
+            clawdevs-panel-backend \
+            clawdevs-searxng-proxy \
+            clawdevs-panel-worker \
+            clawdevs-panel-frontend \
+            clawdevs-openclaw; do
+            echo "=== $c ==="
+            docker logs "$c" || true
+          done
 
-      - name: Stop Docker Compose services
+      - name: Stop services
         if: always()
-        run: docker-compose down
+        run: make down
 
   security-scan:
     runs-on: ubuntu-latest

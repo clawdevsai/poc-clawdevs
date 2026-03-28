@@ -31,7 +31,7 @@ docker build \
   --build-arg OPENCLAW_VERSION=2026.3.24 \
   -t clawdevsai/openclaw-runtime:2026.3.24 \
   -t clawdevsai/openclaw-runtime:latest \
-  -f docker/openclaw-runtime/Dockerfile .
+  -f docker/clawdevs-openclaw/Dockerfile .
 ```
 
 ## Push Docker Hub
@@ -43,6 +43,8 @@ docker push clawdevsai/openclaw-runtime:2026.3.24
 docker push clawdevsai/openclaw-runtime:latest
 ```
 
-## Uso no Docker Compose
+## Uso na Stack Local
 
-O `container/base/openclaw-container.yaml` já está apontando para `clawdevsai/openclaw-runtime:latest`.
+A stack local usa `make up` (docker run) e monta scripts/config de `docker/base/`.
+O container inicia via `ENTRYPOINT` (`/usr/local/bin/openclaw-entrypoint.sh`) e executa, em ordem,
+os scripts `docker/base/bootstrap-scripts/00-env.sh` ate `11-start-gateway.sh`.

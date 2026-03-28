@@ -92,9 +92,9 @@ The example initiative is internal: reinforce the use of SDD in all agents and m
 
 ## Plan
 ### Architecture
-- `container/base/openclaw-config/shared/` stores the official templates.
-- `container/base/openclaw-container.yaml` copies the files to the agents' workspaces.
-- `container/base/kustomization.yaml` exposes the files in configMap.
+- `docker/base/openclaw-config/shared/` stores the official templates.
+- `docker/base/openclaw-container.yaml` copies the files to the agents' workspaces.
+- `docker/base/kustomization.yaml` exposes the files in configMap.
 - `README.md` becomes the flow input port.
 - `Makefile` offers shortcuts to open artifacts.### Phases
 1. Create templates and convention documents.

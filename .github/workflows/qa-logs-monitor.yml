@@ -2,7 +2,7 @@ name: QA Logs Monitor
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
+    - cron: '*/15 * * * *'
   workflow_dispatch:
     inputs:
       service_name:
@@ -25,31 +25,31 @@ jobs:
         run: |
           cat > .env <<ENVEOF
           OPENCLAW_GATEWAY_TOKEN=test-token
-          TELEGRAM_BOT_TOKEN_CEO=test
-          TELEGRAM_CHAT_ID_CEO=test
+          TELEGRAM_BOT_TOKEN_CEO=123456:test-token
+          TELEGRAM_CHAT_ID_CEO=123456
           GIT_TOKEN=${{ secrets.GIT_TOKEN }}
           GIT_ORG=${{ secrets.GIT_ORG }}
-          PANEL_SECRET_KEY=test-secret-key
+          PANEL_SECRET_KEY=test-secret-key-32-chars-min-length
           PANEL_ADMIN_USERNAME=admin
-          PANEL_ADMIN_PASSWORD=test
-          PANEL_DB_PASSWORD=test
-          PANEL_REDIS_PASSWORD=test
-          SEARXNG_SECRET=test
+          PANEL_ADMIN_PASSWORD=test-password
+          PANEL_DB_PASSWORD=test-db-password
+          PANEL_REDIS_PASSWORD=test-redis-password
+          SEARXNG_SECRET=test-secret
           PROVEDOR_LLM=ollama
           OPENCLAW_LOG_LEVEL=info
           DEBUG_LOG_ENABLED=false
           ENVEOF
 
-      - name: Start Docker Compose services
-        run: docker-compose up -d
+      - name: Start services
+        run: make up
 
       - name: Wait for services to start
-        run: sleep 15
+        run: sleep 20
 
       - name: Get OpenClaw container logs
         id: openclaw-logs
         run: |
-          OPENCLAW_LOGS=$(docker-compose logs openclaw --tail=100 2>&1 || echo "Container not found")
+          OPENCLAW_LOGS=$(docker logs clawdevs-openclaw --tail=100 2>&1 || echo "Container not found")
           echo "$OPENCLAW_LOGS" > /tmp/openclaw-logs.txt
           echo "logs_collected=true" >> $GITHUB_OUTPUT
 
@@ -60,7 +60,6 @@ jobs:
             ERROR_COUNT=$(grep -ci "error\|exception\|failed\|fatal" /tmp/openclaw-logs.txt || echo "0")
             echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
 
-            # Extract last 5 errors
             LAST_ERRORS=$(grep -i "error\|exception\|failed\|fatal" /tmp/openclaw-logs.txt | tail -5 || echo "No errors found")
             echo "last_errors<<EOF" >> $GITHUB_OUTPUT
             echo "$LAST_ERRORS" >> $GITHUB_OUTPUT
@@ -72,13 +71,13 @@ jobs:
       - name: Check Ollama logs
         id: ollama-logs
         run: |
-          OLLAMA_LOGS=$(docker-compose logs ollama --tail=50 2>&1 || echo "Container not found")
+          OLLAMA_LOGS=$(docker logs clawdevs-ollama --tail=50 2>&1 || echo "Container not found")
           OLLAMA_ERRORS=$(echo "$OLLAMA_LOGS" | grep -ci "error\|exception" || echo "0")
           echo "ollama_errors=$OLLAMA_ERRORS" >> $GITHUB_OUTPUT
 
       - name: Report summary
         run: |
-          echo "## QA Logs Summary (Docker Compose)" >> $GITHUB_STEP_SUMMARY
+          echo "## QA Logs Summary (docker run)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Errors Found |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------------|" >> $GITHUB_STEP_SUMMARY
@@ -107,4 +106,4 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: make down
