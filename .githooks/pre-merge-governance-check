@@ -9,9 +9,9 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONSTITUTION_FILE="$SCRIPT_DIR/container/base/openclaw-config/shared/CONSTITUTION.md"
-COST_ORCHESTRATION_FILE="$SCRIPT_DIR/container/base/openclaw-config/shared/DYNAMIC_COST_ORCHESTRATION.md"
-MULTI_REPO_FILE="$SCRIPT_DIR/container/base/openclaw-config/shared/MULTI_REPO_COORDINATION.md"
+CONSTITUTION_FILE="$SCRIPT_DIR/docker/base/openclaw-config/shared/CONSTITUTION.md"
+COST_ORCHESTRATION_FILE="$SCRIPT_DIR/docker/base/openclaw-config/shared/DYNAMIC_COST_ORCHESTRATION.md"
+MULTI_REPO_FILE="$SCRIPT_DIR/docker/base/openclaw-config/shared/MULTI_REPO_COORDINATION.md"
 
 # Color output
 RED='\033[0;31m'

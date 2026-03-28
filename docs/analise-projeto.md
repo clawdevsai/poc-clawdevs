@@ -110,7 +110,7 @@ O projeto implementa um fluxo de especificação rigoroso chamado **Fluxo SDD**:
 ```
 
 **Diretórios de Artefatos:**
-- Templates: `container/base/openclaw-config/shared/*.md`
+- Templates: `docker/base/openclaw-config/shared/*.md`
 - Specs: `/data/openclaw/backlog/specs/`
 - Briefs: `/data/openclaw/backlog/briefs/`
 - User Stories: `/data/openclaw/backlog/user_story/`
@@ -565,9 +565,9 @@ make docker-down           # Para Docker
 
 ### Documentação
 
-- **Fluxo SDD:** `container/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
-- **Templates:** `container/base/openclaw-config/shared/*.md`
-- **Iniciativas:** `container/base/openclaw-config/shared/initiatives/`
+- **Fluxo SDD:** `docker/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
+- **Templates:** `docker/base/openclaw-config/shared/*.md`
+- **Iniciativas:** `docker/base/openclaw-config/shared/initiatives/`
 - **OpenClaw Docs:** `docs/README.md`
 
 ### Arquivos de Configuração
@@ -603,8 +603,8 @@ make docker-down           # Para Docker
 
 ### Profundidade Técnica
 
-- **OpenClaw internals:** Leia `container/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
-- **Kustomize:** Estude `container/base/` e `container/overlays/`
+- **OpenClaw internals:** Leia `docker/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
+- **Kustomize:** Estude `docker/base/` e `docker/overlays/`
 - **FastAPI:** Explore `control-panel/backend/app/`
 - **Next.js:** Explore `control-panel/frontend/app/`
 

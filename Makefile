@@ -34,7 +34,9 @@ endif
 # ────────────────────────────────────────────────────────────────────────────
 
 DC_ENV_FILE ?= .env
-DC_CMD = docker compose --env-file $(DC_ENV_FILE)
+DC_FILE ?= docker/stack.compose.yaml
+DC_CMD = docker compose --env-file $(DC_ENV_FILE) -f $(DC_FILE)
+PUSH_IMAGE ?= remote
 
 OPENCLAW_IMAGE_REPO  ?= clawdevsai/openclaw-runtime
 OPENCLAW_IMAGE_TAG   ?= latest
@@ -124,8 +126,15 @@ help:
 
 ## up: Equivale a: docker compose --env-file .env up -d (apos preflight; sync opcional)
 up: preflight
-	@if [ -f container/base/kustomization.yaml ]; then $(MAKE) sync-agent-config; else mkdir -p tmp/agent-config-flat; fi
-	$(DC_CMD) up -d
+	@if [ -f docker/base/kustomization.yaml ]; then $(MAKE) sync-agent-config; else mkdir -p tmp/agent-config-flat; fi
+	@if [ "$(PUSH_IMAGE)" = "local" ]; then \
+		echo "[up] PUSH_IMAGE=local -> build local via Dockerfile"; \
+		$(DC_CMD) up -d --build; \
+	else \
+		echo "[up] PUSH_IMAGE=$(PUSH_IMAGE) -> pull Docker Hub images"; \
+		$(DC_CMD) pull; \
+		$(DC_CMD) up -d; \
+	fi
 	@echo ""
 	@echo "  Stack iniciada! Acesse:"
 	@echo "    http://localhost:3000        Painel de Controle"
@@ -138,8 +147,15 @@ up: preflight
 
 ## up-gpu: Mesmo fluxo que up (GPU no compose quando houver override local)
 up-gpu: preflight
-	@if [ -f container/base/kustomization.yaml ]; then $(MAKE) sync-agent-config; else mkdir -p tmp/agent-config-flat; fi
-	$(DC_CMD) up -d
+	@if [ -f docker/base/kustomization.yaml ]; then $(MAKE) sync-agent-config; else mkdir -p tmp/agent-config-flat; fi
+	@if [ "$(PUSH_IMAGE)" = "local" ]; then \
+		echo "[up-gpu] PUSH_IMAGE=local -> build local via Dockerfile"; \
+		$(DC_CMD) up -d --build; \
+	else \
+		echo "[up-gpu] PUSH_IMAGE=$(PUSH_IMAGE) -> pull Docker Hub images"; \
+		$(DC_CMD) pull; \
+		$(DC_CMD) up -d; \
+	fi
 	@echo "Stack GPU iniciada. Certifique-se de que Docker Desktop > Settings > Resources > GPU esta habilitado."
 
 ## down: Para e remove os containers (preserva volumes/dados)
@@ -155,6 +171,15 @@ preflight:
 	@if [ ! -f "$(DC_ENV_FILE)" ]; then \
 		echo "ERRO: $(DC_ENV_FILE) nao encontrado."; \
 		echo "Execute: cp .env.example .env   e preencha os valores."; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(DC_FILE)" ]; then \
+		echo "ERRO: $(DC_FILE) nao encontrado."; \
+		exit 1; \
+	fi
+	@if [ "$(PUSH_IMAGE)" != "local" ] && [ "$(PUSH_IMAGE)" != "remote" ]; then \
+		echo "ERRO: PUSH_IMAGE invalido: $(PUSH_IMAGE)"; \
+		echo "Use PUSH_IMAGE=local ou PUSH_IMAGE=remote"; \
 		exit 1; \
 	fi
 	@set -eu; \
@@ -245,7 +270,13 @@ destroy:
 
 ## build: Build local de todas as imagens via Docker Compose
 build:
-	$(DC_CMD) build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION)
+	@if [ "$(PUSH_IMAGE)" = "local" ]; then \
+		echo "[build] PUSH_IMAGE=local -> build local via Dockerfile"; \
+		$(DC_CMD) build; \
+	else \
+		echo "[build] PUSH_IMAGE=$(PUSH_IMAGE) -> pull Docker Hub images"; \
+		$(DC_CMD) pull; \
+	fi
 
 ## pull: Baixa todas as imagens pré-buildadas do Docker Hub
 pull:
@@ -255,7 +286,7 @@ openclaw-image-build:
 	docker build \
 		--build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) \
 		-t $(OPENCLAW_IMAGE_REPO):$(OPENCLAW_IMAGE_TAG) \
-		-f docker/openclaw-runtime/Dockerfile .
+		-f docker/clawdevs-openclaw/Dockerfile .
 
 openclaw-image-push:
 	docker push $(OPENCLAW_IMAGE_REPO):$(OPENCLAW_IMAGE_TAG)
@@ -263,19 +294,19 @@ openclaw-image-push:
 openclaw-image-release: openclaw-image-build openclaw-image-push
 
 ollama-image-build:
-	docker build -t $(OLLAMA_IMAGE_REPO):$(IMAGE_TAG) -f docker/ollama-runtime/Dockerfile .
+	docker build -t $(OLLAMA_IMAGE_REPO):$(IMAGE_TAG) -f docker/clawdevs-ollama/Dockerfile .
 
 ollama-image-push:
 	docker push $(OLLAMA_IMAGE_REPO):$(IMAGE_TAG)
 
 searxng-image-build:
-	docker build -t $(SEARXNG_IMAGE_REPO):$(IMAGE_TAG) -f docker/searxng-runtime/Dockerfile .
+	docker build -t $(SEARXNG_IMAGE_REPO):$(IMAGE_TAG) -f docker/clawdevs-searxng/Dockerfile .
 
 searxng-image-push:
 	docker push $(SEARXNG_IMAGE_REPO):$(IMAGE_TAG)
 
 searxng-proxy-image-build:
-	docker build -t $(SEARXNG_PROXY_REPO):$(IMAGE_TAG) -f docker/searxng-proxy/Dockerfile .
+	docker build -t $(SEARXNG_PROXY_REPO):$(IMAGE_TAG) -f docker/clawdevs-searxng-proxy/Dockerfile .
 
 searxng-proxy-image-push:
 	docker push $(SEARXNG_PROXY_REPO):$(IMAGE_TAG)
@@ -293,13 +324,13 @@ panel-frontend-image-push:
 	docker push $(PANEL_FRONTEND_REPO):$(IMAGE_TAG)
 
 postgres-image-build:
-	docker build -t $(POSTGRES_IMAGE_REPO):$(IMAGE_TAG) -f docker/postgres-runtime/Dockerfile .
+	docker build -t $(POSTGRES_IMAGE_REPO):$(IMAGE_TAG) -f docker/clawdevs-postgres/Dockerfile .
 
 postgres-image-push:
 	docker push $(POSTGRES_IMAGE_REPO):$(IMAGE_TAG)
 
 redis-image-build:
-	docker build -t $(REDIS_IMAGE_REPO):$(IMAGE_TAG) -f docker/redis-runtime/Dockerfile .
+	docker build -t $(REDIS_IMAGE_REPO):$(IMAGE_TAG) -f docker/clawdevs-redis/Dockerfile .
 
 redis-image-push:
 	docker push $(REDIS_IMAGE_REPO):$(IMAGE_TAG)
@@ -319,43 +350,43 @@ images-release: images-build images-push
 # ════════════════════════════════════════════════════════════════════════════
 
 spec-template:
-	@echo "Template: container/base/openclaw-config/shared/SPEC_TEMPLATE.md"
+	@echo "Template: docker/base/openclaw-config/shared/SPEC_TEMPLATE.md"
 
 vibe-playbook:
-	@echo "Playbook: container/base/openclaw-config/shared/VIBE_CODING_PLAYBOOK.md"
+	@echo "Playbook: docker/base/openclaw-config/shared/VIBE_CODING_PLAYBOOK.md"
 
 sdd-contract:
-	@echo "Contrato SDD: container/base/openclaw-config/shared/SDD_OPERATING_MODEL.md"
+	@echo "Contrato SDD: docker/base/openclaw-config/shared/SDD_OPERATING_MODEL.md"
 
 constitution-template:
-	@echo "Constitution: container/base/openclaw-config/shared/CONSTITUTION.md"
+	@echo "Constitution: docker/base/openclaw-config/shared/CONSTITUTION.md"
 
 speckit-flow:
-	@echo "Spec Kit: container/base/openclaw-config/shared/SPECKIT_ADAPTATION.md"
+	@echo "Spec Kit: docker/base/openclaw-config/shared/SPECKIT_ADAPTATION.md"
 
 sdd-checklist:
-	@echo "Checklist SDD: container/base/openclaw-config/shared/SDD_CHECKLIST.md"
+	@echo "Checklist SDD: docker/base/openclaw-config/shared/SDD_CHECKLIST.md"
 
 brief-template:
-	@echo "Brief template: container/base/openclaw-config/shared/BRIEF_TEMPLATE.md"
+	@echo "Brief template: docker/base/openclaw-config/shared/BRIEF_TEMPLATE.md"
 
 clarify-template:
-	@echo "Clarify template: container/base/openclaw-config/shared/CLARIFY_TEMPLATE.md"
+	@echo "Clarify template: docker/base/openclaw-config/shared/CLARIFY_TEMPLATE.md"
 
 plan-template:
-	@echo "Plan template: container/base/openclaw-config/shared/PLAN_TEMPLATE.md"
+	@echo "Plan template: docker/base/openclaw-config/shared/PLAN_TEMPLATE.md"
 
 task-template:
-	@echo "Task template: container/base/openclaw-config/shared/TASK_TEMPLATE.md"
+	@echo "Task template: docker/base/openclaw-config/shared/TASK_TEMPLATE.md"
 
 validate-template:
-	@echo "Validate template: container/base/openclaw-config/shared/VALIDATE_TEMPLATE.md"
+	@echo "Validate template: docker/base/openclaw-config/shared/VALIDATE_TEMPLATE.md"
 
 sdd-prompts:
-	@echo "Prompts operacionais: container/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md"
+	@echo "Prompts operacionais: docker/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md"
 
 sdd-example:
-	@echo "Exemplo SDD completo: container/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md"
+	@echo "Exemplo SDD completo: docker/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md"
 
 sdd-real-initiative:
-	@echo "Iniciativa real: container/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/"
+	@echo "Iniciativa real: docker/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/"

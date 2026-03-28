@@ -301,7 +301,7 @@ Full reference: [Environment Variables](../reference/environment.md)
 
 ### ConfigMaps
 
-Agent configuration in `container/base/openclaw-config/`:
+Agent configuration in `docker/base/openclaw-config/`:
 
 ```
 openclaw-config/

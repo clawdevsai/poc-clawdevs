@@ -160,7 +160,7 @@ docker-compose exec -it container/openclaw-runtime-0 -- \
 
 2. **Cron expression invalid**
    ```bash
-   # Verify in container/base/openclaw-container.yaml
+   # Verify in docker/base/openclaw-container.yaml
    # Format: minute hour day month day-of-week
    # Example: 0 * * * * (every hour)
 
@@ -220,7 +220,7 @@ docker-compose exec -it container/ollama-runtime-0 -- ls -lh /root/.ollama/model
    # Clean up
    docker system prune --all
 
-   # Or increase PVC in container/base/pvc.yaml
+   # Or increase PVC in docker/base/pvc.yaml
    ```
 
 3. **Corrupt model**
@@ -270,7 +270,7 @@ docker-compose exec -it container/ollama-runtime-0 -- env | grep OLLAMA
 
 2. **GPU resource not requested**
    ```bash
-   # Edit container/base/ollama-container.yaml
+   # Edit docker/base/ollama-container.yaml
    # Add:
    # resources:
    #   limits:
@@ -379,7 +379,7 @@ docker-compose exec -it container/openclaw-runtime-0 -- \
 2. **Tool failure causing loop**
    ```bash
    # Disable problematic tool temporarily
-   # Edit container/base/openclaw-config/agents/dev_backend/AGENTS.md
+   # Edit docker/base/openclaw-config/agents/dev_backend/AGENTS.md
    # Add to constraints: "Do not use tool X"
 
    # Redeploy
@@ -420,7 +420,7 @@ docker-compose describe nodes
 
 1. **Increase memory limit**
    ```bash
-   # In container/base/*.yaml, increase:
+   # In docker/base/*.yaml, increase:
    # resources.limits.memory: 8Gi
 
    # Also increase Docker
@@ -431,7 +431,7 @@ docker-compose describe nodes
 2. **Reduce model size**
    ```bash
    # Switch to smaller model
-   # In container/base/ollama-container.yaml:
+   # In docker/base/ollama-container.yaml:
    # ollama run nemotron-3-super:cloud
    # Change to: qwen3-next:cloud (smaller)
 
@@ -479,7 +479,7 @@ docker-compose exec -it container/openclaw-runtime-0 -- \
    docker-compose delete networkpolicy <policy>
 
    # Or update to allow egress
-   # Edit container/base/networkpolicy-allow-egress.yaml
+   # Edit docker/base/networkpolicy-allow-egress.yaml
    ```
 
 2. **DNS not working**

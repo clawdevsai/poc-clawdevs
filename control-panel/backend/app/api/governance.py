@@ -328,7 +328,7 @@ async def get_constitution_rules() -> dict:
             "Multi-repo changes must follow dependency order",
             "Cost tier must match task complexity",
         ],
-        "document": "container/base/openclaw-config/shared/CONSTITUTION.md",
+        "document": "docker/base/openclaw-config/shared/CONSTITUTION.md",
     }
 
 
@@ -347,7 +347,7 @@ async def get_multi_repo_rules() -> dict:
             "mobile": {"can_depend_on": ["shared_lib", "backend"]},
         },
         "required_keywords": ["Depends on:", "Related to:", "Requires"],
-        "document": "container/base/openclaw-config/shared/MULTI_REPO_COORDINATION.md",
+        "document": "docker/base/openclaw-config/shared/MULTI_REPO_COORDINATION.md",
     }
 
 
@@ -376,5 +376,5 @@ async def get_cost_orchestration_rules() -> dict:
                 "cost": "~$0.50-2.00 per task",
             },
         },
-        "document": "container/base/openclaw-config/shared/DYNAMIC_COST_ORCHESTRATION.md",
+        "document": "docker/base/openclaw-config/shared/DYNAMIC_COST_ORCHESTRATION.md",
     }

@@ -47,18 +47,18 @@ Antes de implementar uma mudança, o fluxo recomendado neste repositório é:
 
 Templates e artefatos:
 
-- `container/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
-- `container/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
-- `container/base/openclaw-config/shared/PLAN_TEMPLATE.md`
-- `container/base/openclaw-config/shared/TASK_TEMPLATE.md`
-- `container/base/openclaw-config/shared/VALIDATE_TEMPLATE.md`
-- `container/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
-- `container/base/openclaw-config/shared/SPEC_TEMPLATE.md`
-- `container/base/openclaw-config/shared/CONSTITUTION.md`
-- `container/base/openclaw-config/shared/SDD_CHECKLIST.md`
-- `container/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
-- `container/base/openclaw-config/shared/SPECKIT_ADAPTATION.md`
-- `container/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/`
+- `docker/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
+- `docker/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
+- `docker/base/openclaw-config/shared/PLAN_TEMPLATE.md`
+- `docker/base/openclaw-config/shared/TASK_TEMPLATE.md`
+- `docker/base/openclaw-config/shared/VALIDATE_TEMPLATE.md`
+- `docker/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
+- `docker/base/openclaw-config/shared/SPEC_TEMPLATE.md`
+- `docker/base/openclaw-config/shared/CONSTITUTION.md`
+- `docker/base/openclaw-config/shared/SDD_CHECKLIST.md`
+- `docker/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
+- `docker/base/openclaw-config/shared/SPECKIT_ADAPTATION.md`
+- `docker/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/`
 - `/data/openclaw/backlog/specs/`
 - `/data/openclaw/backlog/briefs/`
 - `/data/openclaw/backlog/user_story/`

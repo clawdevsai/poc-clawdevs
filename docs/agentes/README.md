@@ -37,4 +37,4 @@
 | dba_data_engineer | [dba_data_engineer.md](./dba_data_engineer.md) |
 | memory_curator | [memory_curator.md](./memory_curator.md) |
 
-Cada `.md` inclui **Habilidades** (resumo do bloco `capabilities` do `AGENTS.md`). Detalhes e quality gates: `container/base/openclaw-config/<id>/AGENTS.md`. Skills OpenClaw em arquivo separado: `SKILL.md` no mesmo diretório (ou em `skills/<nome>/SKILL.md` quando o agente usa skill environmentd), quando existir.
+Cada `.md` inclui **Habilidades** (resumo do bloco `capabilities` do `AGENTS.md`). Detalhes e quality gates: `docker/base/openclaw-config/<id>/AGENTS.md`. Skills OpenClaw em arquivo separado: `SKILL.md` no mesmo diretório (ou em `skills/<nome>/SKILL.md` quando o agente usa skill environmentd), quando existir.

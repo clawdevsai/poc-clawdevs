@@ -18,10 +18,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM ollama/ollama:0.18.2@sha256:5a5d014aa774f78ebe1340c0d4afc2e35afc12a2c3b34c84e71f78ea20af4ba3
+FROM public.ecr.aws/docker/library/node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
-COPY docker/ollama-runtime/start-ollama.sh /usr/local/bin/start-ollama.sh
-RUN sed -i 's/\r$//' /usr/local/bin/start-ollama.sh \
-  && chmod +x /usr/local/bin/start-ollama.sh
+FROM base AS deps
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-ENTRYPOINT ["/usr/local/bin/start-ollama.sh"]
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN mkdir -p public
+RUN pnpm build
+
+FROM public.ecr.aws/docker/library/node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+USER nextjs
+EXPOSE 3000
+CMD ["node", "server.js"]

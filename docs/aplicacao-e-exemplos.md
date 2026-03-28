@@ -29,14 +29,14 @@ O repositório **clawdevs-ai** define um stack em Docker Compose que sobe:
 1. **Ollama** — API de modelos em `http://ollama:11434`, com modelos cloud configurados no bootstrap do container Ollama.
 2. **OpenClaw** — gateway multi-agente num container Debian: instala o CLI via `install.sh`, gera `openclaw.json` e executa `openclaw gateway` na porta **18789** (probe e Service). Estado persistente em PVC `openclaw-data` montado em `/data/openclaw`.
 3. **SearXNG** — busca interna no cluster; o bootstrap do OpenClaw expõe o comando `web-search` que chama `http://searxng:8080`.
-4. **Painel de controle** — UI e API (`container/base/control-panel/`): acompanha agentes, sessões e filas; sobe junto com `make stack-apply` / `make clawdevs-up` (inclui `panel-db-migrate` no fluxo `clawdevs-up`).
+4. **Painel de controle** — UI e API (`docker/base/control-panel/`): acompanha agentes, sessões e filas; sobe junto com `make stack-apply` / `make clawdevs-up` (inclui `panel-db-migrate` no fluxo `clawdevs-up`).
 5. **Ferramentas no container OpenClaw** — `gh` autenticado com `GIT_TOKEN`, `web-search` (SearXNG), `web-read` (Jina Reader em `https://r.jina.ai/...`), scripts `claw-repo-discover`, `claw-repo-ensure`, `claw-repo-switch` em `/data/openclaw/bin` e em `/usr/local/bin`.
 
 O **StatefulSet** `clawdevs-ai` (container `openclaw`) é o núcleo: um time de agentes (CEO, PO, Arquiteto, Dev_Backend, Dev_Frontend, Dev_Mobile, QA_Engineer, DevOps_SRE, Security_Engineer, UX_Designer, DBA_Data_Engineer, Memory_Curator) com workspaces sob `/data/openclaw/workspace-*`, regras em `AGENTS.md` copiadas do ConfigMap `openclaw-agent-config`, e modelo padrão apontando para provedores Ollama no `openclaw.json`.
 
 ## Comportamento principal
 
-- **Spec-Driven Development (SDD)** — templates e constitution em `container/base/openclaw-config/shared/`; artefatos esperados em `/data/openclaw/backlog/` (briefs, specs, tasks, user_story, implementation, status, etc.).
+- **Spec-Driven Development (SDD)** — templates e constitution em `docker/base/openclaw-config/shared/`; artefatos esperados em `/data/openclaw/backlog/` (briefs, specs, tasks, user_story, implementation, status, etc.).
 - **Delegação entre agentes** — `openclaw.json` habilita `agentToAgent` entre os IDs listados; CEO costuma orquestrar; executor técnico (ex.: Dev_Backend) trabalha a partir de TASK/issue conforme `AGENTS.md`.
 - **Telegram** — binding padrão: agente **ceo** no canal Telegram (bot `TELEGRAM_BOT_TOKEN_CEO`, allowlist `TELEGRAM_CHAT_ID_CEO`). Mensagens de grupo fora da política containerem ser negadas pelas regras de `session.sendPolicy`.
 - **GitHub** — contexto ativo em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`, branch, org). Fallback de repo no bootstrap se `GIT_DEFAULT_REPOSITORY` não existir na org.
@@ -53,7 +53,7 @@ make preflight
 make clawdevs-up
 ```
 
-O `make clawdevs-up` / `make stack-apply` já inclui `openclaw-apply-gpu` (manifest em `container/overlays/gpu`). Para GPU só no Ollama em cenários manuais: `make openclaw-apply-gpu` ou fluxo `gpu-migrate-apply` (ver `docs/README.md`).
+O `make clawdevs-up` / `make stack-apply` já inclui `openclaw-apply-gpu` (manifest em `docker/overlays/gpu`). Para GPU só no Ollama em cenários manuais: `make openclaw-apply-gpu` ou fluxo `gpu-migrate-apply` (ver `docs/README.md`).
 
 ### Acessar o gateway e o painel na máquina local
 
@@ -124,4 +124,4 @@ Bootstrap: `/data/openclaw/backlog/status/openclaw-bootstrap.log` (e `openclaw-g
 
 ## Agentes
 
-Resumo por agente: [agentes/README.md](./agentes/README.md). Contrato completo: `container/base/openclaw-config/<id>/AGENTS.md`.
+Resumo por agente: [agentes/README.md](./agentes/README.md). Contrato completo: `docker/base/openclaw-config/<id>/AGENTS.md`.

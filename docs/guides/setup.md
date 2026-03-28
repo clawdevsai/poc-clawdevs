@@ -352,7 +352,7 @@ docker-compose exec -it container/ollama-runtime-0 -- ollama rm model-name
 docker system prune --all
 
 # Solution 3: Increase storage
-# container/base/pvc.yaml - increase size in spec.resources.requests.storage
+# docker/base/pvc.yaml - increase size in spec.resources.requests.storage
 ```
 
 ### GPU Issues
@@ -377,7 +377,7 @@ make gpu-node-check
 docker-compose exec -it container/ollama-runtime-0 -- env | grep OLLAMA
 
 # Reduce model size or use CPU fallback
-# Edit container/base/ollama-container.yaml
+# Edit docker/base/ollama-container.yaml
 # Change model to smaller (qwen3-next instead of nemotron-3-super)
 make ollama-restart
 ```

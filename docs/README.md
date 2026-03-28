@@ -41,17 +41,17 @@
 |--------|-------------------|
 | OpenClaw | `StatefulSet` `clawdevs-ai`, container típico `clawdevs-ai-0`, container `openclaw` |
 | Ollama | `Container` `ollama`, `Service` `ollama` |
-| PVC | `ollama-data` (`container/base/ollama-pvc.yaml`) |
-| SearXNG | `container/base/searxng-deployment.yaml` |
-| Painel de controle | `container/base/control-panel/` — frontend, backend API, worker, Postgres, Redis (`docker-compose apply -k container/base/control-panel/` via `make panel-apply`) |
-| Rede | `container/base/networkpolicy-allow-egress.yaml` |
+| PVC | `ollama-data` (`docker/base/ollama-pvc.yaml`) |
+| SearXNG | `docker/base/searxng-deployment.yaml` |
+| Painel de controle | `docker/base/control-panel/` — frontend, backend API, worker, Postgres, Redis (`docker-compose apply -k docker/base/control-panel/` via `make panel-apply`) |
+| Rede | `docker/base/networkpolicy-allow-egress.yaml` |
 | Segredos | `openclaw-auth`, `ollama-auth`, `clawdevs-panel-auth` gerados por `container/kustomization.yaml` a partir de `container/.env` |
-| Config agentes | `ConfigMap` `openclaw-agent-config` (arquivos em `container/base/openclaw-config/`) |
+| Config agentes | `ConfigMap` `openclaw-agent-config` (arquivos em `docker/base/openclaw-config/`) |
 
 ## Kustomize
 
-- `docker-compose apply -k container` usa apenas `container/base` (via `container/kustomization.yaml` → `resources: [base]`).
-- GPU no Ollama: overlay `container/overlays/gpu` (RuntimeClass, device plugin, patch do container `ollama`). Aplicar com `make openclaw-apply-gpu`, `make gpu-migrate-apply` (contexto `docker-desktop`) ou `docker-compose apply -k container/overlays/gpu`.
+- `docker-compose apply -k container` usa apenas `docker/base` (via `container/kustomization.yaml` → `resources: [base]`).
+- GPU no Ollama: overlay `docker/overlays/gpu` (RuntimeClass, device plugin, patch do container `ollama`). Aplicar com `make openclaw-apply-gpu`, `make gpu-migrate-apply` (contexto `docker-desktop`) ou `docker-compose apply -k docker/overlays/gpu`.
 
 ## Segredos obrigatórios (`make preflight`)
 
@@ -72,9 +72,9 @@ Demais variáveis: ver `container/.env.example`.
 - `make manifests-validate` — `docker-compose kustomize container`
 - `make clawdevs-up` — Docker + addons + `stack-apply` + status
 - `make clawdevs-rebuild` — `destroy-all`, sobe cluster de novo, `storage-enable-expansion`, `stack-apply`
-- `make stack-apply` — `ollama-apply` + `openclaw-apply-gpu` + `panel-apply` (OpenClaw pelo overlay `container/overlays/gpu`, como definido no `Makefile`)
+- `make stack-apply` — `ollama-apply` + `openclaw-apply-gpu` + `panel-apply` (OpenClaw pelo overlay `docker/overlays/gpu`, como definido no `Makefile`)
 - `make openclaw-apply` — `docker-compose apply -k container` (contexto `KUBE_CONTEXT`, default `clawdevs-ai`)
-- `make openclaw-apply-gpu` — aplica `container/overlays/gpu`
+- `make openclaw-apply-gpu` — aplica `docker/overlays/gpu`
 - `make openclaw-restart` / `make openclaw-logs` — `statefulset/clawdevs-ai`
 - `make ollama-volume-apply` — PVC; `make ollama-apply` — recria container `ollama`
 - `make panel-apply` / `panel-status` / `panel-forward` / `panel-db-migrate` / `panel-restart` / `panel-destroy` — painel ClawDevs

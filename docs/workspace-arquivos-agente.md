@@ -22,7 +22,7 @@
 
 # Objetivo dos arquivos no workspace do agente
 
-Objetivo de cada arquivo no workspace (como neste repositório), alinhado à documentação OpenClaw e ao que `container/base/openclaw-container.yaml` faz.
+Objetivo de cada arquivo no workspace (como neste repositório), alinhado à documentação OpenClaw e ao que `docker/base/openclaw-container.yaml` faz.
 
 ## Onde a OpenClaw define isso
 
@@ -52,4 +52,4 @@ Objetivo de cada arquivo no workspace (como neste repositório), alinhado à doc
 - **OpenClaw:** workspace = “casa” do agente; arquivos padrão entram no Project Context (com truncagem). **RPC** = adaptadores de **canais**, não substituem estes `.md`.
 - **ClawDevs:** `INPUT_SCHEMA.json` e `SECURITY_TEST_CASES.md` reforçam contrato e testes de segurança além do mapa básico da doc OpenClaw.
 
-**Fonte no repo:** `container/base/openclaw-config/<agente>/` (via ConfigMap `openclaw-agent-config`); destino em runtime: `/data/openclaw/workspace-<agente>/`.
+**Fonte no repo:** `docker/base/openclaw-config/<agente>/` (via ConfigMap `openclaw-agent-config`); destino em runtime: `/data/openclaw/workspace-<agente>/`.

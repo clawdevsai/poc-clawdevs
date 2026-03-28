@@ -20,7 +20,7 @@
 
 FROM searxng/searxng:latest
 
-COPY docker/searxng-runtime/limiter.toml /etc/searxng/limiter.toml
+COPY docker/clawdevs-searxng/limiter.toml /etc/searxng/limiter.toml
 
 RUN set -eux; \
     cp /usr/local/searxng/searx/settings.yml /etc/searxng/settings.yml; \

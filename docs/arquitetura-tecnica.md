@@ -205,7 +205,7 @@ Sistema:
 ### 3.1 Modelos Configurados
 
 ```yaml
-# container/base/ollama-container.yaml
+# docker/base/ollama-container.yaml
 env:
   - name: OLLAMA_AUTO_PULL_MODELS
     value: "true"
@@ -471,7 +471,7 @@ container/
 
 **Via Kustomize:**
 ```yaml
-# container/base/kustomization.yaml
+# docker/base/kustomization.yaml
 configMapGenerator:
   - name: openclaw-config
     files:
@@ -921,8 +921,8 @@ docker-compose logs -f <container> --previous  (crashed container)
 ### 12.1 Arquivos Críticos
 
 - **Configuração:** `container/.env`, `openclaw.json`
-- **Containers:** `container/base/*.yaml`
-- **ConfigMaps:** `container/base/openclaw-config/`
+- **Containers:** `docker/base/*.yaml`
+- **ConfigMaps:** `docker/base/openclaw-config/`
 - **Backend:** `control-panel/backend/app/`
 - **Frontend:** `control-panel/frontend/app/`
 

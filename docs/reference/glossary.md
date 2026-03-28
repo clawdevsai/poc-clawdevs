@@ -38,7 +38,7 @@ Configuration file in agent workspace. Defines:
 - Constraints and guardrails
 - Integration with other agents
 
-Example: `container/base/openclaw-config/agents/dev_backend/AGENTS.md`
+Example: `docker/base/openclaw-config/agents/dev_backend/AGENTS.md`
 
 ---
 
@@ -189,7 +189,7 @@ Docker Compose templating tool. Enables:
 - Reusable base configurations
 - ConfigMap/Secret generation
 
-Location: `container/base/` (base) and `container/overlays/` (variations)
+Location: `docker/base/` (base) and `docker/overlays/` (variations)
 
 ---
 
@@ -314,7 +314,7 @@ Workflow template for organized development:
 CONSTITUTION → BRIEF → SPEC → CLARIFY → PLAN → TASK → IMPLEMENTATION
 ```
 
-Templates in: `container/base/openclaw-config/shared/`
+Templates in: `docker/base/openclaw-config/shared/`
 
 **Secret**
 Docker Compose resource for sensitive data:

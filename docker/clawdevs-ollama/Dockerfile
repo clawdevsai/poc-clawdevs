@@ -18,17 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM public.ecr.aws/docker/library/nginx:1.27-alpine
+FROM ollama/ollama:latest
 
-RUN apk upgrade --no-cache \
-    && apk del --no-cache \
-        curl \
-        libcurl \
-        c-ares \
-        nghttp2-libs \
-        nginx-module-geoip \
-        nginx-module-image-filter \
-        nginx-module-njs \
-        nginx-module-xslt
+COPY docker/clawdevs-ollama/start-ollama.sh /usr/local/bin/start-ollama.sh
+RUN sed -i 's/\r$//' /usr/local/bin/start-ollama.sh \
+  && chmod +x /usr/local/bin/start-ollama.sh
 
-COPY docker/searxng-proxy/default.conf /etc/nginx/conf.d/default.conf
+ENTRYPOINT ["/usr/local/bin/start-ollama.sh"]
