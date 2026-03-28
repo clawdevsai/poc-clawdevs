@@ -24,7 +24,7 @@ from sqlmodel import col, select
 from sqlalchemy import func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, UTC
 from uuid import UUID
 
 from app.core.database import get_session
@@ -32,6 +32,17 @@ from app.api.deps import CurrentUser
 from app.models import Metric, Approval, Task, Agent, Session
 
 router = APIRouter()
+
+
+def _to_naive_utc(dt: datetime | None) -> datetime | None:
+    """Convert any datetime to naive UTC datetime."""
+    if dt is None:
+        return None
+    # If it has timezone info, convert to UTC and strip it
+    if dt.tzinfo is not None:
+        return dt.astimezone(UTC).replace(tzinfo=None)
+    # If it's already naive, assume it's UTC
+    return dt
 
 
 class OverviewMetrics(BaseModel):
@@ -81,7 +92,10 @@ async def list_metrics(
         for bucket, count in rows:
             if bucket is None:
                 continue
-            count_by_day[bucket.replace(tzinfo=None)] = float(count)
+            # Normalize bucket datetime to naive UTC
+            normalized_bucket = _to_naive_utc(bucket)
+            if normalized_bucket is not None:
+                count_by_day[normalized_bucket] = float(count)
 
         start_day = day_start
         today = (
@@ -125,14 +139,14 @@ async def list_metrics(
             return int((ts - series_start).total_seconds() // (interval_minutes * 60))
 
         for sess in session_rows:
-            start = sess.started_at or sess.created_at or sess.last_active_at
+            start = _to_naive_utc(sess.started_at or sess.created_at or sess.last_active_at)
             if start is None:
                 continue
 
             if sess.status == "active":
                 end = now
             else:
-                end = sess.ended_at or sess.last_active_at or start
+                end = _to_naive_utc(sess.ended_at or sess.last_active_at or start)
 
             if end < series_start or start > now:
                 continue
@@ -196,7 +210,7 @@ async def overview_metrics(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
 
     agents_result = await session.exec(
         select(Agent).where(col(Agent.status).in_(["online", "working"]))

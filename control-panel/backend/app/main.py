@@ -70,8 +70,13 @@ async def bootstrap_admin():
 async def bootstrap_agents():
     from app.services.agent_sync import sync_agents
 
-    async with AsyncSessionLocal() as session:
-        await sync_agents(session)
+    try:
+        async with AsyncSessionLocal() as session:
+            await sync_agents(session)
+        logger.info("Agent bootstrap completed successfully")
+    except Exception as e:
+        logger.error(f"Agent bootstrap failed: {e}", exc_info=True)
+        raise
 
 
 @asynccontextmanager

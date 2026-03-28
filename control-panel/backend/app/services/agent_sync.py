@@ -145,6 +145,9 @@ def _get_agent_config(slug: str) -> dict[str, Any]:
 
 def parse_identity(slug: str) -> dict:
     """Try to read IDENTITY.md from the openclaw data path. Fall back to defaults."""
+    import logging
+    logger = logging.getLogger(__name__)
+
     base = Path(settings.openclaw_data_path) / "agents" / slug
     identity_file = base / "IDENTITY.md"
     display_name = DISPLAY_NAME_MAP.get(slug, slug.replace("_", " ").title())
@@ -152,13 +155,16 @@ def parse_identity(slug: str) -> dict:
     model = None
 
     # Try to get model from openclaw.json
-    agent_config = _get_agent_config(slug)
-    if agent_config:
-        model = agent_config.get("model")
-        # If name is in config and not in our display name map, use it as fallback
-        config_name = agent_config.get("name")
-        if config_name and slug not in DISPLAY_NAME_MAP:
-            display_name = config_name.replace("_", " ").title()
+    try:
+        agent_config = _get_agent_config(slug)
+        if agent_config:
+            model = agent_config.get("model")
+            # If name is in config and not in our display name map, use it as fallback
+            config_name = agent_config.get("name")
+            if config_name and slug not in DISPLAY_NAME_MAP:
+                display_name = config_name.replace("_", " ").title()
+    except Exception as e:
+        logger.warning(f"Failed to read agent config for {slug}: {e}")
 
     # Some agent folders/files can be mounted with restrictive ACLs.
     # Startup must not fail if identity metadata cannot be read.
@@ -175,43 +181,77 @@ def parse_identity(slug: str) -> dict:
                 display_name = name_match.group(1).strip()
             if role_match:
                 role = role_match.group(1).strip()
-    except (OSError, PermissionError):
-        pass
+        else:
+            logger.debug(f"IDENTITY.md not found for {slug} at {identity_file}")
+    except (OSError, PermissionError) as e:
+        logger.warning(f"Failed to read IDENTITY.md for {slug}: {e}")
+    except Exception as e:
+        logger.warning(f"Unexpected error reading identity for {slug}: {e}")
 
+    logger.debug(f"Identity for {slug}: display_name={display_name}, role={role}, model={model}")
     return {"display_name": display_name, "role": role, "model": model}
 
 
 async def sync_agents(session) -> None:
     """Upsert all 12 agents from config. Called at startup."""
+    import logging
     from sqlmodel import select
     from app.models import Agent
 
-    for slug in AGENT_SLUGS:
-        result = await session.exec(select(Agent).where(Agent.slug == slug))
-        agent = result.first()
-        identity = parse_identity(slug)
+    logger = logging.getLogger(__name__)
+    created_count = 0
+    updated_count = 0
 
-        avatar_url = AVATAR_URL_MAP.get(slug, "/avatars/Developer.png")
+    try:
+        logger.info(f"Starting sync_agents for {len(AGENT_SLUGS)} agents")
 
-        if agent is None:
-            agent = Agent(
-                slug=slug,
-                display_name=identity["display_name"],
-                role=identity["role"],
-                current_model=identity.get("model"),
-                avatar_url=avatar_url,
-                cron_expression=CRON_MAP.get(slug),
-            )
-            session.add(agent)
-        else:
-            agent.display_name = identity["display_name"]
-            agent.role = identity["role"]
-            agent.avatar_url = avatar_url
-            # Only update model if not set or empty
-            if not agent.current_model:
-                agent.current_model = identity.get("model")
+        for slug in AGENT_SLUGS:
+            try:
+                result = await session.exec(select(Agent).where(Agent.slug == slug))
+                agent = result.first()
+                identity = parse_identity(slug)
 
-    await session.commit()
+                avatar_url = AVATAR_URL_MAP.get(slug, "/avatars/Developer.png")
+
+                if agent is None:
+                    agent = Agent(
+                        slug=slug,
+                        display_name=identity["display_name"],
+                        role=identity["role"],
+                        current_model=identity.get("model"),
+                        avatar_url=avatar_url,
+                        cron_expression=CRON_MAP.get(slug),
+                    )
+                    session.add(agent)
+                    created_count += 1
+                    logger.info(f"  ✓ Created agent: {slug} ({identity['display_name']})")
+                else:
+                    agent.display_name = identity["display_name"]
+                    agent.role = identity["role"]
+                    agent.avatar_url = avatar_url
+                    # Only update model if not set or empty
+                    if not agent.current_model:
+                        agent.current_model = identity.get("model")
+                    updated_count += 1
+                    logger.info(f"  ✓ Updated agent: {slug} ({identity['display_name']})")
+            except Exception as e:
+                logger.error(f"Error syncing agent {slug}: {e}", exc_info=True)
+                raise
+
+        logger.info(f"Committing {created_count} new agents and {updated_count} updates...")
+        await session.commit()
+
+        # Verify the sync worked
+        result = await session.exec(select(Agent))
+        final_agents = result.all()
+        logger.info(f"✓ Agent sync completed: {created_count} created, {updated_count} updated")
+        logger.info(f"✓ Total agents in database: {len(final_agents)}")
+        for agent in final_agents:
+            logger.debug(f"  - {agent.slug}: {agent.display_name} ({agent.role})")
+
+    except Exception as e:
+        logger.error(f"✗ Failed to sync agents: {e}", exc_info=True)
+        raise
 
 
 def _pick_latest_runtime_entry(

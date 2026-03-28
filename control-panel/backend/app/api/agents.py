@@ -28,7 +28,7 @@ from datetime import datetime, UTC
 from app.core.database import get_session
 from app.api.deps import CurrentUser
 from app.models import Agent
-from app.services.agent_sync import sync_agents_runtime
+from app.services.agent_sync import sync_agents_runtime, sync_agents
 from app.services.agent_activity import get_agent_current_activity
 
 router = APIRouter()
@@ -96,9 +96,13 @@ async def list_agents(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """List all agents."""
+    import logging
+    logger = logging.getLogger(__name__)
+
     await sync_agents_runtime(session)
     result = await session.exec(select(Agent).order_by(Agent.slug))
     agents = result.all()
+    logger.info(f"list_agents: Found {len(agents)} agents in database")
     items = [AgentResponse.from_orm(a) for a in agents]
     return AgentsListResponse(items=items, total=len(items))
 
@@ -146,3 +150,52 @@ async def update_agent_status(
     await session.commit()
     await session.refresh(agent)
     return AgentResponse.from_orm(agent)
+
+
+class SyncResponse(BaseModel):
+    message: str
+    created: int
+    updated: int
+    total: int
+
+
+@router.post("/admin/sync", response_model=SyncResponse)
+async def sync_agents_admin(
+    _: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """
+    Admin endpoint to manually trigger agent synchronization.
+    This is useful for debugging if agents aren't appearing.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Get count before
+        result_before = await session.exec(select(Agent))
+        count_before = len(result_before.all())
+
+        # Sync
+        logger.info("Admin triggered agent sync...")
+        await sync_agents(session)
+
+        # Get count after
+        result_after = await session.exec(select(Agent))
+        agents_after = result_after.all()
+        count_after = len(agents_after)
+
+        created = max(0, count_after - count_before)
+        updated = 0  # We don't track this separately in the API response
+
+        logger.info(f"Sync complete: {created} agents created, {count_after} total")
+
+        return SyncResponse(
+            message=f"Synchronized {created} new agents",
+            created=created,
+            updated=updated,
+            total=count_after,
+        )
+    except Exception as e:
+        logger.error(f"Admin sync failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
