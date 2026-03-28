@@ -8,7 +8,7 @@
 
 ## 📋 Sumário Executivo
 
-ClawDevsAI é uma **plataforma de agentes de IA baseada em OpenClaw** que orquestra múltiplos agentes especializados para gerenciar o ciclo completo de desenvolvimento de software. A arquitetura é construída sobre Kubernetes (Minikube), OpenClaw, Ollama, e um Control Panel customizado, com suporte a GPU nativa via NVIDIA.
+ClawDevsAI é uma **plataforma de agentes de IA baseada em OpenClaw** que orquestra múltiplos agentes especializados para gerenciar o ciclo completo de desenvolvimento de software. A arquitetura é construída sobre Docker Compose (Docker), OpenClaw, Ollama, e um Control Panel customizado, com suporte a GPU nativa via NVIDIA.
 
 **Objetivo Principal:** Automatizar e orquestrar tarefas de desenvolvimento, QA, DevOps e design através de agentes de IA coordenados que seguem um fluxo estruturado (CONSTITUTION → BRIEF → SPEC → PLAN → TASK → IMPLEMENTAÇÃO).
 
@@ -31,7 +31,7 @@ ClawDevsAI é uma **plataforma de agentes de IA baseada em OpenClaw** que orques
 │  │ (LLM Local)  │ (Agentes)    │ (Busca Distribuída)  │    │
 │  └──────────────┴──────────────┴──────────────────────┘    │
 ├────────────────────────────────────────────────────────────┤
-│         Kubernetes (Minikube) + Docker + GPU (NVIDIA)       │
+│         Docker Compose (Docker) + Docker + GPU (NVIDIA)       │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -39,7 +39,7 @@ ClawDevsAI é uma **plataforma de agentes de IA baseada em OpenClaw** que orques
 
 | Componente | Tecnologia | Propósito |
 |-----------|-----------|----------|
-| **Container** | Minikube + Docker | Orquestração local com suporte a GPU |
+| **Container** | Docker + Docker | Orquestração local com suporte a GPU |
 | **LLM Runtime** | Ollama | Modelos locais (nemotron, qwen3-next, etc) |
 | **Agent Framework** | OpenClaw | Gateway e orquestração de agentes |
 | **Backend** | FastAPI + SQLAlchemy | API REST e gerenciamento de estado |
@@ -110,7 +110,7 @@ O projeto implementa um fluxo de especificação rigoroso chamado **Fluxo SDD**:
 ```
 
 **Diretórios de Artefatos:**
-- Templates: `k8s/base/openclaw-config/shared/*.md`
+- Templates: `container/base/openclaw-config/shared/*.md`
 - Specs: `/data/openclaw/backlog/specs/`
 - Briefs: `/data/openclaw/backlog/briefs/`
 - User Stories: `/data/openclaw/backlog/user_story/`
@@ -131,14 +131,14 @@ O projeto implementa um fluxo de especificação rigoroso chamado **Fluxo SDD**:
 - Windows 11
 - Docker Desktop com suporte a GPU
 - NVIDIA Driver atualizado
-- `minikube`, `kubectl`, `make` no PATH
+- `docker`, `docker-compose`, `make` no PATH
 
 ### Startup Rápido
 
 ```bash
 # 1. Preparar segredos
-cp k8s/.env.example k8s/.env
-# edite k8s/.env com valores reais
+cp container/.env.example container/.env
+# edite container/.env com valores reais
 
 # 2. Validar
 make preflight          # Valida segredos obrigatórios
@@ -150,9 +150,9 @@ make clawdevs-up       # Setup completo (não destrutivo)
 
 O comando `make clawdevs-up` executa em sequência:
 1. `preflight` — Valida segredos obrigatórios
-2. `minikube-up` — Inicia Minikube com GPU
-3. `minikube-context` — Ajusta kubeconfig
-4. `minikube-addons` — Habilita dashboard, metrics, storage, NVIDIA plugin
+2. `docker-up` — Inicia Docker com GPU
+3. `docker-context` — Ajusta docker compose config
+4. `docker-addons` — Habilita dashboard, metrics, storage, NVIDIA plugin
 5. `storage-enable-expansion` — Expansão de volumes
 6. `ollama-volume-apply` — PVC para dados do Ollama
 7. `stack-apply` — Deploy de ollama + openclaw + control-panel
@@ -166,7 +166,7 @@ PUSH_IMAGE=remote  # Faz pull de clawdevsai/* no Docker Hub
 
 **Local:**
 ```bash
-PUSH_IMAGE=local   # Builda imagens localmente no Minikube
+PUSH_IMAGE=local   # Builda imagens localmente no Docker
 ```
 
 Para publicar imagens:
@@ -180,7 +180,7 @@ make images-release STACK_IMAGE_TAG=latest
 **Validação:**
 ```bash
 make gpu-doctor              # Diagnóstico completo
-make docker-k8s-context      # Muda para docker-desktop
+make docker-container-context      # Muda para docker-desktop
 make gpu-plugin-apply        # Aplica NVIDIA device plugin
 make gpu-node-check          # Verifica GPU disponível
 ```
@@ -235,7 +235,7 @@ make panel-logs-frontend  # Logs do frontend
 
 ---
 
-## 🔧 Configuração (k8s/.env)
+## 🔧 Configuração (container/.env)
 
 ### Variáveis Essenciais
 
@@ -299,14 +299,14 @@ clawdevs-ai/
 │   ├── workspace-arquivos-agente.md
 │   └── plans/                (Planos de execução)
 │
-├── k8s/                      (Kubernetes + Kustomize)
+├── container/                      (Docker Compose + Kustomize)
 │   ├── .env.example          (Template de configuração)
 │   ├── .env                  (Segredos — NÃO commitar)
 │   ├── kustomization.yaml    (Kustomize root)
 │   ├── base/                 (Manifestos base)
-│   │   ├── openclaw-pod.yaml
-│   │   ├── ollama-pod.yaml
-│   │   ├── searxng-pod.yaml
+│   │   ├── openclaw-container.yaml
+│   │   ├── ollama-container.yaml
+│   │   ├── searxng-container.yaml
 │   │   ├── openclaw-config/  (ConfigMaps e Secrets)
 │   │   └── bootstrap-scripts/
 │   └── overlays/             (Variações por ambiente)
@@ -421,7 +421,7 @@ OpenClaw implementa um sistema de memória em **Markdown puro** no workspace:
    - Tracked changes em documentos
    - Timestamps de todas as operações
 
-### Segredos Obrigatórios (k8s/.env)
+### Segredos Obrigatórios (container/.env)
 
 ```
 ✓ OPENCLAW_GATEWAY_TOKEN
@@ -443,12 +443,12 @@ Validados via `make preflight`.
 
 ```bash
 # Status do cluster
-make minikube-status        # Status do Minikube
-make minikube-logs          # Logs do Minikube
+make docker-status        # Status do Docker
+make docker-logs          # Logs do Docker
 make gpu-doctor             # Diagnóstico GPU
 
 # Status dos serviços
-make stack-status           # Status de todos os pods
+make stack-status           # Status de todos os containers
 make panel-status           # Status do painel
 make ollama-list            # Modelos disponíveis
 
@@ -534,7 +534,7 @@ make openclaw-image-release  # Build + push apenas OpenClaw
 make reset-all               # Recria stack do zero
 make destroy-all             # Limpeza completa
 make clawdevs-down           # Para e remove tudo
-make minikube-down           # Para Minikube
+make docker-down           # Para Docker
 ```
 
 ### Escalação de Problemas
@@ -565,9 +565,9 @@ make minikube-down           # Para Minikube
 
 ### Documentação
 
-- **Fluxo SDD:** `k8s/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
-- **Templates:** `k8s/base/openclaw-config/shared/*.md`
-- **Iniciativas:** `k8s/base/openclaw-config/shared/initiatives/`
+- **Fluxo SDD:** `container/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
+- **Templates:** `container/base/openclaw-config/shared/*.md`
+- **Iniciativas:** `container/base/openclaw-config/shared/initiatives/`
 - **OpenClaw Docs:** `docs/README.md`
 
 ### Arquivos de Configuração
@@ -597,14 +597,14 @@ make minikube-down           # Para Minikube
 ### Customizações Frequentes
 
 - **Adicionar novo agente:** Duplicate `docs/agentes/<agente>.md`, crie workspace
-- **Alterar schedule:** Edite cron expression em `k8s/.env` ou pod manifest
+- **Alterar schedule:** Edite cron expression em `container/.env` ou container manifest
 - **Integrar novo LLM:** Configure em `OPENROUTER_API_KEY` ou adicione modelo Ollama
 - **Estender Control Panel:** Adicione endpoints em `control-panel/backend/routers/`
 
 ### Profundidade Técnica
 
-- **OpenClaw internals:** Leia `k8s/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
-- **Kustomize:** Estude `k8s/base/` e `k8s/overlays/`
+- **OpenClaw internals:** Leia `container/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
+- **Kustomize:** Estude `container/base/` e `container/overlays/`
 - **FastAPI:** Explore `control-panel/backend/app/`
 - **Next.js:** Explore `control-panel/frontend/app/`
 

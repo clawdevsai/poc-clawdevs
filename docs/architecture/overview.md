@@ -64,7 +64,7 @@ ClawDevsAI is an **AI-powered development orchestration platform** built on Open
                    │
 ┌──────────────────▼──────────────────────────────┐
 │  Infrastructure                                  │
-│  └─ Kubernetes (Minikube) + Docker + GPU         │
+│  └─ Docker Compose (Docker) + Docker + GPU         │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -211,7 +211,7 @@ Agent Session
 
 | Component | Technology | Version | Purpose |
 |-----------|-----------|---------|---------|
-| Container Orchestration | Kubernetes (Minikube) | 1.34.1 | Pod management, networking |
+| Container Orchestration | Docker Compose (Docker) | 1.34.1 | Container management, networking |
 | Container Runtime | Docker | Latest | Image building, running |
 | GPU Support | NVIDIA Device Plugin | Latest | GPU acceleration for LLM |
 
@@ -247,13 +247,13 @@ Agent Session
 
 ## Deployment Model
 
-### Development (Local Minikube)
+### Development (Local Docker)
 
 ```
 Developer Machine (Windows 11)
 ├─ Docker Desktop with GPU support
-├─ Minikube cluster (2 CPUs, 7GB RAM)
-├─ Pods: OpenClaw, Ollama, Control Panel, PostgreSQL
+├─ Docker cluster (2 CPUs, 7GB RAM)
+├─ Containers: OpenClaw, Ollama, Control Panel, PostgreSQL
 └─ PersistentVolumes: 200GB (Ollama) + 100GB (OpenClaw) + 20GB (Database)
 ```
 
@@ -262,7 +262,7 @@ Developer Machine (Windows 11)
 ### Production (Proposed)
 
 ```
-Kubernetes Cluster (Multi-node)
+Docker Compose Cluster (Multi-node)
 ├─ Ingress Controller (HAProxy/nginx)
 ├─ OpenClaw Nodes (3x replicas, stateless)
 ├─ Ollama Nodes (2x, GPU)
@@ -274,7 +274,7 @@ Kubernetes Cluster (Multi-node)
 └─ Monitoring (Prometheus + Grafana)
 ```
 
-**Currently:** Single-node Minikube (development only)
+**Currently:** Single-node Docker (development only)
 
 ---
 
@@ -282,7 +282,7 @@ Kubernetes Cluster (Multi-node)
 
 ### Environment Variables
 
-Stored in `k8s/.env` (not committed):
+Stored in `container/.env` (not committed):
 
 ```bash
 # Required
@@ -301,7 +301,7 @@ Full reference: [Environment Variables](../reference/environment.md)
 
 ### ConfigMaps
 
-Agent configuration in `k8s/base/openclaw-config/`:
+Agent configuration in `container/base/openclaw-config/`:
 
 ```
 openclaw-config/
@@ -316,7 +316,7 @@ openclaw-config/
     └── ... (agent specs)
 ```
 
-These are mounted in pods and injected into agent workspace.
+These are mounted in containers and injected into agent workspace.
 
 ---
 
@@ -336,7 +336,7 @@ These are mounted in pods and injected into agent workspace.
 
 ### Secrets Management
 
-- `k8s/.env` — Never committed, loaded at deploy time
+- `container/.env` — Never committed, loaded at deploy time
 - `/data/openclaw/credentials/` — OAuth tokens (runtime)
 - `~/.openclaw/` — Local auth profiles (dev mode)
 

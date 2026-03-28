@@ -9,12 +9,12 @@ Complete technical documentation for software engineers. **Start here** to find 
 ### For Backend Engineers
 - [Architecture Overview](./architecture/overview.md) — System design and component relationships
 - [Backend Services Guide](./guides/backend-setup.md) — FastAPI setup, database, API structure
-- [Deployment Guide](./guides/deployment.md) — K8s, containers, local development
+- [Deployment Guide](./guides/deployment.md) — container, containers, local development
 - [Agent Development](./architecture/agents.md) — How agents work, agent loop, tools
 
 ### For DevOps/Infrastructure Engineers
 - [Deployment Guide](./guides/deployment.md) — Full infrastructure setup and operations
-- [Kubernetes Reference](./architecture/kubernetes.md) — Pod specs, services, storage, networking
+- [Docker Compose Reference](./architecture/container.md) — Container specs, services, storage, networking
 - [GPU Support Guide](./guides/gpu-setup.md) — NVIDIA integration and troubleshooting
 - [Operations Checklist](./operations/checklist.md) — Pre-flight, monitoring, scaling
 
@@ -40,12 +40,12 @@ docs/
 │   ├── overview.md           ← START: System design, components, data flow
 │   ├── agents.md             ← How agents work, agent loop, tools
 │   ├── memory-system.md      ← Memory, embeddings, search
-│   ├── kubernetes.md         ← Pod specs, manifests, services
+│   ├── container.md         ← Container specs, manifests, services
 │   ├── control-panel.md      ← Backend API, database schema, frontend architecture
 │   └── security.md           ← Authentication, authorization, secrets
 ├── guides/
 │   ├── setup.md              ← Local development environment
-│   ├── deployment.md         ← Production deployment, Minikube, makefile
+│   ├── deployment.md         ← Production deployment, Docker, makefile
 │   ├── backend-setup.md      ← FastAPI configuration, dependencies
 │   ├── frontend-setup.md     ← Next.js setup, components, styling
 │   ├── gpu-setup.md          ← NVIDIA device plugin, Ollama GPU configuration
@@ -58,7 +58,7 @@ docs/
 ├── reference/
 │   ├── glossary.md           ← Terms and abbreviations
 │   ├── api-reference.md      ← API endpoints, schemas
-│   ├── environment.md        ← Configuration variables (k8s/.env)
+│   ├── environment.md        ← Configuration variables (container/.env)
 │   └── makefile-commands.md  ← All make targets explained
 ├── agentes/                   ← Agent specifications (existing)
 │   ├── README.md
@@ -91,7 +91,7 @@ docs/
 ### I'm debugging a problem
 1. Check [Troubleshooting Guide](./operations/troubleshooting.md)
 2. Look at [Glossary](./reference/glossary.md) for context
-3. Review relevant architecture doc (agents, kubernetes, etc.)
+3. Review relevant architecture doc (agents, container, etc.)
 
 ### I need API documentation
 → [API Reference](./reference/api-reference.md)
@@ -148,7 +148,7 @@ make panel-logs-backend    # View API logs
 
 # Access
 make panel-url             # Get Control Panel URL
-kubectl exec -it statefulset/clawdevs-ai -c openclaw -- bash  # Shell into agent container
+docker-compose exec -it statefulset/clawdevs-ai -c openclaw -- bash  # Shell into agent container
 ```
 
 ---
@@ -168,7 +168,7 @@ OpenClaw Gateway (Agent Orchestration)
 │ Ollama (Local LLM) or OpenAI/Anthropic│
 └───────────────────────────────────────┘
         ↓
-Kubernetes (Minikube) + Docker + GPU (optional)
+Docker Compose (Docker) + Docker + GPU (optional)
 ```
 
 **Data Flow:**
@@ -198,7 +198,7 @@ All docs follow these conventions:
 ## 🔗 External Resources
 
 - [OpenClaw Documentation](https://docs.openclaw.ai)
-- [Kubernetes Documentation](https://kubernetes.io/docs)
+- [Docker Compose Documentation](https://container.io/docs)
 - [FastAPI Documentation](https://fastapi.tiangolo.com)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Ollama Documentation](https://github.com/ollama/ollama)

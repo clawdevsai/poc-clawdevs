@@ -55,7 +55,7 @@
 
 ## Tests
 - Unit: N/A
-- Integration: `kubectl kustomize k8s`
+- Integration: `docker-compose kustomize container`
 - Validation: reading prompts and shortcuts
 
 ## NFRs

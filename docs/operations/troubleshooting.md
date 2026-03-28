@@ -15,8 +15,8 @@ Run these first when something is broken:
 make stack-status
 
 # Detailed diagnostics
-kubectl get pods
-kubectl describe pods
+docker-compose get containers
+docker-compose describe containers
 
 # Logs from all components
 make openclaw-logs
@@ -31,14 +31,14 @@ make gpu-doctor
 
 ## Common Issues
 
-### Pod Won't Start
+### Container Won't Start
 
-**Symptom:** Pod status: `CrashLoopBackOff` or `Pending`
+**Symptom:** Container status: `CrashLoopBackOff` or `Pending`
 
 **Diagnosis:**
 ```bash
-kubectl describe pod <pod-name>
-kubectl logs <pod-name>
+docker-compose describe container <container-name>
+docker-compose logs <container-name>
 ```
 
 **Solutions:**
@@ -49,26 +49,26 @@ kubectl logs <pod-name>
    make images-build
 
    # Or use remote (default)
-   kubectl set env deployment/<deploy> PUSH_IMAGE=remote
+   docker-compose set env deployment/<deploy> PUSH_IMAGE=remote
    ```
 
 2. **Insufficient CPU/Memory**
    ```bash
-   # Check Minikube allocation
-   minikube config view
+   # Check Docker allocation
+   docker config view
 
    # Increase resources
-   minikube delete
-   minikube start --cpus=4 --memory=8192
+   docker delete
+   docker start --cpus=4 --memory=8192
    ```
 
 3. **PVC not bound**
    ```bash
-   kubectl get pvc
-   kubectl describe pvc <pvc-name>
+   docker-compose get pvc
+   docker-compose describe pvc <pvc-name>
 
    # Wait or delete stale PVC
-   kubectl delete pvc <pvc-name>
+   docker-compose delete pvc <pvc-name>
    make storage-enable-expansion
    ```
 
@@ -80,14 +80,14 @@ kubectl logs <pod-name>
 
 **Diagnosis:**
 ```bash
-# Check if pod is running
-kubectl get pod/openclaw-runtime-0
+# Check if container is running
+docker-compose get container/openclaw-runtime-0
 
 # Check logs
-kubectl logs -f pod/openclaw-runtime-0 -c openclaw
+docker-compose logs -f container/openclaw-runtime-0 -c openclaw
 
 # Test connectivity
-kubectl port-forward service/openclaw-gateway 8080:8080
+docker-compose port-forward service/openclaw-gateway 8080:8080
 curl -v http://localhost:8080/health
 ```
 
@@ -96,10 +96,10 @@ curl -v http://localhost:8080/health
 1. **Gateway failed to start**
    ```bash
    # Check for config errors
-   kubectl logs pod/openclaw-runtime-0
+   docker-compose logs container/openclaw-runtime-0
 
    # Rebuild config
-   kubectl delete configmap openclaw-agent-config
+   docker-compose delete configmap openclaw-agent-config
    make stack-apply
    ```
 
@@ -111,7 +111,7 @@ curl -v http://localhost:8080/health
    # Must be non-empty and valid Bearer token
 
    # Regenerate if needed
-   # Edit k8s/.env, then:
+   # Edit container/.env, then:
    make stack-apply
    ```
 
@@ -121,7 +121,7 @@ curl -v http://localhost:8080/health
    make services-expose
 
    # For local testing
-   kubectl port-forward service/openclaw-gateway 18789:18789
+   docker-compose port-forward service/openclaw-gateway 18789:18789
    ```
 
 ---
@@ -133,16 +133,16 @@ curl -v http://localhost:8080/health
 **Diagnosis:**
 ```bash
 # Check if cron is enabled
-kubectl exec -it pod/openclaw-runtime-0 -- env | grep CRON
+docker-compose exec -it container/openclaw-runtime-0 -- env | grep CRON
 
 # Check agent status
-kubectl exec -it pod/openclaw-runtime-0 -- openclaw agents list
+docker-compose exec -it container/openclaw-runtime-0 -- openclaw agents list
 
 # Check workspace exists
-kubectl exec -it pod/openclaw-runtime-0 -- ls -la /data/openclaw/workspace-*
+docker-compose exec -it container/openclaw-runtime-0 -- ls -la /data/openclaw/workspace-*
 
 # Trigger agent manually
-kubectl exec -it pod/openclaw-runtime-0 -- \
+docker-compose exec -it container/openclaw-runtime-0 -- \
   openclaw agent --agent dev_backend --message "test"
 ```
 
@@ -151,16 +151,16 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 1. **Workspace not initialized**
    ```bash
    # Copy bootstrap files
-   kubectl exec -it pod/openclaw-runtime-0 -- \
+   docker-compose exec -it container/openclaw-runtime-0 -- \
      cp -r /openclaw/config/agents/* /data/openclaw/workspace-*/
 
    # Restart
-   kubectl delete pod/openclaw-runtime-0
+   docker-compose delete container/openclaw-runtime-0
    ```
 
 2. **Cron expression invalid**
    ```bash
-   # Verify in k8s/base/openclaw-pod.yaml
+   # Verify in container/base/openclaw-container.yaml
    # Format: minute hour day month day-of-week
    # Example: 0 * * * * (every hour)
 
@@ -170,10 +170,10 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 3. **Memory too low**
    ```bash
    # Check available memory
-   kubectl top pod openclaw-runtime-0
+   docker-compose top container openclaw-runtime-0
 
    # If >80% used, memory is issue
-   # Increase in Minikube or reduce model size
+   # Increase in Docker or reduce model size
    ```
 
 ---
@@ -185,16 +185,16 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 **Diagnosis:**
 ```bash
 # Check what's in container
-kubectl exec -it pod/ollama-runtime-0 -- ollama list
+docker-compose exec -it container/ollama-runtime-0 -- ollama list
 
 # Check logs
-kubectl logs -f pod/ollama-runtime-0
+docker-compose logs -f container/ollama-runtime-0
 
 # Check disk space
-kubectl exec -it pod/ollama-runtime-0 -- df -h /
+docker-compose exec -it container/ollama-runtime-0 -- df -h /
 
 # Check model file
-kubectl exec -it pod/ollama-runtime-0 -- ls -lh /root/.ollama/models/blobs/
+docker-compose exec -it container/ollama-runtime-0 -- ls -lh /root/.ollama/models/blobs/
 ```
 
 **Solutions:**
@@ -203,33 +203,33 @@ kubectl exec -it pod/ollama-runtime-0 -- ls -lh /root/.ollama/models/blobs/
    ```bash
    # This can take 10-30 minutes for first run
    # Check logs:
-   kubectl logs -f pod/ollama-runtime-0 | grep downloading
+   docker-compose logs -f container/ollama-runtime-0 | grep downloading
 
    # Wait or manually pull
-   kubectl exec -it pod/ollama-runtime-0 -- \
+   docker-compose exec -it container/ollama-runtime-0 -- \
      ollama pull nemotron-3-super:cloud
    ```
 
 2. **Out of disk space**
    ```bash
    # Check available space
-   kubectl exec -it pod/ollama-runtime-0 -- df -h
+   docker-compose exec -it container/ollama-runtime-0 -- df -h
 
    # Need 200+ GB free on node
 
    # Clean up
    docker system prune --all
 
-   # Or increase PVC in k8s/base/pvc.yaml
+   # Or increase PVC in container/base/pvc.yaml
    ```
 
 3. **Corrupt model**
    ```bash
    # Remove and re-download
-   kubectl exec -it pod/ollama-runtime-0 -- \
+   docker-compose exec -it container/ollama-runtime-0 -- \
      ollama rm nemotron-3-super:cloud
 
-   kubectl exec -it pod/ollama-runtime-0 -- \
+   docker-compose exec -it container/ollama-runtime-0 -- \
      ollama pull nemotron-3-super:cloud
    ```
 
@@ -242,16 +242,16 @@ kubectl exec -it pod/ollama-runtime-0 -- ls -lh /root/.ollama/models/blobs/
 **Diagnosis:**
 ```bash
 # Check NVIDIA device plugin
-kubectl get pods -n kube-system | grep nvidia
+docker-compose get containers -n kube-system | grep nvidia
 
 # Check GPU on node
-kubectl describe nodes
+docker-compose describe nodes
 
-# Check GPU in pod
-kubectl exec -it pod/ollama-runtime-0 -- nvidia-smi
+# Check GPU in container
+docker-compose exec -it container/ollama-runtime-0 -- nvidia-smi
 
 # Check Ollama config
-kubectl exec -it pod/ollama-runtime-0 -- env | grep OLLAMA
+docker-compose exec -it container/ollama-runtime-0 -- env | grep OLLAMA
 ```
 
 **Solutions:**
@@ -262,15 +262,15 @@ kubectl exec -it pod/ollama-runtime-0 -- env | grep OLLAMA
    make gpu-plugin-apply
 
    # Wait for plugin to be ready
-   kubectl get pods -n kube-system -w
+   docker-compose get containers -n kube-system -w
 
    # Restart Ollama
-   kubectl delete pod/ollama-runtime-0
+   docker-compose delete container/ollama-runtime-0
    ```
 
 2. **GPU resource not requested**
    ```bash
-   # Edit k8s/base/ollama-pod.yaml
+   # Edit container/base/ollama-container.yaml
    # Add:
    # resources:
    #   limits:
@@ -286,7 +286,7 @@ kubectl exec -it pod/ollama-runtime-0 -- env | grep OLLAMA
    # Enable GPU checkbox
 
    # Restart Docker Desktop
-   # Then restart Minikube
+   # Then restart Docker
    ```
 
 ---
@@ -297,11 +297,11 @@ kubectl exec -it pod/ollama-runtime-0 -- env | grep OLLAMA
 
 **Diagnosis:**
 ```bash
-# Check pod status
-kubectl get pod | grep panel
+# Check container status
+docker-compose get container | grep panel
 
 # Check port-forward
-kubectl port-forward service/clawdevs-panel-frontend 3000:3000
+docker-compose port-forward service/clawdevs-panel-frontend 3000:3000
 
 # Check logs
 make panel-logs-frontend
@@ -310,13 +310,13 @@ make panel-logs-backend
 
 **Solutions:**
 
-1. **Pod not running**
+1. **Container not running**
    ```bash
    # Check why
-   kubectl describe pod <panel-pod>
+   docker-compose describe container <panel-container>
 
    # Restart
-   kubectl delete pod <panel-pod>
+   docker-compose delete container <panel-container>
 
    # Or redeploy
    make panel-apply
@@ -325,10 +325,10 @@ make panel-logs-backend
 2. **Database not connected**
    ```bash
    # Check PostgreSQL
-   kubectl get pod | grep postgres
+   docker-compose get container | grep postgres
 
    # Check database status
-   kubectl logs pod/postgres-xxx
+   docker-compose logs container/postgres-xxx
 
    # Run migrations
    make panel-db-migrate
@@ -341,7 +341,7 @@ make panel-logs-backend
    lsof -i :3000                  # macOS/Linux
 
    # Or use different port
-   kubectl port-forward svc/clawdevs-panel-frontend 3001:3000
+   docker-compose port-forward svc/clawdevs-panel-frontend 3001:3000
    # Access: http://localhost:3001
    ```
 
@@ -354,10 +354,10 @@ make panel-logs-backend
 **Diagnosis:**
 ```bash
 # Watch logs
-kubectl logs -f pod/openclaw-runtime-0 | tail -50
+docker-compose logs -f container/openclaw-runtime-0 | tail -50
 
 # Check specific agent
-kubectl exec -it pod/openclaw-runtime-0 -- \
+docker-compose exec -it container/openclaw-runtime-0 -- \
   openclaw sessions --agent dev_backend --json
 
 # Look for: error message, infinite retries
@@ -368,18 +368,18 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 1. **Kill stuck session**
    ```bash
    # Reset the session
-   kubectl exec -it pod/openclaw-runtime-0 -- \
+   docker-compose exec -it container/openclaw-runtime-0 -- \
      openclaw session reset agent:dev_backend:main
 
    # Or delete and recreate
-   kubectl exec -it pod/openclaw-runtime-0 -- \
+   docker-compose exec -it container/openclaw-runtime-0 -- \
      rm -rf /data/openclaw/sessions/agent_dev_backend_main*
    ```
 
 2. **Tool failure causing loop**
    ```bash
    # Disable problematic tool temporarily
-   # Edit k8s/base/openclaw-config/agents/dev_backend/AGENTS.md
+   # Edit container/base/openclaw-config/agents/dev_backend/AGENTS.md
    # Add to constraints: "Do not use tool X"
 
    # Redeploy
@@ -389,7 +389,7 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 3. **LLM timeout**
    ```bash
    # Check if Ollama is responding
-   kubectl exec -it pod/ollama-runtime-0 -- \
+   docker-compose exec -it container/ollama-runtime-0 -- \
      curl http://localhost:11434/api/status
 
    # Increase timeout in openclaw.json
@@ -402,36 +402,36 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 
 ### Memory Issues (Out of Memory)
 
-**Symptom:** Pod crashes with OOMKilled, slow performance
+**Symptom:** Container crashes with OOMKilled, slow performance
 
 **Diagnosis:**
 ```bash
 # Check memory usage
-kubectl top pod
+docker-compose top container
 
 # Check limits
-kubectl describe pod <pod> | grep -A 5 "Limits"
+docker-compose describe container <container> | grep -A 5 "Limits"
 
 # Check node
-kubectl describe nodes
+docker-compose describe nodes
 ```
 
 **Solutions:**
 
 1. **Increase memory limit**
    ```bash
-   # In k8s/base/*.yaml, increase:
+   # In container/base/*.yaml, increase:
    # resources.limits.memory: 8Gi
 
-   # Also increase Minikube
-   minikube delete
-   minikube start --memory=8192
+   # Also increase Docker
+   docker delete
+   docker start --memory=8192
    ```
 
 2. **Reduce model size**
    ```bash
    # Switch to smaller model
-   # In k8s/base/ollama-pod.yaml:
+   # In container/base/ollama-container.yaml:
    # ollama run nemotron-3-super:cloud
    # Change to: qwen3-next:cloud (smaller)
 
@@ -440,8 +440,8 @@ kubectl describe nodes
 
 3. **Enable swap**
    ```bash
-   # In Minikube (Linux only)
-   minikube ssh
+   # In Docker (Linux only)
+   docker ssh
    sudo fallocate -l 4G /swapfile
    sudo chmod 600 /swapfile
    sudo mkswap /swapfile
@@ -457,14 +457,14 @@ kubectl describe nodes
 **Diagnosis:**
 ```bash
 # Check network policy
-kubectl get networkpolicy
+docker-compose get networkpolicy
 
-# Test from pod
-kubectl exec -it pod/openclaw-runtime-0 -- \
+# Test from container
+docker-compose exec -it container/openclaw-runtime-0 -- \
   curl -v https://api.github.com
 
 # Check DNS
-kubectl exec -it pod/openclaw-runtime-0 -- \
+docker-compose exec -it container/openclaw-runtime-0 -- \
   nslookup api.github.com
 ```
 
@@ -473,22 +473,22 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 1. **Network policy blocking traffic**
    ```bash
    # Check what's allowed
-   kubectl describe networkpolicy <policy>
+   docker-compose describe networkpolicy <policy>
 
    # Temporarily disable for testing
-   kubectl delete networkpolicy <policy>
+   docker-compose delete networkpolicy <policy>
 
    # Or update to allow egress
-   # Edit k8s/base/networkpolicy-allow-egress.yaml
+   # Edit container/base/networkpolicy-allow-egress.yaml
    ```
 
 2. **DNS not working**
    ```bash
    # Check CoreDNS
-   kubectl get pods -n kube-system | grep coredns
+   docker-compose get containers -n kube-system | grep coredns
 
    # Restart if needed
-   kubectl rollout restart deployment/coredns -n kube-system
+   docker-compose rollout restart deployment/coredns -n kube-system
    ```
 
 3. **Firewall blocking**
@@ -505,7 +505,7 @@ kubectl exec -it pod/openclaw-runtime-0 -- \
 Enable more verbose logging:
 
 ```bash
-# In k8s/.env
+# In container/.env
 DEBUG_LOG_ENABLED=true
 OPENCLAW_LOG_LEVEL=debug
 
@@ -523,18 +523,18 @@ This increases output but helps diagnose issues.
 ## Checking Resource Usage
 
 ```bash
-# Pod CPU/Memory
-kubectl top pod
+# Container CPU/Memory
+docker-compose top container
 
 # Node resources
-kubectl describe nodes
+docker-compose describe nodes
 
 # Storage
-kubectl get pvc
+docker-compose get pvc
 
 # Network
-kubectl get services
-kubectl describe svc <service>
+docker-compose get services
+docker-compose describe svc <service>
 ```
 
 ---
@@ -543,24 +543,24 @@ kubectl describe svc <service>
 
 ```bash
 # Get shell access
-kubectl exec -it pod/<name> -- bash
-kubectl exec -it statefulset/clawdevs-ai -c openclaw -- bash
+docker-compose exec -it container/<name> -- bash
+docker-compose exec -it statefulset/clawdevs-ai -c openclaw -- bash
 
-# View detailed pod info
-kubectl describe pod <name>
+# View detailed container info
+docker-compose describe container <name>
 
 # Check events
-kubectl get events
+docker-compose get events
 
 # Port forwarding
-kubectl port-forward pod/<name> 8080:8080
-kubectl port-forward svc/<name> 8080:8080
+docker-compose port-forward container/<name> 8080:8080
+docker-compose port-forward svc/<name> 8080:8080
 
 # Watch deployment progress
-kubectl get pods -w
+docker-compose get containers -w
 
 # See only errors
-kubectl logs <pod> | grep ERROR
+docker-compose logs <container> | grep ERROR
 ```
 
 ---
@@ -573,8 +573,8 @@ Complete reset:
 # Stop everything
 make clawdevs-down
 
-# Delete Minikube
-minikube delete
+# Delete Docker
+docker delete
 
 # Start fresh
 make clawdevs-up

@@ -92,9 +92,9 @@ The example initiative is internal: reinforce the use of SDD in all agents and m
 
 ## Plan
 ### Architecture
-- `k8s/base/openclaw-config/shared/` stores the official templates.
-- `k8s/base/openclaw-pod.yaml` copies the files to the agents' workspaces.
-- `k8s/base/kustomization.yaml` exposes the files in configMap.
+- `container/base/openclaw-config/shared/` stores the official templates.
+- `container/base/openclaw-container.yaml` copies the files to the agents' workspaces.
+- `container/base/kustomization.yaml` exposes the files in configMap.
 - `README.md` becomes the flow input port.
 - `Makefile` offers shortcuts to open artifacts.### Phases
 1. Create templates and convention documents.
@@ -118,7 +118,7 @@ The example initiative is internal: reinforce the use of SDD in all agents and m
 - [x] Agents receive files in bootstrap.
 - [x] README points out the flow and shortcuts.
 - [x] Makefile exposes support commands.
-- [x] `kubectl kustomize k8s` renders successfully.
+- [x] `docker-compose kustomize container` renders successfully.
 
 ### Decision
 - Status: approved for internal use as a reference.

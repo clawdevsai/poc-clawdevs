@@ -26,7 +26,7 @@ Mirror of the repository README for agent boot context.
 
 ## Project
 
-`clawdevs-ai` and the ClawDevs AI platform repository to upload local Kubernetes with Minikube on Docker Desktop, expose real GPU and run the `ollama` + `openclaw` stack.
+`clawdevs-ai` and the ClawDevs AI platform repository to upload local Docker Compose with Docker on Docker Desktop, expose real GPU and run the `ollama` + `openclaw` stack.
 
 ## Spec flow
 
@@ -43,18 +43,18 @@ Before implementing a change, the recommended flow is:
 
 ## Templates and artifacts
 
-- `k8s/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/PLAN_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/TASK_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/VALIDATE_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
-- `k8s/base/openclaw-config/shared/SPEC_TEMPLATE.md`
-- `k8s/base/openclaw-config/shared/CONSTITUTION.md`
-- `k8s/base/openclaw-config/shared/SDD_CHECKLIST.md`
-- `k8s/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
-- `k8s/base/openclaw-config/shared/SPECKIT_ADAPTATION.md`
-- `k8s/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/`
+- `container/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
+- `container/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
+- `container/base/openclaw-config/shared/PLAN_TEMPLATE.md`
+- `container/base/openclaw-config/shared/TASK_TEMPLATE.md`
+- `container/base/openclaw-config/shared/VALIDATE_TEMPLATE.md`
+- `container/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
+- `container/base/openclaw-config/shared/SPEC_TEMPLATE.md`
+- `container/base/openclaw-config/shared/CONSTITUTION.md`
+- `container/base/openclaw-config/shared/SDD_CHECKLIST.md`
+- `container/base/openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md`
+- `container/base/openclaw-config/shared/SPECKIT_ADAPTATION.md`
+- `container/base/openclaw-config/shared/initiatives/internal-sdd-operationalization/`
 - `/data/openclaw/backlog/specs/`
 - `/data/openclaw/backlog/briefs/`
 - `/data/openclaw/backlog/user_story/`
@@ -84,7 +84,7 @@ ClawDevs AI must operate in short, demonstrable cycles:
 - Windows 11
 - Docker Desktop with GPU support
 - NVIDIA driver updated
-- `minikube`, `kubectl` and `make` in PATH
+- `docker`, `docker-compose` and `make` in PATH
 - Docker Desktop running, with GPU exposed to containers
 
 ## Main commands
@@ -103,17 +103,17 @@ make clawdevs-up
 - The active session repository is at `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`).
 - For `gh` commands outside of local checkout, use `--repo "$ACTIVE_GIT_REPOSITORY"` (or `"$GIT_REPOSITORY"` for compatibility).
 
-## K8s Structure
+## container Structure
 
 ```text
-k8s/
+container/
   .env
   .env.example
   kustomization.yaml
   base/
     kustomization.yaml
-    openclaw-pod.yaml
-    ollama-pod.yaml
+    openclaw-container.yaml
+    ollama-container.yaml
     ollama-pvc.yaml
     networkpolicy-allow-egress.yaml
     openclaw-config/
@@ -132,5 +132,5 @@ k8s/
 The default deploy command continues to be:
 
 ```bash
-kubectl apply -k k8s
+docker-compose apply -k container
 ```

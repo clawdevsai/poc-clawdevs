@@ -35,27 +35,27 @@
 - **Engenharia de prompts (técnicas reutilizáveis):** [engenharia-de-prompts.md](./engenharia-de-prompts.md)
 - **Planos de design / implementação (rascunhos):** [plans/](./plans/)
 
-## Stack Kubernetes
+## Stack Docker Compose
 
 | Recurso | Nome / observação |
 |--------|-------------------|
-| OpenClaw | `StatefulSet` `clawdevs-ai`, pod típico `clawdevs-ai-0`, container `openclaw` |
-| Ollama | `Pod` `ollama`, `Service` `ollama` |
-| PVC | `ollama-data` (`k8s/base/ollama-pvc.yaml`) |
-| SearXNG | `k8s/base/searxng-deployment.yaml` |
-| Painel de controle | `k8s/base/control-panel/` — frontend, backend API, worker, Postgres, Redis (`kubectl apply -k k8s/base/control-panel/` via `make panel-apply`) |
-| Rede | `k8s/base/networkpolicy-allow-egress.yaml` |
-| Segredos | `openclaw-auth`, `ollama-auth`, `clawdevs-panel-auth` gerados por `k8s/kustomization.yaml` a partir de `k8s/.env` |
-| Config agentes | `ConfigMap` `openclaw-agent-config` (arquivos em `k8s/base/openclaw-config/`) |
+| OpenClaw | `StatefulSet` `clawdevs-ai`, container típico `clawdevs-ai-0`, container `openclaw` |
+| Ollama | `Container` `ollama`, `Service` `ollama` |
+| PVC | `ollama-data` (`container/base/ollama-pvc.yaml`) |
+| SearXNG | `container/base/searxng-deployment.yaml` |
+| Painel de controle | `container/base/control-panel/` — frontend, backend API, worker, Postgres, Redis (`docker-compose apply -k container/base/control-panel/` via `make panel-apply`) |
+| Rede | `container/base/networkpolicy-allow-egress.yaml` |
+| Segredos | `openclaw-auth`, `ollama-auth`, `clawdevs-panel-auth` gerados por `container/kustomization.yaml` a partir de `container/.env` |
+| Config agentes | `ConfigMap` `openclaw-agent-config` (arquivos em `container/base/openclaw-config/`) |
 
 ## Kustomize
 
-- `kubectl apply -k k8s` usa apenas `k8s/base` (via `k8s/kustomization.yaml` → `resources: [base]`).
-- GPU no Ollama: overlay `k8s/overlays/gpu` (RuntimeClass, device plugin, patch do pod `ollama`). Aplicar com `make openclaw-apply-gpu`, `make gpu-migrate-apply` (contexto `docker-desktop`) ou `kubectl apply -k k8s/overlays/gpu`.
+- `docker-compose apply -k container` usa apenas `container/base` (via `container/kustomization.yaml` → `resources: [base]`).
+- GPU no Ollama: overlay `container/overlays/gpu` (RuntimeClass, device plugin, patch do container `ollama`). Aplicar com `make openclaw-apply-gpu`, `make gpu-migrate-apply` (contexto `docker-desktop`) ou `docker-compose apply -k container/overlays/gpu`.
 
 ## Segredos obrigatórios (`make preflight`)
 
-Chaves que devem estar preenchidas em `k8s/.env`:
+Chaves que devem estar preenchidas em `container/.env`:
 
 - `OPENCLAW_GATEWAY_TOKEN`
 - `TELEGRAM_BOT_TOKEN_CEO`
@@ -64,42 +64,42 @@ Chaves que devem estar preenchidas em `k8s/.env`:
 - `GIT_ORG`
 - `OLLAMA_API_KEY`
 
-Demais variáveis: ver `k8s/.env.example`.
+Demais variáveis: ver `container/.env.example`.
 
 ## Targets Make relevantes
 
-- `make preflight` — valida segredos em `k8s/.env`
-- `make manifests-validate` — `kubectl kustomize k8s`
-- `make clawdevs-up` — Minikube + addons + `stack-apply` + status
+- `make preflight` — valida segredos em `container/.env`
+- `make manifests-validate` — `docker-compose kustomize container`
+- `make clawdevs-up` — Docker + addons + `stack-apply` + status
 - `make clawdevs-rebuild` — `destroy-all`, sobe cluster de novo, `storage-enable-expansion`, `stack-apply`
-- `make stack-apply` — `ollama-apply` + `openclaw-apply-gpu` + `panel-apply` (OpenClaw pelo overlay `k8s/overlays/gpu`, como definido no `Makefile`)
-- `make openclaw-apply` — `kubectl apply -k k8s` (contexto `KUBE_CONTEXT`, default `clawdevs-ai`)
-- `make openclaw-apply-gpu` — aplica `k8s/overlays/gpu`
+- `make stack-apply` — `ollama-apply` + `openclaw-apply-gpu` + `panel-apply` (OpenClaw pelo overlay `container/overlays/gpu`, como definido no `Makefile`)
+- `make openclaw-apply` — `docker-compose apply -k container` (contexto `KUBE_CONTEXT`, default `clawdevs-ai`)
+- `make openclaw-apply-gpu` — aplica `container/overlays/gpu`
 - `make openclaw-restart` / `make openclaw-logs` — `statefulset/clawdevs-ai`
-- `make ollama-volume-apply` — PVC; `make ollama-apply` — recria pod `ollama`
+- `make ollama-volume-apply` — PVC; `make ollama-apply` — recria container `ollama`
 - `make panel-apply` / `panel-status` / `panel-forward` / `panel-db-migrate` / `panel-restart` / `panel-destroy` — painel ClawDevs
 - `make services-expose` / `services-stop` — port-forwards locais (painel 3000/8000 + gateway 18789; ver saída do target)
-- Fluxo Docker Desktop + GPU: `gpu-doctor`, `docker-k8s-check`, `gpu-plugin-apply`, `gpu-node-check`, `gpu-migrate-apply`
+- Fluxo Docker Desktop + GPU: `gpu-doctor`, `docker-container-check`, `gpu-plugin-apply`, `gpu-node-check`, `gpu-migrate-apply`
 
-## Exec no pod OpenClaw
+## Exec no container OpenClaw
 
 Usar o workload real, por exemplo:
 
 ```bash
-kubectl --context=clawdevs-ai exec -it statefulset/clawdevs-ai -c openclaw -- bash
+docker-compose --context=clawdevs-ai exec -it statefulset/clawdevs-ai -c openclaw -- bash
 ```
 
-## Estrutura `k8s/` (resumo)
+## Estrutura `container/` (resumo)
 
 ```text
-k8s/
+container/
   .env
   .env.example
   kustomization.yaml
   base/
     kustomization.yaml
-    openclaw-pod.yaml
-    ollama-pod.yaml
+    openclaw-container.yaml
+    ollama-container.yaml
     ollama-pvc.yaml
     networkpolicy-allow-egress.yaml
     searxng-deployment.yaml

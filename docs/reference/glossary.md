@@ -38,7 +38,7 @@ Configuration file in agent workspace. Defines:
 - Constraints and guardrails
 - Integration with other agents
 
-Example: `k8s/base/openclaw-config/agents/dev_backend/AGENTS.md`
+Example: `container/base/openclaw-config/agents/dev_backend/AGENTS.md`
 
 ---
 
@@ -67,7 +67,7 @@ One-time initialization file for new agent setup. Removed after first run (for C
 ## C
 
 **ConfigMap**
-Kubernetes resource for non-secret configuration data. In ClawDevsAI:
+Docker Compose resource for non-secret configuration data. In ClawDevsAI:
 - `openclaw-agent-config` — Agent specifications
 - `openclaw-system-config` — System settings
 
@@ -99,7 +99,7 @@ Full reference: [crontab.guru](https://crontab.guru)
 
 **Docker**
 Container runtime. Used for:
-- Building images for Kubernetes pods
+- Building images for Docker Compose containers
 - Local development
 - Reproducible environments
 
@@ -174,22 +174,22 @@ Agent configuration file defining:
 
 ## K
 
-**Kubernetes (K8s)**
+**Docker Compose (container)**
 Container orchestration platform. Provides:
-- Pod scheduling
+- Container scheduling
 - Service discovery
 - Persistent storage
 - Secrets management
 
-In ClawDevsAI: Minikube for local development, multi-node cluster for production
+In ClawDevsAI: Docker for local development, multi-node cluster for production
 
 **Kustomize**
-Kubernetes templating tool. Enables:
+Docker Compose templating tool. Enables:
 - Overlays for different environments
 - Reusable base configurations
 - ConfigMap/Secret generation
 
-Location: `k8s/base/` (base) and `k8s/overlays/` (variations)
+Location: `container/base/` (base) and `container/overlays/` (variations)
 
 ---
 
@@ -220,12 +220,12 @@ Persistent learning system for agents:
 
 See: [Memory System](../architecture/memory-system.md)
 
-**Minikube**
-Local Kubernetes cluster for development. Single-node, easy setup.
+**Docker**
+Local Docker Compose cluster for development. Single-node, easy setup.
 
 ```bash
-make minikube-up    # Start
-make minikube-down  # Stop
+make docker-up    # Start
+make docker-down  # Stop
 ```
 
 ---
@@ -263,13 +263,13 @@ Port: 8080 (internal), 18789 (exposed)
 ## P
 
 **PVC (PersistentVolumeClaim)**
-Kubernetes storage request. In ClawDevsAI:
+Docker Compose storage request. In ClawDevsAI:
 - `ollama-data` — 200 GB for models
 - `openclaw-data` — 100 GB for sessions/logs
 - `panel-db` — 20 GB for metadata
 
-**Pod**
-Smallest deployable unit in Kubernetes. Contains one or more containers.
+**Container**
+Smallest deployable unit in Docker Compose. Contains one or more containers.
 
 In ClawDevsAI:
 - `openclaw-runtime` — Agent orchestration
@@ -314,18 +314,18 @@ Workflow template for organized development:
 CONSTITUTION → BRIEF → SPEC → CLARIFY → PLAN → TASK → IMPLEMENTATION
 ```
 
-Templates in: `k8s/base/openclaw-config/shared/`
+Templates in: `container/base/openclaw-config/shared/`
 
 **Secret**
-Kubernetes resource for sensitive data:
+Docker Compose resource for sensitive data:
 - API tokens
 - Database passwords
 - OAuth credentials
 
-Never committed to git. Generated from `k8s/.env`.
+Never committed to git. Generated from `container/.env`.
 
 **Service**
-Kubernetes abstraction for accessing pods. Provides:
+Docker Compose abstraction for accessing containers. Provides:
 - Stable IP address
 - Load balancing
 - DNS name
@@ -421,7 +421,7 @@ Location: `/data/openclaw/workspace-<agent-id>/`
 
 **YAML**
 Configuration file format used for:
-- Kubernetes manifests
+- Docker Compose manifests
 - Kustomize overlays
 - Configuration data
 
@@ -439,7 +439,7 @@ Configuration file format used for:
 | GPU | Graphics Processing Unit |
 | HA | High Availability |
 | IAM | Identity Access Management |
-| K8s | Kubernetes |
+| container | Docker Compose |
 | LLM | Large Language Model |
 | OAuth | Open Authorization |
 | ORM | Object-Relational Mapping |

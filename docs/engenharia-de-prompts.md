@@ -22,7 +22,7 @@
 
 # Engenharia de prompts
 
-Referência curta de técnicas para instruir modelos de linguagem de forma previsível e reutilizável. Útil ao desenhar prompts operacionais (por exemplo junto de `k8s/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`).
+Referência curta de técnicas para instruir modelos de linguagem de forma previsível e reutilizável. Útil ao desenhar prompts operacionais (por exemplo junto de `container/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`).
 
 ## Técnicas
 

@@ -43,6 +43,6 @@ docker push clawdevsai/openclaw-runtime:2026.3.24
 docker push clawdevsai/openclaw-runtime:latest
 ```
 
-## Uso no Kubernetes
+## Uso no Docker Compose
 
-O `k8s/base/openclaw-pod.yaml` já está apontando para `clawdevsai/openclaw-runtime:latest`.
+O `container/base/openclaw-container.yaml` já está apontando para `clawdevsai/openclaw-runtime:latest`.

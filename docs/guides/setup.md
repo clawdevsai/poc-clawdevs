@@ -21,8 +21,8 @@
 ### System Requirements
 
 - **OS:** Windows 11 (Docker Desktop required)
-- **CPU:** 4+ cores (Minikube uses 2)
-- **RAM:** 16 GB minimum (Minikube uses 7 GB)
+- **CPU:** 4+ cores (Docker uses 2)
+- **RAM:** 16 GB minimum (Docker uses 7 GB)
 - **Storage:** 500 GB free (200 GB for Ollama models + 100 GB for OpenClaw data)
 - **GPU:** Optional (NVIDIA with CUDA support recommended)
 
@@ -31,8 +31,8 @@
 | Component | Version | Purpose |
 |-----------|---------|---------|
 | Docker Desktop | Latest | Container runtime |
-| Minikube | Latest | Local Kubernetes |
-| kubectl | Latest | Kubernetes CLI |
+| Docker | Latest | Local Docker Compose |
+| docker-compose | Latest | Docker Compose CLI |
 | make | GNU 4.3+ | Build automation |
 | git | Latest | Version control |
 | bash/zsh | Latest | Shell (Git Bash on Windows) |
@@ -52,19 +52,19 @@
    docker --version  # Verify: should show version
    ```
 
-3. **Install Minikube**
+3. **Install Docker**
    ```bash
    # Using Chocolatey (if installed)
-   choco install minikube
+   choco install docker
 
-   # Or download from: https://minikube.sigs.k8s.io/docs/start/
-   minikube version  # Verify
+   # Or download from: https://docker.sigs.container.io/docs/start/
+   docker version  # Verify
    ```
 
-4. **Install kubectl**
+4. **Install docker-compose**
    ```bash
    # Usually comes with Docker Desktop
-   kubectl version --client  # Verify
+   docker-compose version --client  # Verify
    ```
 
 5. **Install GNU make**
@@ -90,9 +90,9 @@
 
 ```bash
 # Copy environment template
-cp k8s/.env.example k8s/.env
+cp container/.env.example container/.env
 
-# Edit k8s/.env with your values
+# Edit container/.env with your values
 # Required (minimum):
 OPENCLAW_GATEWAY_TOKEN=your-token-here
 GIT_TOKEN=ghp_your-github-token
@@ -107,7 +107,7 @@ See [Environment Reference](../reference/environment.md) for all variables.
 # Check required variables are set
 make preflight
 
-# Validate Kubernetes manifests
+# Validate Docker Compose manifests
 make manifests-validate
 ```
 
@@ -118,8 +118,8 @@ make manifests-validate
 make clawdevs-up
 
 # This runs:
-# 1. Minikube setup with GPU support
-# 2. Kubernetes add-ons (dashboard, storage, NVIDIA plugin)
+# 1. Docker setup with GPU support
+# 2. Docker Compose add-ons (dashboard, storage, NVIDIA plugin)
 # 3. Deploy OpenClaw, Ollama, Control Panel
 # 4. Wait for readiness
 # Takes 5-10 minutes
@@ -128,8 +128,8 @@ make clawdevs-up
 ### 4. Verify Installation
 
 ```bash
-# Check all pods are running
-kubectl get pods
+# Check all containers are running
+docker-compose get containers
 
 # Expected output:
 # NAME                                    READY   STATUS
@@ -140,7 +140,7 @@ kubectl get pods
 # postgres-xxx                            1/1     Running
 
 # View logs
-kubectl logs -f pod/openclaw-runtime-0 -c openclaw
+docker-compose logs -f container/openclaw-runtime-0 -c openclaw
 ```
 
 ### 5. Access the System
@@ -163,7 +163,7 @@ make panel-url
 
 ### Environment Variables
 
-Edit `k8s/.env`:
+Edit `container/.env`:
 
 ```bash
 # OpenClaw
@@ -195,9 +195,9 @@ LANGUAGE=pt-BR                     # en-US|pt-BR
 ### First Run Checklist
 
 - ✓ Docker Desktop running with GPU (if available)
-- ✓ Minikube supports `docker` driver
+- ✓ Docker supports `docker` driver
 - ✓ 300+ GB free disk space
-- ✓ `k8s/.env` filled with required values
+- ✓ `container/.env` filled with required values
 - ✓ `make preflight` passes
 - ✓ `make manifests-validate` passes
 
@@ -209,18 +209,18 @@ LANGUAGE=pt-BR                     # en-US|pt-BR
 
 ```bash
 # Check cluster status
-minikube status
+docker status
 
 # Expected:
-# minikube: Running
+# docker: Running
 # driver: docker
-# kubeconfig: Configured
+# docker compose config: Configured
 
-# Check pods
-kubectl get pods --all-namespaces
+# Check containers
+docker-compose get containers --all-environments
 
 # Check storage
-kubectl get pvc
+docker-compose get pvc
 
 # Expected:
 # openclaw-data    Bound    150 GB
@@ -228,7 +228,7 @@ kubectl get pvc
 # panel-db         Bound     20 GB
 
 # Check services
-kubectl get svc
+docker-compose get svc
 
 # Expected:
 # openclaw-gateway   ClusterIP   8080
@@ -241,7 +241,7 @@ kubectl get svc
 
 ```bash
 # Test OpenClaw gateway
-kubectl port-forward service/openclaw-gateway 8080:8080
+docker-compose port-forward service/openclaw-gateway 8080:8080
 
 # In another terminal
 curl -H "Authorization: Bearer $OPENCLAW_GATEWAY_TOKEN" \
@@ -264,14 +264,14 @@ make panel-forward
 
 ```bash
 # Check models are loaded
-kubectl exec -it pod/ollama-runtime-0 -- ollama list
+docker-compose exec -it container/ollama-runtime-0 -- ollama list
 
 # Expected models:
 # nemotron-3-super:cloud
 # nomic-embed-text
 
 # Test model
-kubectl exec -it pod/ollama-runtime-0 -- ollama run nemotron-3-super:cloud "hello"
+docker-compose exec -it container/ollama-runtime-0 -- ollama run nemotron-3-super:cloud "hello"
 ```
 
 ---
@@ -295,31 +295,31 @@ docker run hello-world  # Test
 # Settings → Resources → Memory: 12 GB or more
 ```
 
-### Minikube Issues
+### Docker Issues
 
-**Problem:** `Minikube failed to start`
+**Problem:** `Docker failed to start`
 
 ```bash
 # Solution 1: Check Docker
 docker ps  # Should return empty list, not error
 
-# Solution 2: Reset Minikube
-minikube delete
-make minikube-up
+# Solution 2: Reset Docker
+docker delete
+make docker-up
 
 # Solution 3: Use Docker driver explicitly
-minikube start --driver=docker
+docker start --driver=docker
 ```
 
-**Problem:** `kubeconfig context not found`
+**Problem:** `docker compose config context not found`
 
 ```bash
 # Solution: Set context
-kubectl config use-context clawdevs-ai
+docker-compose config use-context clawdevs-ai
 
 # Or: Reset contexts
-minikube delete
-make minikube-context
+docker delete
+make docker-context
 ```
 
 ### Storage Issues
@@ -328,7 +328,7 @@ make minikube-context
 
 ```bash
 # Check PVC status
-kubectl describe pvc openclaw-data
+docker-compose describe pvc openclaw-data
 
 # Solution: Enable storage-provisioner
 make storage-enable-expansion
@@ -343,16 +343,16 @@ df -h
 
 ```bash
 # Check usage
-kubectl exec -it pod/ollama-runtime-0 -- df -h
+docker-compose exec -it container/ollama-runtime-0 -- df -h
 
 # Solution 1: Delete old models
-kubectl exec -it pod/ollama-runtime-0 -- ollama rm model-name
+docker-compose exec -it container/ollama-runtime-0 -- ollama rm model-name
 
 # Solution 2: Clean Docker
 docker system prune --all
 
 # Solution 3: Increase storage
-# k8s/base/pvc.yaml - increase size in spec.resources.requests.storage
+# container/base/pvc.yaml - increase size in spec.resources.requests.storage
 ```
 
 ### GPU Issues
@@ -374,10 +374,10 @@ make gpu-node-check
 
 ```bash
 # Check Ollama GPU allocation
-kubectl exec -it pod/ollama-runtime-0 -- env | grep OLLAMA
+docker-compose exec -it container/ollama-runtime-0 -- env | grep OLLAMA
 
 # Reduce model size or use CPU fallback
-# Edit k8s/base/ollama-pod.yaml
+# Edit container/base/ollama-container.yaml
 # Change model to smaller (qwen3-next instead of nemotron-3-super)
 make ollama-restart
 ```
@@ -393,7 +393,7 @@ make openclaw-logs
 # Look for: "Agent registered", "Session started"
 
 # Trigger manually
-kubectl exec -it statefulset/clawdevs-ai -c openclaw -- \
+docker-compose exec -it statefulset/clawdevs-ai -c openclaw -- \
   openclaw agent --agent dev_backend --message "hello"
 ```
 
@@ -401,10 +401,10 @@ kubectl exec -it statefulset/clawdevs-ai -c openclaw -- \
 
 ```bash
 # Check logs
-kubectl logs -f pod/openclaw-runtime-0 -c openclaw | grep ERROR
+docker-compose logs -f container/openclaw-runtime-0 -c openclaw | grep ERROR
 
 # Kill stuck session
-kubectl exec -it statefulset/clawdevs-ai -c openclaw -- \
+docker-compose exec -it statefulset/clawdevs-ai -c openclaw -- \
   openclaw session reset agent:dev_backend:main
 
 # Or reset everything
@@ -420,7 +420,7 @@ make reset-all
 make panel-logs-backend
 
 # Check database
-kubectl exec -it pod/postgres-xxx -- psql -U postgres
+docker-compose exec -it container/postgres-xxx -- psql -U postgres
 
 # Verify migrations ran
 make panel-db-migrate
@@ -432,10 +432,10 @@ make panel-db-migrate
 # Check gateway token
 echo $OPENCLAW_GATEWAY_TOKEN
 
-# Should be set in k8s/.env
+# Should be set in container/.env
 
 # Verify connectivity
-kubectl exec -it pod/clawdevs-panel-backend-xxx -- \
+docker-compose exec -it container/clawdevs-panel-backend-xxx -- \
   curl -H "Authorization: Bearer $OPENCLAW_GATEWAY_TOKEN" \
   http://openclaw-gateway:8080/health
 ```
@@ -480,10 +480,10 @@ make panel-logs-backend   # API logs
 make gpu-doctor           # GPU diagnostics
 
 # Development
-kubectl get pods          # List pods
-kubectl describe pod <name>  # Pod details
-kubectl logs -f pod/<name>   # Live logs
-kubectl exec -it pod/<name> bash  # Shell access
+docker-compose get containers          # List containers
+docker-compose describe container <name>  # Container details
+docker-compose logs -f container/<name>   # Live logs
+docker-compose exec -it container/<name> bash  # Shell access
 
 # Cleanup
 make reset-all            # Full reset (destructive)

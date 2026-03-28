@@ -10,15 +10,15 @@
 
 ### 1.1 Camada de Containerização
 
-**Minikube (Windows/Docker Desktop)**
+**Docker (Windows/Docker Desktop)**
 ```
 ┌─────────────────────────────────────────┐
 │         Docker Desktop (Windows)         │
 ├─────────────────────────────────────────┤
-│  Minikube Cluster (v1.34.1)             │
+│  Docker Cluster (v1.34.1)             │
 │  ├─ CPUs: 2 (configurável)              │
 │  ├─ Memory: 7168 MB (7 GB)              │
-│  ├─ K8s Version: 1.34.1                 │
+│  ├─ container Version: 1.34.1                 │
 │  └─ GPU Support: NVIDIA Device Plugin   │
 └─────────────────────────────────────────┘
 ```
@@ -29,12 +29,12 @@
 - Storage Classes: local-path, standard
 - Add-ons: dashboard, metrics-server, storage-provisioner, nvidia-device-plugin
 
-### 1.2 Pods e Serviços
+### 1.2 Containers e Serviços
 
 ```
-Namespace: default
+Environment: default
 │
-├─ Pod: openclaw-runtime
+├─ Container: openclaw-runtime
 │  ├─ Image: clawdevsai/openclaw-runtime:latest
 │  ├─ CPU: 2000m (solicitado), 4000m (limite)
 │  ├─ Memory: 4Gi (solicitado), 8Gi (limite)
@@ -46,7 +46,7 @@ Namespace: default
 │  ├─ Env Vars: OPENCLAW_GATEWAY_TOKEN, OPENCLAW_LOG_LEVEL, ...
 │  └─ Ports: 8080 (Gateway WebSocket)
 │
-├─ Pod: ollama-runtime
+├─ Container: ollama-runtime
 │  ├─ Image: clawdevsai/ollama-runtime:latest
 │  ├─ CPU: 4000m (solicitado), 8000m (limite)
 │  ├─ Memory: 6Gi (solicitado), 12Gi (limite)
@@ -56,7 +56,7 @@ Namespace: default
 │  ├─ Env Vars: OLLAMA_API_KEY, OLLAMA_AUTO_PULL_MODELS
 │  └─ Ports: 11434 (API), 11435 (WebUI)
 │
-├─ Pod: searxng-runtime
+├─ Container: searxng-runtime
 │  ├─ Image: clawdevsai/searxng-runtime:latest
 │  ├─ CPU: 500m (solicitado), 1000m (limite)
 │  ├─ Memory: 512Mi (solicitado), 1Gi (limite)
@@ -64,7 +64,7 @@ Namespace: default
 │  │  └─ searxng-config (ConfigMap)
 │  └─ Ports: 8888 (API)
 │
-├─ Pod: clawdevs-panel-backend
+├─ Container: clawdevs-panel-backend
 │  ├─ Image: clawdevsai/clawdevs-panel-backend:latest
 │  ├─ CPU: 500m (solicitado), 1000m (limite)
 │  ├─ Memory: 512Mi (solicitado), 1Gi (limite)
@@ -73,7 +73,7 @@ Namespace: default
 │  ├─ Env Vars: DATABASE_URL, OPENCLAW_GATEWAY_URL, ...
 │  └─ Ports: 8000 (FastAPI)
 │
-└─ Pod: clawdevs-panel-frontend
+└─ Container: clawdevs-panel-frontend
    ├─ Image: clawdevsai/clawdevs-panel-frontend:latest
    ├─ CPU: 200m (solicitado), 500m (limite)
    ├─ Memory: 256Mi (solicitado), 512Mi (limite)
@@ -205,7 +205,7 @@ Sistema:
 ### 3.1 Modelos Configurados
 
 ```yaml
-# k8s/base/ollama-pod.yaml
+# container/base/ollama-container.yaml
 env:
   - name: OLLAMA_AUTO_PULL_MODELS
     value: "true"
@@ -415,15 +415,15 @@ control-panel/frontend/
 ### 5.1 Estrutura
 
 ```
-k8s/
+container/
 ├── kustomization.yaml      (Root — combina base + overlays)
 ├── base/
 │   ├── kustomization.yaml
-│   ├── openclaw-pod.yaml
-│   ├── ollama-pod.yaml
-│   ├── searxng-pod.yaml
-│   ├── panel-backend-pod.yaml
-│   ├── panel-frontend-pod.yaml
+│   ├── openclaw-container.yaml
+│   ├── ollama-container.yaml
+│   ├── searxng-container.yaml
+│   ├── panel-backend-container.yaml
+│   ├── panel-frontend-container.yaml
 │   ├── pvc.yaml            (PersistentVolumeClaims)
 │   ├── service.yaml
 │   ├── storage-class.yaml
@@ -449,7 +449,7 @@ k8s/
 │   │   │   └── dba-data-engineer.md
 │   │   └── bootstrap-scripts/
 │   │       ├── 00-base-setup.sh
-│   │       ├── 01-minikube-setup.sh
+│   │       ├── 01-docker-setup.sh
 │   │       ├── 02-nvidia-setup.sh
 │   │       ├── 03-storage-setup.sh
 │   │       ├── 04-pullsecrets.sh
@@ -471,7 +471,7 @@ k8s/
 
 **Via Kustomize:**
 ```yaml
-# k8s/base/kustomization.yaml
+# container/base/kustomization.yaml
 configMapGenerator:
   - name: openclaw-config
     files:
@@ -483,12 +483,12 @@ configMapGenerator:
 secretGenerator:
   - name: openclaw-secrets
     envs:
-      - ../.env        # Referencia k8s/.env
+      - ../.env        # Referencia container/.env
 ```
 
-**Montagem em Pod:**
+**Montagem em Container:**
 ```yaml
-# Pod spec
+# Container spec
 volumeMounts:
   - name: openclaw-config
     mountPath: /openclaw/config
@@ -745,7 +745,7 @@ Mode: PUSH_IMAGE=remote (padrão)
 └─ Requer acesso Docker Hub
 
 Mode: PUSH_IMAGE=local
-├─ Kustomize builda localmente no Minikube
+├─ Kustomize builda localmente no Docker
 ├─ Não requer Docker Hub
 └─ Mais lento no primeiro build
 ```
@@ -764,7 +764,7 @@ Log Levels:
 └─ error — Falhas (exception, abort, timeout)
 
 Sinks:
-├─ Pod logs (kubectl logs)
+├─ Container logs (docker-compose logs)
 ├─ Persistent volume (/openclaw/logs/)
 ├─ Structured logging (JSON)
 └─ Panel backend (log viewer com filtros)
@@ -870,23 +870,23 @@ Arquitetura escalada:
 ### 11.1 Common Issues
 
 ```
-Issue: Pod stuck in ImagePullBackOff
+Issue: Container stuck in ImagePullBackOff
 Solução:
-├─ Check: kubectl describe pod <pod>
+├─ Check: docker-compose describe container <container>
 ├─ Verificar: docker login credentials
 ├─ Ou: PUSH_IMAGE=local (builda localmente)
 
 Issue: GPU not available
 Solução:
 ├─ Run: make gpu-doctor
-├─ Verify: nvidia-smi in pod
+├─ Verify: nvidia-smi in container
 ├─ Fix: make gpu-plugin-apply
 
 Issue: Ollama models not loaded
 Solução:
 ├─ Check: make ollama-logs
-├─ Wait: Pode estar pulling (verificar space)
-├─ Manual: kubectl exec -it <pod> ollama pull nemotron-3-super:cloud
+├─ Wait: Containere estar pulling (verificar space)
+├─ Manual: docker-compose exec -it <container> ollama pull nemotron-3-super:cloud
 
 Issue: Compaction infinite loop
 Solução:
@@ -899,19 +899,19 @@ Solução:
 
 ```bash
 # Enable debug logging
-kubectl set env pod/openclaw-runtime OPENCLAW_LOG_LEVEL=debug
+docker-compose set env container/openclaw-runtime OPENCLAW_LOG_LEVEL=debug
 
-# Attach to pod shell
-kubectl exec -it <pod> /bin/bash
+# Attach to container shell
+docker-compose exec -it <container> /bin/bash
 
 # View system state
-kubectl describe pod <pod>
-kubectl get pvc
-kubectl get events
+docker-compose describe container <container>
+docker-compose get pvc
+docker-compose get events
 
 # Stream logs
-kubectl logs -f <pod>
-kubectl logs -f <pod> --previous  (crashed container)
+docker-compose logs -f <container>
+docker-compose logs -f <container> --previous  (crashed container)
 ```
 
 ---
@@ -920,9 +920,9 @@ kubectl logs -f <pod> --previous  (crashed container)
 
 ### 12.1 Arquivos Críticos
 
-- **Configuração:** `k8s/.env`, `openclaw.json`
-- **Pods:** `k8s/base/*.yaml`
-- **ConfigMaps:** `k8s/base/openclaw-config/`
+- **Configuração:** `container/.env`, `openclaw.json`
+- **Containers:** `container/base/*.yaml`
+- **ConfigMaps:** `container/base/openclaw-config/`
 - **Backend:** `control-panel/backend/app/`
 - **Frontend:** `control-panel/frontend/app/`
 
@@ -930,22 +930,22 @@ kubectl logs -f <pod> --previous  (crashed container)
 
 ```bash
 # Debugging
-kubectl get pods -w
-kubectl describe pod <pod>
-kubectl exec -it <pod> /bin/bash
-kubectl logs -f <pod>
+docker-compose get containers -w
+docker-compose describe container <container>
+docker-compose exec -it <container> /bin/bash
+docker-compose logs -f <container>
 
 # Port forwarding
-kubectl port-forward service/panel-backend-api 8000:8000
-kubectl port-forward service/ollama-api 11434:11434
+docker-compose port-forward service/panel-backend-api 8000:8000
+docker-compose port-forward service/ollama-api 11434:11434
 
 # Restart services
-kubectl rollout restart deployment <deployment>
+docker-compose rollout restart deployment <deployment>
 
 # View resources
-kubectl get pvc
-kubectl get configmap
-kubectl get secret
+docker-compose get pvc
+docker-compose get configmap
+docker-compose get secret
 ```
 
 ---

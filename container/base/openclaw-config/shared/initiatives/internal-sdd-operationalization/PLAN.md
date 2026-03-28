@@ -33,9 +33,9 @@
 - Checklist SDD
 
 ##Architecture
-- `k8s/base/openclaw-config/shared/` keeps the contracts.
-- `k8s/base/openclaw-pod.yaml` distributes the artifacts to the workspaces.
-- `k8s/base/kustomization.yaml` exposes the files in configMap.
+- `container/base/openclaw-config/shared/` keeps the contracts.
+- `container/base/openclaw-container.yaml` distributes the artifacts to the workspaces.
+- `container/base/kustomization.yaml` exposes the files in configMap.
 - `README.md` points to the official entry of the stream.
 - `Makefile` offers shortcuts to templates and operational prompts.
 

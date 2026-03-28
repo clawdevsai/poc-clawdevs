@@ -33,7 +33,7 @@
 
 **Faz:**
 - Fila GitHub: label **`devops`**; ciclos também olham SLOs/alertas e CVEs de infra.
-- Pipelines (GitHub Actions), Terraform/Helm/K8s, rotação de secrets, runbooks.
+- Pipelines (GitHub Actions), Terraform/Helm/container, rotação de secrets, runbooks.
 - Incidentes: P0 → CEO imediato; P1 → Arquiteto e PO; relatório semanal **PROD_METRICS** em `backlog/status/`.
 
 **Não faz:** mudar produção sem TASK ou P0 documentado; commitar secrets; aceitar CEO direto sem pedido explícito do Diretor.

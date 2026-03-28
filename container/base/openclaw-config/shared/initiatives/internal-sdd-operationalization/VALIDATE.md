@@ -38,7 +38,7 @@
 - [x] No unresolved ambiguity
 
 ## Evidence
-- `kubectl kustomize k8s`
+- `docker-compose kustomize container`
 
 ## Decision
 - Status: aprovado
