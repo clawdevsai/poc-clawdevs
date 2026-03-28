@@ -28,6 +28,8 @@ spec:
   template:
     metadata:
       name: generate-panel-agent-token
+      labels:
+        app: panel-agent-token-generator
     spec:
       serviceAccountName: panel-agent-token-generator
       containers:

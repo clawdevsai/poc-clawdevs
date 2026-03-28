@@ -158,6 +158,28 @@ spec:
         - protocol: TCP
           port: 443
 ---
+# Control panel frontend: backend API only.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-panel-frontend-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: clawdevs-panel-frontend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-backend
+      ports:
+        - protocol: TCP
+          port: 8000
+---
 # Control panel worker: DB/Redis/Gateway plus HTTPS.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -222,6 +244,34 @@ spec:
           port: 443
         - protocol: TCP
           port: 80
+---
+# Token generator job: panel backend + HTTPS (k8s API patch secret).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-token-generator-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: panel-agent-token-generator
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-backend
+      ports:
+        - protocol: TCP
+          port: 8000
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
 ---
 # Ollama: model/runtime pulls over HTTP/HTTPS.
 apiVersion: networking.k8s.io/v1

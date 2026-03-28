@@ -34,6 +34,7 @@ spec:
       labels:
         app: searxng
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: searxng
           image: clawdevsai/searxng-runtime@sha256:d59cc03d02241d3c25d6948c534beb34fdaac51cbf31162b2e9eabeb0fb391bc

@@ -34,6 +34,7 @@ spec:
       labels:
         app: clawdevs-panel-redis
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: redis
           image: clawdevsai/redis-runtime@sha256:b95f59534a9112e82c68677a05afa0c69dd4d75c9fdc7114b98594a28ad79f13

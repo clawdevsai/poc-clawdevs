@@ -36,6 +36,7 @@ spec:
       labels:
         app: ollama
     spec:
+      automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
       containers:
         - name: ollama

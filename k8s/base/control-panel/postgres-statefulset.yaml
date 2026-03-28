@@ -35,6 +35,7 @@ spec:
       labels:
         app: clawdevs-panel-db
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: postgres
           image: clawdevsai/postgres-runtime@sha256:538a39488026fbe64e0d9d4330607046725bb11c7b987fbc5e91dc8cde5c7b4f
