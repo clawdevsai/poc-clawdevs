@@ -195,8 +195,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -228,8 +230,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -261,8 +265,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -293,8 +299,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -325,8 +333,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -357,8 +367,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -389,8 +401,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -421,8 +435,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -453,8 +469,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -485,8 +503,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -517,8 +537,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
@@ -548,8 +570,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           ],
           "exec": {
             "host": "gateway",
-            "security": "full",
-            "ask": "off"
+            "security": "allowlist",
+            "ask": "on-miss",
+            "askFallback": "deny",
+            "strictInlineEval": true
           }
         },
         "subagents": {
