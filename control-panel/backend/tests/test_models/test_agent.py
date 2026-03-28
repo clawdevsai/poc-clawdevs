@@ -22,7 +22,7 @@
 Unit tests for Agent model - 100% mocked, no external access.
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID
 
 
@@ -51,7 +51,7 @@ class TestAgentModel:
         from app.models.agent import Agent
         from datetime import datetime
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         agent = Agent(
             slug="complete-agent",
@@ -207,7 +207,7 @@ class TestAgentCronManagement:
         from app.models.agent import Agent
         from datetime import datetime, timedelta
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         tomorrow = now + timedelta(days=1)
 
         agent = Agent(

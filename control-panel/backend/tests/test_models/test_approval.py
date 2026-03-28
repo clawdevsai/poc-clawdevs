@@ -22,7 +22,7 @@
 Unit tests for Approval model - 100% mocked, no external access.
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
 
@@ -176,7 +176,7 @@ class TestApprovalWorkflow:
             action_type="deploy",
             status="approved",
             decided_by_id=user_id,
-            decided_at=datetime.utcnow(),
+            decided_at=datetime.now(UTC),
         )
 
         assert approval.decided_by_id == user_id

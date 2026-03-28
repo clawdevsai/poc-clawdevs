@@ -24,7 +24,7 @@ Test suite for Tasks API endpoints.
 
 import pytest
 from httpx import AsyncClient
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import uuid4
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models import Task
@@ -196,8 +196,8 @@ class TestTasksResponseModels:
             github_issue_url=None,
             github_repo=None,
             due_at=None,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert task.id is not None

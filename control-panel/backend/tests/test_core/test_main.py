@@ -187,10 +187,12 @@ class TestBootstrap:
         """Test that bootstrap_admin creates admin user if not exists."""
         from app.main import bootstrap_admin
 
-        mock_session = AsyncMock()
+        mock_session = MagicMock()
         mock_result = MagicMock()
         mock_result.first.return_value = None
         mock_session.exec = AsyncMock(return_value=mock_result)
+        mock_session.commit = AsyncMock()
+        mock_session.add = MagicMock()
 
         with patch("app.main.AsyncSessionLocal") as mock_session_local:
             mock_session_local.return_value.__aenter__.return_value = mock_session
@@ -205,11 +207,11 @@ class TestBootstrap:
         """Test that bootstrap_admin doesn't create duplicate users."""
         from app.main import bootstrap_admin
 
-        mock_session = AsyncMock()
+        mock_session = MagicMock()
         mock_user = MagicMock()
-        mock_result = AsyncMock()
+        mock_result = MagicMock()
         mock_result.first.return_value = mock_user
-        mock_session.exec.return_value = mock_result
+        mock_session.exec = AsyncMock(return_value=mock_result)
 
         with patch("app.main.AsyncSessionLocal") as mock_session_local:
             mock_session_local.return_value.__aenter__.return_value = mock_session

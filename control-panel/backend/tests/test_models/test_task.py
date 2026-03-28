@@ -22,7 +22,7 @@
 Unit tests for Task model - 100% mocked, no external access.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from uuid import UUID, uuid4
 
 
@@ -49,7 +49,7 @@ class TestTaskModel:
         """Test task with all fields populated."""
         from app.models.task import Task
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         task = Task(
             title="Complete Task",

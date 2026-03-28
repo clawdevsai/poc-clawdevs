@@ -24,7 +24,7 @@ Tests for API endpoints.
 
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class TestAuthEndpoints:
@@ -227,7 +227,7 @@ class TestAgentEndpoints:
             )
 
             with patch("app.api.agents.datetime") as mock_datetime:
-                mock_datetime.utcnow.return_value = datetime.utcnow()
+                mock_datetime.utcnow.return_value = datetime.now(UTC)
 
                 # This test documents the expected behavior
                 pass
@@ -244,7 +244,7 @@ class TestAgentEndpoints:
             )
 
             with patch("app.api.agents.datetime") as mock_datetime:
-                mock_datetime.utcnow.return_value = datetime.utcnow()
+                mock_datetime.utcnow.return_value = datetime.now(UTC)
 
                 # This test documents the expected behavior
                 pass
@@ -392,7 +392,7 @@ class TestTaskEndpoints:
             )
 
             with patch("app.api.tasks.datetime") as mock_datetime:
-                mock_datetime.now.return_value = datetime.utcnow()
+                mock_datetime.now.return_value = datetime.now(UTC)
 
                 # This test documents the expected behavior
                 pass

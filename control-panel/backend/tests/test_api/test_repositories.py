@@ -24,7 +24,7 @@ Test suite for Repositories API endpoints.
 
 import pytest
 from httpx import AsyncClient
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import uuid4
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models import Repository
@@ -185,8 +185,8 @@ class TestRepositoryResponseModels:
             description=None,
             default_branch="main",
             is_active=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert repo.id is not None

@@ -1,136 +1,108 @@
-# Copyright (c) 2026 Diego Silva Morais <lukewaresoftwarehouse@gmail.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 """
-Unit tests for MemoryEntry model - 100% mocked, no external access.
+Unit tests for MemoryEntry model.
 """
 
-from datetime import datetime
-from uuid import UUID, uuid4
+from datetime import UTC, datetime
+from uuid import UUID
 
 
 class TestMemoryEntryModel:
-    """Test MemoryEntry model creation and validation - UNIT TESTS ONLY."""
-
     def test_memory_entry_creation(self):
-        """Test basic memory entry creation."""
         from app.models.memory_entry import MemoryEntry
 
         entry = MemoryEntry(
             entry_type="active",
-            content="This is a test memory",
+            title="Test memory",
+            body="This is a test memory",
         )
 
         assert entry.entry_type == "active"
-        assert entry.content == "This is a test memory"
+        assert entry.title == "Test memory"
+        assert entry.body == "This is a test memory"
         assert entry.id is not None
         assert isinstance(entry.id, UUID)
 
     def test_memory_entry_with_agent(self):
-        """Test memory entry linked to agent."""
         from app.models.memory_entry import MemoryEntry
-
-        agent_id = uuid4()
 
         entry = MemoryEntry(
             entry_type="active",
-            content="Agent-specific memory",
-            agent_id=agent_id,
+            title="Agent memory",
+            body="Agent-specific memory",
+            agent_slug="qa_engineer",
         )
 
-        assert entry.agent_id == agent_id
+        assert entry.agent_slug == "qa_engineer"
 
     def test_memory_entry_with_tags(self):
-        """Test memory entry with tags."""
         from app.models.memory_entry import MemoryEntry
 
         tags = ["important", "urgent", "review"]
-
         entry = MemoryEntry(
             entry_type="active",
-            content="Memory with tags",
+            title="Tagged memory",
+            body="Memory with tags",
             tags=tags,
         )
 
         assert entry.tags == tags
 
     def test_memory_entry_with_source_agents(self):
-        """Test memory entry with source agents."""
         from app.models.memory_entry import MemoryEntry
 
         source_agents = ["agent-1", "agent-2"]
-
         entry = MemoryEntry(
             entry_type="active",
-            content="Aggregated memory",
+            title="Aggregated memory",
+            body="Aggregated memory",
             source_agents=source_agents,
         )
 
         assert entry.source_agents == source_agents
 
     def test_memory_entry_status_values(self):
-        """Test valid entry_type values for memory entry."""
         from app.models.memory_entry import MemoryEntry
 
         valid_types = ["active", "candidate", "global", "archived"]
-
         for entry_type in valid_types:
             entry = MemoryEntry(
                 entry_type=entry_type,
-                content=f"Memory type {entry_type}",
+                title=f"Memory {entry_type}",
+                body=f"Memory type {entry_type}",
             )
             assert entry.entry_type == entry_type
 
     def test_memory_entry_shared(self):
-        """Test shared memory entry (null agent)."""
         from app.models.memory_entry import MemoryEntry
 
         entry = MemoryEntry(
             entry_type="global",
-            content="Shared knowledge for all agents",
+            title="Shared memory",
+            body="Shared knowledge for all agents",
         )
 
-        assert entry.agent_id is None
+        assert entry.agent_slug is None
 
-    def test_memory_entry_promotion(self):
-        """Test memory entry promotion."""
+    def test_memory_entry_embedding_timestamp(self):
         from app.models.memory_entry import MemoryEntry
-        from datetime import datetime
 
-        now = datetime.utcnow()
-
+        now = datetime.now(UTC)
         entry = MemoryEntry(
             entry_type="candidate",
-            content="Pending promotion",
-            promoted_at=now,
+            title="Embedding test",
+            body="Pending embedding",
+            embedding_generated_at=now,
         )
 
-        assert entry.promoted_at == now
+        assert entry.embedding_generated_at == now
 
     def test_memory_entry_timestamps(self):
-        """Test automatic timestamp creation."""
         from app.models.memory_entry import MemoryEntry
 
         entry = MemoryEntry(
             entry_type="active",
-            content="Timestamp test",
+            title="Timestamp test",
+            body="Timestamp body",
         )
 
         assert entry.created_at is not None
@@ -139,122 +111,82 @@ class TestMemoryEntryModel:
 
 
 class TestMemoryEntryWorkflow:
-    """Test memory entry workflow transitions - UNIT TESTS ONLY."""
-
     def test_candidate_to_active(self):
-        """Test memory promotion from candidate to active."""
         from app.models.memory_entry import MemoryEntry
 
-        entry = MemoryEntry(
-            entry_type="candidate",
-            content="Candidate memory",
-        )
-
+        entry = MemoryEntry(entry_type="candidate", title="Candidate", body="Body")
         entry.entry_type = "active"
-
         assert entry.entry_type == "active"
 
     def test_active_to_archived(self):
-        """Test memory archival."""
         from app.models.memory_entry import MemoryEntry
 
-        entry = MemoryEntry(
-            entry_type="active",
-            content="Active memory to archive",
-        )
-
+        entry = MemoryEntry(entry_type="active", title="Active", body="Body")
         entry.entry_type = "archived"
-
         assert entry.entry_type == "archived"
 
 
 class TestMemoryEntryTypes:
-    """Test different memory entry types - UNIT TESTS ONLY."""
-
-    def test_active_memory(self):
-        """Test active memory type."""
+    def test_global_memory_type(self):
         from app.models.memory_entry import MemoryEntry
 
-        entry = MemoryEntry(
-            entry_type="active",
-            content="Currently used memory",
-        )
-
-        assert entry.entry_type == "active"
-
-    def test_global_memory(self):
-        """Test global memory type (shared)."""
-        from app.models.memory_entry import MemoryEntry
-
-        entry = MemoryEntry(
-            entry_type="global",
-            content="Shared across all agents",
-        )
-
+        entry = MemoryEntry(entry_type="global", title="Global", body="Shared")
         assert entry.entry_type == "global"
 
-    def test_archived_memory(self):
-        """Test archived memory type."""
+    def test_archived_memory_type(self):
         from app.models.memory_entry import MemoryEntry
 
-        entry = MemoryEntry(
-            entry_type="archived",
-            content="Historical memory",
-        )
-
+        entry = MemoryEntry(entry_type="archived", title="Archived", body="History")
         assert entry.entry_type == "archived"
 
 
 class TestMemoryEntryEdgeCases:
-    """Test edge cases for MemoryEntry model."""
-
     def test_memory_entry_id_is_uuid(self):
-        """Test that memory entry ID is UUID."""
         from app.models.memory_entry import MemoryEntry
 
         entry = MemoryEntry(
-            entry_type="uuid-memory",
-            content="Memory with UUID",
+            entry_type="active",
+            title="UUID test",
+            body="Memory with UUID",
         )
 
         assert isinstance(entry.id, UUID)
         assert len(str(entry.id)) == 36
 
-    def test_memory_entry_empty_content(self):
-        """Test memory entry with empty content."""
+    def test_memory_entry_empty_body(self):
         from app.models.memory_entry import MemoryEntry
 
         entry = MemoryEntry(
-            entry_type="empty-memory",
-            content="",
+            entry_type="active",
+            title="Empty body",
+            body="",
         )
 
-        assert entry.content == ""
+        assert entry.body == ""
 
     def test_memory_entry_none_values(self):
-        """Test memory entry with None values."""
         from app.models.memory_entry import MemoryEntry
 
         entry = MemoryEntry(
-            entry_type="none-values-memory",
-            agent_id=None,
+            entry_type="active",
+            title="None values",
+            agent_slug=None,
             tags=None,
             source_agents=None,
         )
 
-        assert entry.agent_id is None
+        assert entry.agent_slug is None
         assert entry.tags is None
         assert entry.source_agents is None
 
-    def test_memory_entry_large_content(self):
-        """Test memory entry with large content."""
+    def test_memory_entry_large_body(self):
         from app.models.memory_entry import MemoryEntry
 
-        content = "x" * 100000
-
+        body = "x" * 100000
         entry = MemoryEntry(
-            entry_type="large-content-memory",
-            content=content,
+            entry_type="active",
+            title="Large body",
+            body=body,
         )
 
-        assert len(entry.content) == 100000
+        assert len(entry.body or "") == 100000

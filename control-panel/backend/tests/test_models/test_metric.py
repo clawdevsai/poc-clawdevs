@@ -22,7 +22,7 @@
 Unit tests for Metric model - 100% mocked, no external access.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from uuid import UUID, uuid4
 
 
@@ -33,7 +33,7 @@ class TestMetricModel:
         """Test basic metric creation."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -53,7 +53,7 @@ class TestMetricModel:
         from app.models.metric import Metric
 
         agent_id = uuid4()
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -73,7 +73,7 @@ class TestMetricModel:
         valid_types = ["tokens_used", "tasks_completed", "approvals_issued", "errors"]
 
         for metric_type in valid_types:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             period_end = now + timedelta(hours=1)
 
             metric = Metric(
@@ -88,7 +88,7 @@ class TestMetricModel:
         """Test metric value variations (integers and decimals)."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         # Integer value
@@ -115,7 +115,7 @@ class TestMetricModel:
         from app.models.metric import Metric
         from datetime import timedelta
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -132,7 +132,7 @@ class TestMetricModel:
         """Test automatic timestamp creation."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -153,7 +153,7 @@ class TestMetricScenarios:
         """Test tokens used tracking."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -170,7 +170,7 @@ class TestMetricScenarios:
         """Test tasks completed tracking."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -187,7 +187,7 @@ class TestMetricScenarios:
         """Test approvals issued tracking."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -204,7 +204,7 @@ class TestMetricScenarios:
         """Test errors tracking."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -225,7 +225,7 @@ class TestMetricEdgeCases:
         """Test that metric ID is UUID."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -242,7 +242,7 @@ class TestMetricEdgeCases:
         """Test metric with zero values."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -258,7 +258,7 @@ class TestMetricEdgeCases:
         """Test metric with None values."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(
@@ -275,7 +275,7 @@ class TestMetricEdgeCases:
         """Test metric with large values."""
         from app.models.metric import Metric
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_end = now + timedelta(hours=1)
 
         metric = Metric(

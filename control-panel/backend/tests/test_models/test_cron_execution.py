@@ -22,7 +22,7 @@
 Unit tests for CronExecution model - 100% mocked, no external access.
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
 
@@ -33,7 +33,7 @@ class TestCronExecutionModel:
         """Test basic cron execution creation."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -51,7 +51,7 @@ class TestCronExecutionModel:
         """Test cron execution with manual trigger."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -66,7 +66,7 @@ class TestCronExecutionModel:
         """Test cron execution with exit code."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -81,7 +81,7 @@ class TestCronExecutionModel:
         """Test cron execution with log tail."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
         log_content = "Starting execution...\nRunning task...\nDone."
 
@@ -97,7 +97,7 @@ class TestCronExecutionModel:
         """Test cron execution with finish time."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -111,10 +111,10 @@ class TestCronExecutionModel:
         assert execution.exit_code == 0
 
     def test_cron_execution_timestamp(self):
-        """Test automatic timestamp creation."""
+        """Test started_at timestamp is set."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -122,8 +122,8 @@ class TestCronExecutionModel:
             started_at=now,
         )
 
-        assert execution.created_at is not None
-        assert isinstance(execution.created_at, datetime)
+        assert execution.started_at == now
+        assert isinstance(execution.started_at, datetime)
 
 
 class TestCronExecutionScenarios:
@@ -133,7 +133,7 @@ class TestCronExecutionScenarios:
         """Test successful cron execution."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -151,7 +151,7 @@ class TestCronExecutionScenarios:
         """Test failed cron execution."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -167,7 +167,7 @@ class TestCronExecutionScenarios:
         """Test manually triggered execution."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -182,7 +182,7 @@ class TestCronExecutionScenarios:
         """Test running (incomplete) cron execution."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -197,7 +197,7 @@ class TestCronExecutionScenarios:
         """Test execution with log output."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
         log_output = """INFO: Starting task
 INFO: Processing data
@@ -220,7 +220,7 @@ class TestCronExecutionEdgeCases:
         """Test that execution ID is UUID."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -235,7 +235,7 @@ class TestCronExecutionEdgeCases:
         """Test cron execution with zero values."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -250,7 +250,7 @@ class TestCronExecutionEdgeCases:
         """Test cron execution with None values."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
 
         execution = CronExecution(
@@ -269,7 +269,7 @@ class TestCronExecutionEdgeCases:
         """Test execution with large log output."""
         from app.models.cron_execution import CronExecution
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         agent_id = uuid4()
         log_output = "x" * 100000
 

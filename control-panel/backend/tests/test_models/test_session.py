@@ -22,7 +22,7 @@
 Unit tests for Session model - 100% mocked, no external access.
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID
 
 
@@ -50,7 +50,7 @@ class TestSessionModel:
         """Test session with all fields populated."""
         from app.models.session import Session
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         session = Session(
             openclaw_session_id="complete-sess",
@@ -100,7 +100,7 @@ class TestSessionModel:
         from app.models.session import Session
         from datetime import timedelta
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         session = Session(
             openclaw_session_id="ended-sess",
