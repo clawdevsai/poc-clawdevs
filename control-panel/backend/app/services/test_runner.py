@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 class TestResult:
     """Container for test execution results."""
+
     __test__ = False
 
     def __init__(self):
@@ -67,6 +68,7 @@ class TestResult:
 
 class TestRunner:
     """Run automated tests and check quality gates."""
+
     __test__ = False
 
     def __init__(self, db_session: Session, repo_path: str = "."):
