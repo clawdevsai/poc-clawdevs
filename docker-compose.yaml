@@ -85,7 +85,7 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
+      test: ["CMD", "sh", "-c", "curl -sf http://localhost:11434/api/tags || wget -qO- http://localhost:11434/api/tags || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -115,11 +115,13 @@ services:
     image: clawdevsai/searxng-proxy:latest
     container_name: clawdevs-searxng-proxy
     networks: [clawdevs]
+    ports:
+      - "18080:18080"
     depends_on:
       searxng:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:18080/healthz"]
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:18080/healthz || curl -sf http://localhost:18080/healthz || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -148,6 +150,7 @@ services:
         alembic upgrade head
         exec uvicorn app.main:app --host 0.0.0.0 --port 8000
     environment:
+      PYTHONPATH: /app
       PANEL_DB_PASSWORD: ${PANEL_DB_PASSWORD}
       PANEL_REDIS_PASSWORD: ${PANEL_REDIS_PASSWORD}
       PANEL_DATABASE_URL: postgresql+asyncpg://panel:${PANEL_DB_PASSWORD}@postgres:5432/clawdevs_panel
@@ -160,13 +163,12 @@ services:
       GIT_ORG: ${GIT_ORG}
     volumes:
       - openclaw-data:/data/openclaw
-    # healthcheck disabled temporarily - image needs curl installed
-    # healthcheck:
-    #   test: ["CMD", "curl", "-sf", "http://localhost:8000/healthz"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 10
-    #   start_period: 20s
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     restart: unless-stopped
 
   panel-worker:
@@ -177,6 +179,7 @@ services:
       - panel-backend
     command: ["python", "-m", "scripts.worker"]
     environment:
+      PYTHONPATH: /app
       PANEL_DB_PASSWORD: ${PANEL_DB_PASSWORD}
       PANEL_REDIS_PASSWORD: ${PANEL_REDIS_PASSWORD}
       PANEL_DATABASE_URL: postgresql+asyncpg://panel:${PANEL_DB_PASSWORD}@postgres:5432/clawdevs_panel
