@@ -26,7 +26,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.auth import decode_token
 from app.core.database import get_session
-from app.models import User
+from app.models import User, AgentPermission
 
 bearer_scheme = HTTPBearer()
 
@@ -63,6 +63,38 @@ async def require_admin(
             detail="Admin access required",
         )
     return current_user
+
+
+async def require_agent_access(
+    agent_slug: str,
+    current_user: User,
+    session: AsyncSession,
+) -> None:
+    """Check if user has access to the specified agent.
+
+    Admins always have access. If no permissions are configured for an agent, everyone has access.
+    If permissions are configured, only users with explicit permission can access.
+    """
+    if current_user.role == "admin":
+        return
+
+    # Check if there are any permissions defined for this agent
+    result = await session.exec(
+        select(AgentPermission).where(AgentPermission.agent_slug == agent_slug)
+    )
+    permissions = result.all()
+
+    # If no permissions defined, everyone can access
+    if not permissions:
+        return
+
+    # If permissions exist, check if user has access
+    user_has_access = any(p.user_id == current_user.id for p in permissions)
+    if not user_has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied to agent '{agent_slug}'",
+        )
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

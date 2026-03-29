@@ -47,6 +47,7 @@ from app.api import health as health_api
 from app.api import memory_rag as memory_rag_api
 from app.api import governance as governance_api
 from app.api import chat as chat_api
+from app.api import agent_permissions as agent_permissions_api
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO)
@@ -127,6 +128,7 @@ app.include_router(
 app.include_router(health_api.router, tags=["health"])
 app.include_router(governance_api.router, tags=["governance"])
 app.include_router(chat_api.router, tags=["chat"])
+app.include_router(agent_permissions_api.router, tags=["agent-permissions"])
 
 # WebSocket
 app.include_router(ws_api.router, tags=["websocket"])

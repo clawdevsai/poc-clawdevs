@@ -18,30 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .user import User
-from .agent import Agent
-from .session import Session
-from .approval import Approval
-from .task import Task
-from .sdd_artifact import SddArtifact
-from .memory_entry import MemoryEntry
-from .cron_execution import CronExecution
-from .activity_event import ActivityEvent
-from .metric import Metric
-from .repository import Repository
-from .agent_permission import AgentPermission
+from sqlmodel import SQLModel, Field
+from typing import Optional
+from datetime import datetime, UTC
+from uuid import UUID, uuid4
 
-__all__ = [
-    "User",
-    "Agent",
-    "Session",
-    "Approval",
-    "Task",
-    "SddArtifact",
-    "MemoryEntry",
-    "CronExecution",
-    "ActivityEvent",
-    "Metric",
-    "Repository",
-    "AgentPermission",
-]
+
+class AgentPermission(SQLModel, table=True):
+    """Maps users to agents they can access. If no permissions exist for an agent, all users can access."""
+    __tablename__ = "agent_permissions"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    agent_slug: str = Field(index=True)  # e.g., "clawdevsai/searxng-runtime"
+    user_id: UUID = Field(index=True)  # User who has access
+
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )

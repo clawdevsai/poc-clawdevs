@@ -248,6 +248,9 @@ function ChatPageContent() {
     queryFn: () =>
       fetchHistory(selectedAgent as string, selectedSessionKey ?? undefined),
     enabled: !!selectedAgent,
+    // Prevent stale data after page reload
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
   });
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -592,10 +595,10 @@ function ChatPageContent() {
               </div>
               {selectedAgentData?.status ? (
                 <Badge
-                  variant={selectedAgentData.status === "online" ? "success" : "secondary"}
+                  variant={["online", "working"].includes(selectedAgentData.status) ? "success" : "secondary"}
                   className="ml-1 hidden sm:inline-flex"
                 >
-                  {selectedAgentData.status}
+                  {selectedAgentData.status === "working" ? "online" : selectedAgentData.status}
                 </Badge>
               ) : null}
             </div>

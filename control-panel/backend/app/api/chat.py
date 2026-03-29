@@ -34,7 +34,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, require_agent_access
 from app.models import Agent, MemoryEntry, Session as SessionModel
 from app.services.openclaw_client import openclaw_client
 from app.services.embedding_service import EmbeddingService
@@ -399,10 +399,11 @@ async def _wait_for_agent_online(
 @router.get("/history/{agent_slug}", response_model=ChatHistoryResponse)
 async def chat_history(
     agent_slug: str,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_session)],
     session_key: Annotated[Optional[str], Query(max_length=512)] = None,
 ):
+    await require_agent_access(agent_slug, current_user, db)
     await _ensure_agent(db, agent_slug)
 
     target_session_id: Optional[str] = None
@@ -460,10 +461,11 @@ async def _stream_sse(
 @router.post("/stream")
 async def chat_stream(
     body: ChatRequest,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_session)],
 ):
     resolved_agent_slug, resolved_session_key = _resolve_agent_and_session_key(body)
+    await require_agent_access(resolved_agent_slug, current_user, db)
     agent = await _ensure_agent(db, resolved_agent_slug)
 
     # Get current status
@@ -489,12 +491,13 @@ async def chat_stream(
 @router.post("/rag/turn", response_model=ChatRagTurnResponse)
 async def persist_chat_turn_rag(
     body: ChatRagTurnRequest,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_session)],
 ):
     resolved_agent_slug, resolved_session_key = _resolve_agent_and_session_key_fields(
         body.agent_slug, body.session_key
     )
+    await require_agent_access(resolved_agent_slug, current_user, db)
     await _ensure_agent(db, resolved_agent_slug)
 
     normalized_turn_id = _normalize_turn_id(body.turn_id)
