@@ -380,6 +380,10 @@ up-all: preflight build network-create volumes-create containers-clean
 	docker run -d --name clawdevs-panel-frontend --network $(STACK_NETWORK) --network-alias panel-frontend \
 		-p 3000:3000 \
 		-e BACKEND_URL=http://panel-backend:8000 \
+		-e OPENCLAW_GATEWAY_URL="$${OPENCLAW_GATEWAY_URL:-http://openclaw:18789}" \
+		-e PANEL_OPENCLAW_GATEWAY_URL="$${PANEL_OPENCLAW_GATEWAY_URL:-http://openclaw:18789}" \
+		-e OPENCLAW_GATEWAY_TOKEN="$$OPENCLAW_GATEWAY_TOKEN" \
+		-e PANEL_OPENCLAW_GATEWAY_TOKEN="$${PANEL_OPENCLAW_GATEWAY_TOKEN:-$$OPENCLAW_GATEWAY_TOKEN}" \
 		-e NODE_ENV=production \
 		--restart unless-stopped \
 		$(PANEL_FRONTEND_IMAGE) >$(NULL_DEV); \

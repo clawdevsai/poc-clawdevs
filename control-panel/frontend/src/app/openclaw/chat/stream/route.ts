@@ -103,7 +103,11 @@ function resolveGatewayCandidates(): string[] {
   const configured = process.env.OPENCLAW_GATEWAY_URL?.trim();
   const panelConfigured = process.env.PANEL_OPENCLAW_GATEWAY_URL?.trim();
   const defaults = [
+    "http://openclaw:18789",
+    "http://clawdevs-openclaw:18789",
+    "http://host.docker.internal:18789",
     "http://localhost:18789",
+    "http://127.0.0.1:18789",
     "http://clawdevs-ai:18789",
   ];
   const all = [configured, panelConfigured, ...defaults]
@@ -112,12 +116,26 @@ function resolveGatewayCandidates(): string[] {
   return Array.from(new Set(all));
 }
 
+type GatewayStreamResult =
+  | {
+      kind: "success";
+      response: Response;
+    }
+  | {
+      kind: "upstream_error";
+      status: number;
+      detail: string;
+    }
+  | {
+      kind: "network_error";
+    };
+
 async function streamFromGateway(
   gatewayUrl: string,
   gatewayToken: string,
   sessionKey: string,
   payload: unknown
-): Promise<Response | null> {
+): Promise<GatewayStreamResult> {
   try {
     const upstreamResponse = await fetch(`${gatewayUrl}/v1/chat/completions`, {
       method: "POST",
@@ -129,21 +147,44 @@ async function streamFromGateway(
       body: JSON.stringify(payload),
     });
 
-    if (!upstreamResponse.ok || !upstreamResponse.body) {
-      return null;
+    if (!upstreamResponse.ok) {
+      const rawBody = await upstreamResponse.text();
+      let detail = rawBody.trim() || `Gateway returned HTTP ${upstreamResponse.status}`;
+      try {
+        const parsed = JSON.parse(rawBody) as { detail?: string; message?: string };
+        detail = (parsed.detail ?? parsed.message ?? detail).trim();
+      } catch {
+        // Keep plain text fallback.
+      }
+      return {
+        kind: "upstream_error",
+        status: upstreamResponse.status,
+        detail,
+      };
     }
 
-    return new Response(upstreamResponse.body, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
-      },
-    });
+    if (!upstreamResponse.body) {
+      return {
+        kind: "upstream_error",
+        status: 502,
+        detail: "OpenClaw gateway returned an empty stream body",
+      };
+    }
+
+    return {
+      kind: "success",
+      response: new Response(upstreamResponse.body, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+          "X-Accel-Buffering": "no",
+        },
+      }),
+    };
   } catch {
-    return null;
+    return { kind: "network_error" };
   }
 }
 
@@ -190,16 +231,32 @@ export async function POST(request: Request) {
     };
 
     const gatewayCandidates = resolveGatewayCandidates();
+    let upstreamError: { status: number; detail: string } | null = null;
     for (const candidate of gatewayCandidates) {
-      const streamResponse = await streamFromGateway(
+      const streamResult = await streamFromGateway(
         candidate,
         gatewayToken,
         sessionKey,
         upstreamPayload
       );
-      if (streamResponse) {
-        return streamResponse;
+
+      if (streamResult.kind === "success") {
+        return streamResult.response;
       }
+
+      if (streamResult.kind === "upstream_error" && !upstreamError) {
+        upstreamError = {
+          status: streamResult.status,
+          detail: streamResult.detail,
+        };
+      }
+    }
+
+    if (upstreamError) {
+      return NextResponse.json(
+        { detail: upstreamError.detail },
+        { status: upstreamError.status }
+      );
     }
 
     return NextResponse.json(
