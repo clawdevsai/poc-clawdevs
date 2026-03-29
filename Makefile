@@ -332,9 +332,15 @@ reset:
 	@echo "[reset] volumes removidos."
 
 destroy:
-	@echo "AVISO: isso vai remover containers, volumes e imagens locais da stack."
+	@echo "AVISO: isso vai remover containers, volumes, network, build cache e imagens locais da stack."
 	@read -p "Confirma? [y/N] " confirm && [ "$$confirm" = "y" ]
-	@$(MAKE) reset
+	@$(MAKE) down
+	@set -eu; \
+	for volume in $(STACK_VOLUMES); do \
+		docker volume rm "$$volume" >$(NULL_DEV) 2>&1 || true; \
+	done
+	@docker network rm $(STACK_NETWORK) >$(NULL_DEV) 2>&1 || true
+	@docker builder prune -af >$(NULL_DEV) 2>&1 || true
 	@set -eu; \
 	for image in \
 		$(TOKEN_INIT_IMAGE) \
