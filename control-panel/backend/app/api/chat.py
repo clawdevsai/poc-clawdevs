@@ -20,9 +20,12 @@
 
 from typing import Annotated, Any, AsyncGenerator, Optional
 import asyncio
+import json
 import httpx
+import re
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sse_starlette.sse import EventSourceResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -32,9 +35,13 @@ from app.api.deps import CurrentUser
 from app.models import Agent, Session as SessionModel
 from app.services.openclaw_client import openclaw_client
 from app.services.agent_sync import _status_from_heartbeat
+from app.core.config import get_settings
 from app.core.database import get_session
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+settings = get_settings()
+
+SESSION_KEY_RE = re.compile(r"^agent:(?P<slug>[a-zA-Z0-9_-]+):(?P<rest>.+)$")
 
 
 class ToolCall(BaseModel):
@@ -57,8 +64,83 @@ class ChatHistoryResponse(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    agent_slug: str = Field(..., max_length=64)
+    agent_slug: Optional[str] = Field(default=None, max_length=64)
+    session_key: Optional[str] = Field(default=None, max_length=512)
     message: str = Field(..., min_length=1, max_length=4000)
+
+
+def _parse_agent_session_key(session_key: str) -> tuple[str, str]:
+    value = (session_key or "").strip()
+    match = SESSION_KEY_RE.match(value)
+    if not match:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="session_key must match 'agent:<slug>:<rest>'",
+        )
+    slug = match.group("slug").strip().lower()
+    if not slug:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="session_key must include an agent slug",
+        )
+    return slug, value
+
+
+def _resolve_agent_and_session_key(body: ChatRequest) -> tuple[str, str]:
+    if body.session_key:
+        session_slug, normalized_session_key = _parse_agent_session_key(body.session_key)
+        if body.agent_slug and body.agent_slug.strip().lower() != session_slug:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="agent_slug does not match session_key agent",
+            )
+        return session_slug, normalized_session_key
+
+    if not body.agent_slug:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="agent_slug is required when session_key is not provided",
+        )
+
+    agent_slug = body.agent_slug.strip()
+    return agent_slug, f"agent:{agent_slug}:main"
+
+
+async def _resolve_session_id_for_key(
+    agent_slug: str, session_key: str
+) -> Optional[str]:
+    sessions_index_path = (
+        Path(settings.openclaw_data_path)
+        / "agents"
+        / agent_slug
+        / "sessions"
+        / "sessions.json"
+    )
+
+    try:
+        if sessions_index_path.exists():
+            with open(sessions_index_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+            if isinstance(payload, dict):
+                session_obj = payload.get(session_key)
+                if isinstance(session_obj, dict):
+                    session_id = session_obj.get("sessionId")
+                    if isinstance(session_id, str) and session_id.strip():
+                        return session_id.strip()
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    sessions = await openclaw_client.get_sessions(limit=1000)
+    for item in sessions:
+        if not isinstance(item, dict):
+            continue
+        if item.get("key") != session_key:
+            continue
+        session_id = item.get("sessionId") or item.get("session_id")
+        if isinstance(session_id, str) and session_id.strip():
+            return session_id.strip()
+
+    return None
 
 
 def _parse_message(msg: dict) -> Optional[Message]:
@@ -268,13 +350,30 @@ async def chat_history(
     agent_slug: str,
     _: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_session)],
+    session_key: Annotated[Optional[str], Query(max_length=512)] = None,
 ):
     await _ensure_agent(db, agent_slug)
-    session_row = await _latest_session_for_agent(db, agent_slug)
-    if not session_row or not session_row.openclaw_session_id:
-        return ChatHistoryResponse(agent_slug=agent_slug, messages=[])
 
-    oc_session = await openclaw_client.get_session(session_row.openclaw_session_id)
+    target_session_id: Optional[str] = None
+    if session_key:
+        session_slug, normalized_session_key = _parse_agent_session_key(session_key)
+        if session_slug != agent_slug.strip().lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="agent_slug does not match session_key agent",
+            )
+        target_session_id = await _resolve_session_id_for_key(
+            agent_slug, normalized_session_key
+        )
+        if not target_session_id:
+            return ChatHistoryResponse(agent_slug=agent_slug, messages=[])
+    else:
+        session_row = await _latest_session_for_agent(db, agent_slug)
+        if not session_row or not session_row.openclaw_session_id:
+            return ChatHistoryResponse(agent_slug=agent_slug, messages=[])
+        target_session_id = session_row.openclaw_session_id
+
+    oc_session = await openclaw_client.get_session(target_session_id)
     messages_raw = []
     if oc_session and isinstance(oc_session, dict):
         messages_raw = (
@@ -293,9 +392,11 @@ async def chat_history(
     return ChatHistoryResponse(agent_slug=agent_slug, messages=parsed)
 
 
-async def _stream_sse(agent_slug: str, prompt: str) -> AsyncGenerator[str, None]:
+async def _stream_sse(
+    agent_slug: str, prompt: str, session_key: str
+) -> AsyncGenerator[str, None]:
     async for event in openclaw_client.stream_chat(
-        agent_slug=agent_slug, message=prompt
+        agent_slug=agent_slug, message=prompt, session_key=session_key
     ):
         if event.get("event") == "delta":
             yield f"data: {event['data']}\n\n"
@@ -311,7 +412,8 @@ async def chat_stream(
     _: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_session)],
 ):
-    agent = await _ensure_agent(db, body.agent_slug)
+    resolved_agent_slug, resolved_session_key = _resolve_agent_and_session_key(body)
+    agent = await _ensure_agent(db, resolved_agent_slug)
 
     # Get current status
     current_status = _status_from_heartbeat(agent.last_heartbeat_at)
@@ -319,7 +421,7 @@ async def chat_stream(
     # If agent is offline or idle, wait for it to come online
     if current_status in ["offline", "idle"]:
         agent_came_online = await _wait_for_agent_online(
-            db, body.agent_slug, timeout_seconds=3.0
+            db, resolved_agent_slug, timeout_seconds=3.0
         )
 
         if not agent_came_online:
@@ -328,4 +430,6 @@ async def chat_stream(
                 detail="Agente offline - aguarde e tente novamente",
             )
 
-    return EventSourceResponse(_stream_sse(body.agent_slug, body.message))
+    return EventSourceResponse(
+        _stream_sse(resolved_agent_slug, body.message, resolved_session_key)
+    )

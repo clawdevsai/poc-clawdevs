@@ -108,13 +108,13 @@ class OpenClawClient:
             return None
 
     async def stream_chat(
-        self, agent_slug: str, message: str
+        self, agent_slug: str, message: str, session_key: str | None = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Stream chat completions from the gateway.
         Yields dict events: {"event": "delta"|"done"|"error", "data": str}
         """
-        session_key = f"agent:{agent_slug}:main"
+        resolved_session_key = (session_key or "").strip() or f"agent:{agent_slug}:main"
         payload = {
             "model": f"openclaw/{agent_slug}",
             "messages": [{"role": "user", "content": message}],
@@ -123,7 +123,7 @@ class OpenClawClient:
         headers = {
             **self.headers,
             "Content-Type": "application/json",
-            "x-openclaw-session-key": session_key,
+            "x-openclaw-session-key": resolved_session_key,
         }
         try:
             async with httpx.AsyncClient(timeout=None) as client:
@@ -153,9 +153,11 @@ class OpenClawClient:
         except Exception as exc:  # noqa: BLE001
             yield {"event": "error", "data": str(exc)}
 
-    async def run_agent_turn(self, agent_slug: str, message: str) -> str:
+    async def run_agent_turn(
+        self, agent_slug: str, message: str, session_key: str | None = None
+    ) -> str:
         """Run a non-streaming turn and return plain text output."""
-        session_key = f"agent:{agent_slug}:main"
+        resolved_session_key = (session_key or "").strip() or f"agent:{agent_slug}:main"
         payload = {
             "model": f"openclaw/{agent_slug}",
             "messages": [{"role": "user", "content": message}],
@@ -164,7 +166,7 @@ class OpenClawClient:
         headers = {
             **self.headers,
             "Content-Type": "application/json",
-            "x-openclaw-session-key": session_key,
+            "x-openclaw-session-key": resolved_session_key,
         }
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(

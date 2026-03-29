@@ -51,8 +51,10 @@ export OPENCLAW_SESSION_ID="${OPENCLAW_SESSION_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$(
 export DIRECTORS_NAME="${DIRECTORS_NAME:-Director}"
 # Idioma padrao dos agentes (sobrescrito via LANGUAGE no .env)
 export LANGUAGE="${LANGUAGE:-pt-BR}"
-# Alinhar GH CLI caso GH_TOKEN venha em outro nome
-export GH_TOKEN="${GH_TOKEN:-${GIT_TOKEN:-}}"
+# Alinhar aliases de token para evitar divergencia entre ferramentas
+export GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-${GIT_TOKEN:-}}}"
+export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-${GIT_TOKEN:-}}}"
+export GIT_TOKEN="${GIT_TOKEN:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}"
 mkdir -p "${OPENCLAW_STATE_DIR}/contexts/repos"
 resolve_repo_id_safe() {
   repo_ref="$1"

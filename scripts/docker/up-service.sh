@@ -217,6 +217,8 @@ case "$SERVICE" in
       -e PANEL_ADMIN_USERNAME="${PANEL_ADMIN_USERNAME}" \
       -e PANEL_ADMIN_PASSWORD="${PANEL_ADMIN_PASSWORD}" \
       -e GIT_TOKEN="${GIT_TOKEN}" \
+      -e GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-${GIT_TOKEN}}}" \
+      -e GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-${GIT_TOKEN}}}" \
       -e GIT_ORG="${GIT_ORG}" \
       --health-cmd="curl -sf http://localhost:8000/healthz" \
       --health-interval=10s --health-timeout=5s --health-retries=10 --health-start-period=20s \
@@ -236,6 +238,8 @@ case "$SERVICE" in
       -e PANEL_DATABASE_URL="postgresql+asyncpg://panel:${PANEL_DB_PASSWORD}@postgres:5432/clawdevs_panel" \
       -e PANEL_REDIS_URL="redis://:${PANEL_REDIS_PASSWORD}@redis:6379/0" \
       -e GIT_TOKEN="${GIT_TOKEN}" \
+      -e GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-${GIT_TOKEN}}}" \
+      -e GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-${GIT_TOKEN}}}" \
       -e GIT_ORG="${GIT_ORG}" \
       --restart unless-stopped \
       "$PANEL_WORKER_IMAGE" >/dev/null

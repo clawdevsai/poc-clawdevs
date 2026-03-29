@@ -22,8 +22,16 @@
 
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { Send, Loader2, RefreshCw } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -64,16 +72,40 @@ interface HistoryResponse {
   messages: ChatMessage[];
 }
 
+const SESSION_KEY_RE = /^agent:([a-z0-9_-]+):(.+)$/i;
+
+type ParsedSessionKey = {
+  agentSlug: string;
+  sessionKey: string;
+};
+
 const fetchAgents = () =>
   customInstance<AgentsResponse>({ url: "/agents", method: "GET" });
 
-const fetchHistory = (slug: string) =>
+const parseSessionKey = (rawValue: string | null): ParsedSessionKey | null => {
+  if (!rawValue) return null;
+  const value = rawValue.trim();
+  const match = SESSION_KEY_RE.exec(value);
+  if (!match) return null;
+  return {
+    agentSlug: match[1].toLowerCase(),
+    sessionKey: value,
+  };
+};
+
+const buildMainSessionKey = (agentSlug: string) => `agent:${agentSlug}:main`;
+
+const fetchHistory = (slug: string, sessionKey?: string) =>
   customInstance<HistoryResponse>({
     url: `/chat/history/${slug}`,
     method: "GET",
+    params: sessionKey ? { session_key: sessionKey } : undefined,
   });
 
 export default function ChatPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { data: agentsData, isLoading: agentsLoading } = useQuery({
     queryKey: ["agents"],
     queryFn: fetchAgents,
@@ -81,20 +113,97 @@ export default function ChatPage() {
 
   const agents = agentsData?.items ?? [];
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [selectedSessionKey, setSelectedSessionKey] = useState<string | null>(null);
+  const [sessionParamError, setSessionParamError] = useState<string | null>(null);
+
+  const rawSessionParam = searchParams.get("session");
+  const parsedSessionParam = useMemo(
+    () => parseSessionKey(rawSessionParam),
+    [rawSessionParam]
+  );
+
+  const syncSessionParam = useCallback(
+    (nextSessionKey: string, replace = true) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (params.get("session") === nextSessionKey) return;
+      params.set("session", nextSessionKey);
+      const nextUrl = `${pathname}?${params.toString()}`;
+      if (replace) {
+        router.replace(nextUrl);
+      } else {
+        router.push(nextUrl);
+      }
+    },
+    [pathname, router, searchParams]
+  );
 
   useEffect(() => {
-    if (!selectedAgent && agents.length > 0) {
-      setSelectedAgent(agents[0].slug);
+    if (rawSessionParam && !parsedSessionParam) {
+      setSessionParamError(
+        "Session inválida. Use o formato agent:<slug>:<rest>."
+      );
+      return;
     }
-  }, [agents, selectedAgent]);
+    setSessionParamError(null);
+  }, [rawSessionParam, parsedSessionParam]);
+
+  useEffect(() => {
+    if (parsedSessionParam) {
+      const knownAgent =
+        agents.length === 0 ||
+        agents.some((agent) => agent.slug === parsedSessionParam.agentSlug);
+
+      if (knownAgent) {
+        setSelectedAgent(parsedSessionParam.agentSlug);
+        setSelectedSessionKey(parsedSessionParam.sessionKey);
+        return;
+      }
+
+      if (agents.length > 0) {
+        const fallbackAgent = agents[0].slug;
+        const fallbackSessionKey = buildMainSessionKey(fallbackAgent);
+        setSelectedAgent(fallbackAgent);
+        setSelectedSessionKey(fallbackSessionKey);
+        setSessionParamError(
+          "A sessão informada não corresponde a um agente disponível."
+        );
+        syncSessionParam(fallbackSessionKey, true);
+      }
+      return;
+    }
+
+    if (selectedAgent) {
+      const fallbackSessionKey = buildMainSessionKey(selectedAgent);
+      if (selectedSessionKey !== fallbackSessionKey) {
+        setSelectedSessionKey(fallbackSessionKey);
+      }
+      syncSessionParam(fallbackSessionKey, true);
+      return;
+    }
+
+    if (agents.length > 0) {
+      const fallbackAgent = agents[0].slug;
+      const fallbackSessionKey = buildMainSessionKey(fallbackAgent);
+      setSelectedAgent(fallbackAgent);
+      setSelectedSessionKey(fallbackSessionKey);
+      syncSessionParam(fallbackSessionKey, true);
+    }
+  }, [
+    agents,
+    parsedSessionParam,
+    selectedAgent,
+    selectedSessionKey,
+    syncSessionParam,
+  ]);
 
   const {
     data: historyData,
     isFetching: historyLoading,
     refetch: refetchHistory,
   } = useQuery({
-    queryKey: ["chat-history", selectedAgent],
-    queryFn: () => fetchHistory(selectedAgent as string),
+    queryKey: ["chat-history", selectedAgent, selectedSessionKey],
+    queryFn: () =>
+      fetchHistory(selectedAgent as string, selectedSessionKey ?? undefined),
     enabled: !!selectedAgent,
   });
 
@@ -130,6 +239,17 @@ export default function ChatPage() {
   const selectedAgentLabel = selectedAgentName
     ? `${selectedAgentRole} · ${selectedAgentName}`
     : "";
+  const activeSessionKey =
+    selectedSessionKey ??
+    (selectedAgent ? buildMainSessionKey(selectedAgent) : null);
+
+  function handleAgentChange(nextAgent: string) {
+    const nextSessionKey = buildMainSessionKey(nextAgent);
+    setSelectedAgent(nextAgent);
+    setSelectedSessionKey(nextSessionKey);
+    setSessionParamError(null);
+    syncSessionParam(nextSessionKey, false);
+  }
 
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -149,6 +269,7 @@ export default function ChatPage() {
 
   async function sendMessage() {
     if (!selectedAgent || !input.trim()) return;
+    const sessionKeyForRequest = activeSessionKey ?? buildMainSessionKey(selectedAgent);
     setSending(true);
     setError(null);
 
@@ -170,7 +291,11 @@ export default function ChatPage() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ agent_slug: selectedAgent, message: userInput }),
+        body: JSON.stringify({
+          agent_slug: selectedAgent,
+          session_key: sessionKeyForRequest,
+          message: userInput,
+        }),
       });
 
       if (!res.ok || !res.body) {
@@ -268,7 +393,7 @@ export default function ChatPage() {
               </label>
               <select
                 value={selectedAgent ?? ""}
-                onChange={(e) => setSelectedAgent(e.target.value)}
+                onChange={(e) => handleAgentChange(e.target.value)}
                 className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))]"
               >
                 {agents.map((a) => (
@@ -345,6 +470,9 @@ export default function ChatPage() {
 
           <div className="border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/75 p-3 sm:p-4">
             <div className="mx-auto w-full max-w-4xl space-y-3">
+              {sessionParamError && (
+                <p className="text-sm text-[hsl(var(--destructive))]">{sessionParamError}</p>
+              )}
               {error && <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>}
               <div className="flex items-end gap-3">
                 <textarea
