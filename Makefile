@@ -200,7 +200,7 @@ up-all: preflight build network-create volumes-create containers-clean
 	load_env_file() { \
 		local env_file="$$1"; \
 		while IFS= read -r raw_line || [ -n "$$raw_line" ]; do \
-			line="$${raw_line%$$'\r'}"; \
+			line="$$(printf '%s\n' "$$raw_line" | tr -d '\r')"; \
 			case "$$line" in \
 				''|\#*) continue ;; \
 			esac; \
