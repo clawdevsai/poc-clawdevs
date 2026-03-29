@@ -65,6 +65,7 @@ load_env_file "$ENV_FILE"
 TELEGRAM_CHAT_ID_EFFECTIVE="${TELEGRAM_CHAT_ID_CEO:-${TELEGRAM_CHAT_ID:-}}"
 
 echo "[up] iniciando clawdevs-openclaw"
+docker rm -f clawdevs-openclaw >/dev/null 2>&1 || true
 "${DOCKER_BIN[@]}" run -d --name clawdevs-openclaw --network "$STACK_NETWORK" --network-alias openclaw \
   -p 18789:18789 \
   --env-file "$ENV_FILE" \

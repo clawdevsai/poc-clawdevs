@@ -30,6 +30,15 @@ if [ -z "${_allowed_origins_json}" ]; then
     --arg o3 "http://openclaw:18789" \
     '[$o1,$o2,$o3] | unique')"
 fi
+_control_ui_disable_device_auth_raw="${OPENCLAW_CONTROL_UI_DISABLE_DEVICE_AUTH:-false}"
+case "$(printf '%s' "${_control_ui_disable_device_auth_raw}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    _control_ui_disable_device_auth=true
+    ;;
+  *)
+    _control_ui_disable_device_auth=false
+    ;;
+esac
 
 is_valid_telegram_bot_token() {
   case "${1:-}" in
@@ -684,11 +693,11 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
-# Hardening minimo: manter autenticacao de dispositivo habilitada no Control UI.
+# Hardening minimo do Control UI (device auth configuravel por env).
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_openclaw_json="$(mktemp)"
-  if jq --argjson allowedOrigins "${_allowed_origins_json}" '
-      .gateway.controlUi.dangerouslyDisableDeviceAuth = false
+  if jq --argjson allowedOrigins "${_allowed_origins_json}" --argjson disableDeviceAuth "${_control_ui_disable_device_auth}" '
+      .gateway.controlUi.dangerouslyDisableDeviceAuth = $disableDeviceAuth
       | .gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback = false
       | .gateway.controlUi.allowedOrigins = $allowedOrigins
       | .gateway.auth.rateLimit = {
@@ -705,13 +714,41 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
     echo "[bootstrap] falha ao aplicar hardening de device auth no openclaw.json"
   fi
 fi
+echo "[bootstrap] controlUi.dangerouslyDisableDeviceAuth=${_control_ui_disable_device_auth}"
 
 # Telegram opcional: remove canal/bindings se token/chat id estiverem invalidos.
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_openclaw_json="$(mktemp)"
   if [ "${_telegram_enabled}" = "true" ]; then
-    if jq '
-        .channels.telegram.enabled = true
+    if jq --arg botToken "${TELEGRAM_BOT_TOKEN_CEO}" --arg chatId "${TELEGRAM_CHAT_ID}" '
+        .channels = (.channels // {})
+        | .channels.telegram = ((.channels.telegram // {}) + {
+            "enabled": true,
+            "dmPolicy": "allowlist",
+            "allowFrom": [$chatId],
+            "groupPolicy": "allowlist",
+            "groupAllowFrom": [$chatId],
+            "streaming": "partial"
+          })
+        | .channels.telegram.accounts = ((.channels.telegram.accounts // {}) + {
+            "default": {
+              "botToken": $botToken,
+              "dmPolicy": "allowlist",
+              "allowFrom": [$chatId],
+              "groupPolicy": "allowlist",
+              "groupAllowFrom": [$chatId],
+              "streaming": "partial"
+            }
+          })
+        | .bindings = ((.bindings // []) | map(select((.match.channel // "") != "telegram")) + [
+            {
+              "agentId": "ceo",
+              "match": {
+                "channel": "telegram",
+                "accountId": "default"
+              }
+            }
+          ])
       ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
       mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
       mkdir -p ~/.openclaw
@@ -1383,5 +1420,3 @@ repair_main_session "security_engineer" "${OPENCLAW_STATE_DIR}/workspace-securit
 repair_main_session "ux_designer"      "${OPENCLAW_STATE_DIR}/workspace-ux_designer"      "UX_Designer pronto. Pode me acionar para wireframes, fluxos de usuario e design tokens."
 repair_main_session "dba_data_engineer" "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer" "DBA_DataEngineer pronto. Pode me acionar para schemas, migrations, queries e compliance LGPD."
 repair_main_session "memory_curator"   "${OPENCLAW_STATE_DIR}/workspace-memory_curator"   "Memory_Curator pronto. Executo curadoria diaria de padroes cross-agent e promocao para SHARED_MEMORY."
-
-
