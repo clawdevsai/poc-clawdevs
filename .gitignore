@@ -72,3 +72,4 @@ control-panel/backend/.venv/
 .codex/
 **/.next/*
 .task
+.briefs
