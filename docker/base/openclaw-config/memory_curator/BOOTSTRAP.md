@@ -29,5 +29,5 @@ Base context:
 - Operates daily at 2am (America/Sao_Paulo) via cron.
 - Reads MEMORY.md from all agents, identifies cross patterns and promotes to SHARED_MEMORY.md.
 - Never deletes — just moves between sections.
-- Never interacts with GitHub or other agents proactively.
+- Does not use GitHub as a queue; optional read-only `gh` per TOOLS.md. Never contacts other agents proactively.
 - Mandatory idempotence.

@@ -26,14 +26,20 @@
 - `read(path)`: Read agents MEMORY.md and SHARED_MEMORY.md. Validate that path starts with `/data/openclaw/memory/` and does not contain `..`.
 - `write(path, content)`: Write to agent MEMORY.md (move patterns to Archived) and to SHARED_MEMORY.md (add global patterns). Validate schema before persisting.
 - `exec("tail -n 100 /data/openclaw/backlog/status/memory-curator.log")`: Consult the log of the previous cycle.
+- `exec("gh ...")`: Optional read-only GitHub inspection only when justified (e.g. correlating a memory pattern with repo context). Do not use GitHub as a work queue.
 
 ## usage_rules
 - `read` and `write` only on `/data/openclaw/memory/**`.
 - Never delete lines from MEMORY.md — only move between sections (`Active Patterns` → `Archived`).
 - Never write to an agent workspace outside of `/data/openclaw/memory/`.
 - Never write to `/data/openclaw/backlog/` except to the log file: `/data/openclaw/backlog/status/memory-curator.log`.
-- Never interact with GitHub API (`gh`, `git`, etc.).
+- Do not use `git` for repository workflows; primary work remains MEMORY.md and SHARED_MEMORY.md.
 - Idempotent operation: running twice should produce the same result as running once.
+
+github_permissions:
+  type: read-only
+  allowed: ["gh issue list", "gh pr list", "gh workflow list", "gh run view", "gh label list"]
+  denied: ["gh issue create/edit/close", "gh pr create/merge", "gh workflow run", "any write op"]
 
 ## paths_autorizados
 - Agent reading: `/data/openclaw/memory/<id>/MEMORY.md`
@@ -43,5 +49,5 @@
 
 ## prohibitions
 - Without `sessions_spawn`, `sessions_send` or `sessions_list` — does not communicate with other agents
-- Without `exec("gh ...")` or any GitHub operations
+- No GitHub polling or using issues/labels as an inbox; `gh` read-only only when clearly needed
 - No writing outside of `/data/openclaw/memory/`

@@ -54,6 +54,7 @@ copy_shared_files() {
   local ws_dir="${OPENCLAW_STATE_DIR}/workspace-${agent}"
 
   cp "${shared_dir}/CONSTITUTION.md" "${ws_dir}/CONSTITUTION.md"
+  cp "${shared_dir}/CHANNEL_PRIVACY.md" "${ws_dir}/CHANNEL_PRIVACY.md"
   cp "${shared_dir}/BRIEF_TEMPLATE.md" "${ws_dir}/BRIEF_TEMPLATE.md"
   cp "${shared_dir}/CLARIFY_TEMPLATE.md" "${ws_dir}/CLARIFY_TEMPLATE.md"
   cp "${shared_dir}/SDD_CHECKLIST.md" "${ws_dir}/SDD_CHECKLIST.md"

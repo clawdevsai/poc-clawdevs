@@ -1001,6 +1001,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/printenv" },
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1030,6 +1031,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/printenv" },
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1093,6 +1095,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1124,6 +1127,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1155,6 +1159,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1186,6 +1191,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1217,6 +1223,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/usr/bin/openssl" },
         { "pattern": "/usr/bin/sha256sum" },
         { "pattern": "/data/openclaw/bin/web-search" },
@@ -1249,6 +1256,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1281,6 +1289,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
         { "pattern": "/usr/bin/docker" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1311,6 +1320,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
+        { "pattern": "/usr/bin/gh" },
         { "pattern": "/data/openclaw/bin/web-search" },
         { "pattern": "/data/openclaw/bin/web-read" }
       ]
@@ -1339,7 +1349,8 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/env" },
         { "pattern": "/usr/bin/printenv" },
         { "pattern": "/usr/bin/tee" },
-        { "pattern": "/usr/bin/tr" }
+        { "pattern": "/usr/bin/tr" },
+        { "pattern": "/usr/bin/gh" }
       ]
     }
   }

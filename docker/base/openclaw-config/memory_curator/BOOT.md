@@ -40,7 +40,7 @@ Does - `/data/openclaw/memory/shared/SHARED_MEMORY.md` exist? ✅ (create if doe
 - MEMORY.md (memory_curator) loaded? ✅
 
 ## Operating rules
-- Never interact with GitHub.
+- GitHub: no polling; `gh` read-only only when justified per TOOLS.md; no writes via `gh`.
 - Never communicate with other agents proactively.
 - Never delete — only move between sections of MEMORY.md.
 - Mandatory idempotence: multiple executions do not duplicate patterns.
