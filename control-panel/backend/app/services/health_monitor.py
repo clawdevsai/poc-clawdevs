@@ -162,7 +162,7 @@ class HealthMonitorLoop:
                     max_connections = 100
                     active_connections = 1
 
-                pool_percentage = int((active_connections / max_connections) * 100)
+                pool_percentage = int((active_connections / max_connections) * 100) if max_connections > 0 else 0
 
                 # Get slow queries from pg_stat_statements (if available)
                 slow_queries = 0
