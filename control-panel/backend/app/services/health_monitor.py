@@ -198,10 +198,59 @@ class HealthMonitorLoop:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
-    async def _gather_agent_metrics(self) -> Dict[str, Any]:
+    async def _gather_agent_metrics(self, session=None) -> Dict[str, Any]:
         """Gather agent health metrics"""
-        # TODO: Implement in Task 3
-        return {}
+        try:
+            from sqlmodel import select
+            from app.models import Agent
+
+            if session is None:
+                from app.core.database import AsyncSessionLocal
+                async with AsyncSessionLocal() as session:
+                    return await self._gather_agent_metrics(session=session)
+
+            # Query all agents
+            result = await session.exec(select(Agent))
+            agents = result.all()
+
+            # Process agent metrics
+            agent_metrics = []
+            now = datetime.now(timezone.utc)
+
+            for agent in agents:
+                # Calculate heartbeat age in minutes
+                heartbeat_age_minutes = 0
+                if agent.last_heartbeat_at:
+                    # Handle both timezone-aware and naive datetimes
+                    last_heartbeat = agent.last_heartbeat_at
+                    if last_heartbeat.tzinfo is None:
+                        last_heartbeat = last_heartbeat.replace(tzinfo=timezone.utc)
+
+                    age_delta = now - last_heartbeat
+                    heartbeat_age_minutes = int(age_delta.total_seconds() / 60)
+
+                agent_metrics.append({
+                    "slug": agent.slug,
+                    "display_name": agent.display_name,
+                    "status": agent.status,
+                    "runtime_status": agent.runtime_status,
+                    "last_heartbeat_at": agent.last_heartbeat_at.isoformat() if agent.last_heartbeat_at else None,
+                    "heartbeat_age_minutes": heartbeat_age_minutes,
+                    "openclaw_session_id": agent.openclaw_session_id,
+                })
+
+            return {
+                "agents": agent_metrics,
+                "total": len(agents),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to gather agent metrics: {e}")
+            return {
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
 
     async def _gather_queue_metrics(self) -> Dict[str, Any]:
         """Gather queue health metrics"""
