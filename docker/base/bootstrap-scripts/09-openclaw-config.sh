@@ -824,6 +824,35 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
+# CEO/PO: exec full (sem allowlist). Demais agentes permanecem com a policy global (OPENCLAW_EXEC_POLICY).
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .agents.list |= map(
+        if (.id == "ceo" or .id == "po")
+        then .tools.exec = (
+            (.tools.exec // {})
+            + {
+              "host": "gateway",
+              "security": "full",
+              "ask": "off",
+              "strictInlineEval": true
+            }
+          )
+        else .
+        end
+      )
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    echo "[bootstrap] ceo/po: tools.exec security=full ask=off"
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao aplicar exec full para ceo/po no openclaw.json"
+  fi
+fi
+
 # Zero Trust break-glass: bloquear canal alternativo de elevated fora do painel.
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_openclaw_json="$(mktemp)"
@@ -1340,6 +1369,21 @@ if [ -f "${EXEC_APPROVALS_FILE}" ]; then
   else
     rm -f "${_tmp_exec_approvals}"
     echo "[bootstrap] falha ao ajustar exec approvals para policy=${_exec_policy}"
+  fi
+fi
+if [ -f "${EXEC_APPROVALS_FILE}" ]; then
+  _tmp_exec_approvals="$(mktemp)"
+  if jq '
+      .agents.ceo.security = "full"
+      | .agents.ceo.ask = "off"
+      | .agents.po.security = "full"
+      | .agents.po.ask = "off"
+    ' "${EXEC_APPROVALS_FILE}" > "${_tmp_exec_approvals}"; then
+    mv "${_tmp_exec_approvals}" "${EXEC_APPROVALS_FILE}"
+    echo "[bootstrap] exec approvals: ceo/po security=full ask=off"
+  else
+    rm -f "${_tmp_exec_approvals}"
+    echo "[bootstrap] falha ao aplicar exec full para ceo/po em exec-approvals.json"
   fi
 fi
 # Repair agent main sessions when the persisted transcript is missing, invalid,

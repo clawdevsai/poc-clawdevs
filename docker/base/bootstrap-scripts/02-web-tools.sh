@@ -21,7 +21,7 @@
 WEB_TOOLS_DIR="${OPENCLAW_BIN_DIR:-${OPENCLAW_STATE_DIR}/bin}"
 mkdir -p "${WEB_TOOLS_DIR}"
 
-# --- web-search: pesquisa via SearxNG (self-hosted, cluster-internal) ---
+# --- web-search: pesquisa via SearxNG (default: clawdevs-searxng-proxy na rede Docker) ---
 cat > "${WEB_TOOLS_DIR}/web-search" <<'SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -30,8 +30,9 @@ if [ -z "${query}" ]; then
   echo "Usage: web-search <query>" >&2
   exit 1
 fi
+base="${SEARXNG_BASE_URL:-http://searxng-proxy:18080}"
 encoded="$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "${query}")"
-result="$(curl -sf "http://searxng:8080/search?q=${encoded}&format=json&categories=general&language=pt-BR" 2>/dev/null || true)"
+result="$(curl -sf "${base}/search?q=${encoded}&format=json&categories=general&language=pt-BR" 2>/dev/null || true)"
 if [ -z "${result}" ]; then
   echo "[web-search] SearxNG indisponivel. Tente novamente." >&2
   exit 1
