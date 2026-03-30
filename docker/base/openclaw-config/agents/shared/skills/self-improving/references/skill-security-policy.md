@@ -27,7 +27,8 @@ Validar skills candidatas criadas autonomamente antes de qualquer promocao para 
 
 ## Escopo de caminho (obrigatorio)
 - Origem local: `/data/openclaw/workspace-<agent_id>/skills/<agent_id>_<skill_slug>/SKILL.md`
-- Destino compartilhado: `/data/openclaw/backlog/implementation/skills/<skill_slug>/SKILL.md`
+- Destino compartilhado (promocao aprovada): `/data/openclaw/backlog/implementation/skills/<skill_slug>/SKILL.md` (maior precedencia no workspace compartilhado)
+- Politica de referencia (Security Engineer): `/data/openclaw/workspace-security_engineer/.agents/skills/self-improving/references/skill-security-policy.md`
 - Qualquer caminho fora desse contrato: `FAIL`.
 
 ## Checklist de seguranca (obrigatorio)

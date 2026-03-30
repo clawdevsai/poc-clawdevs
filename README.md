@@ -287,6 +287,30 @@ docker/
   clawdevs-panel-frontend/        # Dockerfile do frontend
 ```
 
+## Skills (OpenClaw)
+
+OpenClaw carrega skills no formato [AgentSkills](https://agentskills.io) (pastas com `SKILL.md` e frontmatter). Precedência oficial: `<workspace>/skills` (maior) → `<workspace>/.agents/skills` → `~/.agents/skills` → `~/.openclaw/skills` → skills bundled → `skills.load.extraDirs`. Ver [documentação OpenClaw — Skills](https://docs.openclaw.ai/tools/skills).
+
+Neste repositório (fonte no host, montada em `/bootstrap/openclaw-config`):
+
+| Origem | Destino no volume (runtime) |
+|--------|-----------------------------|
+| `docker/base/openclaw-config/agents/<agente>/skills/<skill>/` | `/data/openclaw/workspace-<agente>/skills/<skill>/` |
+| `docker/base/openclaw-config/agents/shared/skills/<skill>/` | `/data/openclaw/workspace-<agente>/.agents/skills/<skill>/` (todos os agentes) |
+
+O bootstrap também espelha o mesmo layout no workspace compartilhado de implementação:
+
+- `/data/openclaw/backlog/implementation/skills/`
+- `/data/openclaw/backlog/implementation/.agents/skills/`
+
+Promoções aprovadas pelo fluxo self-improving (após PASS do Security Engineer) continuam documentadas em **`/data/openclaw/backlog/implementation/skills/<slug>/SKILL.md`** (maior precedência no workspace compartilhado).
+
+**Conferência rápida no container** (`clawdevs-openclaw`):
+
+```bash
+docker exec -it clawdevs-openclaw /bin/bash -lc 'ls -la /data/openclaw/workspace-ceo/skills; ls -la /data/openclaw/workspace-ceo/.agents/skills'
+```
+
 ## Conclusão para o desenvolvedor
 
 Resumo do caminho **mínimo** para subir a stack completa:

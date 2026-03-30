@@ -48,3 +48,12 @@ docker push clawdevsai/openclaw-runtime:latest
 A stack local usa `make up` (docker run) e monta scripts/config de `docker/base/`.
 O container inicia via `ENTRYPOINT` (`/usr/local/bin/openclaw-entrypoint.sh`) e executa, em ordem,
 os scripts `docker/base/bootstrap-scripts/00-env.sh` ate `11-start-gateway.sh`.
+
+## Skills por agente (layout OpenClaw)
+
+No volume `OPENCLAW_STATE_DIR` (por padrão `/data/openclaw`), cada agente usa:
+
+- **`/data/openclaw/workspace-<id>/skills/`** — skills específicas do agente (maior precedência).
+- **`/data/openclaw/workspace-<id>/.agents/skills/`** — skills compartilhadas do projeto (`openclaw-config/agents/shared/skills/` no host).
+
+O workspace compartilhado `backlog/implementation` replica `skills/` e `.agents/skills/` para o mesmo padrão. Referência: [OpenClaw — Skills](https://docs.openclaw.ai/tools/skills).

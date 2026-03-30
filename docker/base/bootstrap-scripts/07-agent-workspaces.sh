@@ -82,7 +82,8 @@ copy_shared_files() {
   cp "${sdd_dir}/VALIDATE.md" "${ws_dir}/initiatives/internal-sdd-operationalization/VALIDATE.md"
 }
 
-# Copy agent-specific skills from agents/<agent>/skills/
+# Copy agent-specific skills from agents/<agent>/skills/ into <workspace>/skills/
+# (OpenClaw: highest-precedence workspace skills live under <workspace>/skills/)
 # Arguments: agent_name
 copy_agent_skills() {
   local agent="$1"
@@ -178,7 +179,8 @@ fi
 # --- Fim: politica compartilhada de validacao de fontes ---
 
 # --- Rollout dinamico de skills compartilhadas para todos os agentes ---
-# Copy all skills from agents/shared/skills/ to every agent workspace
+# OpenClaw: project-level agent skills under <workspace>/.agents/skills (precedence below <workspace>/skills).
+# Source: agents/shared/skills/ -> every workspace-<agent>/.agents/skills/<skill_name>/
 SHARED_SKILLS_DIR="${OPENCLAW_CONFIG_DIR}/agents/shared/skills"
 if [ -d "${SHARED_SKILLS_DIR}" ]; then
   for shared_skill_dir in "${SHARED_SKILLS_DIR}"/*/; do
@@ -187,7 +189,7 @@ if [ -d "${SHARED_SKILLS_DIR}" ]; then
 
     # Copy to all agent workspaces
     for shared_agent in "${AGENTS[@]}"; do
-      target_dir="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/skills/${skill_name}"
+      target_dir="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/.agents/skills/${skill_name}"
       mkdir -p "${target_dir}"
       cp -Rf "${shared_skill_dir}/." "${target_dir}/"
     done
@@ -195,22 +197,50 @@ if [ -d "${SHARED_SKILLS_DIR}" ]; then
 fi
 # --- Fim: rollout dinamico de skills compartilhadas ---
 
+# Skills partilhadas pertencem apenas a .agents/skills. Volumes antigos podem ter
+# copias em workspace-*/skills/ (layout pre-OpenClaw); remove para evitar duplicacao
+# e precedencia confusa com a doc.
+if [ -d "${SHARED_SKILLS_DIR}" ]; then
+  for shared_skill_dir in "${SHARED_SKILLS_DIR}"/*/; do
+    [ -d "${shared_skill_dir}" ] || continue
+    skill_name=$(basename "${shared_skill_dir}")
+    for shared_agent in "${AGENTS[@]}"; do
+      legacy_skills="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/skills/${skill_name}"
+      if [ -d "${legacy_skills}" ]; then
+        rm -rf "${legacy_skills}"
+      fi
+    done
+  done
+fi
+
 # --- Render agent context for all workspaces ---
 for agent in "${AGENTS[@]}"; do
   render_agent_context "${OPENCLAW_STATE_DIR}/workspace-${agent}"
 done
 # --- Fim: render agent context ---
 
-# --- Skills no workspace compartilhado ---
-# Todos os agentes usam /data/openclaw/backlog/implementation como workspace.
-# As skills precisam estar em skills/ dentro desse workspace para serem encontradas pelo OpenClaw.
+# --- Skills no workspace compartilhado (backlog/implementation) ---
+# Espelha no workspace compartilhado o mesmo layout da doc OpenClaw:
+#   <workspace>/skills  e  <workspace>/.agents/skills
+# (precedencia: skills/ > .agents/skills > ~/.openclaw/skills > bundled > extraDirs)
 SHARED_WORKSPACE="${OPENCLAW_STATE_DIR}/backlog/implementation"
 mkdir -p "${SHARED_WORKSPACE}/skills"
+mkdir -p "${SHARED_WORKSPACE}/.agents/skills"
+
 for skill_src_dir in "${OPENCLAW_STATE_DIR}"/workspace-*/skills/*/; do
   [ -d "${skill_src_dir}" ] || continue
   [ -f "${skill_src_dir}/SKILL.md" ] || continue
   skill_name="$(basename "${skill_src_dir}")"
   dest_dir="${SHARED_WORKSPACE}/skills/${skill_name}"
+  mkdir -p "${dest_dir}"
+  cp -Rf "${skill_src_dir}/." "${dest_dir}/"
+done
+
+for skill_src_dir in "${OPENCLAW_STATE_DIR}"/workspace-*/.agents/skills/*/; do
+  [ -d "${skill_src_dir}" ] || continue
+  [ -f "${skill_src_dir}/SKILL.md" ] || continue
+  skill_name="$(basename "${skill_src_dir}")"
+  dest_dir="${SHARED_WORKSPACE}/.agents/skills/${skill_name}"
   mkdir -p "${dest_dir}"
   cp -Rf "${skill_src_dir}/." "${dest_dir}/"
 done
@@ -230,7 +260,7 @@ sanitize_skill_artifacts() {
 if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ]; then
   for si_agent in "${AGENTS[@]}"; do
     si_ws="${OPENCLAW_STATE_DIR}/workspace-${si_agent}"
-    si_skill_dir="${si_ws}/skills/self-improving"
+    si_skill_dir="${si_ws}/.agents/skills/self-improving"
     mkdir -p "${si_skill_dir}"
     cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${si_skill_dir}/SKILL.md"
 
@@ -262,7 +292,7 @@ if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ]; then
   done
 
   # Expor a mesma skill no workspace compartilhado utilizado pelos agentes.
-  shared_self_improving_dir="${SHARED_WORKSPACE}/skills/self-improving"
+  shared_self_improving_dir="${SHARED_WORKSPACE}/.agents/skills/self-improving"
   mkdir -p "${shared_self_improving_dir}"
   cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${shared_self_improving_dir}/SKILL.md"
 
