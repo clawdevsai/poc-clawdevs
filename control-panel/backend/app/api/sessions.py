@@ -34,6 +34,7 @@ from app.core.config import get_settings
 from app.api.deps import CurrentUser
 from app.models import Session as SessionModel
 from app.services.session_sync import sync_sessions
+from app.services.session_labels import session_display_label, session_kind
 from app.services.openclaw_client import openclaw_client
 
 router = APIRouter()
@@ -50,6 +51,9 @@ class SessionResponse(BaseModel):
     id: str
     agent_slug: str | None
     openclaw_session_id: str
+    openclaw_session_key: str | None = None
+    session_kind: str  # main | sub
+    session_label: str
     channel_type: str | None
     channel_peer: str | None
     status: str
@@ -65,6 +69,33 @@ class SessionResponse(BaseModel):
 class SessionsListResponse(BaseModel):
     items: list[SessionResponse]
     total: int
+
+
+def _session_to_response(
+    s: SessionModel,
+    *,
+    messages: list[MessageResponse] | None = None,
+) -> SessionResponse:
+    key = s.openclaw_session_key
+    slug = s.agent_slug
+    return SessionResponse(
+        id=str(s.id),
+        agent_slug=slug,
+        openclaw_session_id=s.openclaw_session_id,
+        openclaw_session_key=key,
+        session_kind=session_kind(key, slug),
+        session_label=session_display_label(key, slug),
+        channel_type=s.channel_type,
+        channel_peer=s.channel_peer,
+        status=s.status,
+        message_count=s.message_count,
+        token_count=s.token_count,
+        started_at=s.started_at,
+        ended_at=s.ended_at,
+        last_active_at=s.last_active_at,
+        created_at=s.created_at,
+        messages=messages,
+    )
 
 
 @router.get("", response_model=SessionsListResponse)
@@ -107,24 +138,7 @@ async def list_sessions(
     result = await session.exec(paginated_query)
     sessions = result.all()
 
-    items = [
-        SessionResponse(
-            id=str(s.id),
-            agent_slug=s.agent_slug,
-            openclaw_session_id=s.openclaw_session_id,
-            channel_type=s.channel_type,
-            channel_peer=s.channel_peer,
-            status=s.status,
-            message_count=s.message_count,
-            token_count=s.token_count,
-            started_at=s.started_at,
-            ended_at=s.ended_at,
-            last_active_at=s.last_active_at,
-            created_at=s.created_at,
-            messages=None,
-        )
-        for s in sessions
-    ]
+    items = [_session_to_response(s, messages=None) for s in sessions]
     return SessionsListResponse(items=items, total=total)
 
 
@@ -180,21 +194,7 @@ async def get_session(
             openclaw_session_id=db_session_obj.openclaw_session_id,
         )
 
-    return SessionResponse(
-        id=str(db_session_obj.id),
-        agent_slug=db_session_obj.agent_slug,
-        openclaw_session_id=db_session_obj.openclaw_session_id,
-        channel_type=db_session_obj.channel_type,
-        channel_peer=db_session_obj.channel_peer,
-        status=db_session_obj.status,
-        message_count=db_session_obj.message_count,
-        token_count=db_session_obj.token_count,
-        started_at=db_session_obj.started_at,
-        ended_at=db_session_obj.ended_at,
-        last_active_at=db_session_obj.last_active_at,
-        created_at=db_session_obj.created_at,
-        messages=messages,
-    )
+    return _session_to_response(db_session_obj, messages=messages)
 
 
 def _parse_message(msg: dict) -> MessageResponse:

@@ -35,10 +35,12 @@ class TestSessionModel:
 
         session = Session(
             openclaw_session_id="sess-12345",
+            openclaw_session_key="agent:ceo:main",
             channel_type="telegram",
         )
 
         assert session.openclaw_session_id == "sess-12345"
+        assert session.openclaw_session_key == "agent:ceo:main"
         assert session.channel_type == "telegram"
         assert session.status == "active"
         assert session.message_count == 0

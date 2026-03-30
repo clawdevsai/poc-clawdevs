@@ -27,7 +27,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { formatDistanceToNow, format } from "date-fns"
 import Link from "next/link"
 import * as Tabs from "@radix-ui/react-tabs"
-import { ArrowLeft, Clock, Calendar, CheckSquare, Brain, Eye, Download, X } from "lucide-react"
+import { ArrowLeft, Clock, Calendar, CheckSquare, Brain, Eye, Download, X, MessageSquare } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -60,6 +60,10 @@ interface Agent {
 interface Session {
   id: string
   agent_slug: string
+  openclaw_session_id: string
+  openclaw_session_key?: string | null
+  session_kind?: string
+  session_label?: string
   status: string
   created_at: string
   last_active_at?: string | null
@@ -107,7 +111,7 @@ const fetchSessions = (slug: string, page: number) =>
   customInstance<PaginatedResponse<Session>>({
     url: "/sessions",
     method: "GET",
-    params: { agent_slug: slug, page, page_size: 20 },
+    params: { agent_slug: slug, page, page_size: 100 },
   })
 
 const fetchApprovals = (slug: string) =>
@@ -323,7 +327,7 @@ function SessionsTab({ slug }: { slug: string }) {
     return bTime - aTime
   })
   const total = data?.total ?? 0
-  const totalPages = Math.ceil(total / 20)
+  const totalPages = Math.ceil(total / 100)
 
   if (isLoading) {
     return (
@@ -350,14 +354,33 @@ function SessionsTab({ slug }: { slug: string }) {
         {total} session{total !== 1 ? "s" : ""} total
       </p>
       <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] divide-y divide-[hsl(var(--border))]">
-        {sortedSessions.map((session) => (
+        {sortedSessions.map((session) => {
+          const chatKey = session.openclaw_session_key
+          const chatHref =
+            chatKey != null && chatKey.length > 0
+              ? `/chat?session=${encodeURIComponent(chatKey)}`
+              : null
+          return (
           <div
             key={session.id}
-            className="flex items-center gap-3 px-4 py-3"
+            className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3"
           >
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-mono text-[hsl(var(--foreground))] truncate">
-                {session.id}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-[hsl(var(--foreground))] truncate">
+                  {session.session_label ?? "—"}
+                </span>
+                {session.session_kind === "sub" ? (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Subagente
+                  </Badge>
+                ) : null}
+              </div>
+              <p
+                className="text-xs font-mono text-[hsl(var(--muted-foreground))] truncate mt-0.5"
+                title={session.openclaw_session_key ?? session.openclaw_session_id}
+              >
+                {session.openclaw_session_key ?? session.openclaw_session_id}
               </p>
               {session.task_description && (
                 <p className="text-xs text-[hsl(var(--muted-foreground))] truncate mt-0.5">
@@ -365,7 +388,16 @@ function SessionsTab({ slug }: { slug: string }) {
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+              {chatHref ? (
+                <Link
+                  href={chatHref}
+                  className="inline-flex items-center gap-1 rounded-lg border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Abrir no chat
+                </Link>
+              ) : null}
               <Badge
                 variant={
                   session.status === "active"
@@ -387,7 +419,8 @@ function SessionsTab({ slug }: { slug: string }) {
               </span>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {totalPages > 1 && (

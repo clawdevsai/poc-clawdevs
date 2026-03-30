@@ -18,28 +18,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from sqlmodel import SQLModel, Field
-from typing import Optional
-from datetime import datetime, UTC
-from uuid import UUID, uuid4
+"""Tests for session_labels helpers."""
+
+from app.services.session_labels import session_display_label, session_kind
 
 
-class Session(SQLModel, table=True):
-    __tablename__ = "sessions"
+class TestSessionKind:
+    def test_main_key(self):
+        assert session_kind("agent:po:main", "po") == "main"
+        assert session_kind("AGENT:PO:MAIN", "po") == "main"
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    openclaw_session_id: str = Field(index=True)
-    # Canonical key from sessions.json (e.g. agent:po:main vs delegated keys).
-    openclaw_session_key: Optional[str] = None
-    agent_slug: Optional[str] = Field(default=None, index=True)
-    channel_type: Optional[str] = None  # telegram|cli|agent-to-agent
-    channel_peer: Optional[str] = None
-    status: str = Field(default="active")  # active|ended|error
-    message_count: int = Field(default=0)
-    token_count: int = Field(default=0)
-    started_at: Optional[datetime] = None
-    ended_at: Optional[datetime] = None
-    last_active_at: Optional[datetime] = None
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    def test_sub_key(self):
+        assert session_kind("agent:po:delegation-abc", "po") == "sub"
+        assert session_kind(None, "po") == "sub"
+        assert session_kind("agent:po:main", None) == "sub"
+
+
+class TestSessionDisplayLabel:
+    def test_principal(self):
+        assert session_display_label("agent:po:main", "po") == "Principal"
+
+    def test_subagent_suffix(self):
+        assert (
+            session_display_label("agent:po:delegation-xyz", "po")
+            == "Subagente · delegation-xyz"
+        )
+
+    def test_empty_key(self):
+        assert session_display_label(None, "po") == "—"

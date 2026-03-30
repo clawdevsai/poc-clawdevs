@@ -78,6 +78,22 @@ interface AgentsResponse {
   total: number;
 }
 
+interface ChatSessionRow {
+  id: string;
+  openclaw_session_id: string;
+  openclaw_session_key?: string | null;
+  session_kind: string;
+  session_label: string;
+  status: string;
+  created_at: string;
+  last_active_at?: string | null;
+}
+
+interface SessionsListResponse {
+  items: ChatSessionRow[];
+  total: number;
+}
+
 interface HistoryResponse {
   agent_slug: string;
   messages: ChatMessage[];
@@ -108,6 +124,13 @@ type ParsedSessionKey = {
 
 const fetchAgents = () =>
   customInstance<AgentsResponse>({ url: "/agents", method: "GET" });
+
+const fetchSessionsForAgent = (slug: string) =>
+  customInstance<SessionsListResponse>({
+    url: "/sessions",
+    method: "GET",
+    params: { agent_slug: slug, page: 1, page_size: 100 },
+  });
 
 const parseSessionKey = (rawValue: string | null): ParsedSessionKey | null => {
   if (!rawValue) return null;
@@ -159,6 +182,12 @@ function ChatPageContent() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [selectedSessionKey, setSelectedSessionKey] = useState<string | null>(null);
   const [sessionParamError, setSessionParamError] = useState<string | null>(null);
+
+  const { data: sessionsData } = useQuery({
+    queryKey: ["sessions", selectedAgent, "chat-picker"],
+    queryFn: () => fetchSessionsForAgent(selectedAgent as string),
+    enabled: !!selectedAgent,
+  });
 
   const rawSessionParam = searchParams.get("session");
   const parsedSessionParam = useMemo(
@@ -218,10 +247,21 @@ function ChatPageContent() {
 
     if (selectedAgent) {
       const fallbackSessionKey = buildMainSessionKey(selectedAgent);
-      if (selectedSessionKey !== fallbackSessionKey) {
+      if (selectedSessionKey == null) {
         setSelectedSessionKey(fallbackSessionKey);
+        syncSessionParam(fallbackSessionKey, true);
+        return;
       }
-      syncSessionParam(fallbackSessionKey, true);
+      const slug = selectedAgent.toLowerCase();
+      const belongs = selectedSessionKey.toLowerCase().startsWith(`agent:${slug}:`);
+      if (!belongs) {
+        setSelectedSessionKey(fallbackSessionKey);
+        syncSessionParam(fallbackSessionKey, true);
+        return;
+      }
+      if (!rawSessionParam) {
+        syncSessionParam(selectedSessionKey, true);
+      }
       return;
     }
 
@@ -235,6 +275,7 @@ function ChatPageContent() {
   }, [
     agents,
     parsedSessionParam,
+    rawSessionParam,
     selectedAgent,
     selectedSessionKey,
     syncSessionParam,
@@ -354,6 +395,38 @@ function ChatPageContent() {
     ? `${selectedAgentRole} · ${selectedAgentName}`
     : "";
 
+  const sessionSelectOptions = useMemo(() => {
+    if (!selectedAgent) return [];
+    const mainKey = buildMainSessionKey(selectedAgent);
+    const rows = sessionsData?.items ?? [];
+    const withKeys = rows.filter((r) => (r.openclaw_session_key ?? "").length > 0);
+    if (withKeys.length === 0) {
+      return [{ key: mainKey, label: "Principal" }];
+    }
+    const sorted = [...withKeys].sort((a, b) => {
+      if (a.session_kind === "main" && b.session_kind !== "main") return -1;
+      if (a.session_kind !== "main" && b.session_kind === "main") return 1;
+      const ta = new Date(a.last_active_at ?? a.created_at).getTime();
+      const tb = new Date(b.last_active_at ?? b.created_at).getTime();
+      return tb - ta;
+    });
+    return sorted.map((s) => ({
+      key: s.openclaw_session_key as string,
+      label: s.session_label || s.openclaw_session_key || "",
+    }));
+  }, [sessionsData, selectedAgent]);
+
+  const sessionSelectOptionsResolved = useMemo(() => {
+    if (!selectedSessionKey || !selectedAgent) return sessionSelectOptions;
+    if (sessionSelectOptions.some((o) => o.key === selectedSessionKey)) {
+      return sessionSelectOptions;
+    }
+    return [
+      ...sessionSelectOptions,
+      { key: selectedSessionKey, label: selectedSessionKey },
+    ];
+  }, [sessionSelectOptions, selectedSessionKey, selectedAgent]);
+
   const activeSessionKey =
     selectedSessionKey ??
     (selectedAgent ? buildMainSessionKey(selectedAgent) : null);
@@ -372,6 +445,12 @@ function ChatPageContent() {
     setAgentDropdownOpen(false);
     setAgentQuery("");
     syncSessionParam(nextSessionKey, false);
+  }
+
+  function handleSessionKeyChange(nextKey: string) {
+    setSessionParamError(null);
+    setSelectedSessionKey(nextKey);
+    syncSessionParam(nextKey, false);
   }
 
   function handleAgentInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -629,7 +708,8 @@ function ChatPageContent() {
               ) : null}
             </div>
 
-            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[auto_minmax(250px,340px)_auto] sm:items-center">
+            <div className="flex w-full flex-col gap-3 lg:w-auto lg:max-w-[min(100%,560px)]">
+              <div className="grid w-full gap-2 sm:grid-cols-[auto_minmax(250px,340px)_auto] sm:items-center">
               <label className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
                 Agente
               </label>
@@ -712,6 +792,27 @@ function ChatPageContent() {
                 <RefreshCw className={`h-3.5 w-3.5 ${historyLoading ? "animate-spin" : ""}`} />
                 Histórico
               </button>
+              </div>
+
+              <div className="grid w-full gap-2 sm:grid-cols-[auto_minmax(250px,340px)_auto] sm:items-center">
+                <label className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+                  Sessão
+                </label>
+                <select
+                  value={activeSessionKey ?? ""}
+                  onChange={(event) => handleSessionKeyChange(event.target.value)}
+                  disabled={!selectedAgent}
+                  className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))] disabled:opacity-50"
+                  aria-label="Sessão OpenClaw"
+                >
+                  {sessionSelectOptionsResolved.map((opt) => (
+                    <option key={opt.key} value={opt.key}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="hidden sm:block" aria-hidden />
+              </div>
             </div>
           </div>
         </div>

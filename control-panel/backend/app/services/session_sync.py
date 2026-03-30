@@ -56,6 +56,9 @@ async def sync_sessions(db_session) -> None:
         if not isinstance(data, dict):
             continue
 
+        # If two JSON keys share the same sessionId, the last one processed wins for
+        # the DB row (upsert by openclaw_session_id); openclaw_session_key reflects
+        # the last seen key.
         for session_key, oc_session in data.items():
             if not isinstance(oc_session, dict):
                 continue
@@ -127,6 +130,7 @@ async def sync_sessions(db_session) -> None:
             if existing:
                 # Update existing session
                 existing.agent_slug = agent_slug
+                existing.openclaw_session_key = session_key
                 existing.channel_type = channel_type or existing.channel_type
                 existing.channel_peer = (
                     str(channel_peer) if channel_peer else existing.channel_peer
@@ -141,6 +145,7 @@ async def sync_sessions(db_session) -> None:
                 # Create new session
                 new_session = Session(
                     openclaw_session_id=session_id,
+                    openclaw_session_key=session_key,
                     agent_slug=agent_slug,
                     channel_type=channel_type,
                     channel_peer=str(channel_peer) if channel_peer else None,

@@ -13,15 +13,16 @@ description: Condensed architecture skill focused on decomposition, ADRs, qualit
 - Record explicit tradeoffs in ADR when decision impact is relevant.
 
 ## Technical decomposition contract
-1. Read IDEA/US/SPEC and confirm constraints.
-2. Define architecture only as needed for the current slice.
-3. Generate executable TASKs (1-3 days each) with:
+1. Locate the project backlog: `/data/openclaw/projects/<project>/docs/backlogs/` (or `~/projects/<project>/docs/backlogs/` when that path is the same workspace). Read briefs/, specs/, and related folders before acting. If there is no SPEC/scope on disk, stop and align with PO/CEO — do not invent scope.
+2. Read IDEA/US/SPEC and confirm constraints.
+3. Define architecture only as needed for the current slice.
+4. Generate executable TASKs (1-3 days each) with:
    - objective and scope
    - BDD acceptance criteria
    - dependencies
    - measurable NFRs (latency/throughput/cost)
    - security and observability requirements
-4. Add ADR only when decision has non-trivial tradeoff.
+5. Add ADR only when decision has non-trivial tradeoff.
 
 ## Quality gates before handoff
 - Traceability: IDEA -> US -> TASK (and ADR if used).

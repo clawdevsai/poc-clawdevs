@@ -18,28 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from sqlmodel import SQLModel, Field
-from typing import Optional
-from datetime import datetime, UTC
-from uuid import UUID, uuid4
+"""Human-readable labels for OpenClaw session keys (main vs delegated/sub)."""
 
 
-class Session(SQLModel, table=True):
-    __tablename__ = "sessions"
+def session_kind(session_key: str | None, agent_slug: str | None) -> str:
+    """Return 'main' for agent:<slug>:main, else 'sub'."""
+    if not session_key or not agent_slug:
+        return "sub"
+    normalized = session_key.strip().lower()
+    expected = f"agent:{agent_slug.strip().lower()}:main"
+    return "main" if normalized == expected else "sub"
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    openclaw_session_id: str = Field(index=True)
-    # Canonical key from sessions.json (e.g. agent:po:main vs delegated keys).
-    openclaw_session_key: Optional[str] = None
-    agent_slug: Optional[str] = Field(default=None, index=True)
-    channel_type: Optional[str] = None  # telegram|cli|agent-to-agent
-    channel_peer: Optional[str] = None
-    status: str = Field(default="active")  # active|ended|error
-    message_count: int = Field(default=0)
-    token_count: int = Field(default=0)
-    started_at: Optional[datetime] = None
-    ended_at: Optional[datetime] = None
-    last_active_at: Optional[datetime] = None
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+
+def session_display_label(session_key: str | None, agent_slug: str | None) -> str:
+    """Short UI label: Principal vs Subagente · <suffix>."""
+    if not session_key:
+        return "—"
+    if session_kind(session_key, agent_slug) == "main":
+        return "Principal"
+    parts = session_key.split(":", 2)
+    suffix = parts[2] if len(parts) > 2 else session_key
+    if len(suffix) > 48:
+        suffix = suffix[:45] + "…"
+    return f"Subagente · {suffix}"

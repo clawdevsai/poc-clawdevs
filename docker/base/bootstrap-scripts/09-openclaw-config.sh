@@ -285,9 +285,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["po", "arquiteto", "dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "ux_designer", "dba_data_engineer"]
-        }
+
       },
       {
         "id": "po",
@@ -319,9 +317,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["arquiteto", "ux_designer", "dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "dba_data_engineer"]
-        }
+
       },
       {
         "id": "arquiteto",
@@ -353,9 +349,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["dev_backend", "dev_frontend", "dev_mobile", "qa_engineer", "devops_sre", "security_engineer", "dba_data_engineer"]
-        }
+
       },
       {
         "id": "dev_backend",
@@ -386,9 +380,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["qa_engineer", "security_engineer"]
-        }
+
       },
       {
         "id": "dev_frontend",
@@ -419,9 +411,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["qa_engineer", "security_engineer"]
-        }
+
       },
       {
         "id": "dev_mobile",
@@ -452,9 +442,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["qa_engineer", "security_engineer"]
-        }
+
       },
       {
         "id": "qa_engineer",
@@ -485,9 +473,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": []
-        }
+   
       },
       {
         "id": "devops_sre",
@@ -518,9 +504,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": []
-        }
+
       },
       {
         "id": "security_engineer",
@@ -551,9 +535,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["dev_backend", "dev_frontend", "dev_mobile"]
-        }
+
       },
       {
         "id": "ux_designer",
@@ -584,9 +566,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": []
-        }
+
       },
       {
         "id": "dba_data_engineer",
@@ -617,9 +597,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": ["dev_backend", "devops_sre"]
-        }
+
       },
       {
         "id": "memory_curator",
@@ -649,9 +627,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
             "strictInlineEval": true
           }
         },
-        "subagents": {
-          "allowAgents": []
-        }
+
       }
     ]
   },

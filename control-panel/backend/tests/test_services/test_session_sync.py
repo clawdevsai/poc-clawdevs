@@ -21,30 +21,76 @@
 """
 Tests for session_sync service.
 """
+import json
+
 import pytest
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.models.session import Session as SessionRow
 
 
 class TestSyncSessions:
     """Test sync_sessions function with mocked dependencies."""
 
     @pytest.mark.asyncio
-    async def test_sync_sessions_creates_sessions(self, db_session: AsyncSession):
-        """Test that sync_sessions creates new sessions."""
-        # Test with mocked dependencies
-        pass
+    async def test_sync_persists_openclaw_session_keys(
+        self, db_session: AsyncSession, tmp_path, monkeypatch
+    ):
+        """sessions.json keys are stored as openclaw_session_key."""
+        monkeypatch.setattr(
+            "app.services.session_sync.settings",
+            type("S", (), {"openclaw_data_path": tmp_path})(),
+        )
+        monkeypatch.setattr(
+            "app.services.session_sync.get_discovered_agent_slugs",
+            lambda: ["po"],
+        )
+        sessions_file = tmp_path / "agents" / "po" / "sessions" / "sessions.json"
+        sessions_file.parent.mkdir(parents=True)
+        sessions_file.write_text(
+            json.dumps(
+                {
+                    "agent:po:main": {
+                        "sessionId": "sid-main",
+                        "updatedAt": 1_710_000_000_000,
+                    },
+                    "agent:po:delegation-xyz": {
+                        "sessionId": "sid-sub",
+                        "updatedAt": 1_710_000_000_000,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        from app.services.session_sync import sync_sessions
+
+        await sync_sessions(db_session)
+        result = await db_session.exec(select(SessionRow))
+        rows = list(result.all())
+        assert len(rows) == 2
+        by_key = {r.openclaw_session_key: r for r in rows}
+        assert by_key["agent:po:main"].openclaw_session_id == "sid-main"
+        assert by_key["agent:po:delegation-xyz"].openclaw_session_id == "sid-sub"
 
     @pytest.mark.asyncio
-    async def test_sync_sessions_updates_existing(self, db_session: AsyncSession):
-        """Test that sync_sessions updates existing sessions."""
-        # Test with mocked dependencies
-        pass
+    async def test_sync_sessions_handles_missing_file(
+        self, db_session: AsyncSession, tmp_path, monkeypatch
+    ):
+        """No sessions.json: sync commits with no rows."""
+        monkeypatch.setattr(
+            "app.services.session_sync.settings",
+            type("S", (), {"openclaw_data_path": tmp_path})(),
+        )
+        monkeypatch.setattr(
+            "app.services.session_sync.get_discovered_agent_slugs",
+            lambda: ["po"],
+        )
+        from app.services.session_sync import sync_sessions
 
-    @pytest.mark.asyncio
-    async def test_sync_sessions_handles_missing_file(self, db_session: AsyncSession):
-        """Test that sync_sessions handles missing session file."""
-        # Test with mocked dependencies
-        pass
+        await sync_sessions(db_session)
+        result = await db_session.exec(select(SessionRow))
+        assert list(result.all()) == []
 
 
 class TestParseTimestamp:

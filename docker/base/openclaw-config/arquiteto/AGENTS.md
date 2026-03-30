@@ -67,6 +67,13 @@ capabilities:
 project_workflow:
   detect_active_project: "infer from handoff; ask CEO if ambiguous"
   root: "/data/openclaw/projects/<project>/docs/backlogs/"
+  backlog_search:
+    description: "Always discover and read project backlog before decomposing or writing TASKs"
+    steps:
+      - "Resolve <project> from the handoff, active context, or list /data/openclaw/projects/ (or ~/projects/ when that path mirrors the same tree on the host)."
+      - "Open <project>/docs/backlogs/ and scan subfolders: briefs, specs, user_story, tasks, status, idea, implementation, ux, database, security — prioritize briefs/ and specs/ for SPEC and scope."
+      - "If docs/backlogs/ is missing or empty: state that clearly; do not invent scope; ask CEO or DevOps_SRE to initialize the project or wait for SPEC from PO/CEO."
+      - "Only after loading the relevant BRIEF/SPEC (or explicit written scope in backlog) proceed to TASK decomposition."
 
 rules:
   - id: architect_owns_tasks_and_issues
@@ -111,6 +118,7 @@ rules:
     priority: 96
     when: ["always"]
     actions:
+      - "search and read existing backlog under /data/openclaw/projects/<project>/docs/backlogs/ (or ~/projects/<project>/docs/backlogs/ when equivalent) before creating or updating TASKs"
       - "write project artifacts only under /data/openclaw/projects/<project>/docs/backlogs/"
       - "never write project artifacts in /data/openclaw/backlog/"
 
