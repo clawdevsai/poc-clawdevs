@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentAvatar } from "@/components/agents/agent-avatar"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface Agent {
   id: string
@@ -136,13 +137,22 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
             </Badge>
           </div>
           <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-            <span className="font-mono truncate max-w-[120px]" title={agent.model ?? agent.current_model ?? ""}>
-              {agent.model ?? agent.current_model ?? "—"}
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="font-mono truncate max-w-[120px]">
+                  {agent.model ?? agent.current_model ?? "—"}
+                </span>
+              </TooltipTrigger>
+              {(agent.model ?? agent.current_model) && (
+                <TooltipContent>
+                  Modelo: {agent.model ?? agent.current_model}
+                </TooltipContent>
+              )}
+            </Tooltip>
             <span>
               {(agent.last_heartbeat ?? agent.last_heartbeat_at)
                 ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
-                : "no heartbeat"}
+                : "sem heartbeat"}
             </span>
           </div>
         </Link>

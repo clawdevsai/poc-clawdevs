@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { LogOut, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { customInstance } from "@/lib/axios-instance";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const BREADCRUMBS: Record<string, string> = {
   "/": "Dashboard",
@@ -55,19 +56,27 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         {pending > 0 && (
-          <Link
-            href="/approvals"
-            className="flex items-center gap-1.5 text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
-            title={`${pending} aprovação${pending !== 1 ? "ões" : ""} pendente${pending !== 1 ? "s" : ""}`}
-          >
-            <ShieldAlert size={14} />
-            <span className="font-semibold">{pending > 99 ? "99+" : pending}</span>
-          </Link>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/approvals"
+                className="flex items-center gap-1.5 text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
+                aria-label={`${pending} aprovação${pending !== 1 ? "ões" : ""} pendente${pending !== 1 ? "s" : ""}`}
+              >
+                <ShieldAlert size={14} />
+                <span className="font-semibold">{pending > 99 ? "99+" : pending}</span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              {pending} aprovação{pending !== 1 ? "ões" : ""} pendente{pending !== 1 ? "s" : ""}
+            </TooltipContent>
+          </Tooltip>
         )}
 
         <button
           onClick={logout}
           className="flex items-center gap-1.5 text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+          aria-label="Sair do sistema"
         >
           <LogOut size={14} />
           Sair

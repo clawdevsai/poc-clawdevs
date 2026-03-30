@@ -90,7 +90,7 @@ export function StatsCard({
           )}
         >
           {trendPositive ? "+" : ""}
-          {trend.value}% {trend.label ?? "vs yesterday"}
+          {trend.value}% {trend.label ?? "vs ontem"}
         </div>
       )}
     </div>

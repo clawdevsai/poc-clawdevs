@@ -88,15 +88,18 @@ export function ActivityFeed({ events, loading = false }: ActivityFeedProps) {
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] flex flex-col h-full">
       <div className="px-4 py-3 border-b border-[hsl(var(--border))]">
-        <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">Recent Activity</h3>
-        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Live event stream</p>
+        <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">Atividade Recente</h3>
+        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Fluxo de eventos ao vivo</p>
       </div>
       <div className="flex-1 overflow-y-auto px-4 divide-y divide-[hsl(var(--border))]">
         {loading ? (
           Array.from({ length: 8 }).map((_, i) => <ActivitySkeleton key={i} />)
         ) : events.length === 0 ? (
-          <div className="py-8 text-center text-sm text-[hsl(var(--muted-foreground))]">
-            No recent activity
+          <div className="py-12 flex flex-col items-center justify-center text-center">
+            <Activity size={32} className="text-[hsl(var(--muted-foreground))] opacity-20 mb-3" />
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              Nenhuma atividade recente
+            </p>
           </div>
         ) : (
           events.map((event) => {

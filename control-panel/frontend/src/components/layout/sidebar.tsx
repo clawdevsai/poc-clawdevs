@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { customInstance } from "@/lib/axios-instance";
 import { wsManager } from "@/lib/ws";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LayoutDashboard,
   Bot,
@@ -75,13 +76,20 @@ export function Sidebar() {
             <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Control Panel</p>
           </div>
         )}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className="ml-auto text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-          title={collapsed ? "Expandir" : "Colapsar"}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="ml-auto text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+              aria-label={collapsed ? "Expandir menu" : "Colapsar menu"}
+            >
+              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {collapsed ? "Expandir" : "Colapsar"}
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Navigation */}
@@ -93,11 +101,11 @@ export function Sidebar() {
           const badge = item.badge === "approvals" && pendingCount > 0 ? pendingCount : null;
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              className={cn(
+            <Tooltip key={item.href} delayDuration={0} disableHoverableContent={!collapsed}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.href}
+                  className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors relative",
                 collapsed ? "justify-center" : "",
                 isActive
@@ -113,17 +121,24 @@ export function Sidebar() {
                   </span>
                 )}
               </span>
-              {!collapsed && (
-                <>
-                  <span className="flex-1">{item.label}</span>
-                  {badge !== null && (
-                    <span className="ml-auto rounded-full bg-[hsl(var(--primary))] text-black text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                      {badge > 99 ? "99+" : badge}
-                    </span>
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1">{item.label}</span>
+                      {badge !== null && (
+                        <span className="ml-auto rounded-full bg-[hsl(var(--primary))] text-black text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                          {badge > 99 ? "99+" : badge}
+                        </span>
+                      )}
+                    </>
                   )}
-                </>
+                </Link>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  {item.label}
+                </TooltipContent>
               )}
-            </Link>
+            </Tooltip>
           );
         })}
       </nav>
