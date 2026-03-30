@@ -115,7 +115,7 @@ constraints:
   - "Do not expose secrets"
 
 communication:
-  language: "Always respond in English"
+  language: "Always respond in __LANGUAGE__"
   format: ["status", "executive summary", "next owner/action"]
 
 memory:

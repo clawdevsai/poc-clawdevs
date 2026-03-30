@@ -73,7 +73,8 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: help
 .PHONY: preflight sync-agent-config
 .PHONY: build images-build pull
-.PHONY: up up-all up-gpu down restart status logs
+.PHONY: build-with-cache images-build-with-cache
+.PHONY: up up-all up-all-with-cache up-gpu down restart status logs
 .PHONY: up-postgres up-redis up-ollama up-searxng up-searxng-proxy up-panel-backend up-panel-worker up-panel-frontend up-token-init up-openclaw
 .PHONY: openclaw-logs backend-logs ollama-logs frontend-logs
 .PHONY: logs-follow ps top
@@ -91,6 +92,16 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: panel-worker-image-build panel-worker-image-push
 .PHONY: panel-frontend-image-build panel-frontend-image-push
 .PHONY: openclaw-image-build openclaw-image-push
+.PHONY: token-init-image-build-with-cache
+.PHONY: postgres-image-build-with-cache
+.PHONY: searxng-image-build-with-cache
+.PHONY: ollama-image-build-with-cache
+.PHONY: redis-image-build-with-cache
+.PHONY: panel-backend-image-build-with-cache
+.PHONY: searxng-proxy-image-build-with-cache
+.PHONY: panel-worker-image-build-with-cache
+.PHONY: panel-frontend-image-build-with-cache
+.PHONY: openclaw-image-build-with-cache
 .PHONY: images-push images-release
 .PHONY: spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist
 .PHONY: brief-template clarify-template plan-template task-template validate-template
@@ -102,12 +113,14 @@ help:
 	@echo "════════════════════════════════════════════════════════════════"
 	@echo ""
 	@echo "make up-all        Build local + sobe todos os 10 containers"
+	@echo "make up-all-with-cache  Build local (com cache) + sobe todos os 10 containers"
 	@echo "make up-gpu        Mesmo fluxo do up-all com --gpus all no Ollama"
 	@echo "make up-<service>  Sobe container individual (ex.: up-postgres)"
 	@echo "make down          Remove todos os containers da stack"
 	@echo "make status        Lista status dos containers da stack"
 	@echo "make logs          Logs agregados dos containers em execucao"
 	@echo "make build         Build local das 10 imagens"
+	@echo "make build-with-cache   Build local das 10 imagens (com cache)"
 	@echo "make migrate       Executa migrations Alembic"
 
 preflight:
@@ -177,6 +190,8 @@ containers-clean:
 
 build: images-build
 
+build-with-cache: images-build-with-cache
+
 images-build: \
 	token-init-image-build \
 	postgres-image-build \
@@ -189,12 +204,39 @@ images-build: \
 	panel-frontend-image-build \
 	openclaw-image-build
 
+images-build-with-cache: \
+	token-init-image-build-with-cache \
+	postgres-image-build-with-cache \
+	searxng-image-build-with-cache \
+	ollama-image-build-with-cache \
+	redis-image-build-with-cache \
+	panel-backend-image-build-with-cache \
+	searxng-proxy-image-build-with-cache \
+	panel-worker-image-build-with-cache \
+	panel-frontend-image-build-with-cache \
+	openclaw-image-build-with-cache
+
 up:
 	@echo "Use make up-all para subir a stack completa."
 	@echo "Para subir um container: make up-postgres | up-redis | up-ollama | up-searxng | up-searxng-proxy | up-panel-backend | up-panel-worker | up-panel-frontend | up-token-init | up-openclaw"
 	@exit 1
 
 up-all: preflight build network-create volumes-create containers-clean
+	@bash scripts/docker/up-all.sh "$(ENV_FILE)" "$(STACK_NETWORK)" \
+		"$(POSTGRES_IMAGE)" "$(REDIS_IMAGE)" "$(OLLAMA_IMAGE)" \
+		"$(SEARXNG_IMAGE)" "$(SEARXNG_PROXY_IMAGE)" "$(PANEL_BACKEND_IMAGE)" \
+		"$(PANEL_WORKER_IMAGE)" "$(PANEL_FRONTEND_IMAGE)" "$(TOKEN_INIT_IMAGE)" \
+		"$(SEARXNG_PROXY_CONF)"
+	@bash scripts/docker/run-openclaw.sh "$(ENV_FILE)" "$(STACK_NETWORK)" "$(OPENCLAW_IMAGE)" "$(BOOTSTRAP_SCRIPTS_DIR)"
+	@echo ""
+	@echo "Stack iniciada."
+	@echo "  http://localhost:3000        Painel de Controle"
+	@echo "  http://localhost:8000/docs   API Docs"
+	@echo "  http://localhost:18789       OpenClaw Gateway"
+	@echo "  http://localhost:11434       Ollama API"
+	@echo "  http://localhost:18080       SearXNG Proxy"
+
+up-all-with-cache: preflight build-with-cache network-create volumes-create containers-clean
 	@bash scripts/docker/up-all.sh "$(ENV_FILE)" "$(STACK_NETWORK)" \
 		"$(POSTGRES_IMAGE)" "$(REDIS_IMAGE)" "$(OLLAMA_IMAGE)" \
 		"$(SEARXNG_IMAGE)" "$(SEARXNG_PROXY_IMAGE)" "$(PANEL_BACKEND_IMAGE)" \
@@ -246,7 +288,7 @@ down: containers-clean
 
 restart:
 	@$(MAKE) down
-	@$(MAKE) up-all
+	@$(MAKE) up-all-with-cache
 
 status:
 	@docker ps -a --filter "name=^/clawdevs-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -371,11 +413,17 @@ destroy-complete:
 token-init-image-build:
 	docker build --no-cache -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
 
+token-init-image-build-with-cache:
+	docker build -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
+
 token-init-image-push:
 	docker push $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 postgres-image-build:
 	docker build --no-cache -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .
+
+postgres-image-build-with-cache:
+	docker build -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .
 
 postgres-image-push:
 	docker push $(POSTGRES_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
@@ -383,11 +431,17 @@ postgres-image-push:
 searxng-image-build:
 	docker build --no-cache -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .
 
+searxng-image-build-with-cache:
+	docker build -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .
+
 searxng-image-push:
 	docker push $(SEARXNG_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 ollama-image-build:
 	docker build --no-cache -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .
+
+ollama-image-build-with-cache:
+	docker build -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .
 
 ollama-image-push:
 	docker push $(OLLAMA_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
@@ -395,11 +449,17 @@ ollama-image-push:
 redis-image-build:
 	docker build --no-cache -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .
 
+redis-image-build-with-cache:
+	docker build -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .
+
 redis-image-push:
 	docker push $(REDIS_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-backend-image-build:
 	docker build --no-cache -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend
+
+panel-backend-image-build-with-cache:
+	docker build -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend
 
 panel-backend-image-push:
 	docker push $(PANEL_BACKEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
@@ -407,11 +467,17 @@ panel-backend-image-push:
 searxng-proxy-image-build:
 	docker build --no-cache -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .
 
+searxng-proxy-image-build-with-cache:
+	docker build -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .
+
 searxng-proxy-image-push:
 	docker push $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-worker-image-build:
 	docker build --no-cache -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend
+
+panel-worker-image-build-with-cache:
+	docker build -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend
 
 panel-worker-image-push:
 	docker push $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
@@ -419,11 +485,17 @@ panel-worker-image-push:
 panel-frontend-image-build:
 	docker build --no-cache -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend
 
+panel-frontend-image-build-with-cache:
+	docker build -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend
+
 panel-frontend-image-push:
 	docker push $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 openclaw-image-build:
 	docker build --no-cache --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .
+
+openclaw-image-build-with-cache:
+	docker build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .
 
 openclaw-image-push:
 	docker push $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)

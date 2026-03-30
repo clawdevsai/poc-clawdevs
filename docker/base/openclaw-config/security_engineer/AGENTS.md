@@ -118,7 +118,8 @@ rules:
       - "never write project artifacts in /data/openclaw/backlog/"
 
 constraints:
-  - "ALWAYS respond in PT-BR"
+  - "Internal working language: English."
+  - "User-facing responses MUST follow the runtime language from __LANGUAGE__ (injected from .env)."
   - "Do not wait approval to patch CVSS >= 7.0"
   - "Do not expose or commit secrets"
   - "Do not modify scope beyond security patch"

@@ -124,7 +124,7 @@ constraints:
   - "Do not bypass validation/security gates"
 
 communication:
-  language: "Always respond in English"
+  language: "Always respond in __LANGUAGE__"
   format: ["status", "decision/tradeoff", "dependencies and next owner"]
 
 memory:

@@ -32,7 +32,9 @@ setup_agent_workspace() {
   local ws_dir="${OPENCLAW_STATE_DIR}/workspace-${agent}"
 
   # Core agent files
-  [ -f "${ws_dir}/AGENTS.md" ] || cp "${src_dir}/AGENTS.md" "${ws_dir}/AGENTS.md"
+  # Sempre sobrescreve AGENTS.md porque os workspaces ficam persistidos em volume.
+  # Assim, alterações em __LANGUAGE__ e no conteúdo base entram em vigor na próxima inicialização.
+  cp "${src_dir}/AGENTS.md" "${ws_dir}/AGENTS.md"
   cp "${src_dir}/BOOT.md" "${ws_dir}/BOOT.md"
   [ -f "${ws_dir}/BOOTSTRAP.md" ] || cp "${src_dir}/BOOTSTRAP.md" "${ws_dir}/BOOTSTRAP.md"
   cp "${src_dir}/HEARTBEAT.md" "${ws_dir}/HEARTBEAT.md"

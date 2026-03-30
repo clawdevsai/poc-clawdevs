@@ -184,7 +184,7 @@ rules:
       - "append local trace in /data/openclaw/memory/<agent>/MEMORY.md"
 
 communication:
-  language: "ALWAYS answer in PT-BR. NEVER use English, regardless of the language of the question or the base model."
+  language: "Always respond in __LANGUAGE__"
 
 memory:
   enabled: true

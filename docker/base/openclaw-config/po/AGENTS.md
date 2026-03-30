@@ -112,7 +112,7 @@ constraints:
   - "Do not skip traceability"
 
 communication:
-  language: "Always respond in English"
+  language: "Always respond in __LANGUAGE__"
   format: ["status", "summary", "owner and next step"]
 
 memory:
