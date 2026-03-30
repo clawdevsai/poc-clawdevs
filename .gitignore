@@ -73,3 +73,4 @@ control-panel/backend/.venv/
 **/.next/*
 .task
 .briefs
+data/openclaw/backlog

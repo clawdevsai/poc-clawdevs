@@ -954,7 +954,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/env" },
         { "pattern": "/usr/bin/printenv" },
         { "pattern": "/usr/bin/tee" },
-        { "pattern": "/usr/bin/tr" }
+        { "pattern": "/usr/bin/tr" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "po": {

@@ -257,12 +257,14 @@ function ChatPageContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [streamSeconds, setStreamSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
   const [agentQuery, setAgentQuery] = useState("");
   const [activeAgentIndex, setActiveAgentIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const agentDropdownRef = useRef<HTMLDivElement | null>(null);
+  const streamIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (historyData?.messages) {
@@ -280,6 +282,29 @@ function ChatPageContent() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (!sending) {
+      setStreamSeconds(0);
+      if (streamIntervalRef.current !== null) {
+        window.clearInterval(streamIntervalRef.current);
+        streamIntervalRef.current = null;
+      }
+      return;
+    }
+
+    setStreamSeconds(0);
+    streamIntervalRef.current = window.setInterval(() => {
+      setStreamSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => {
+      if (streamIntervalRef.current !== null) {
+        window.clearInterval(streamIntervalRef.current);
+        streamIntervalRef.current = null;
+      }
+    };
+  }, [sending]);
 
   useEffect(() => {
     if (!agentDropdownOpen) return;
@@ -732,7 +757,9 @@ function ChatPageContent() {
                               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[hsl(var(--muted-foreground))]" style={{ animationDelay: "150ms" }} />
                               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[hsl(var(--muted-foreground))]" style={{ animationDelay: "300ms" }} />
                             </span>
-                            <span className="text-sm text-[hsl(var(--muted-foreground))]">Stream em andamento...</span>
+                            <span className="text-sm text-[hsl(var(--muted-foreground))]">
+                              Stream em andamento... {streamSeconds}s
+                            </span>
                           </div>
                         ) : (
                           <span className="text-sm text-[hsl(var(--muted-foreground))]">Pensando...</span>
