@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from pydantic_settings import BaseSettings
+from pydantic import Field
 from functools import lru_cache
 
 
@@ -81,6 +82,32 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://clawdevs-panel-frontend:3000",
     ]
+
+    # Health Monitor Configuration
+    HEALTH_MONITOR_ENABLED: bool = Field(
+        default=True,
+        description="Enable health monitoring loop"
+    )
+    HEALTH_MONITOR_INTERVAL_SECONDS: int = Field(
+        default=300,
+        description="Health monitor check interval (seconds)"
+    )
+    HEALTH_MONITOR_STARTUP_DELAY_SECONDS: int = Field(
+        default=30,
+        description="Delay before first health monitor run (seconds)"
+    )
+
+    # Repair Agent Toggles
+    DATABASE_HEALER_ENABLED: bool = Field(default=True)
+    AGENT_REVIVER_ENABLED: bool = Field(default=True)
+    QUEUE_MECHANIC_ENABLED: bool = Field(default=True)
+
+    # Health Thresholds
+    DB_CONNECTION_POOL_WARNING_PCT: int = Field(default=80)
+    DB_CONNECTION_POOL_CRITICAL_PCT: int = Field(default=95)
+    AGENT_HEARTBEAT_TIMEOUT_MINUTES: int = Field(default=30)
+    QUEUE_CRITICAL_DEPTH: int = Field(default=100)
+    QUEUE_CRITICAL_PROCESSING_RATE_MIN: int = Field(default=5)
 
     model_config = {"env_prefix": "PANEL_", "env_file": ".env", "extra": "allow"}
 

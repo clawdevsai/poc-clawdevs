@@ -86,7 +86,25 @@ async def lifespan(app: FastAPI):
     await run_migrations()
     await bootstrap_admin()
     await bootstrap_agents()
+
+    # Start health monitor
+    if settings.HEALTH_MONITOR_ENABLED:
+        from app.services.health_monitor import HealthMonitorLoop
+
+        monitor = HealthMonitorLoop(
+            interval_seconds=settings.HEALTH_MONITOR_INTERVAL_SECONDS
+        )
+        app.state.health_monitor = monitor
+        await monitor.start()
+        logger.info("Health monitor initialized on startup")
+    else:
+        logger.info("Health monitor disabled via config")
+
     yield
+
+    # Stop health monitor
+    if hasattr(app.state, 'health_monitor'):
+        await app.state.health_monitor.stop()
 
 
 app = FastAPI(
