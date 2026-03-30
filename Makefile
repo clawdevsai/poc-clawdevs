@@ -153,7 +153,6 @@ preflight:
 			exit 1; \
 		fi; \
 	done
-	@$(MAKE) sync-agent-config
 	@echo "[preflight] ambiente validado."
 
 env-check: preflight
@@ -201,7 +200,7 @@ up-all: preflight build network-create volumes-create containers-clean
 		"$(SEARXNG_IMAGE)" "$(SEARXNG_PROXY_IMAGE)" "$(PANEL_BACKEND_IMAGE)" \
 		"$(PANEL_WORKER_IMAGE)" "$(PANEL_FRONTEND_IMAGE)" "$(TOKEN_INIT_IMAGE)" \
 		"$(SEARXNG_PROXY_CONF)"
-	@bash scripts/docker/run-openclaw.sh "$(ENV_FILE)" "$(STACK_NETWORK)" "$(OPENCLAW_IMAGE)" "$(AGENT_CONFIG_FLAT_DIR)" "$(BOOTSTRAP_SCRIPTS_DIR)"
+	@bash scripts/docker/run-openclaw.sh "$(ENV_FILE)" "$(STACK_NETWORK)" "$(OPENCLAW_IMAGE)" "$(BOOTSTRAP_SCRIPTS_DIR)"
 	@echo ""
 	@echo "Stack iniciada."
 	@echo "  http://localhost:3000        Painel de Controle"
@@ -238,7 +237,7 @@ up-token-init: preflight network-create volumes-create token-init-image-build
 	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" TOKEN_INIT_IMAGE="$(TOKEN_INIT_IMAGE)" bash scripts/docker/up-service.sh token-init
 
 up-openclaw: preflight network-create volumes-create openclaw-image-build
-	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OPENCLAW_IMAGE="$(OPENCLAW_IMAGE)" AGENT_CONFIG_FLAT_DIR="$(AGENT_CONFIG_FLAT_DIR)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh openclaw
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OPENCLAW_IMAGE="$(OPENCLAW_IMAGE)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh openclaw
 
 up-gpu:
 	@$(MAKE) up-all OLLAMA_GPU_FLAGS="--gpus all"

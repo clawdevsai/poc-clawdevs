@@ -5,8 +5,7 @@ set -euo pipefail
 ENV_FILE="${1:-.env}"
 STACK_NETWORK="${2:-clawdevs}"
 OPENCLAW_IMAGE="${3:-clawdevsai/openclaw-runtime:local}"
-AGENT_CONFIG_FLAT_DIR="${4:-tmp/agent-config-flat}"
-BOOTSTRAP_SCRIPTS_DIR="${5:-docker/base/bootstrap-scripts}"
+BOOTSTRAP_SCRIPTS_DIR="${4:-docker/base/bootstrap-scripts}"
 
 HOST_PWD="$(pwd)"
 DOCKER_BIN=(docker)
@@ -70,7 +69,7 @@ docker rm -f clawdevs-openclaw >/dev/null 2>&1 || true
   -p 18789:18789 \
   --env-file "$ENV_FILE" \
   -v openclaw-data:/data/openclaw \
-  -v "$HOST_PWD/$AGENT_CONFIG_FLAT_DIR:/bootstrap/agent-config:ro" \
+  -v "$HOST_PWD/docker/base/openclaw-config:/bootstrap/openclaw-config:ro" \
   -v "$HOST_PWD/$BOOTSTRAP_SCRIPTS_DIR:/bootstrap/scripts:ro" \
   -v panel-token:/panel-token:ro \
   -e HOME=/data/openclaw \

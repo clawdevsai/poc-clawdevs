@@ -18,546 +18,115 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-[ -f "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md" ] || cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
-cp /bootstrap/agent-config/ceo-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/ceo-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
-cp /bootstrap/agent-config/ceo-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-ceo/HEARTBEAT.md"
-cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
-cp /bootstrap/agent-config/ceo-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-ceo/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/ceo-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SOUL.md"
-cp /bootstrap/agent-config/ceo-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/ceo-USER.md "${OPENCLAW_STATE_DIR}/workspace-ceo/USER.md"
-cp /bootstrap/agent-config/ceo-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/TOOLS.md"
+# Base configuration directory
+OPENCLAW_CONFIG_DIR="/bootstrap/openclaw-config"
+
+# List of all agents
+AGENTS=(ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator)
+
+# Copy agent base files from structured directory
+# Arguments: agent_name
+setup_agent_workspace() {
+  local agent="$1"
+  local src_dir="${OPENCLAW_CONFIG_DIR}/${agent}"
+  local ws_dir="${OPENCLAW_STATE_DIR}/workspace-${agent}"
+
+  # Core agent files
+  [ -f "${ws_dir}/AGENTS.md" ] || cp "${src_dir}/AGENTS.md" "${ws_dir}/AGENTS.md"
+  cp "${src_dir}/BOOT.md" "${ws_dir}/BOOT.md"
+  [ -f "${ws_dir}/BOOTSTRAP.md" ] || cp "${src_dir}/BOOTSTRAP.md" "${ws_dir}/BOOTSTRAP.md"
+  cp "${src_dir}/HEARTBEAT.md" "${ws_dir}/HEARTBEAT.md"
+  cp "${src_dir}/IDENTITY.md" "${ws_dir}/IDENTITY.md"
+  cp "${src_dir}/INPUT_SCHEMA.json" "${ws_dir}/INPUT_SCHEMA.json"
+  cp "${src_dir}/SOUL.md" "${ws_dir}/SOUL.md"
+  cp "${src_dir}/SECURITY_TEST_CASES.md" "${ws_dir}/SECURITY_TEST_CASES.md"
+  cp "${src_dir}/USER.md" "${ws_dir}/USER.md"
+  cp "${src_dir}/TOOLS.md" "${ws_dir}/TOOLS.md"
+}
+
+# Copy shared files to agent workspace
+# Arguments: agent_name
+copy_shared_files() {
+  local agent="$1"
+  local shared_dir="${OPENCLAW_CONFIG_DIR}/shared"
+  local ws_dir="${OPENCLAW_STATE_DIR}/workspace-${agent}"
+
+  cp "${shared_dir}/CONSTITUTION.md" "${ws_dir}/CONSTITUTION.md"
+  cp "${shared_dir}/BRIEF_TEMPLATE.md" "${ws_dir}/BRIEF_TEMPLATE.md"
+  cp "${shared_dir}/CLARIFY_TEMPLATE.md" "${ws_dir}/CLARIFY_TEMPLATE.md"
+  cp "${shared_dir}/SDD_CHECKLIST.md" "${ws_dir}/SDD_CHECKLIST.md"
+  cp "${shared_dir}/SDD_FULL_CYCLE_EXAMPLE.md" "${ws_dir}/SDD_FULL_CYCLE_EXAMPLE.md"
+  cp "${shared_dir}/SDD_OPERATIONAL_PROMPTS.md" "${ws_dir}/SDD_OPERATIONAL_PROMPTS.md"
+  cp "${shared_dir}/SPEC_TEMPLATE.md" "${ws_dir}/SPEC_TEMPLATE.md"
+  cp "${shared_dir}/PLAN_TEMPLATE.md" "${ws_dir}/PLAN_TEMPLATE.md"
+  cp "${shared_dir}/TASK_TEMPLATE.md" "${ws_dir}/TASK_TEMPLATE.md"
+  cp "${shared_dir}/VALIDATE_TEMPLATE.md" "${ws_dir}/VALIDATE_TEMPLATE.md"
+  cp "${shared_dir}/VIBE_CODING_PLAYBOOK.md" "${ws_dir}/VIBE_CODING_PLAYBOOK.md"
+  cp "${shared_dir}/SDD_OPERATING_MODEL.md" "${ws_dir}/SDD_OPERATING_MODEL.md"
+  cp "${shared_dir}/SPECKIT_ADAPTATION.md" "${ws_dir}/SPECKIT_ADAPTATION.md"
+
+  # Project README (renamed from PROJECT_README.md)
+  cp "${shared_dir}/PROJECT_README.md" "${ws_dir}/README.md"
+
+  # SDD Initiative files
+  mkdir -p "${ws_dir}/initiatives/internal-sdd-operationalization"
+  local sdd_dir="${shared_dir}/initiatives/internal-sdd-operationalization"
+  cp "${sdd_dir}/README.md" "${ws_dir}/initiatives/internal-sdd-operationalization/README.md"
+  cp "${sdd_dir}/BRIEF.md" "${ws_dir}/initiatives/internal-sdd-operationalization/BRIEF.md"
+  cp "${sdd_dir}/SPEC.md" "${ws_dir}/initiatives/internal-sdd-operationalization/SPEC.md"
+  cp "${sdd_dir}/CLARIFY.md" "${ws_dir}/initiatives/internal-sdd-operationalization/CLARIFY.md"
+  cp "${sdd_dir}/PLAN.md" "${ws_dir}/initiatives/internal-sdd-operationalization/PLAN.md"
+  cp "${sdd_dir}/TASK.md" "${ws_dir}/initiatives/internal-sdd-operationalization/TASK.md"
+  cp "${sdd_dir}/VALIDATE.md" "${ws_dir}/initiatives/internal-sdd-operationalization/VALIDATE.md"
+}
+
+# Copy agent-specific skills from agents/<agent>/skills/
+# Arguments: agent_name
+copy_agent_skills() {
+  local agent="$1"
+  local skills_dir="${OPENCLAW_CONFIG_DIR}/agents/${agent}/skills"
+  local ws_dir="${OPENCLAW_STATE_DIR}/workspace-${agent}"
+
+  # Check if skills directory exists for this agent
+  if [ -d "${skills_dir}" ]; then
+    for skill_dir in "${skills_dir}"/*/; do
+      [ -d "${skill_dir}" ] || continue
+      local skill_name=$(basename "${skill_dir}")
+      local target_dir="${ws_dir}/skills/${skill_name}"
+      mkdir -p "${target_dir}"
+      cp -Rf "${skill_dir}/." "${target_dir}/"
+    done
+  fi
+}
+
+# Setup all agent workspaces
+for agent in "${AGENTS[@]}"; do
+  setup_agent_workspace "${agent}"
+  copy_shared_files "${agent}"
+  copy_agent_skills "${agent}"
+done
+
+# Special handling for CEO DIRECTORS_NAME substitution
 DIRECTORS_NAME_ESCAPED="$(printf '%s' "${DIRECTORS_NAME}" | sed -e 's/[\\/&]/\\&/g')"
 sed -i "s|\${DIRECTORS_NAME}|${DIRECTORS_NAME_ESCAPED}|g" "${OPENCLAW_STATE_DIR}/workspace-ceo/USER.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/ceo_orchestration"
-cp /bootstrap/agent-config/ceo-skill-ceo_orchestration-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/ceo_orchestration/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-ceo/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ceo/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-ceo/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-ceo/README.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md" ] || cp /bootstrap/agent-config/po-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-po/AGENTS.md"
-cp /bootstrap/agent-config/po-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-po/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-po/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/po-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-po/BOOTSTRAP.md"
-cp /bootstrap/agent-config/po-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-po/HEARTBEAT.md"
-cp /bootstrap/agent-config/po-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-po/IDENTITY.md"
-cp /bootstrap/agent-config/po-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-po/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/po-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-po/SOUL.md"
-cp /bootstrap/agent-config/po-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-po/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/po-USER.md "${OPENCLAW_STATE_DIR}/workspace-po/USER.md"
-cp /bootstrap/agent-config/po-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-po/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po/skills/po_product_delivery"
-cp /bootstrap/agent-config/po-skill-po_product_delivery-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-po/skills/po_product_delivery/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-po/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-po/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-po/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-po/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-po/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-po/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-po/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-po/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-po/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-po/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-po/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-po/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-po/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-po/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-po/README.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-arquiteto/AGENTS.md" ] || cp /bootstrap/agent-config/arquiteto-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/AGENTS.md"
-cp /bootstrap/agent-config/arquiteto-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/arquiteto-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BOOTSTRAP.md"
-cp /bootstrap/agent-config/arquiteto-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/HEARTBEAT.md"
-cp /bootstrap/agent-config/arquiteto-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/IDENTITY.md"
-cp /bootstrap/agent-config/arquiteto-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-arquiteto/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/arquiteto-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SOUL.md"
-cp /bootstrap/agent-config/arquiteto-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/arquiteto-USER.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/USER.md"
-cp /bootstrap/agent-config/arquiteto-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-arquiteto/skills/arquiteto_engineering"
-cp /bootstrap/agent-config/arquiteto-skill-arquiteto_engineering-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/skills/arquiteto_engineering/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/README.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dev_backend/AGENTS.md" ] || cp /bootstrap/agent-config/dev_backend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/AGENTS.md"
-cp /bootstrap/agent-config/dev_backend-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dev_backend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOTSTRAP.md"
-cp /bootstrap/agent-config/dev_backend-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/HEARTBEAT.md"
-cp /bootstrap/agent-config/dev_backend-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/IDENTITY.md"
-cp /bootstrap/agent-config/dev_backend-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_backend/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/dev_backend-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SOUL.md"
-cp /bootstrap/agent-config/dev_backend-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/dev_backend-USER.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/USER.md"
-cp /bootstrap/agent-config/dev_backend-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_backend/skills/dev_backend_implementation"
-cp /bootstrap/agent-config/dev_backend-skill-dev_backend_implementation-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/skills/dev_backend_implementation/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/README.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/AGENTS.md" ] || cp /bootstrap/agent-config/dev_frontend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/AGENTS.md"
-cp /bootstrap/agent-config/dev_frontend-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dev_frontend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BOOTSTRAP.md"
-cp /bootstrap/agent-config/dev_frontend-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/HEARTBEAT.md"
-cp /bootstrap/agent-config/dev_frontend-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/IDENTITY.md"
-cp /bootstrap/agent-config/dev_frontend-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/dev_frontend-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SOUL.md"
-cp /bootstrap/agent-config/dev_frontend-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/dev_frontend-USER.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/USER.md"
-cp /bootstrap/agent-config/dev_frontend-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/skills/dev_frontend_implementation"
-cp /bootstrap/agent-config/dev_frontend-skill-dev_frontend_implementation-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/skills/dev_frontend_implementation/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/README.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/SPECKIT_ADAPTATION.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/AGENTS.md" ] || cp /bootstrap/agent-config/dev_mobile-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/AGENTS.md"
-cp /bootstrap/agent-config/dev_mobile-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dev_mobile-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BOOTSTRAP.md"
-cp /bootstrap/agent-config/dev_mobile-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/HEARTBEAT.md"
-cp /bootstrap/agent-config/dev_mobile-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/IDENTITY.md"
-cp /bootstrap/agent-config/dev_mobile-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/dev_mobile-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SOUL.md"
-cp /bootstrap/agent-config/dev_mobile-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/dev_mobile-USER.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/USER.md"
-cp /bootstrap/agent-config/dev_mobile-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/skills/dev_mobile_implementation"
-cp /bootstrap/agent-config/dev_mobile-skill-dev_mobile_implementation-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/skills/dev_mobile_implementation/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/README.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/SPECKIT_ADAPTATION.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/AGENTS.md" ] || cp /bootstrap/agent-config/qa_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/AGENTS.md"
-cp /bootstrap/agent-config/qa_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/qa_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BOOTSTRAP.md"
-cp /bootstrap/agent-config/qa_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/HEARTBEAT.md"
-cp /bootstrap/agent-config/qa_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/IDENTITY.md"
-cp /bootstrap/agent-config/qa_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/qa_engineer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SOUL.md"
-cp /bootstrap/agent-config/qa_engineer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/qa_engineer-USER.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/USER.md"
-cp /bootstrap/agent-config/qa_engineer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa_engineer_validation"
-cp /bootstrap/agent-config/qa_engineer-skill-qa_engineer_validation-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa_engineer_validation/SKILL.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/test-specialist"
-cp /bootstrap/agent-config/qa_engineer-skill-test-specialist-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/test-specialist/SKILL.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa-bug-investigation"
-cp /bootstrap/agent-config/qa_engineer-skill-qa-bug-investigation-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa-bug-investigation/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/README.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/SPECKIT_ADAPTATION.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-devops_sre/AGENTS.md" ] || cp /bootstrap/agent-config/devops_sre-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/AGENTS.md"
-cp /bootstrap/agent-config/devops_sre-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/devops_sre-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BOOTSTRAP.md"
-cp /bootstrap/agent-config/devops_sre-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/HEARTBEAT.md"
-cp /bootstrap/agent-config/devops_sre-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/IDENTITY.md"
-cp /bootstrap/agent-config/devops_sre-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-devops_sre/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/devops_sre-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SOUL.md"
-cp /bootstrap/agent-config/devops_sre-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/devops_sre-USER.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/USER.md"
-cp /bootstrap/agent-config/devops_sre-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-devops_sre/skills/devops_sre_operations"
-cp /bootstrap/agent-config/devops_sre-skill-devops_sre_operations-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/skills/devops_sre_operations/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/README.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-devops_sre/SPECKIT_ADAPTATION.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-security_engineer/AGENTS.md" ] || cp /bootstrap/agent-config/security_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/AGENTS.md"
-cp /bootstrap/agent-config/security_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/security_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BOOTSTRAP.md"
-cp /bootstrap/agent-config/security_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/HEARTBEAT.md"
-cp /bootstrap/agent-config/security_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/IDENTITY.md"
-cp /bootstrap/agent-config/security_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-security_engineer/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/security_engineer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SOUL.md"
-cp /bootstrap/agent-config/security_engineer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/security_engineer-USER.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/USER.md"
-cp /bootstrap/agent-config/security_engineer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-security_engineer/skills/security_engineer_scan"
-cp /bootstrap/agent-config/security_engineer-skill-security_engineer_scan-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/skills/security_engineer_scan/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/README.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-security_engineer/SPECKIT_ADAPTATION.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-ux_designer/AGENTS.md" ] || cp /bootstrap/agent-config/ux_designer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/AGENTS.md"
-cp /bootstrap/agent-config/ux_designer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/ux_designer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BOOTSTRAP.md"
-cp /bootstrap/agent-config/ux_designer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/HEARTBEAT.md"
-cp /bootstrap/agent-config/ux_designer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/IDENTITY.md"
-cp /bootstrap/agent-config/ux_designer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-ux_designer/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/ux_designer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SOUL.md"
-cp /bootstrap/agent-config/ux_designer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/ux_designer-USER.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/USER.md"
-cp /bootstrap/agent-config/ux_designer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_designer_artifacts"
-cp /bootstrap/agent-config/ux_designer-skill-ux_designer_artifacts-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_designer_artifacts/SKILL.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_ui_pro_rules"
-cp /bootstrap/agent-config/ux_designer-skill-ux_ui_pro_rules-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_ui_pro_rules/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/README.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/SPECKIT_ADAPTATION.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/AGENTS.md" ] || cp /bootstrap/agent-config/dba_data_engineer-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/AGENTS.md"
-cp /bootstrap/agent-config/dba_data_engineer-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOT.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOTSTRAP.md" ] || cp /bootstrap/agent-config/dba_data_engineer-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BOOTSTRAP.md"
-cp /bootstrap/agent-config/dba_data_engineer-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/HEARTBEAT.md"
-cp /bootstrap/agent-config/dba_data_engineer-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/IDENTITY.md"
-cp /bootstrap/agent-config/dba_data_engineer-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/INPUT_SCHEMA.json"
-cp /bootstrap/agent-config/dba_data_engineer-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SOUL.md"
-cp /bootstrap/agent-config/dba_data_engineer-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SECURITY_TEST_CASES.md"
-cp /bootstrap/agent-config/dba_data_engineer-USER.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/USER.md"
-cp /bootstrap/agent-config/dba_data_engineer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/TOOLS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/skills/dba_data_engineer_schema"
-cp /bootstrap/agent-config/dba_data_engineer-skill-dba_data_engineer_schema-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/skills/dba_data_engineer_schema/SKILL.md"
-cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/CONSTITUTION.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SPECKIT_ADAPTATION.md"
-cp /bootstrap/agent-config/project-README.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/README.md"
-cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/BRIEF_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/CLARIFY_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-SDD_CHECKLIST.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_CHECKLIST.md"
-cp /bootstrap/agent-config/shared-SDD_FULL_CYCLE_EXAMPLE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_FULL_CYCLE_EXAMPLE.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATIONAL_PROMPTS.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_OPERATIONAL_PROMPTS.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization"
-cp /bootstrap/agent-config/shared-sdd-initiative-README.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/README.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-BRIEF.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/BRIEF.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-SPEC.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/SPEC.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-CLARIFY.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/CLARIFY.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-PLAN.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/PLAN.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-TASK.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/TASK.md"
-cp /bootstrap/agent-config/shared-sdd-initiative-VALIDATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/initiatives/internal-sdd-operationalization/VALIDATE.md"
-cp /bootstrap/agent-config/shared-SPEC_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SPEC_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-PLAN_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/PLAN_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-TASK_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/TASK_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VALIDATE_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/VALIDATE_TEMPLATE.md"
-cp /bootstrap/agent-config/shared-VIBE_CODING_PLAYBOOK.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/VIBE_CODING_PLAYBOOK.md"
-cp /bootstrap/agent-config/shared-SDD_OPERATING_MODEL.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SDD_OPERATING_MODEL.md"
-cp /bootstrap/agent-config/shared-SPECKIT_ADAPTATION.md "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/SPECKIT_ADAPTATION.md"
-[ -f "${OPENCLAW_STATE_DIR}/workspace-memory_curator/AGENTS.md" ] || cp /bootstrap/agent-config/memory_curator-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/AGENTS.md"
-cp /bootstrap/agent-config/memory_curator-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/BOOT.md"
-cp /bootstrap/agent-config/memory_curator-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/HEARTBEAT.md"
-cp /bootstrap/agent-config/memory_curator-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/IDENTITY.md"
-cp /bootstrap/agent-config/memory_curator-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/SOUL.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-memory_curator/skills/memory_curator_promotion"
-cp /bootstrap/agent-config/memory_curator-skill-memory_curator_promotion-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/skills/memory_curator_promotion/SKILL.md"
-for ws_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
+
+# Create memory directories for all agents
+for ws_agent in "${AGENTS[@]}"; do
   ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
   mkdir -p "${ws_dir}/memory"
 done
+
 # --- Sistema de Memória Cross-Agent (aiox-core pattern) ---
 MEMORY_BASE="${OPENCLAW_STATE_DIR}/memory"
 mkdir -p "${MEMORY_BASE}/shared"
-for mem_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer memory_curator; do
+
+# Memory agents (excluding memory_curator for special handling)
+MEM_AGENTS=(ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer memory_curator)
+
+for mem_agent in "${MEM_AGENTS[@]}"; do
   mkdir -p "${MEMORY_BASE}/${mem_agent}"
   if [ ! -f "${MEMORY_BASE}/${mem_agent}/MEMORY.md" ]; then
-    src="/bootstrap/agent-config/${mem_agent}-MEMORY.md"
+    src="${OPENCLAW_CONFIG_DIR}/${mem_agent}/MEMORY.md"
     if [ -f "${src}" ]; then
       cp "${src}" "${MEMORY_BASE}/${mem_agent}/MEMORY.md"
     else
@@ -565,8 +134,9 @@ for mem_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_enginee
     fi
   fi
 done
+
 if [ ! -f "${MEMORY_BASE}/shared/SHARED_MEMORY.md" ]; then
-  src_shared="/bootstrap/agent-config/shared-SHARED_MEMORY.md"
+  src_shared="${OPENCLAW_CONFIG_DIR}/shared/SHARED_MEMORY.md"
   if [ -f "${src_shared}" ]; then
     cp "${src_shared}" "${MEMORY_BASE}/shared/SHARED_MEMORY.md"
   else
@@ -575,8 +145,7 @@ if [ ! -f "${MEMORY_BASE}/shared/SHARED_MEMORY.md" ]; then
 fi
 
 # Canonicaliza workspace-<agent>/MEMORY.md para o arquivo central:
-# /data/openclaw/memory/<agent>/MEMORY.md
-for mem_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer memory_curator; do
+for mem_agent in "${MEM_AGENTS[@]}"; do
   ws_memory="${OPENCLAW_STATE_DIR}/workspace-${mem_agent}/MEMORY.md"
   canonical_memory="${MEMORY_BASE}/${mem_agent}/MEMORY.md"
   migrated_snapshot="${MEMORY_BASE}/${mem_agent}/_migrated_workspace_MEMORY.md"
@@ -599,93 +168,43 @@ done
 # --- Fim: Sistema de Memória Cross-Agent ---
 
 # --- Politica compartilhada de validacao de fontes (Zero Trust) ---
-if [ -f /bootstrap/agent-config/shared-SOURCE_VALIDATION.md ]; then
-  for src_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
-    cp /bootstrap/agent-config/shared-SOURCE_VALIDATION.md "${OPENCLAW_STATE_DIR}/workspace-${src_agent}/SOURCE_VALIDATION.md"
+if [ -f "${OPENCLAW_CONFIG_DIR}/shared/SOURCE_VALIDATION.md" ]; then
+  for src_agent in "${AGENTS[@]}"; do
+    cp "${OPENCLAW_CONFIG_DIR}/shared/SOURCE_VALIDATION.md" "${OPENCLAW_STATE_DIR}/workspace-${src_agent}/SOURCE_VALIDATION.md"
   done
 fi
 # --- Fim: politica compartilhada de validacao de fontes ---
 
-# --- Sincronizacao dinamica de skills por agente ---
-# Garante que todo arquivo em /bootstrap/agent-config/<agent>-skill-*
-# seja materializado em workspace-<agent>/skills/<skill>/...
-for skill_manifest in /bootstrap/agent-config/*-skill-*-SKILL.md; do
-  [ -f "${skill_manifest}" ] || continue
-  skill_manifest_base="$(basename "${skill_manifest}")"
-  if [[ "${skill_manifest_base}" =~ ^(.+)-skill-(.+)-SKILL\.md$ ]]; then
-    skill_agent="${BASH_REMATCH[1]}"
-    skill_name="${BASH_REMATCH[2]}"
-    skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${skill_agent}/skills/${skill_name}"
-    mkdir -p "${skill_target_dir}"
-    cp -f "${skill_manifest}" "${skill_target_dir}/SKILL.md"
-  fi
-done
-
-for skill_asset in /bootstrap/agent-config/*-skill-*--asset--*; do
-  [ -f "${skill_asset}" ] || continue
-  skill_asset_base="$(basename "${skill_asset}")"
-  if [[ "${skill_asset_base}" =~ ^(.+)-skill-(.+)--asset--(.+)$ ]]; then
-    skill_agent="${BASH_REMATCH[1]}"
-    skill_name="${BASH_REMATCH[2]}"
-    asset_rel_encoded="${BASH_REMATCH[3]}"
-    asset_rel="${asset_rel_encoded//__SLASH__/\/}"
-    skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${skill_agent}/skills/${skill_name}"
-    mkdir -p "${skill_target_dir}/$(dirname "${asset_rel}")"
-    cp -f "${skill_asset}" "${skill_target_dir}/${asset_rel}"
-  fi
-done
-# --- Fim: sincronizacao dinamica de skills por agente ---
-
 # --- Rollout dinamico de skills compartilhadas para todos os agentes ---
-# Materializa /bootstrap/agent-config/shared-skill-* em todos os workspaces
-# para que skills configuradas em agents.list[].skills sejam resolvidas.
-for shared_skill_manifest in /bootstrap/agent-config/shared-skill-*-SKILL.md; do
-  [ -f "${shared_skill_manifest}" ] || continue
-  shared_skill_manifest_base="$(basename "${shared_skill_manifest}")"
-  if [[ "${shared_skill_manifest_base}" =~ ^shared-skill-(.+)-SKILL\.md$ ]]; then
-    shared_skill_name="${BASH_REMATCH[1]}"
-    for shared_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
-      shared_skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/skills/${shared_skill_name}"
-      mkdir -p "${shared_skill_target_dir}"
-      cp -f "${shared_skill_manifest}" "${shared_skill_target_dir}/SKILL.md"
-    done
-  fi
-done
+# Copy all skills from agents/shared/skills/ to every agent workspace
+SHARED_SKILLS_DIR="${OPENCLAW_CONFIG_DIR}/agents/shared/skills"
+if [ -d "${SHARED_SKILLS_DIR}" ]; then
+  for shared_skill_dir in "${SHARED_SKILLS_DIR}"/*/; do
+    [ -d "${shared_skill_dir}" ] || continue
+    skill_name=$(basename "${shared_skill_dir}")
 
-for shared_skill_asset in /bootstrap/agent-config/shared-skill-*--asset--*; do
-  [ -f "${shared_skill_asset}" ] || continue
-  shared_skill_asset_base="$(basename "${shared_skill_asset}")"
-  if [[ "${shared_skill_asset_base}" =~ ^shared-skill-(.+)--asset--(.+)$ ]]; then
-    shared_skill_name="${BASH_REMATCH[1]}"
-    shared_asset_rel_encoded="${BASH_REMATCH[2]}"
-    shared_asset_rel="${shared_asset_rel_encoded//__SLASH__/\/}"
-    for shared_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
-      shared_skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/skills/${shared_skill_name}"
-      mkdir -p "${shared_skill_target_dir}/$(dirname "${shared_asset_rel}")"
-      cp -f "${shared_skill_asset}" "${shared_skill_target_dir}/${shared_asset_rel}"
+    # Copy to all agent workspaces
+    for shared_agent in "${AGENTS[@]}"; do
+      target_dir="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/skills/${skill_name}"
+      mkdir -p "${target_dir}"
+      cp -Rf "${shared_skill_dir}/." "${target_dir}/"
     done
-  fi
-done
+  done
+fi
 # --- Fim: rollout dinamico de skills compartilhadas ---
 
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dev_backend"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dev_frontend"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dev_mobile"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-qa_engineer"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-devops_sre"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-security_engineer"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ux_designer"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer"
-render_agent_context "${OPENCLAW_STATE_DIR}/workspace-memory_curator"
+# --- Render agent context for all workspaces ---
+for agent in "${AGENTS[@]}"; do
+  render_agent_context "${OPENCLAW_STATE_DIR}/workspace-${agent}"
+done
+# --- Fim: render agent context ---
+
 # --- Skills no workspace compartilhado ---
 # Todos os agentes usam /data/openclaw/backlog/implementation como workspace.
 # As skills precisam estar em skills/ dentro desse workspace para serem encontradas pelo OpenClaw.
 SHARED_WORKSPACE="${OPENCLAW_STATE_DIR}/backlog/implementation"
 mkdir -p "${SHARED_WORKSPACE}/skills"
-for skill_src_dir in "${OPENCLAW_STATE_DIR}"/workspace-*/skills/*; do
+for skill_src_dir in "${OPENCLAW_STATE_DIR}"/workspace-*/skills/*/; do
   [ -d "${skill_src_dir}" ] || continue
   [ -f "${skill_src_dir}/SKILL.md" ] || continue
   skill_name="$(basename "${skill_src_dir}")"
@@ -697,21 +216,27 @@ done
 
 # --- Rollout global da skill self-improving (hardened) ---
 # Fonte canonica da skill (path compartilhado).
-SELF_IMPROVING_CANONICAL_SRC="/bootstrap/agent-config/shared-skill-self-improving-SKILL.md"
-SELF_IMPROVING_SECURITY_POLICY_SRC="/bootstrap/agent-config/shared-skill-self-improving-skill-security-policy.md"
+SELF_IMPROVING_CANONICAL_SRC="${OPENCLAW_CONFIG_DIR}/agents/shared/skills/self-improving/SKILL.md"
+SELF_IMPROVING_SECURITY_POLICY_SRC="${OPENCLAW_CONFIG_DIR}/agents/shared/skills/self-improving/references/skill-security-policy.md"
+
 sanitize_skill_artifacts() {
   local skill_dir="$1"
   rm -rf "${skill_dir}/hooks" "${skill_dir}/scripts"
   rm -f "${skill_dir}/HOOK.md" "${skill_dir}/handler.js" "${skill_dir}/handler.ts"
 }
-if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ] && [ -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" ]; then
-  for si_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
+
+if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ]; then
+  for si_agent in "${AGENTS[@]}"; do
     si_ws="${OPENCLAW_STATE_DIR}/workspace-${si_agent}"
     si_skill_dir="${si_ws}/skills/self-improving"
     mkdir -p "${si_skill_dir}"
     cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${si_skill_dir}/SKILL.md"
-    mkdir -p "${si_skill_dir}/references"
-    cp -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" "${si_skill_dir}/references/skill-security-policy.md"
+
+    # Copy references if they exist
+    if [ -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" ]; then
+      mkdir -p "${si_skill_dir}/references"
+      cp -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" "${si_skill_dir}/references/skill-security-policy.md"
+    fi
 
     # Gate de seguranca: bloquear artefatos executaveis do pacote upstream 3.0.6.
     sanitize_skill_artifacts "${si_skill_dir}"
@@ -738,16 +263,22 @@ if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ] && [ -f "${SELF_IMPROVING_SECURITY_P
   shared_self_improving_dir="${SHARED_WORKSPACE}/skills/self-improving"
   mkdir -p "${shared_self_improving_dir}"
   cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${shared_self_improving_dir}/SKILL.md"
-  mkdir -p "${shared_self_improving_dir}/references"
-  cp -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" "${shared_self_improving_dir}/references/skill-security-policy.md"
+
+  if [ -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" ]; then
+    mkdir -p "${shared_self_improving_dir}/references"
+    cp -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" "${shared_self_improving_dir}/references/skill-security-policy.md"
+  fi
+
   sanitize_skill_artifacts "${shared_self_improving_dir}"
 else
-  echo "[bootstrap] warning: self-improving canonical files not found at ${SELF_IMPROVING_CANONICAL_SRC} / ${SELF_IMPROVING_SECURITY_POLICY_SRC}"
+  echo "[bootstrap] warning: self-improving canonical files not found at ${SELF_IMPROVING_CANONICAL_SRC}"
 fi
 # --- Fim: rollout global da skill self-improving ---
 
 # --- Contrato obrigatorio de persistencia em MEMORY.md ---
-for mem_contract_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer; do
+MEM_CONTRACT_AGENTS=(ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer)
+
+for mem_contract_agent in "${MEM_CONTRACT_AGENTS[@]}"; do
   mem_contract_agents_file="${OPENCLAW_STATE_DIR}/workspace-${mem_contract_agent}/AGENTS.md"
   if [ -f "${mem_contract_agents_file}" ] && ! grep -q "memory_write_contract_v1" "${mem_contract_agents_file}"; then
     cat >> "${mem_contract_agents_file}" <<EOF

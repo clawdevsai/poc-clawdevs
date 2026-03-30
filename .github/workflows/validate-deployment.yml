@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   config-validate:
@@ -13,16 +14,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate .env from secrets
+      - name: Generate .env from vars/secrets
         run: |
           cat > .env <<ENVEOF
-          OPENCLAW_GATEWAY_TOKEN=${{ secrets.OPENCLAW_GATEWAY_TOKEN }}
+          OPENCLAW_GATEWAY_TOKEN=${{ secrets.OPENCLAW_GATEWAY_TOKEN || vars.OPENCLAW_GATEWAY_TOKEN }}
           TELEGRAM_BOT_TOKEN_CEO=${{ secrets.TELEGRAM_BOT_TOKEN_CEO }}
           TELEGRAM_CHAT_ID_CEO=${{ secrets.TELEGRAM_CHAT_ID_CEO }}
           GIT_TOKEN=${{ secrets.GIT_TOKEN }}
-          GIT_ORG=${{ secrets.GIT_ORG }}
-          GIT_DEFAULT_REPOSITORY=${{ secrets.GIT_DEFAULT_REPOSITORY }}
-          DIRECTORS_NAME=${{ secrets.DIRECTORS_NAME }}
+          GIT_ORG=${{ secrets.GIT_ORG || vars.GIT_ORG }}
+          GIT_DEFAULT_REPOSITORY=${{ secrets.GIT_DEFAULT_REPOSITORY || vars.GIT_DEFAULT_REPOSITORY }}
+          DIRECTORS_NAME=${{ secrets.DIRECTORS_NAME || vars.DIRECTORS_NAME }}
           OLLAMA_API_KEY=${{ secrets.OLLAMA_API_KEY }}
           PROVEDOR_LLM=ollama
           OPENCLAW_LOG_LEVEL=info

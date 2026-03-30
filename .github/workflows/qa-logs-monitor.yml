@@ -28,7 +28,7 @@ jobs:
           TELEGRAM_BOT_TOKEN_CEO=123456:test-token
           TELEGRAM_CHAT_ID_CEO=123456
           GIT_TOKEN=${{ secrets.GIT_TOKEN }}
-          GIT_ORG=${{ secrets.GIT_ORG }}
+          GIT_ORG=${{ secrets.GIT_ORG || vars.GIT_ORG }}
           PANEL_SECRET_KEY=test-secret-key-32-chars-min-length
           PANEL_ADMIN_USERNAME=admin
           PANEL_ADMIN_PASSWORD=test-password

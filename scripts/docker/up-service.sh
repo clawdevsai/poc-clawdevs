@@ -273,7 +273,7 @@ case "$SERVICE" in
     ;;
   openclaw)
     bash scripts/docker/run-openclaw.sh "$ENV_FILE" "$STACK_NETWORK" "${OPENCLAW_IMAGE:-clawdevsai/openclaw-runtime:local}" \
-      "${AGENT_CONFIG_FLAT_DIR:-tmp/agent-config-flat}" "${BOOTSTRAP_SCRIPTS_DIR:-docker/base/bootstrap-scripts}"
+      "${BOOTSTRAP_SCRIPTS_DIR:-docker/base/bootstrap-scripts}"
     ;;
   *)
     echo "Servico invalido: $SERVICE"
