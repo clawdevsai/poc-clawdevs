@@ -45,6 +45,7 @@ import {
   Copy,
   Check,
   ChevronsUpDown,
+  FileText,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { customInstance } from "@/lib/axios-instance";
@@ -194,6 +195,140 @@ function slugifyMarkdownHeading(raw: string): string {
     .replace(/^-|-$/g, "")
     .slice(0, 80);
   return slug || "document";
+}
+
+/** First line index that starts a markdown heading (agent-pasted docs usually start with # / ##). */
+function findFirstHeadingLineIndex(lines: string[]): number {
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*#{1,6}\s+\S/.test(lines[i])) return i;
+  }
+  return -1;
+}
+
+/**
+ * Splits trailing conversational CTA (e.g. "Deseja que eu...") from document-like body text.
+ */
+function splitOutroFromBody(body: string): { doc: string; outro: string | null } {
+  const ctaPatterns = [
+    /\n\n(?=Deseja\b)/gi,
+    /\n\n(?=Responda com\b)/gi,
+    /\n\n(?=Would you like\b)/gi,
+    /\n\n(?=Do you want\b)/gi,
+    /\n\n(?=Gostaria que\b)/gi,
+  ];
+  let bestIdx = -1;
+  for (const re of ctaPatterns) {
+    re.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(body)) !== null) {
+      if (m.index > bestIdx) bestIdx = m.index;
+    }
+  }
+  if (bestIdx >= 0) {
+    return {
+      doc: body.slice(0, bestIdx).trim(),
+      outro: body.slice(bestIdx).replace(/^\s*\n+/, "").trim(),
+    };
+  }
+
+  const paras = body.split(/\n\n+/);
+  if (paras.length >= 2) {
+    const last = paras[paras.length - 1]!;
+    const prev = paras.slice(0, -1).join("\n\n");
+    if (
+      last.length < 450 &&
+      !/^\s*#/.test(last) &&
+      (/[?¿]/.test(last) ||
+        /\*\*(?:SIM|AJUSTAR|YES|NO)\*\*/i.test(last) ||
+        /(?:^|[\s.!?])(?:😉|👍)/u.test(last))
+    ) {
+      return { doc: prev.trim(), outro: last.trim() };
+    }
+  }
+  return { doc: body, outro: null };
+}
+
+interface AssistantMessageSplit {
+  intro: string | null;
+  document: string | null;
+  outro: string | null;
+}
+
+/**
+ * Separates conversational text from embedded file-style markdown (headings + body + optional CTA outro).
+ */
+function splitAssistantMessageForDisplay(content: string): AssistantMessageSplit {
+  const trimmed = content.trim();
+  if (!trimmed) {
+    return { intro: null, document: null, outro: null };
+  }
+
+  const lines = trimmed.split("\n");
+  const docStartLine = findFirstHeadingLineIndex(lines);
+  if (docStartLine < 0) {
+    return { intro: trimmed, document: null, outro: null };
+  }
+
+  const intro =
+    docStartLine > 0 ? lines.slice(0, docStartLine).join("\n").trim() || null : null;
+  const body = lines.slice(docStartLine).join("\n");
+  const { doc, outro } = splitOutroFromBody(body);
+
+  return {
+    intro,
+    document: doc || null,
+    outro: outro || null,
+  };
+}
+
+function assistantDownloadPayload(content: string): string {
+  const split = splitAssistantMessageForDisplay(content);
+  if (split.document && (split.intro != null || split.outro != null)) {
+    return split.document;
+  }
+  return content;
+}
+
+function AssistantMessageBody({
+  content,
+  pathHintExtra,
+}: {
+  content: string;
+  pathHintExtra?: string;
+}) {
+  const split = splitAssistantMessageForDisplay(content);
+  const pathHint =
+    basenameFromPathHint([pathHintExtra, content].filter(Boolean).join("\n")) ??
+    basenameFromPathHint(content);
+  const docLabel = pathHint ?? "Conteúdo do documento";
+
+  if (!split.document) {
+    return <ReactMarkdown>{content}</ReactMarkdown>;
+  }
+
+  return (
+    <>
+      {split.intro ? (
+        <div className="mb-3 [&_p]:my-2 [&_p:first-child]:mt-0">
+          <ReactMarkdown>{split.intro}</ReactMarkdown>
+        </div>
+      ) : null}
+      <div className="my-1 overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/20 not-prose">
+        <div className="flex items-center gap-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 px-3 py-2">
+          <FileText className="h-4 w-4 shrink-0 text-[hsl(var(--muted-foreground))]" aria-hidden />
+          <span className="text-xs font-medium text-[hsl(var(--muted-foreground))]">{docLabel}</span>
+        </div>
+        <div className="prose prose-invert prose-sm max-w-none min-w-0 px-3 py-3 break-words [overflow-wrap:anywhere] [&_pre]:max-w-full [&_pre]:overflow-x-auto">
+          <ReactMarkdown>{split.document}</ReactMarkdown>
+        </div>
+      </div>
+      {split.outro ? (
+        <div className="mt-3 [&_p]:my-2 [&_p:first-child]:mt-0">
+          <ReactMarkdown>{split.outro}</ReactMarkdown>
+        </div>
+      ) : null}
+    </>
+  );
 }
 
 function suggestFilename(
@@ -964,9 +1099,10 @@ function ChatPageContent() {
                                       ? messages[index - 1].content
                                       : undefined;
                                   const slug = selectedAgent ?? "agent";
+                                  const payload = assistantDownloadPayload(msg.content);
                                   downloadTextFile(
-                                    msg.content,
-                                    suggestFilename(msg.content, prevUser, slug, msg.id)
+                                    payload,
+                                    suggestFilename(payload, prevUser, slug, msg.id)
                                   );
                                 }}
                                 className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
@@ -981,7 +1117,18 @@ function ChatPageContent() {
                       </div>
                       <div className="prose prose-invert prose-sm max-w-none min-w-0 break-words [overflow-wrap:anywhere] [&_pre]:max-w-full [&_pre]:overflow-x-auto">
                         {msg.content ? (
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          msg.role === "assistant" ? (
+                            <AssistantMessageBody
+                              content={msg.content}
+                              pathHintExtra={
+                                index > 0 && messages[index - 1]?.role === "user"
+                                  ? messages[index - 1].content
+                                  : undefined
+                              }
+                            />
+                          ) : (
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          )
                         ) : sending && msg.role === "assistant" ? (
                           <div className="flex items-center gap-1.5">
                             <span className="flex gap-0.5">
