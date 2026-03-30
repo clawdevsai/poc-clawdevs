@@ -288,7 +288,7 @@ down: containers-clean
 
 restart:
 	@$(MAKE) down
-	@$(MAKE) up-all-with-cache
+	@$(MAKE) up-all
 
 status:
 	@docker ps -a --filter "name=^/clawdevs-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

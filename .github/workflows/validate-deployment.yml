@@ -91,7 +91,7 @@ jobs:
           ENVEOF
 
       - name: Start services
-        run: make up
+        run: make up-all
 
       - name: Wait for services to be healthy
         run: |
