@@ -491,19 +491,35 @@ function ChatPageContent() {
     syncSessionParam,
   ]);
 
+  const historyQueryEnabled =
+    !!selectedAgent &&
+    (!rawSessionParam || selectedSessionKey != null);
+
+  const awaitingSessionFromUrl =
+    !!rawSessionParam &&
+    !!parsedSessionParam &&
+    !!selectedAgent &&
+    selectedSessionKey == null;
+
   const {
     data: historyData,
     isFetching: historyLoading,
+    isFetched: historyFetched,
     refetch: refetchHistory,
   } = useQuery({
     queryKey: ["chat-history", selectedAgent, selectedSessionKey],
     queryFn: () =>
       fetchHistory(selectedAgent as string, selectedSessionKey ?? undefined),
-    enabled: !!selectedAgent,
+    enabled: historyQueryEnabled,
     // Prevent stale data after page reload
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
   });
+
+  const showHistorySkeleton =
+    agentsLoading ||
+    awaitingSessionFromUrl ||
+    (historyQueryEnabled && historyLoading && !historyFetched);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -997,7 +1013,7 @@ function ChatPageContent() {
               <button
                 onClick={() => selectedAgent && refetchHistory()}
                 className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[hsl(var(--border))] px-3 text-xs font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/40 disabled:opacity-50"
-                disabled={!selectedAgent || historyLoading}
+                disabled={!selectedAgent || !historyQueryEnabled || historyLoading}
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${historyLoading ? "animate-spin" : ""}`} />
                 Histórico
@@ -1032,7 +1048,7 @@ function ChatPageContent() {
             ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[radial-gradient(circle_at_top,hsla(var(--primary),0.12),transparent_55%)] p-4 sm:p-6"
           >
-            {agentsLoading || historyLoading ? (
+            {showHistorySkeleton ? (
               <div className="mx-auto w-full max-w-4xl space-y-3">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-16 w-full rounded-2xl" />
@@ -1041,7 +1057,7 @@ function ChatPageContent() {
             ) : messages.length === 0 ? (
               <div className="mx-auto flex h-full min-h-[280px] w-full max-w-4xl items-center justify-center">
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                  Ainda não há mensagens para este profissional.
+                  Nenhuma mensagem nesta conversa.
                 </p>
               </div>
             ) : (

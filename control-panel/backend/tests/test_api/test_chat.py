@@ -27,7 +27,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api import chat as chat_api
-from app.models import Agent, MemoryEntry
+from app.models import Agent, MemoryEntry, Session
 
 
 async def _create_agent(db_session: AsyncSession, slug: str = "po") -> Agent:
@@ -219,6 +219,88 @@ class TestChatApi:
         payload = response.json()
         assert payload["agent_slug"] == "po"
         assert payload["messages"] == []
+
+    @pytest.mark.asyncio
+    async def test_history_resolves_session_from_db_when_file_and_gateway_miss(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        tmp_path,
+        monkeypatch,
+    ):
+        await _create_agent(db_session, "po")
+        monkeypatch.setattr(chat_api.settings, "openclaw_data_path", str(tmp_path))
+
+        db_session.add(
+            Session(
+                openclaw_session_id="sess-from-db",
+                openclaw_session_key="agent:po:main",
+                agent_slug="po",
+            )
+        )
+        await db_session.commit()
+
+        monkeypatch.setattr(chat_api.openclaw_client, "get_sessions", AsyncMock(return_value=[]))
+        get_session_mock = AsyncMock(
+            return_value={
+                "messages": [{"role": "assistant", "content": "from-gateway-after-db"}]
+            }
+        )
+        monkeypatch.setattr(chat_api.openclaw_client, "get_session", get_session_mock)
+
+        response = await client.get(
+            "/chat/history/po",
+            headers=auth_headers,
+            params={"session_key": "agent:po:main"},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["messages"][0]["content"] == "from-gateway-after-db"
+        get_session_mock.assert_awaited_once_with("sess-from-db")
+
+    @pytest.mark.asyncio
+    async def test_history_uses_jsonl_when_gateway_empty(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        tmp_path,
+        monkeypatch,
+    ):
+        await _create_agent(db_session, "po")
+        monkeypatch.setattr(chat_api.settings, "openclaw_data_path", str(tmp_path))
+
+        db_session.add(
+            Session(
+                openclaw_session_id="sess-jsonl",
+                openclaw_session_key="agent:po:main",
+                agent_slug="po",
+            )
+        )
+        await db_session.commit()
+
+        monkeypatch.setattr(chat_api.openclaw_client, "get_sessions", AsyncMock(return_value=[]))
+        monkeypatch.setattr(chat_api.openclaw_client, "get_session", AsyncMock(return_value={}))
+
+        sessions_dir = tmp_path / "agents" / "po" / "sessions"
+        sessions_dir.mkdir(parents=True, exist_ok=True)
+        jsonl_line = (
+            '{"type":"message","message":{"role":"assistant","content":"from-jsonl"}}\n'
+        )
+        (sessions_dir / "sess-jsonl.jsonl").write_text(jsonl_line, encoding="utf-8")
+
+        response = await client.get(
+            "/chat/history/po",
+            headers=auth_headers,
+            params={"session_key": "agent:po:main"},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert len(payload["messages"]) == 1
+        assert payload["messages"][0]["content"] == "from-jsonl"
 
 
 class TestChatRagTurnApi:

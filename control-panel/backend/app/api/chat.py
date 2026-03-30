@@ -30,6 +30,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sse_starlette.sse import EventSourceResponse
+from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, Field
@@ -157,13 +158,27 @@ def _compose_turn_memory_body(user_message: str, assistant_message: str) -> str:
     )
 
 
+def _session_id_from_index_obj(session_obj: object) -> Optional[str]:
+    if not isinstance(session_obj, dict):
+        return None
+    session_id = session_obj.get("sessionId")
+    if isinstance(session_id, str) and session_id.strip():
+        return session_id.strip()
+    return None
+
+
 async def _resolve_session_id_for_key(
-    agent_slug: str, session_key: str
+    agent_slug: str,
+    session_key: str,
+    db: Optional[AsyncSession] = None,
 ) -> Optional[str]:
+    slug_norm = agent_slug.strip().lower()
+    key_norm = session_key.strip()
+
     sessions_index_path = (
         Path(settings.openclaw_data_path)
         / "agents"
-        / agent_slug
+        / slug_norm
         / "sessions"
         / "sessions.json"
     )
@@ -173,11 +188,19 @@ async def _resolve_session_id_for_key(
             with open(sessions_index_path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
             if isinstance(payload, dict):
-                session_obj = payload.get(session_key)
-                if isinstance(session_obj, dict):
-                    session_id = session_obj.get("sessionId")
-                    if isinstance(session_id, str) and session_id.strip():
-                        return session_id.strip()
+                session_obj = payload.get(key_norm)
+                if session_obj is None:
+                    for k, v in payload.items():
+                        if (
+                            isinstance(k, str)
+                            and k.lower() == key_norm.lower()
+                            and isinstance(v, dict)
+                        ):
+                            session_obj = v
+                            break
+                sid = _session_id_from_index_obj(session_obj)
+                if sid:
+                    return sid
     except (OSError, json.JSONDecodeError):
         pass
 
@@ -185,11 +208,31 @@ async def _resolve_session_id_for_key(
     for item in sessions:
         if not isinstance(item, dict):
             continue
-        if item.get("key") != session_key:
+        item_key = item.get("key")
+        if not isinstance(item_key, str):
+            continue
+        if item_key != key_norm and item_key.lower() != key_norm.lower():
             continue
         session_id = item.get("sessionId") or item.get("session_id")
         if isinstance(session_id, str) and session_id.strip():
             return session_id.strip()
+
+    if db is not None:
+        stmt = (
+            select(SessionModel)
+            .where(SessionModel.agent_slug == slug_norm)
+            .where(SessionModel.openclaw_session_key.isnot(None))
+            .where(
+                func.lower(SessionModel.openclaw_session_key) == key_norm.lower()
+            )
+            .limit(1)
+        )
+        result = await db.exec(stmt)
+        session_row = result.first()
+        if session_row is not None:
+            oc_id = session_row.openclaw_session_id
+            if isinstance(oc_id, str) and oc_id.strip():
+                return oc_id.strip()
 
     return None
 
@@ -230,6 +273,50 @@ def _parse_message(msg: dict) -> Optional[Message]:
         tool_calls = parsed_calls or None
 
     return Message(role=role, content=content, tool_calls=tool_calls)
+
+
+def _read_messages_from_local_session_jsonl(
+    agent_slug: str, openclaw_session_id: str
+) -> list[Message]:
+    """Load messages from OpenClaw session JSONL when the gateway session payload is empty."""
+    slug = (agent_slug or "").strip().lower()
+    if not slug or not openclaw_session_id:
+        return []
+
+    session_path = (
+        Path(settings.openclaw_data_path)
+        / "agents"
+        / slug
+        / "sessions"
+        / f"{openclaw_session_id}.jsonl"
+    )
+    if not session_path.exists():
+        return []
+
+    parsed: list[Message] = []
+    try:
+        with open(session_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    evt = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                if not isinstance(evt, dict) or evt.get("type") != "message":
+                    continue
+                message_obj = evt.get("message")
+                if not isinstance(message_obj, dict):
+                    continue
+                parsed_msg = _parse_message(message_obj)
+                if parsed_msg:
+                    parsed.append(parsed_msg)
+    except OSError:
+        return []
+
+    return parsed
 
 
 async def _ensure_agent(session: AsyncSession, slug: str) -> Agent:
@@ -415,7 +502,7 @@ async def chat_history(
                 detail="agent_slug does not match session_key agent",
             )
         target_session_id = await _resolve_session_id_for_key(
-            agent_slug, normalized_session_key
+            agent_slug, normalized_session_key, db
         )
         if not target_session_id:
             return ChatHistoryResponse(agent_slug=agent_slug, messages=[])
@@ -440,6 +527,11 @@ async def chat_history(
         parsed_msg = _parse_message(msg)
         if parsed_msg:
             parsed.append(parsed_msg)
+
+    if not parsed and target_session_id:
+        parsed = _read_messages_from_local_session_jsonl(
+            agent_slug, target_session_id
+        )
 
     return ChatHistoryResponse(agent_slug=agent_slug, messages=parsed)
 
