@@ -1,0 +1,205 @@
+OpenClaw Agent - Complete Directory Structure
+===============================================
+
+agent-name/
+│
+├── IDENTITY.md
+│   └── Propósito, responsabilidades, casos de uso
+│
+├── SKILL.md
+│   └── Interface pública, parametros, exemplos
+│
+├── manifest.json
+│   └── Metadados, configuração, hooks, dependências
+│
+├── .env.example
+│   └── Variáveis de ambiente esperadas
+│
+├── .test.env
+│   └── Variáveis de teste
+│
+├── package.json
+│   └── Dependências, versão, scripts
+│
+├── src/
+│   │
+│   ├── index.ts
+│   │   └── Entry point principal, exports públicas
+│   │
+│   ├── core/
+│   │   ├── agent.ts
+│   │   │   └── Classe/função principal, lógica do agent
+│   │   ├── handlers.ts
+│   │   │   └── Manipuladores de eventos, requisições
+│   │   └── utils.ts
+│   │       └── Funções utilitárias, helpers
+│   │
+│   ├── schemas/
+│   │   ├── config.ts
+│   │   │   └── Zod schema para configuração
+│   │   ├── request.ts
+│   │   │   └── Zod schema para requisições
+│   │   └── response.ts
+│   │       └── Zod schema para respostas
+│   │
+│   └── integrations/
+│       ├── [service-1].ts
+│       │   └── Integração com API/SDK externo
+│       ├── [service-2].ts
+│       │   └── Outra integração
+│       └── index.ts
+│           └── Re-exports das integrações
+│
+├── tests/
+│   │
+│   ├── unit/
+│   │   ├── core.test.ts
+│   │   │   └── Testes da lógica principal
+│   │   ├── handlers.test.ts
+│   │   │   └── Testes dos manipuladores
+│   │   ├── utils.test.ts
+│   │   │   └── Testes das funções utilitárias
+│   │   └── schemas.test.ts
+│   │       └── Testes de validação
+│   │
+│   ├── integration/
+│   │   ├── agent.integration.test.ts
+│   │   │   └── Testes end-to-end
+│   │   └── [service].integration.test.ts
+│   │       └── Testes com serviços externos
+│   │
+│   ├── fixtures/
+│   │   ├── samples.ts
+│   │   │   └── Dados de teste reutilizáveis
+│   │   └── mocks.ts
+│   │       └── Mocks de dependências
+│   │
+│   └── setup.ts
+│       └── Configuração global de testes
+│
+├── docs/
+│   │
+│   ├── README.md
+│   │   └── Overview, quick start, features
+│   │
+│   ├── ARCHITECTURE.md
+│   │   └── Design técnico, fluxos de dados, decisões
+│   │
+│   ├── CONFIGURATION.md
+│   │   └── Guia completo de configuração
+│   │
+│   ├── TROUBLESHOOTING.md
+│   │   └── Problemas comuns e soluções
+│   │
+│   ├── API.md
+│   │   └── Referência técnica completa
+│   │
+│   └── EXAMPLES.md
+│       └── Exemplos de código detalhados
+│
+├── examples/
+│   │
+│   ├── basic.ts
+│   │   └── Exemplo simples de uso
+│   │
+│   ├── advanced.ts
+│   │   └── Exemplo com recursos avançados
+│   │
+│   ├── error-handling.ts
+│   │   └── Exemplo de tratamento de erros
+│   │
+│   └── config-example.json
+│       └── Arquivo de configuração de exemplo
+│
+├── tsconfig.json
+│   └── Configuração TypeScript
+│
+├── jest.config.js
+│   └── Configuração de testes
+│
+├── .eslintrc.json
+│   └── Configuração de lint
+│
+├── .gitignore
+│   └── Arquivos a ignorar no git
+│
+└── README.md
+    └── Quick reference para o diretório
+
+
+File Structure Statistics
+=========================
+
+Total directories: 12+
+Total files: 25+
+Key files (must-have):
+  - IDENTITY.md ......................... Identidade do agent
+  - SKILL.md ............................ Interface pública
+  - manifest.json ....................... Metadados
+  - src/index.ts ........................ Entry point
+  - src/core/agent.ts ................... Lógica principal
+  - src/core/handlers.ts ................ Manipuladores
+  - src/schemas/*.ts .................... Validação (3 arquivos)
+  - tests/unit/*.test.ts ................ Testes unitários (4+ arquivos)
+  - tests/integration/*.test.ts ......... Testes integração (2+ arquivos)
+  - docs/README.md ...................... Documentação overview
+  - examples/*.ts ....................... Exemplos (3+ arquivos)
+
+Production Checklist
+====================
+
+Code Quality:
+  [✓] TypeScript strict mode
+  [✓] Type safety em 100% do código
+  [✓] Zod schemas para input/output validation
+  [✓] ESLint/Prettier configurado
+
+Testing:
+  [✓] Unit tests com cobertura >80%
+  [✓] Integration tests para fluxos principais
+  [✓] Fixtures e mocks preparados
+  [✓] Tests passando localmente e em CI
+
+Documentation:
+  [✓] IDENTITY.md completo
+  [✓] SKILL.md com exemplos
+  [✓] ARCHITECTURE.md com diagramas
+  [✓] CONFIGURATION.md detalhado
+  [✓] API reference completa
+  [✓] Exemplos em docs/examples/
+
+Configuration:
+  [✓] .env.example com todas as vars
+  [✓] manifest.json com metadados
+  [✓] package.json com dependências corretas
+  [✓] tsconfig.json configurado
+
+Error Handling:
+  [✓] Tratamento de erros em todas as funções
+  [✓] Validação de entrada consistente
+  [✓] Mensagens de erro claras
+  [✓] Logging estruturado
+
+Integration Points:
+  [✓] Hooks OpenClaw configurados
+  [✓] Schemas compatíveis com ecossistema
+  [✓] Re-exports públicas documentadas
+
+
+Example Integration with OpenClaw
+==================================
+
+// In your OpenClaw agent handler:
+import { agent, validateConfig } from 'agent-name'
+
+// Validação automática
+const config = validateConfig(process.env)
+
+// Uso simples
+const result = await agent.execute({
+  input: "user input",
+  context: {...}
+})
+
+// Com tipos completos
+const result: ResponseSchema = await agent.execute(request)
