@@ -41,7 +41,7 @@ jobs:
           ENVEOF
 
       - name: Start services
-        run: make up
+        run: make up-all-with-cache
 
       - name: Wait for services to start
         run: sleep 20
