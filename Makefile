@@ -550,10 +550,10 @@ panel-frontend-image-push:
 	docker push $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 nemoclaw-image-build:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(NEMOCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(NEMOCLAW_IMAGE) -f docker/clawdevs-nemoclaw/Dockerfile .; fi
 
 nemoclaw-image-build-with-cache:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(NEMOCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(NEMOCLAW_IMAGE) -f docker/clawdevs-nemoclaw/Dockerfile .; fi
 
 nemoclaw-image-push:
 	docker push $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
