@@ -189,10 +189,7 @@ preflight:
 		docker/clawdevs-openclaw/Dockerfile \
 		docker/clawdevs-openclaw/entrypoint.sh \
 		$(SEARXNG_PROXY_CONF) \
-		$(BOOTSTRAP_SCRIPTS_DIR)/05-install-openclaw.sh \
 		$(BOOTSTRAP_SCRIPTS_DIR)/05-install-nemoclaw.sh \
-		$(BOOTSTRAP_SCRIPTS_DIR)/11-start-gateway.sh \
-		scripts/docker/run-openclaw.sh \
 		scripts/docker/up-service.sh \
 		scripts/docker/generate-panel-token.sh; do \
 		if [ ! -f "$$file" ]; then \
@@ -201,7 +198,7 @@ preflight:
 		fi; \
 	done
 	@set -eu; \
-	for key in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO GIT_TOKEN GIT_ORG \
+	for key in GIT_TOKEN GIT_ORG \
 			   PANEL_DB_PASSWORD PANEL_REDIS_PASSWORD PANEL_SECRET_KEY \
 			   PANEL_ADMIN_USERNAME PANEL_ADMIN_PASSWORD; do \
 		value="$$(sed -n "s/^$${key}=//p" $(ENV_FILE) | head -n 1 | tr -d '\r' || true)"; \

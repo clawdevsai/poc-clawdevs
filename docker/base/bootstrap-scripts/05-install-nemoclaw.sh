@@ -12,11 +12,30 @@ nemoclaw_runtime_ok() {
   return 0
 }
 
-install_nemoclaw() {
+install_nemoclaw_official() {
   # Official installer installs NemoClaw + OpenShell on the host.
-  # In container mode this is mostly for consistency/testing; real host-side
-  # installs should be done outside Docker.
   curl -fsSL "https://www.nvidia.com/nemoclaw.sh" | bash
+}
+
+install_openshell_fallback() {
+  # Fallback: install openshell CLI from GitHub releases
+  if command -v openshell >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "[bootstrap] Installing OpenShell from GitHub releases..."
+  OPENSHELL_VERSION="latest"
+  OPENSHELL_URL="https://github.com/NVIDIA/OpenShell/releases/download/${OPENSHELL_VERSION}/openshell-linux-x64"
+
+  if curl -fsSL "${OPENSHELL_URL}" -o /tmp/openshell 2>/dev/null; then
+    chmod +x /tmp/openshell
+    mv /tmp/openshell /usr/local/bin/openshell
+    echo "[bootstrap] OpenShell installed from GitHub"
+    return 0
+  else
+    echo "[bootstrap] WARNING: Could not install OpenShell from GitHub"
+    return 1
+  fi
 }
 
 if nemoclaw_runtime_ok; then
@@ -28,11 +47,26 @@ else
   else
     echo "[bootstrap] nemoclaw ausente; instalando"
   fi
-  install_nemoclaw
+
+  # Try official installer first
+  if install_nemoclaw_official; then
+    echo "[bootstrap] NemoClaw installed successfully"
+  else
+    echo "[bootstrap] Official installer failed, trying fallback..."
+    install_openshell_fallback || true
+  fi
+
   touch "${NEMOCLAW_STAMP}"
 fi
 
-if ! nemoclaw_runtime_ok; then
-  echo "NemoClaw/OpenShell nao foram instalados corretamente" >&2
+# Final validation - only nemoclaw is critical for bootstrap
+if ! command -v nemoclaw >/dev/null 2>&1; then
+  echo "[bootstrap] ERROR: NemoClaw failed to install" >&2
   exit 1
+fi
+
+if nemoclaw_runtime_ok; then
+  echo "[bootstrap] NemoClaw/OpenShell fully operational"
+else
+  echo "[bootstrap] WARNING: NemoClaw is available but OpenShell is not. Some features may be limited."
 fi

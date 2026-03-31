@@ -107,9 +107,13 @@ fi
 echo "[up] iniciando clawdevs-nemoclaw"
 docker rm -f clawdevs-nemoclaw >/dev/null 2>&1 || true
 "${DOCKER_BIN[@]}" run -d --name clawdevs-nemoclaw --network "$STACK_NETWORK" --network-alias nemoclaw --network-alias openclaw \
+  --gpus all \
   -p 18789:18789 \
+  --privileged \
+  --cgroupns=host \
   --env-file "$ENV_FILE" \
   -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
   -v nemoclaw-data:/data/nemoclaw \
   -e OLLAMA_BASE_URL=http://ollama:11434 \
   -e NEMOCLAW_RUNTIME_NAME="${NEMOCLAW_RUNTIME_NAME:-nemoclaw}" \
