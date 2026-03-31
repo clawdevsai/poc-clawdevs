@@ -31,7 +31,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import {
@@ -379,6 +379,7 @@ function buildChatExportMarkdown(
 }
 
 function ChatPageContent() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -539,16 +540,22 @@ function ChatPageContent() {
     streamSecondsRef.current = streamSeconds;
   }, [streamSeconds]);
 
+  /** Evita mostrar conversa do agente anterior enquanto o histórico novo carrega. */
   useEffect(() => {
-    if (historyData?.messages) {
-      setMessages(
-        historyData.messages.map((m, idx) => ({
-          ...m,
-          id: m.id ?? `history-${idx}`,
-        }))
-      );
-    }
-  }, [historyData]);
+    if (!historyQueryEnabled) return;
+    setMessages([]);
+  }, [selectedAgent, selectedSessionKey, historyQueryEnabled]);
+
+  useEffect(() => {
+    if (!historyQueryEnabled) return;
+    if (historyData === undefined) return;
+    setMessages(
+      (historyData.messages ?? []).map((m, idx) => ({
+        ...m,
+        id: m.id ?? `history-${idx}`,
+      }))
+    );
+  }, [historyData, historyQueryEnabled]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -918,6 +925,27 @@ function ChatPageContent() {
       }
 
       const assistantForPersist = (assistantContent || "[sem conteúdo textual]").trim();
+
+      setMessages((prev) => {
+        const next = prev.map((m) =>
+          m.id === assistantMsgId
+            ? { ...m, content: assistantForPersist || m.content }
+            : m
+        );
+        queryClient.setQueryData<HistoryResponse>(
+          ["chat-history", selectedAgent, sessionKeyForRequest],
+          {
+            agent_slug: selectedAgent,
+            messages: next.map((m) => ({
+              role: m.role,
+              content: m.content,
+              ...(m.tool_calls != null ? { tool_calls: m.tool_calls } : {}),
+            })),
+          }
+        );
+        return next;
+      });
+
       await Promise.all([
         persistRagTurn(
           selectedAgent,
@@ -1217,7 +1245,7 @@ function ChatPageContent() {
               {error && <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>}
               {!sending && lastStreamSeconds !== null && (
                 <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                  Tempo da ultima resposta: {lastStreamSeconds}s
+                  Tempo da última resposta: {lastStreamSeconds}s
                 </p>
               )}
 
