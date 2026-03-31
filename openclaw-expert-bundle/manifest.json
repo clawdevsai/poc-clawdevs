@@ -1,0 +1,88 @@
+{
+  "id": "openclaw-expert-bundle",
+  "name": "OpenClaw Expert Bundle",
+  "version": "1.0.0",
+  "description": "Complete expertise system for OpenClaw with 4 integrated skills",
+  "author": "ClawDevs AI",
+  "license": "MIT",
+  "entry": "./index.js",
+  "skills": [
+    {
+      "id": "openclaw-expert",
+      "name": "OpenClaw Expert",
+      "description": "Core OpenClaw concepts and fundamentals",
+      "category": "knowledge"
+    },
+    {
+      "id": "openclaw-plugin-builder",
+      "name": "Plugin Builder",
+      "description": "Step-by-step guide to building OpenClaw plugins",
+      "category": "implementation"
+    },
+    {
+      "id": "openclaw-agent-patterns",
+      "name": "Agent Patterns",
+      "description": "Advanced multi-agent architectural patterns",
+      "category": "architecture"
+    },
+    {
+      "id": "openclaw-automation-troubleshooting",
+      "name": "Automation & Troubleshooting",
+      "description": "Configure automations and debug issues",
+      "category": "operations"
+    }
+  ],
+  "config": {
+    "autoRoute": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically route queries to appropriate skill"
+    },
+    "enableWebSearch": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable web search for latest OpenClaw docs"
+    },
+    "pseudocodeLanguages": {
+      "type": "array",
+      "default": ["python", "typescript", "go"],
+      "description": "Languages for pseudocode examples"
+    },
+    "detailLevel": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "professional"],
+      "default": "professional",
+      "description": "Level of detail in explanations"
+    }
+  },
+  "permissions": [
+    "web_search",
+    "documentation_access",
+    "code_examples"
+  ],
+  "dependencies": {
+    "openclaw": ">=2026.1.0"
+  },
+  "keywords": [
+    "openclaw",
+    "agents",
+    "ai",
+    "plugins",
+    "multi-agent",
+    "automation",
+    "webhooks",
+    "architecture",
+    "patterns"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clawdevs/openclaw-expert-bundle"
+  },
+  "bugs": {
+    "url": "https://github.com/clawdevs/openclaw-expert-bundle/issues"
+  },
+  "links": {
+    "documentation": "https://docs.openclaw.ai",
+    "clawhub": "https://clawhub.io/plugin/openclaw-expert-bundle"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "eval_id": 5,
+  "run_type": "with_skill",
+  "expectations": [
+    {
+      "text": "explains_compaction_strategy",
+      "passed": true,
+      "evidence": "Seção 'Strategy 2: Memory Compaction (Sumarização Persistente)' explica que compaction 'sumariza conversas antigas em textos curtos' que são 'salvos permanentemente'. Seção 'O Que Happens During Compaction' descreve: trigger em ~80%, sumarização silenciosa, persistência em JSONL, NO_REPLY output"
+    },
+    {
+      "text": "explains_pruning_strategy",
+      "passed": true,
+      "evidence": "Seção 'Strategy 1: Session Pruning (Redução em Tempo Real)' explica que pruning 'remove resultados de ferramentas envelhecidos do contexto' sem modificar histórico. Descreve soft-trim (mantém head+tail com ellipsis) vs hard-clear (replace completo) baseado em tamanho"
+    },
+    {
+      "text": "includes_configuration",
+      "passed": true,
+      "evidence": "Múltiplos exemplos JSON: Método 1 automático com contextPruning/mode/ttl, Método 2 granular com keepLastAssistants, softTrimRatio, hardClearRatio, minPrunableToolChars. Seção 'Strategy 3: Combinação Ideal' mostra ambas estratégias juntas. Seção final 'Resumo de Configuração Produção-Ready' com config completa incluindo compaction e memorySearch"
+    },
+    {
+      "text": "mentions_monitoring",
+      "passed": true,
+      "evidence": "Seção 'Monitoramento e Diagnóstico' mostra: openclaw status, /status no chat, /context detail mostrando breakdown por tokens, openclaw sessions --json, comandos Quick /status e /context detail na tabela final"
+    },
+    {
+      "text": "distinguishes_both_approaches",
+      "passed": true,
+      "evidence": "Documento claramente diferencia: 'Pruning remove dados sem modificar histórico em disco' vs 'Compaction modifica o que está armazenado em disco'. Seção 'Strategy 3' mostra como trabalham juntas com diagrama de TURNO 1-100 ilustrando quando cada um age. Conclusão reafirma: 'Pruning automático' vs 'Compaction automático' como estratégias complementares"
+    }
+  ]
+}

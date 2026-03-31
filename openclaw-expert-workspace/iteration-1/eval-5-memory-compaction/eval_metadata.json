@@ -1,0 +1,32 @@
+{
+  "eval_id": 5,
+  "eval_name": "memory-compaction-session-pruning",
+  "prompt": "Meu agente OpenClaw está usando muito contexto e tokens estão explodindo. Como faço memory compaction e session pruning corretamente?",
+  "assertions": [
+    {
+      "name": "explains_compaction_strategy",
+      "description": "Explica estratégia de memory compaction",
+      "type": "string_contains"
+    },
+    {
+      "name": "explains_pruning_strategy",
+      "description": "Explica estratégia de session pruning",
+      "type": "string_contains"
+    },
+    {
+      "name": "includes_configuration",
+      "description": "Fornece configuração prática (JSON ou similar) para aplicar",
+      "type": "string_contains"
+    },
+    {
+      "name": "mentions_monitoring",
+      "description": "Menciona como monitorar tokens ou contexto",
+      "type": "string_contains"
+    },
+    {
+      "name": "distinguishes_both_approaches",
+      "description": "Claramente distingue entre compaction e pruning e quando usar cada uma",
+      "type": "string_contains"
+    }
+  ]
+}

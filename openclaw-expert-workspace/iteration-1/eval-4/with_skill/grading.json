@@ -1,0 +1,31 @@
+{
+  "eval_id": 4,
+  "run_type": "with_skill",
+  "expectations": [
+    {
+      "text": "mentions_delegate_architecture",
+      "passed": true,
+      "evidence": "Seção 'Padrão Recomendado: Delegate Architecture com Sub-Agent Spawning' explica o padrão com diagrama ASCII mostrando Agente Supervisor delegando para 3 agentes especializados (data-engineer, code-specialist, science-engineer)"
+    },
+    {
+      "text": "includes_supervision_strategy",
+      "passed": true,
+      "evidence": "Seção '3. Pseudocódigo da Lógica Delegate' mostra classe SupervisorAgent com método 'handleUserRequest' que orquestra: analyzeRequest, delegateToSubAgents, consolidateResults. Método 'consolidateResults' mostra como supervisor integra e valida resultados de sub-agentes"
+    },
+    {
+      "text": "mentions_sessions_spawn",
+      "passed": true,
+      "evidence": "Método 'spawnSubAgent' chama 'this.tools.sessions_spawn' com task, model, sandbox, runTimeoutSeconds. Descrito como 'ferramenta nativa do OpenClaw' na seção de Padrão Recomendado"
+    },
+    {
+      "text": "includes_error_handling",
+      "passed": true,
+      "evidence": "Seção '4. Robustez: Padrões de Tratamento de Erros' mostra: spawnWithRetry com backoff exponencial (2s, 4s, 8s), executeWithTimeout com Promise.race, validateSubAgentOutput para validação, delegateWithFallback com agentes alternativos"
+    },
+    {
+      "text": "provides_config_example",
+      "passed": true,
+      "evidence": "Seção '1. Configuração de Agents (openclaw.json)' fornece JSON completo configurando 4 agentes (supervisor, data-engineer, code-specialist, science-engineer) com workspace, tools, sandbox settings. Seção '5. Configuração de Sessão' adiciona dmScope, resetByType, sandboxes"
+    }
+  ]
+}

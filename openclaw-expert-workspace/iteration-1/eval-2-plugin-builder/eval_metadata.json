@@ -1,0 +1,32 @@
+{
+  "eval_id": 2,
+  "eval_name": "plugin-builder-guide",
+  "prompt": "Como faço para construir um plugin OpenClaw do zero? Quero criar um plugin que integre com uma API externa. Me mostre a estrutura de pastas e pseudocódigo das principais partes.",
+  "assertions": [
+    {
+      "name": "provides_folder_structure",
+      "description": "Fornece estrutura de pastas clara para o plugin",
+      "type": "string_contains"
+    },
+    {
+      "name": "includes_manifest_example",
+      "description": "Mostra exemplo de manifest.json ou arquivo de configuração do plugin",
+      "type": "string_contains"
+    },
+    {
+      "name": "pseudocode_api_integration",
+      "description": "Inclui pseudocódigo para integração com API externa",
+      "type": "string_contains"
+    },
+    {
+      "name": "mentions_hooks",
+      "description": "Menciona hooks do plugin (before-model-resolve, after-tool-call, etc)",
+      "type": "string_contains"
+    },
+    {
+      "name": "includes_testing_strategy",
+      "description": "Fornece estratégia ou exemplo de testes para o plugin",
+      "type": "string_contains"
+    }
+  ]
+}

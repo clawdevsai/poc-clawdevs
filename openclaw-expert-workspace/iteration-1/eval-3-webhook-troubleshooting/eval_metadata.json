@@ -1,0 +1,32 @@
+{
+  "eval_id": 3,
+  "eval_name": "webhook-troubleshooting",
+  "prompt": "Meu webhook no OpenClaw não está disparando quando eventos acontecem. Tudo parece estar configurado certo. O que eu deveria checar primeiro para debugar isso?",
+  "assertions": [
+    {
+      "name": "provides_structured_checklist",
+      "description": "Fornece uma checklist estruturada de troubleshooting",
+      "type": "string_contains"
+    },
+    {
+      "name": "mentions_logging",
+      "description": "Menciona como ativar logging para debugar webhooks",
+      "type": "string_contains"
+    },
+    {
+      "name": "mentions_session_keys",
+      "description": "Menciona session keys relacionadas a webhooks (hook: prefix)",
+      "type": "string_contains"
+    },
+    {
+      "name": "progressive_debugging_steps",
+      "description": "Sugere passos progressivos de debugging (simples para complexo)",
+      "type": "string_contains"
+    },
+    {
+      "name": "includes_commands_to_run",
+      "description": "Fornece comandos específicos ou ferramentas para debugar",
+      "type": "string_contains"
+    }
+  ]
+}

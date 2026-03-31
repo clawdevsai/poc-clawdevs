@@ -1,0 +1,35 @@
+{
+  "skill_name": "openclaw-expert",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Estou começando com OpenClaw. Explica o agent loop e como ele funciona na prática. Quero entender o fluxo completo de uma mensagem até a resposta.",
+      "expected_output": "Explicação clara do agent loop com diagrama conceitual, pseudocódigo mostrando cada etapa em Python/TypeScript/Go, e um exemplo real de como seria em um chatbot",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Como faço para construir um plugin OpenClaw do zero? Quero criar um plugin que integre com uma API externa. Me mostre a estrutura de pastas e pseudocódigo das principais partes.",
+      "expected_output": "Guia passo a passo com estrutura de pasta, manifest.json de exemplo, pseudocódigo dos hooks principais (on_load, handle_message, etc), e recomendação de padrões",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Meu webhook no OpenClaw não está disparando quando eventos acontecem. Tudo parece estar configurado certo. O que eu deveria checar primeiro para debugar isso?",
+      "expected_output": "Checklist de troubleshooting organizado por etapas (config, autenticação, payload, logging), exemplos de como validar cada coisa, e estratégias de logging/debugging",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Preciso de um sistema multi-agent no OpenClaw onde um agente supervisor delega tarefas para 3 agentes especializados. Qual padrão você recomenda? E como estruturar para que seja robusto?",
+      "expected_output": "Explicação da delegate architecture, pseudocódigo mostrando supervisor + sub-agents, como configurar message routing, error handling, e exemplo de quando cada agente é chamado",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Meu agente OpenClaw está usando muito contexto e tokens estão explodindo. Como faço memory compaction e session pruning corretamente?",
+      "expected_output": "Estratégias de compaction com pseudocódigo, como configurar session pruning, quando usar memory vs context, e métricas para monitorar eficiência de tokens",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@clawhub/openclaw-expert-bundle",
+  "version": "1.0.0",
+  "description": "Complete OpenClaw expertise bundle with 4 integrated skills",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**",
+    "install": "npm install && npm run build"
+  },
+  "keywords": [
+    "openclaw",
+    "agents",
+    "plugins",
+    "multi-agent",
+    "architecture",
+    "automation",
+    "skills"
+  ],
+  "author": "ClawDevs AI",
+  "license": "MIT",
+  "peerDependencies": {
+    "openclaw": ">=2026.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.2.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "eval_id": 1,
+  "eval_name": "agent-loop-explanation",
+  "prompt": "Estou começando com OpenClaw. Explica o agent loop e como ele funciona na prática. Quero entender o fluxo completo de uma mensagem até a resposta.",
+  "assertions": [
+    {
+      "name": "mentions_core_loop_steps",
+      "description": "Menciona os passos principais do agent loop (intake, load context, prompt building, LLM call, tool execution, response, store)",
+      "type": "string_contains"
+    },
+    {
+      "name": "includes_pseudocode",
+      "description": "Fornece pseudocódigo mostrando o fluxo do agent loop",
+      "type": "string_contains"
+    },
+    {
+      "name": "mentions_multiple_languages",
+      "description": "Inclui exemplos em Python, TypeScript, ou Go",
+      "type": "string_contains"
+    },
+    {
+      "name": "explains_context_engine",
+      "description": "Explica o papel do context engine no agent loop",
+      "type": "string_contains"
+    },
+    {
+      "name": "mentions_hooks_or_callbacks",
+      "description": "Menciona hooks ou pontos de interception no agent loop",
+      "type": "string_contains"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "eval_id": 4,
+  "eval_name": "multiagent-delegate-architecture",
+  "prompt": "Preciso de um sistema multi-agent no OpenClaw onde um agente supervisor delega tarefas para 3 agentes especializados. Qual padrão você recomenda? E como estruturar para que seja robusto?",
+  "assertions": [
+    {
+      "name": "mentions_delegate_architecture",
+      "description": "Menciona ou explica delegate architecture pattern",
+      "type": "string_contains"
+    },
+    {
+      "name": "includes_supervision_strategy",
+      "description": "Explica como o supervisor orquestra os agentes",
+      "type": "string_contains"
+    },
+    {
+      "name": "mentions_sessions_spawn",
+      "description": "Menciona sessions_spawn ou mecanismo similar para criar agentes",
+      "type": "string_contains"
+    },
+    {
+      "name": "includes_error_handling",
+      "description": "Inclui estratégia de error handling e retry para multi-agent",
+      "type": "string_contains"
+    },
+    {
+      "name": "provides_config_example",
+      "description": "Fornece exemplo de configuração (openclaw.json ou similar)",
+      "type": "string_contains"
+    }
+  ]
+}
