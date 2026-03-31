@@ -212,7 +212,8 @@ case "$SERVICE" in
       -e PANEL_REDIS_PASSWORD="${PANEL_REDIS_PASSWORD}" \
       -e PANEL_DATABASE_URL="postgresql+asyncpg://panel:${PANEL_DB_PASSWORD}@postgres:5432/clawdevs_panel" \
       -e PANEL_REDIS_URL="redis://:${PANEL_REDIS_PASSWORD}@redis:6379/0" \
-      -e PANEL_OPENCLAW_GATEWAY_URL=http://openclaw:18789 \
+      -e PANEL_NEMOCLAW_GATEWAY_URL=http://nemoclaw:18789 \
+      -e PANEL_OPENCLAW_GATEWAY_URL=http://nemoclaw:18789 \
       -e PANEL_SECRET_KEY="${PANEL_SECRET_KEY}" \
       -e PANEL_ADMIN_USERNAME="${PANEL_ADMIN_USERNAME}" \
       -e PANEL_ADMIN_PASSWORD="${PANEL_ADMIN_PASSWORD}" \
@@ -250,10 +251,14 @@ case "$SERVICE" in
     docker run -d --name clawdevs-panel-frontend --network "$STACK_NETWORK" --network-alias panel-frontend \
       -p 3000:3000 \
       -e BACKEND_URL=http://panel-backend:8000 \
-      -e OPENCLAW_GATEWAY_URL="${OPENCLAW_GATEWAY_URL:-http://openclaw:18789}" \
-      -e PANEL_OPENCLAW_GATEWAY_URL="${PANEL_OPENCLAW_GATEWAY_URL:-http://openclaw:18789}" \
-      -e OPENCLAW_GATEWAY_TOKEN="${OPENCLAW_GATEWAY_TOKEN}" \
-      -e PANEL_OPENCLAW_GATEWAY_TOKEN="${PANEL_OPENCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}" \
+      -e NEMOCLAW_GATEWAY_URL="${NEMOCLAW_GATEWAY_URL:-http://nemoclaw:18789}" \
+      -e PANEL_NEMOCLAW_GATEWAY_URL="${PANEL_NEMOCLAW_GATEWAY_URL:-http://nemoclaw:18789}" \
+      -e NEMOCLAW_GATEWAY_TOKEN="${NEMOCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}" \
+      -e PANEL_NEMOCLAW_GATEWAY_TOKEN="${PANEL_NEMOCLAW_GATEWAY_TOKEN:-${NEMOCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}}" \
+      -e OPENCLAW_GATEWAY_URL="${OPENCLAW_GATEWAY_URL:-http://nemoclaw:18789}" \
+      -e PANEL_OPENCLAW_GATEWAY_URL="${PANEL_OPENCLAW_GATEWAY_URL:-http://nemoclaw:18789}" \
+      -e OPENCLAW_GATEWAY_TOKEN="${OPENCLAW_GATEWAY_TOKEN:-${NEMOCLAW_GATEWAY_TOKEN}}" \
+      -e PANEL_OPENCLAW_GATEWAY_TOKEN="${PANEL_OPENCLAW_GATEWAY_TOKEN:-${NEMOCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}}" \
       -e NODE_ENV=production \
       --restart unless-stopped \
       "$PANEL_FRONTEND_IMAGE" >/dev/null
@@ -271,13 +276,17 @@ case "$SERVICE" in
       "$TOKEN_INIT_IMAGE" >/dev/null
     wait_for_exit_success clawdevs-token-init 180
     ;;
+  nemoclaw)
+    bash scripts/docker/run-nemoclaw.sh "$ENV_FILE" "$STACK_NETWORK" "${NEMOCLAW_IMAGE:-clawdevsai/openclaw-runtime:local}" \
+      "${BOOTSTRAP_SCRIPTS_DIR:-docker/base/bootstrap-scripts}"
+    ;;
   openclaw)
-    bash scripts/docker/run-openclaw.sh "$ENV_FILE" "$STACK_NETWORK" "${OPENCLAW_IMAGE:-clawdevsai/openclaw-runtime:local}" \
+    bash scripts/docker/run-nemoclaw.sh "$ENV_FILE" "$STACK_NETWORK" "${NEMOCLAW_IMAGE:-${OPENCLAW_IMAGE:-clawdevsai/openclaw-runtime:local}}" \
       "${BOOTSTRAP_SCRIPTS_DIR:-docker/base/bootstrap-scripts}"
     ;;
   *)
     echo "Servico invalido: $SERVICE"
-    echo "Servicos: postgres redis ollama searxng searxng-proxy panel-backend panel-worker panel-frontend token-init openclaw"
+    echo "Servicos: postgres redis ollama searxng searxng-proxy panel-backend panel-worker panel-frontend token-init nemoclaw openclaw"
     exit 1
     ;;
 esac

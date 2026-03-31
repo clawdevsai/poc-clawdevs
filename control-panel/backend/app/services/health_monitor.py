@@ -29,7 +29,7 @@ from typing import Optional, Dict, Any
 import redis.asyncio as aioredis
 
 from app.core.config import get_settings
-from app.services.openclaw_client import OpenClawClient
+from app.services.llm_runtime_client import LlmRuntimeClient as OpenClawClient
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

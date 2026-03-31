@@ -93,6 +93,8 @@ function normalizeRagContext(rawContext?: string | null): string | null {
 
 function resolveGatewayToken(): string {
   return (
+    process.env.NEMOCLAW_GATEWAY_TOKEN?.trim() ||
+    process.env.PANEL_NEMOCLAW_GATEWAY_TOKEN?.trim() ||
     process.env.OPENCLAW_GATEWAY_TOKEN?.trim() ||
     process.env.PANEL_OPENCLAW_GATEWAY_TOKEN?.trim() ||
     ""
@@ -100,9 +102,12 @@ function resolveGatewayToken(): string {
 }
 
 function resolveGatewayCandidates(): string[] {
+  const nemoclConfigured = process.env.NEMOCLAW_GATEWAY_URL?.trim();
+  const panelNemoclConfigured = process.env.PANEL_NEMOCLAW_GATEWAY_URL?.trim();
   const configured = process.env.OPENCLAW_GATEWAY_URL?.trim();
   const panelConfigured = process.env.PANEL_OPENCLAW_GATEWAY_URL?.trim();
   const defaults = [
+    "http://nemoclaw:18789",
     "http://openclaw:18789",
     "http://clawdevs-openclaw:18789",
     "http://host.docker.internal:18789",
@@ -110,7 +115,7 @@ function resolveGatewayCandidates(): string[] {
     "http://127.0.0.1:18789",
     "http://clawdevs-ai:18789",
   ];
-  const all = [configured, panelConfigured, ...defaults]
+  const all = [nemoclConfigured, panelNemoclConfigured, configured, panelConfigured, ...defaults]
     .filter(Boolean)
     .map((value) => (value as string).replace(/\/+$/, ""));
   return Array.from(new Set(all));
@@ -212,8 +217,9 @@ export async function POST(request: Request) {
       );
     }
 
+    const modelPrefix = process.env.NEMOCLAW_MODEL_PREFIX?.trim() || "openclaw";
     const upstreamPayload = {
-      model: `openclaw/${agentSlug}`,
+      model: `${modelPrefix}/${agentSlug}`,
       stream: true,
       messages: [
         ...(ragContext

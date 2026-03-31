@@ -30,7 +30,7 @@ fi
 trap 'status=$?; echo "[bootstrap][error] line=${LINENO} cmd=${BASH_COMMAND} exit=${status}" >&2' ERR
 echo "[bootstrap] log file: ${BOOTSTRAP_LOG_FILE}"
 echo "[bootstrap] debug mode: ${DEBUG_LOG_ENABLED}"
-for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID GIT_TOKEN GIT_ORG OLLAMA_API_KEY; do
+for var_name in OPENCLAW_GATEWAY_TOKEN NEMOCLAW_EXTERNAL NEMOCLAW_GATEWAY_URL NEMOCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID GIT_TOKEN GIT_ORG OLLAMA_API_KEY; do
   if [ -n "${!var_name:-}" ]; then
     echo "[bootstrap] ${var_name}=set"
   else

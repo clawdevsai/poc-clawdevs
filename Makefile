@@ -66,7 +66,7 @@ PANEL_BACKEND_IMAGE_REPO ?= clawdevsai/clawdevs-panel-backend
 SEARXNG_PROXY_IMAGE_REPO ?= clawdevsai/searxng-proxy
 PANEL_WORKER_IMAGE_REPO  ?= clawdevsai/clawdevs-panel-worker
 PANEL_FRONTEND_IMAGE_REPO ?= clawdevsai/clawdevs-panel-frontend
-OPENCLAW_IMAGE_REPO      ?= clawdevsai/openclaw-runtime
+NEMOCLAW_IMAGE_REPO      ?= clawdevsai/openclaw-runtime
 
 TOKEN_INIT_IMAGE     := $(TOKEN_INIT_IMAGE_REPO):$(IMAGE_TAG)
 POSTGRES_IMAGE       := $(POSTGRES_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
@@ -77,7 +77,7 @@ PANEL_BACKEND_IMAGE  := $(PANEL_BACKEND_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 SEARXNG_PROXY_IMAGE  := $(SEARXNG_PROXY_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 PANEL_WORKER_IMAGE   := $(PANEL_WORKER_EFFECTIVE_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 PANEL_FRONTEND_IMAGE := $(PANEL_FRONTEND_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
-OPENCLAW_IMAGE       := $(OPENCLAW_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+NEMOCLAW_IMAGE       := $(NEMOCLAW_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 
 STACK_NETWORK ?= clawdevs
 STACK_VOLUMES := openclaw-data ollama-data postgres-data panel-token
@@ -91,7 +91,7 @@ STACK_CONTAINERS := \
 	clawdevs-searxng-proxy \
 	clawdevs-panel-worker \
 	clawdevs-panel-frontend \
-	clawdevs-openclaw
+	clawdevs-nemoclaw
 
 AGENT_CONFIG_FLAT_DIR := tmp/agent-config-flat
 BOOTSTRAP_SCRIPTS_DIR := docker/base/bootstrap-scripts
@@ -102,11 +102,11 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: build images-build pull
 .PHONY: build-with-cache images-build-with-cache
 .PHONY: up up-all up-all-with-cache up-gpu down restart status logs
-.PHONY: up-postgres up-redis up-ollama up-searxng up-searxng-proxy up-panel-backend up-panel-worker up-panel-frontend up-token-init up-openclaw up-openclaw-with-cache
-.PHONY: openclaw-logs backend-logs ollama-logs frontend-logs
+.PHONY: up-postgres up-redis up-ollama up-searxng up-searxng-proxy up-panel-backend up-panel-worker up-panel-frontend up-token-init up-nemoclaw up-nemoclaw-with-cache up-openclaw up-openclaw-with-cache
+.PHONY: nemoclaw-logs openclaw-logs backend-logs ollama-logs frontend-logs
 .PHONY: logs-follow ps top
 .PHONY: env-check panel-url panel-db-migrate panel-logs openclaw-shell openclaw-restart push release clean prune
-.PHONY: migrate openclaw-dashboard ollama-list ollama-sign
+.PHONY: migrate nemoclaw-dashboard openclaw-dashboard ollama-list ollama-sign
 .PHONY: reset destroy destroy-complete
 .PHONY: network-create volumes-create containers-clean
 .PHONY: token-init-image-build token-init-image-push
@@ -118,7 +118,7 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: searxng-proxy-image-build searxng-proxy-image-push
 .PHONY: panel-worker-image-build panel-worker-image-push
 .PHONY: panel-frontend-image-build panel-frontend-image-push
-.PHONY: openclaw-image-build openclaw-image-push
+.PHONY: nemoclaw-image-build nemoclaw-image-push openclaw-image-build openclaw-image-push
 .PHONY: token-init-image-build-with-cache
 .PHONY: postgres-image-build-with-cache
 .PHONY: searxng-image-build-with-cache
@@ -128,11 +128,13 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: searxng-proxy-image-build-with-cache
 .PHONY: panel-worker-image-build-with-cache
 .PHONY: panel-frontend-image-build-with-cache
-.PHONY: openclaw-image-build-with-cache
+.PHONY: nemoclaw-image-build-with-cache openclaw-image-build-with-cache
 .PHONY: images-push images-release
 .PHONY: spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist
 .PHONY: brief-template clarify-template plan-template task-template validate-template
 .PHONY: sdd-prompts sdd-example sdd-real-initiative
+.PHONY: nemoclaw-install nemoclaw-onboard nemoclaw-list nemoclaw-status-host openshell-term
+.PHONY: nemoclaw-setup-ollama-local nemoclaw-smoke
 
 help:
 	@echo "════════════════════════════════════════════════════════════════"
@@ -147,14 +149,21 @@ help:
 	@echo "Exemplo remoto: PUSH_IMAGE=remote make up-all-with-cache"
 	@echo "make up-gpu        Mesmo fluxo do up-all com --gpus all no Ollama"
 	@echo "make up-<service>  Sobe container individual (ex.: up-postgres)"
-	@echo "make up-openclaw / up-openclaw-with-cache  Rebuild imagem + recria so o OpenClaw (sem cache / com cache)"
-	@echo "make openclaw-restart  Reinicia so o container (AGENTS.md em bind mount — sem rebuild)"
+	@echo "make up-nemoclaw / up-nemoclaw-with-cache  Rebuild imagem + recria so o NemoClaw runtime (sem cache / com cache)"
+	@echo "make openclaw-restart  Alias legado para reiniciar o runtime"
 	@echo "make down          Remove todos os containers da stack"
 	@echo "make status        Lista status dos containers da stack"
 	@echo "make logs          Logs agregados dos containers em execucao"
 	@echo "make build         Build local das 10 imagens"
 	@echo "make build-with-cache   Build local das 10 imagens (com cache)"
 	@echo "make migrate       Executa migrations Alembic"
+	@echo ""
+	@echo "NemoClaw (host-side, recomendado):"
+	@echo "make nemoclaw-install   Instala CLI nemoclaw (npm -g)"
+	@echo "make nemoclaw-onboard   Wizard interativo (cria sandbox + providers)"
+	@echo "make nemoclaw-list      Lista sandboxes"
+	@echo "make nemoclaw-status-host Status geral do NemoClaw no host"
+	@echo "make openshell-term     TUI do OpenShell (aprovar egress)"
 
 preflight:
 	@if [ ! -f "$(ENV_FILE)" ]; then \
@@ -180,6 +189,8 @@ preflight:
 		docker/clawdevs-openclaw/Dockerfile \
 		docker/clawdevs-openclaw/entrypoint.sh \
 		$(SEARXNG_PROXY_CONF) \
+		$(BOOTSTRAP_SCRIPTS_DIR)/05-install-openclaw.sh \
+		$(BOOTSTRAP_SCRIPTS_DIR)/05-install-nemoclaw.sh \
 		$(BOOTSTRAP_SCRIPTS_DIR)/11-start-gateway.sh \
 		scripts/docker/run-openclaw.sh \
 		scripts/docker/up-service.sh \
@@ -235,7 +246,7 @@ images-build: \
 	searxng-proxy-image-build \
 	panel-worker-image-build \
 	panel-frontend-image-build \
-	openclaw-image-build
+	nemoclaw-image-build
 
 images-build-with-cache: \
 	token-init-image-build-with-cache \
@@ -247,11 +258,11 @@ images-build-with-cache: \
 	searxng-proxy-image-build-with-cache \
 	panel-worker-image-build-with-cache \
 	panel-frontend-image-build-with-cache \
-	openclaw-image-build-with-cache
+	nemoclaw-image-build-with-cache
 
 up:
 	@echo "Use make up-all para subir a stack completa."
-	@echo "Para subir um container: make up-postgres | up-redis | up-ollama | up-searxng | up-searxng-proxy | up-panel-backend | up-panel-worker | up-panel-frontend | up-token-init | up-openclaw | up-openclaw-with-cache"
+	@echo "Para subir um container: make up-postgres | up-redis | up-ollama | up-searxng | up-searxng-proxy | up-panel-backend | up-panel-worker | up-panel-frontend | up-token-init | up-nemoclaw | up-nemoclaw-with-cache"
 	@exit 1
 
 up-all: preflight build network-create volumes-create containers-clean
@@ -260,12 +271,12 @@ up-all: preflight build network-create volumes-create containers-clean
 		"$(SEARXNG_IMAGE)" "$(SEARXNG_PROXY_IMAGE)" "$(PANEL_BACKEND_IMAGE)" \
 		"$(PANEL_WORKER_IMAGE)" "$(PANEL_FRONTEND_IMAGE)" "$(TOKEN_INIT_IMAGE)" \
 		"$(SEARXNG_PROXY_CONF)"
-	@bash scripts/docker/run-openclaw.sh "$(ENV_FILE)" "$(STACK_NETWORK)" "$(OPENCLAW_IMAGE)" "$(BOOTSTRAP_SCRIPTS_DIR)"
+	@bash scripts/docker/run-nemoclaw.sh "$(ENV_FILE)" "$(STACK_NETWORK)" "$(NEMOCLAW_IMAGE)" "$(BOOTSTRAP_SCRIPTS_DIR)"
 	@echo ""
 	@echo "Stack iniciada."
 	@echo "  http://localhost:3000        Painel de Controle"
 	@echo "  http://localhost:8000/docs   API Docs"
-	@echo "  http://localhost:18789       OpenClaw Gateway"
+	@echo "  http://localhost:18789       NemoClaw Runtime"
 	@echo "  http://localhost:11434       Ollama API"
 	@echo "  http://localhost:18080       SearXNG Proxy"
 
@@ -275,12 +286,12 @@ up-all-with-cache: preflight build-with-cache network-create volumes-create cont
 		"$(SEARXNG_IMAGE)" "$(SEARXNG_PROXY_IMAGE)" "$(PANEL_BACKEND_IMAGE)" \
 		"$(PANEL_WORKER_IMAGE)" "$(PANEL_FRONTEND_IMAGE)" "$(TOKEN_INIT_IMAGE)" \
 		"$(SEARXNG_PROXY_CONF)"
-	@bash scripts/docker/run-openclaw.sh "$(ENV_FILE)" "$(STACK_NETWORK)" "$(OPENCLAW_IMAGE)" "$(BOOTSTRAP_SCRIPTS_DIR)"
+	@bash scripts/docker/run-nemoclaw.sh "$(ENV_FILE)" "$(STACK_NETWORK)" "$(NEMOCLAW_IMAGE)" "$(BOOTSTRAP_SCRIPTS_DIR)"
 	@echo ""
 	@echo "Stack iniciada."
 	@echo "  http://localhost:3000        Painel de Controle"
 	@echo "  http://localhost:8000/docs   API Docs"
-	@echo "  http://localhost:18789       OpenClaw Gateway"
+	@echo "  http://localhost:18789       NemoClaw Runtime"
 	@echo "  http://localhost:11434       Ollama API"
 	@echo "  http://localhost:18080       SearXNG Proxy"
 
@@ -311,12 +322,16 @@ up-panel-frontend: preflight network-create panel-frontend-image-build
 up-token-init: preflight network-create volumes-create token-init-image-build
 	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" TOKEN_INIT_IMAGE="$(TOKEN_INIT_IMAGE)" bash scripts/docker/up-service.sh token-init
 
-up-openclaw: preflight network-create volumes-create openclaw-image-build
-	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OPENCLAW_IMAGE="$(OPENCLAW_IMAGE)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh openclaw
+up-nemoclaw: preflight network-create volumes-create nemoclaw-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" NEMOCLAW_IMAGE="$(NEMOCLAW_IMAGE)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh nemoclaw
 
-# Rebuild da imagem OpenClaw com cache Docker (mais rapido) e recria so o container clawdevs-openclaw.
-up-openclaw-with-cache: preflight network-create volumes-create openclaw-image-build-with-cache
-	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OPENCLAW_IMAGE="$(OPENCLAW_IMAGE)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh openclaw
+# Rebuild da imagem NemoClaw com cache Docker (mais rapido) e recria so o container clawdevs-nemoclaw.
+up-nemoclaw-with-cache: preflight network-create volumes-create nemoclaw-image-build-with-cache
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" NEMOCLAW_IMAGE="$(NEMOCLAW_IMAGE)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh nemoclaw
+
+up-openclaw: up-nemoclaw
+
+up-openclaw-with-cache: up-nemoclaw-with-cache
 
 up-gpu:
 	@$(MAKE) up-all OLLAMA_GPU_FLAGS="--gpus all"
@@ -356,8 +371,10 @@ logs-follow: logs
 top:
 	@docker stats --no-stream $(STACK_CONTAINERS) 2>$(NULL_DEV) || true
 
-openclaw-logs:
-	@docker logs clawdevs-openclaw -f --tail=200
+nemoclaw-logs:
+	@docker logs clawdevs-nemoclaw -f --tail=200
+
+openclaw-logs: nemoclaw-logs
 
 backend-logs:
 	@set -euo pipefail; \
@@ -387,16 +404,18 @@ frontend-logs:
 migrate:
 	@docker exec clawdevs-panel-backend alembic upgrade head
 
-openclaw-dashboard:
-	@docker exec clawdevs-openclaw openclaw dashboard --no-open
+nemoclaw-dashboard:
+	@docker exec clawdevs-nemoclaw openclaw dashboard --no-open
+
+openclaw-dashboard: nemoclaw-dashboard
 
 openclaw-shell:
-	@docker exec -it clawdevs-openclaw /bin/bash
+	@docker exec -it clawdevs-nemoclaw /bin/bash
 
 # Reinicia o container OpenClaw sem rebuild (config em docker/base/openclaw-config ja reflete o disco).
 openclaw-restart:
-	@docker restart clawdevs-openclaw
-	@echo "[openclaw-restart] clawdevs-openclaw reiniciado."
+	@docker restart clawdevs-nemoclaw
+	@echo "[openclaw-restart] clawdevs-nemoclaw reiniciado."
 
 ollama-list:
 	@docker exec clawdevs-ollama ollama list
@@ -435,7 +454,7 @@ destroy:
 		$(SEARXNG_PROXY_IMAGE) \
 		$(PANEL_WORKER_IMAGE) \
 		$(PANEL_FRONTEND_IMAGE) \
-		$(OPENCLAW_IMAGE); do \
+		$(NEMOCLAW_IMAGE); do \
 		docker rmi "$$image" >$(NULL_DEV) 2>&1 || true; \
 	done
 	@echo "[destroy] stack removida por completo."
@@ -533,14 +552,20 @@ panel-frontend-image-build-with-cache:
 panel-frontend-image-push:
 	docker push $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
-openclaw-image-build:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
+nemoclaw-image-build:
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(NEMOCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
 
-openclaw-image-build-with-cache:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
+nemoclaw-image-build-with-cache:
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(NEMOCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
 
-openclaw-image-push:
-	docker push $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
+nemoclaw-image-push:
+	docker push $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
+
+openclaw-image-build: nemoclaw-image-build
+
+openclaw-image-build-with-cache: nemoclaw-image-build-with-cache
+
+openclaw-image-push: nemoclaw-image-push
 
 images-push: \
 	token-init-image-push \
@@ -552,7 +577,7 @@ images-push: \
 	searxng-proxy-image-push \
 	panel-worker-image-push \
 	panel-frontend-image-push \
-	openclaw-image-push
+	nemoclaw-image-push
 
 images-release: images-build images-push
 
@@ -571,12 +596,33 @@ pull:
 	docker pull $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(PANEL_WORKER_EFFECTIVE_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
-	docker pull $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
+	docker pull $(NEMOCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 clean: reset
 
 prune:
 	docker system prune -af
+
+nemoclaw-install:
+	@npm install -g nemoclaw
+
+nemoclaw-onboard:
+	@nemoclaw onboard
+
+nemoclaw-list:
+	@nemoclaw list
+
+nemoclaw-status-host:
+	@nemoclaw status
+
+openshell-term:
+	@openshell term
+
+nemoclaw-setup-ollama-local:
+	@SANDBOX_NAME="clawdevs-ai" bash "scripts/nemoclaw/setup-ollama-local.sh"
+
+nemoclaw-smoke:
+	@SANDBOX_NAME="clawdevs-ai" bash "scripts/nemoclaw/smoke.sh"
 
 spec-template:
 	@echo "Template: docker/base/openclaw-config/shared/SPEC_TEMPLATE.md"

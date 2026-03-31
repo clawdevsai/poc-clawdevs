@@ -42,7 +42,7 @@ from app.models import (
     MemoryEntry,
     Session as SessionModel,
 )
-from app.services.openclaw_client import openclaw_client
+from app.services.llm_runtime_client import llm_runtime_client as openclaw_client
 from app.services.embedding_service import EmbeddingService
 from app.services.agent_sync import _status_from_heartbeat
 from app.core.config import get_settings

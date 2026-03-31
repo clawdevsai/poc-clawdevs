@@ -19,7 +19,8 @@
 # SOFTWARE.
 
 APT_STAMP="${OPENCLAW_STATE_DIR}/backlog/status/.apt-installed"
-required_tools="gh git jq python3 curl"
+# NemoClaw/OpenClaw bootstrap requires these base tools. Node/npm come from the base image.
+required_tools="gh git jq python3 curl bash node npm"
 missing_tools=""
 for tool in ${required_tools}; do
   if ! command -v "${tool}" >/dev/null 2>&1; then
@@ -39,7 +40,7 @@ else
     touch "${APT_STAMP}"
   else
     echo "[bootstrap][error] Missing required tools:${missing_tools}" >&2
-    echo "[bootstrap][error] openclaw-runtime image must provide runtime dependencies." >&2
+    echo "[bootstrap][error] runtime image must provide missing dependencies." >&2
     exit 1
   fi
 fi

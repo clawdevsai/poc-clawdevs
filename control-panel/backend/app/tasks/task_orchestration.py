@@ -29,7 +29,7 @@ from sqlmodel import select
 
 from app.core.database import AsyncSessionLocal
 from app.models import Agent, Task
-from app.services.openclaw_client import openclaw_client
+from app.services.llm_runtime_client import llm_runtime_client as openclaw_client
 from app.services.task_workflow import (
     WORKFLOW_COMPLETED,
     WORKFLOW_FAILED,

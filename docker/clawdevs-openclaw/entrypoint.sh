@@ -7,13 +7,17 @@ if [ "$#" -gt 0 ]; then
 fi
 
 scripts_dir="${BOOTSTRAP_SCRIPTS_DIR:-/bootstrap/scripts}"
+install_script="05-install-openclaw.sh"
+if [ "${NEMOCLAW_EXTERNAL:-false}" = "true" ]; then
+  install_script="05-install-nemoclaw.sh"
+fi
 required_scripts=(
   00-env.sh
   01-deps.sh
   02-web-tools.sh
   03-gh-auth.sh
   04-repo-tools.sh
-  05-install-openclaw.sh
+  "${install_script}"
   06-dirs.sh
   07-agent-workspaces.sh
   08-git-hooks.sh

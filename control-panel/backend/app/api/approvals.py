@@ -161,7 +161,7 @@ async def decide_approval(
 ):
     from uuid import UUID
     from datetime import datetime, timezone
-    from app.services.openclaw_client import openclaw_client
+    from app.services.llm_runtime_client import llm_runtime_client as openclaw_client
 
     if body.decision not in ("approved", "rejected"):
         raise HTTPException(

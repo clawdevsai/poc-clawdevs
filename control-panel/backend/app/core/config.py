@@ -41,7 +41,11 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password: str = "change-me"
 
-    # OpenClaw gateway
+    # NemoClaw runtime gateway
+    nemoclaw_gateway_url: str = "http://clawdevs-ai:18789"
+    nemoclaw_gateway_token: str = ""
+
+    # Legacy OpenClaw aliases (kept for backwards compatibility)
     openclaw_gateway_url: str = "http://clawdevs-ai:18789"
     openclaw_gateway_token: str = ""
 

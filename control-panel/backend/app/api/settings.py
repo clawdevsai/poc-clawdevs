@@ -21,7 +21,7 @@
 from fastapi import APIRouter
 from app.api.deps import CurrentUser
 from app.core.config import get_settings
-from app.services.openclaw_client import openclaw_client
+from app.services.llm_runtime_client import llm_runtime_client as openclaw_client
 from app.services import container_client
 
 settings = get_settings()
@@ -31,8 +31,9 @@ router = APIRouter()
 @router.get("/info")
 async def get_settings_info(_: CurrentUser):
     cluster_info = container_client.get_cluster_info(namespace=settings.container_namespace)
+    gateway_url = (settings.nemoclaw_gateway_url or settings.openclaw_gateway_url).rstrip("/")
     return {
-        "gateway_url": settings.openclaw_gateway_url,
+        "gateway_url": gateway_url,
         "cluster_namespace": cluster_info.get("namespace") or settings.container_namespace,
         "container_version": cluster_info.get("version") or "unknown",
     }

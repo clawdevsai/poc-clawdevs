@@ -35,7 +35,7 @@ from app.api.deps import CurrentUser
 from app.models import Session as SessionModel
 from app.services.session_sync import sync_sessions
 from app.services.session_labels import session_display_label, session_kind
-from app.services.openclaw_client import openclaw_client
+from app.services.llm_runtime_client import llm_runtime_client as openclaw_client
 
 router = APIRouter()
 settings = get_settings()

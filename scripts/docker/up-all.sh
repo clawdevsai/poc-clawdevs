@@ -219,7 +219,8 @@ docker run -d --name clawdevs-panel-backend --network "$STACK_NETWORK" --network
   -e PANEL_REDIS_PASSWORD="$PANEL_REDIS_PASSWORD" \
   -e PANEL_DATABASE_URL="postgresql+asyncpg://panel:${PANEL_DB_PASSWORD}@postgres:5432/clawdevs_panel" \
   -e PANEL_REDIS_URL="redis://:${PANEL_REDIS_PASSWORD}@redis:6379/0" \
-  -e PANEL_OPENCLAW_GATEWAY_URL=http://openclaw:18789 \
+  -e PANEL_NEMOCLAW_GATEWAY_URL="${PANEL_NEMOCLAW_GATEWAY_URL:-${NEMOCLAW_GATEWAY_URL:-http://nemoclaw:18789}}" \
+  -e PANEL_OPENCLAW_GATEWAY_URL="${PANEL_OPENCLAW_GATEWAY_URL:-${NEMOCLAW_GATEWAY_URL:-http://nemoclaw:18789}}" \
   -e PANEL_SECRET_KEY="$PANEL_SECRET_KEY" \
   -e PANEL_ADMIN_USERNAME="$PANEL_ADMIN_USERNAME" \
   -e PANEL_ADMIN_PASSWORD="$PANEL_ADMIN_PASSWORD" \
@@ -280,10 +281,14 @@ echo "[up] iniciando clawdevs-panel-frontend"
 docker run -d --name clawdevs-panel-frontend --network "$STACK_NETWORK" --network-alias panel-frontend \
   -p 3000:3000 \
   -e BACKEND_URL=http://panel-backend:8000 \
-  -e OPENCLAW_GATEWAY_URL="${OPENCLAW_GATEWAY_URL:-http://openclaw:18789}" \
-  -e PANEL_OPENCLAW_GATEWAY_URL="${PANEL_OPENCLAW_GATEWAY_URL:-http://openclaw:18789}" \
-  -e OPENCLAW_GATEWAY_TOKEN="$OPENCLAW_GATEWAY_TOKEN" \
-  -e PANEL_OPENCLAW_GATEWAY_TOKEN="${PANEL_OPENCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}" \
+  -e NEMOCLAW_GATEWAY_URL="${NEMOCLAW_GATEWAY_URL:-http://nemoclaw:18789}" \
+  -e PANEL_NEMOCLAW_GATEWAY_URL="${PANEL_NEMOCLAW_GATEWAY_URL:-${NEMOCLAW_GATEWAY_URL:-http://nemoclaw:18789}}" \
+  -e NEMOCLAW_GATEWAY_TOKEN="${NEMOCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}" \
+  -e PANEL_NEMOCLAW_GATEWAY_TOKEN="${PANEL_NEMOCLAW_GATEWAY_TOKEN:-${NEMOCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}}" \
+  -e OPENCLAW_GATEWAY_URL="${OPENCLAW_GATEWAY_URL:-http://nemoclaw:18789}" \
+  -e PANEL_OPENCLAW_GATEWAY_URL="${PANEL_OPENCLAW_GATEWAY_URL:-http://nemoclaw:18789}" \
+  -e OPENCLAW_GATEWAY_TOKEN="${OPENCLAW_GATEWAY_TOKEN:-${NEMOCLAW_GATEWAY_TOKEN}}" \
+  -e PANEL_OPENCLAW_GATEWAY_TOKEN="${PANEL_OPENCLAW_GATEWAY_TOKEN:-${NEMOCLAW_GATEWAY_TOKEN:-${OPENCLAW_GATEWAY_TOKEN}}}" \
   -e NODE_ENV=production \
   --restart unless-stopped \
   "$PANEL_FRONTEND_IMAGE" >/dev/null
@@ -292,6 +297,6 @@ wait_for_running clawdevs-panel-frontend 120
 echo "[up] Stack iniciada com sucesso!"
 echo "  http://localhost:3000        Painel de Controle"
 echo "  http://localhost:8000/docs   API Docs"
-echo "  http://localhost:18789       OpenClaw Gateway"
+echo "  http://localhost:18789       NemoClaw Runtime"
 echo "  http://localhost:11434       Ollama API"
 echo "  http://localhost:18080       SearXNG Proxy"

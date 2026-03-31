@@ -31,7 +31,7 @@ except Exception:  # pragma: no cover
     kubernetes = None
 
 DOCKER_STACK_SERVICES = [
-    {"name": "clawdevs-openclaw", "url": "http://openclaw:18789/healthz"},
+    {"name": "clawdevs-nemoclaw", "url": "http://nemoclaw:18789/healthz"},
     {"name": "clawdevs-panel-backend", "url": "http://panel-backend:8000/healthz"},
     {"name": "clawdevs-panel-frontend", "url": "http://panel-frontend:3000/"},
     {"name": "clawdevs-ollama", "url": "http://ollama:11434/api/tags"},

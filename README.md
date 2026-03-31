@@ -22,7 +22,7 @@
 
 # ClawDevs AI
 
-Stack local com `OpenClaw + Ollama + Control Panel`, operada via `Makefile` e Docker.
+Stack local com `NemoClaw runtime + Ollama + Control Panel`, operada via `Makefile` e Docker.
 
 ## Inicio rapido (comandos corretos do Makefile)
 
@@ -34,6 +34,22 @@ cp .env.example .env
 make env-check
 make up-all
 make panel-url
+```
+
+### NemoClaw (modo recomendado: host-side)
+
+O NemoClaw é **host-side** (instala OpenShell e cria um sandbox). Para usar o gateway do NemoClaw a partir dos containers do painel:
+
+1) No `.env`, configure:
+- `NEMOCLAW_EXTERNAL=true`
+- `NEMOCLAW_GATEWAY_URL=http://host.docker.internal:18789`
+
+2) No host (fora do Docker), instale e faça onboard:
+
+```bash
+curl -fsSL https://www.nvidia.com/nemoclaw.sh | bash
+nemoclaw onboard
+openshell term
 ```
 
 Na primeira subida com banco novo:
@@ -63,7 +79,7 @@ O fluxo `make up-all` sobe os containers da stack `clawdevs-*`, incluindo:
 | Control Panel (Frontend) | http://localhost:3000 |
 | Control Panel (Backend API) | http://localhost:8000 |
 | Control Panel (Docs) | http://localhost:8000/docs |
-| OpenClaw Gateway | http://localhost:18789 |
+| NemoClaw Runtime | http://localhost:18789 |
 | Ollama API | http://localhost:11434 |
 | SearXNG Proxy | http://localhost:18080 |
 | PostgreSQL | http://localhost:5432 |
@@ -93,7 +109,7 @@ make logs-follow           # alias de logs
 make panel-logs            # logs backend + worker
 make backend-logs          # logs backend + worker
 make frontend-logs         # logs frontend
-make openclaw-logs         # logs do OpenClaw
+make nemoclaw-logs         # logs do NemoClaw runtime
 make ollama-logs           # logs do Ollama
 make top                   # uso de recursos da stack
 ```
@@ -101,9 +117,9 @@ make top                   # uso de recursos da stack
 ### OpenClaw e Ollama
 
 ```bash
-make openclaw-shell        # shell interativo no container OpenClaw
-make openclaw-restart      # reinicia so OpenClaw (sem rebuild)
-make openclaw-dashboard    # roda openclaw dashboard --no-open
+make openclaw-shell        # shell interativo no container de runtime
+make openclaw-restart      # reinicia so runtime (sem rebuild)
+make nemoclaw-dashboard    # dashboard do runtime
 make ollama-list           # lista modelos no Ollama
 make ollama-sign           # login interativo no Ollama
 ```
@@ -128,8 +144,8 @@ make up-panel-backend
 make up-panel-worker
 make up-panel-frontend
 make up-token-init
-make up-openclaw
-make up-openclaw-with-cache
+make up-nemoclaw
+make up-nemoclaw-with-cache
 ```
 
 ### Build, release e limpeza
