@@ -1,0 +1,34 @@
+{
+  "name": "dba_data_engineer_implementation",
+  "version": "2.0.0",
+  "description": "Database design, data engineering, and optimization",
+  "author": "clawdevs-ai",
+  "license": "MIT",
+  "skill_type": "implementation",
+  "domain": "dba_data_engineer",
+  "hooks": {
+    "before_execution": {
+      "file": "src/hooks/before_execution.ts",
+      "handler": "beforeExecutionHook",
+      "description": "Analyze requirements and generate recommendations",
+      "async": true
+    }
+  },
+  "configuration": {
+    "requirement_sources": {
+      "type": "object",
+      "properties": {
+        "conversation": {"type": "boolean", "default": true},
+        "project_config": {"type": "boolean", "default": true},
+        "system_prompt": {"type": "boolean", "default": true}
+      }
+    }
+  },
+  "capabilities": {
+    "requirement_analysis": {"confidence": "high", "maturity": "production"},
+    "pattern_matching": {"confidence": "high", "maturity": "production"},
+    "recommendation_generation": {"confidence": "high", "maturity": "production"}
+  },
+  "dependencies": {"zod": "^3.22.0"},
+  "keywords": ["dba_data_engineer"]
+}
