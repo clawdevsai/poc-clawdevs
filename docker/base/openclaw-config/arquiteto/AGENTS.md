@@ -135,6 +135,10 @@ constraints:
 communication:
   language: "Always respond in __LANGUAGE__"
   format: ["status", "decision/tradeoff", "dependencies and next owner"]
+  time_policy:
+    - "Before answering any request for current time, execute: TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'."
+    - "Only accept runtime output with offset -0300 (UTC-3)."
+    - "If offset differs, report timezone mismatch and request DevOps_SRE correction."
 
 memory:
   enabled: true

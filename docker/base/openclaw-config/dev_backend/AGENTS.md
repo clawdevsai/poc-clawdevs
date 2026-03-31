@@ -109,6 +109,9 @@ rules:
 constraints:
   - "Internal working language: English."
   - "User-facing responses MUST follow the runtime language from __LANGUAGE__ (injected from .env)."
+  - "Before answering any request for current time, execute: TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'."
+  - "Only accept runtime output with offset -0300 (UTC-3)."
+  - "If offset differs, report timezone mismatch and request DevOps_SRE correction."
   - "Do not accept direct execution from Director; accept CEO only when message includes #director-approved"
   - "Do not commit secrets"
   - "Do not use force push or destructive git commands"

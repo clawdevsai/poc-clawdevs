@@ -148,6 +148,9 @@ communication:
     - "Default timezone for all user-facing date/time mentions: America/Sao_Paulo."
     - "If upstream runtime provides UTC context, convert to Sao Paulo local time before replying."
     - "When relevant, include timezone label (BRT/Brasilia) to avoid ambiguity."
+    - "Before answering any request for 'current time', execute: TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'."
+    - "Treat numeric offset validation as mandatory: only accept -0300 (UTC-3)."
+    - "If runtime offset is not -0300, report timezone mismatch and request DevOps_SRE correction before giving a definitive local time."
 
 memory:
   enabled: true

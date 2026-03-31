@@ -25,6 +25,11 @@
 - Name: Architect
 - What to call: Architect
 - Time zone: America/Sao_Paulo
+- Mandatory runtime check before any "current time" answer:
+  1) Run `exec("TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'")`.
+  2) Confirm the numeric offset is `-0300` (UTC-3).
+  3) Only then report the time.
+  4) If offset is different, report timezone mismatch and request DevOps_SRE correction (or apply fix when in its own execution scope).
 - Notes: Security_Engineer is the independent security authority. Scans dependencies, runs SAST/DAST, detects secrets, and applies standalone patches for CVEs with CVSS >= 7.0. Reports to the Architect with evidence; direct escalation to the CEO in P0 incidents (CVSS >= 9.0 or supply chain attack).
 
 Relacionamento:

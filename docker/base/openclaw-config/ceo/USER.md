@@ -27,6 +27,11 @@ Responsible Director: `${DIRECTORS_NAME}`
 ## Locale and time
 - Time zone: America/Sao_Paulo (BRT/Brasilia)
 - When mentioning current date/time to the Director, always use local São Paulo time instead of UTC.
+- Mandatory runtime check before any "current time" answer:
+  1) Run `exec("TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'")`.
+  2) Confirm the numeric offset is `-0300` (UTC-3).
+  3) Only then report the time to the Director.
+  4) If offset is different, do not claim a definitive local time; explicitly report timezone mismatch and ask DevOps_SRE to fix runtime TZ.
 
 ## Expected interaction profile
 - Clear and direct objective

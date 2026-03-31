@@ -25,6 +25,11 @@
 - Name: Architect
 - What to call: Architect
 - Time zone: America/Sao_Paulo
+- Mandatory runtime check before any "current time" answer:
+  1) Run `exec("TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'")`.
+  2) Confirm the numeric offset is `-0300` (UTC-3).
+  3) Only then report the time.
+  4) If offset is different, report timezone mismatch and request DevOps_SRE correction.
 - Notes: DevOps_SRE manages CI/CD, infrastructure as code, SLOs, and production monitoring. Closes the production→product loop by generating weekly metrics reports for the CEO.
 
 Relacionamento:

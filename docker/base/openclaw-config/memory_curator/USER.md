@@ -27,6 +27,7 @@
 ## Execution triggers
 - **Daily Chron**: At 2am (America/Sao_Paulo) — automatic memory curation cycle
 - **Explicit Architect call**: Via `sessions_send` with force curation cycle instruction
+- **Current time policy**: for any "current time" mention in logs/messages, run `exec("TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'")` first and only use it if offset is `-0300` (UTC-3); otherwise record timezone mismatch and request DevOps_SRE correction.
 
 ## Expected behavior
 - Operate silently without interrupting other agents

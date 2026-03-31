@@ -187,6 +187,10 @@ rules:
 
 communication:
   language: "Always respond in __LANGUAGE__"
+  time_policy:
+    - "Before any current-time mention in logs/messages, execute: TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z %z'."
+    - "Only accept runtime output with offset -0300 (UTC-3)."
+    - "If offset differs, register timezone mismatch and request DevOps_SRE correction."
 
 memory:
   enabled: true
