@@ -30,7 +30,7 @@ Stack local com `NemoClaw runtime + Ollama + Control Panel`, operada via `Makefi
 
 ```bash
 cp .env.example .env
-# preencha o .env (ex.: OPENCLAW_GATEWAY_TOKEN, GIT_TOKEN, PANEL_ADMIN_PASSWORD)
+# preencha o .env (ex.: GIT_TOKEN, PANEL_ADMIN_PASSWORD, etc)
 make env-check
 make up-all
 make panel-url
@@ -65,7 +65,7 @@ O fluxo `make up-all` sobe os containers da stack `clawdevs-*`, incluindo:
 - PostgreSQL
 - Redis
 - Ollama
-- OpenClaw
+- NemoClaw Runtime
 - SearXNG + SearXNG Proxy
 - Panel Backend
 - Panel Worker
@@ -114,11 +114,9 @@ make ollama-logs           # logs do Ollama
 make top                   # uso de recursos da stack
 ```
 
-### OpenClaw e Ollama
+### NemoClaw e Ollama
 
 ```bash
-make openclaw-shell        # shell interativo no container de runtime
-make openclaw-restart      # reinicia so runtime (sem rebuild)
 make nemoclaw-dashboard    # dashboard do runtime
 make ollama-list           # lista modelos no Ollama
 make ollama-sign           # login interativo no Ollama
@@ -186,35 +184,9 @@ docker run --rm --gpus all nvidia/cuda:11.8.0-base nvidia-smi
 6. `TASK`
 7. implementacao + validacao
 
-Templates e referencias:
-
-- `docker/base/openclaw-config/shared/CONSTITUTION.md`
-- `docker/base/openclaw-config/shared/SDD_CHECKLIST.md`
-- `docker/base/openclaw-config/shared/SPEC_TEMPLATE.md`
-- `docker/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
-- `docker/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
-- `docker/base/openclaw-config/shared/PLAN_TEMPLATE.md`
-- `docker/base/openclaw-config/shared/TASK_TEMPLATE.md`
-- `docker/base/openclaw-config/shared/VALIDATE_TEMPLATE.md`
-- `docker/base/openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md`
-
-Atalhos no `Makefile` para localizar esses artefatos:
-
-```bash
-make spec-template
-make constitution-template
-make brief-template
-make clarify-template
-make plan-template
-make task-template
-make validate-template
-make sdd-checklist
+Para templates e referencias do SDD, consulte a documentação do projeto em `docs/`
 make sdd-prompts
 make sdd-example
-make sdd-real-initiative
-make vibe-playbook
-make speckit-flow
-make sdd-contract
 ```
 
 ## Estrutura do projeto (resumo)
@@ -225,8 +197,7 @@ Makefile
 docker/
   base/
     bootstrap-scripts/
-    openclaw-config/
-  clawdevs-openclaw/
+  clawdevs-nemoclaw/
   clawdevs-ollama/
   clawdevs-panel-backend/
   clawdevs-panel-worker/
