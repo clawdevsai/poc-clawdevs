@@ -1,599 +1,159 @@
-# Troubleshooting Guide
+# Troubleshooting
 
-**For:** All engineers
-**Purpose:** Debug common issues and find solutions
-**Updated:** March 27, 2026
+Guia tecnico de diagnostico da stack Docker em execucao local.
 
----
+## Conceito de diagnostico
 
-## Quick Diagnostics
+A stack depende de 3 blocos:
 
-Run these first when something is broken:
+1. **Base de dados e cache:** PostgreSQL + Redis
+2. **Aplicacao:** OpenClaw + painel (backend, worker, frontend)
+3. **Inferencia e busca:** Ollama + SearXNG (+ proxy)
+
+A ordem de verificacao recomendada e: **containers -> health -> logs -> conectividade entre servicos**.
+
+## Diagnostico inicial (passo unico)
 
 ```bash
-# System health check
-make stack-status
+make status
+make logs
+```
 
-# Detailed diagnostics
-docker-compose get containers
-docker-compose describe containers
+Logs por componente:
 
-# Logs from all components
+```bash
 make openclaw-logs
 make ollama-logs
-make panel-logs-backend
-
-# GPU status (if applicable)
-make gpu-doctor
+make backend-logs
+make frontend-logs
 ```
 
----
+Inspecao direta no Docker:
 
-## Common Issues
-
-### Container Won't Start
-
-**Symptom:** Container status: `CrashLoopBackOff` or `Pending`
-
-**Diagnosis:**
 ```bash
-docker-compose describe container <container-name>
-docker-compose logs <container-name>
+docker ps -a --filter "name=^/clawdevs-"
+docker inspect clawdevs-openclaw
+docker inspect clawdevs-panel-backend
+docker inspect clawdevs-ollama
 ```
 
-**Solutions:**
+## Problemas comuns
 
-1. **ImagePullBackOff** — Image not found
-   ```bash
-   # If using local build
-   make images-build
+### 1) `make preflight` falha
 
-   # Or use remote (default)
-   docker-compose set env deployment/<deploy> PUSH_IMAGE=remote
-   ```
+**Causa comum:** variaveis obrigatorias ausentes no `.env`.
 
-2. **Insufficient CPU/Memory**
-   ```bash
-   # Check Docker allocation
-   docker config view
+**Acao:**
 
-   # Increase resources
-   docker delete
-   docker start --cpus=4 --memory=8192
-   ```
+1. Copiar `.env.example` para `.env` se necessario.
+2. Preencher as chaves obrigatorias.
+3. Rodar `make preflight` novamente.
 
-3. **PVC not bound**
-   ```bash
-   docker-compose get pvc
-   docker-compose describe pvc <pvc-name>
+### 2) Containers nao sobem ou reiniciam
 
-   # Wait or delete stale PVC
-   docker-compose delete pvc <pvc-name>
-   make storage-enable-expansion
-   ```
+**Acao:**
 
----
-
-### OpenClaw Gateway Not Responding
-
-**Symptom:** Cannot connect to gateway, commands timeout
-
-**Diagnosis:**
 ```bash
-# Check if container is running
-docker-compose get container/openclaw-runtime-0
-
-# Check logs
-docker-compose logs -f container/openclaw-runtime-0 -c openclaw
-
-# Test connectivity
-docker-compose port-forward service/openclaw-gateway 8080:8080
-curl -v http://localhost:8080/health
+make down
+make up-all-with-cache
+make status
 ```
 
-**Solutions:**
+Se ainda falhar, confira logs com `make logs`.
 
-1. **Gateway failed to start**
-   ```bash
-   # Check for config errors
-   docker-compose logs container/openclaw-runtime-0
+Diagnostico adicional:
 
-   # Rebuild config
-   docker-compose delete configmap openclaw-agent-config
-   make stack-apply
-   ```
-
-2. **Authentication failed**
-   ```bash
-   # Verify token is set
-   echo $OPENCLAW_GATEWAY_TOKEN
-
-   # Must be non-empty and valid Bearer token
-
-   # Regenerate if needed
-   # Edit container/.env, then:
-   make stack-apply
-   ```
-
-3. **Port not exposed**
-   ```bash
-   # For remote access
-   make services-expose
-
-   # For local testing
-   docker-compose port-forward service/openclaw-gateway 18789:18789
-   ```
-
----
-
-### Agents Not Running
-
-**Symptom:** Agents don't execute on schedule, no logs
-
-**Diagnosis:**
 ```bash
-# Check if cron is enabled
-docker-compose exec -it container/openclaw-runtime-0 -- env | grep CRON
-
-# Check agent status
-docker-compose exec -it container/openclaw-runtime-0 -- openclaw agents list
-
-# Check workspace exists
-docker-compose exec -it container/openclaw-runtime-0 -- ls -la /data/openclaw/workspace-*
-
-# Trigger agent manually
-docker-compose exec -it container/openclaw-runtime-0 -- \
-  openclaw agent --agent dev_backend --message "test"
+docker inspect clawdevs-postgres
+docker inspect clawdevs-redis
+docker inspect clawdevs-panel-backend
 ```
 
-**Solutions:**
+### 3) Painel nao abre em `localhost:3000`
 
-1. **Workspace not initialized**
-   ```bash
-   # Copy bootstrap files
-   docker-compose exec -it container/openclaw-runtime-0 -- \
-     cp -r /openclaw/config/agents/* /data/openclaw/workspace-*/
+**Acao:**
 
-   # Restart
-   docker-compose delete container/openclaw-runtime-0
-   ```
-
-2. **Cron expression invalid**
-   ```bash
-   # Verify in docker/base/openclaw-container.yaml
-   # Format: minute hour day month day-of-week
-   # Example: 0 * * * * (every hour)
-
-   # Test with online tool: crontab.guru
-   ```
-
-3. **Memory too low**
-   ```bash
-   # Check available memory
-   docker-compose top container openclaw-runtime-0
-
-   # If >80% used, memory is issue
-   # Increase in Docker or reduce model size
-   ```
-
----
-
-### Ollama Models Not Loaded
-
-**Symptom:** `ollama list` shows no models, or model inference fails
-
-**Diagnosis:**
 ```bash
-# Check what's in container
-docker-compose exec -it container/ollama-runtime-0 -- ollama list
-
-# Check logs
-docker-compose logs -f container/ollama-runtime-0
-
-# Check disk space
-docker-compose exec -it container/ollama-runtime-0 -- df -h /
-
-# Check model file
-docker-compose exec -it container/ollama-runtime-0 -- ls -lh /root/.ollama/models/blobs/
+make panel-url
+make frontend-logs
+make backend-logs
 ```
 
-**Solutions:**
+Verifique tambem se a porta `3000` esta ocupada por outro processo local.
 
-1. **Models still downloading**
-   ```bash
-   # This can take 10-30 minutes for first run
-   # Check logs:
-   docker-compose logs -f container/ollama-runtime-0 | grep downloading
+### 4) OpenClaw sem resposta em `localhost:18789`
 
-   # Wait or manually pull
-   docker-compose exec -it container/ollama-runtime-0 -- \
-     ollama pull nemotron-3-super:cloud
-   ```
-
-2. **Out of disk space**
-   ```bash
-   # Check available space
-   docker-compose exec -it container/ollama-runtime-0 -- df -h
-
-   # Need 200+ GB free on node
-
-   # Clean up
-   docker system prune --all
-
-   # Or increase PVC in docker/base/pvc.yaml
-   ```
-
-3. **Corrupt model**
-   ```bash
-   # Remove and re-download
-   docker-compose exec -it container/ollama-runtime-0 -- \
-     ollama rm nemotron-3-super:cloud
-
-   docker-compose exec -it container/ollama-runtime-0 -- \
-     ollama pull nemotron-3-super:cloud
-   ```
-
----
-
-### GPU Not Available
-
-**Symptom:** GPU shown in `nvidia-smi` but Ollama uses CPU only
-
-**Diagnosis:**
-```bash
-# Check NVIDIA device plugin
-docker-compose get containers -n kube-system | grep nvidia
-
-# Check GPU on node
-docker-compose describe nodes
-
-# Check GPU in container
-docker-compose exec -it container/ollama-runtime-0 -- nvidia-smi
-
-# Check Ollama config
-docker-compose exec -it container/ollama-runtime-0 -- env | grep OLLAMA
-```
-
-**Solutions:**
-
-1. **Device plugin not installed**
-   ```bash
-   # Install it
-   make gpu-plugin-apply
-
-   # Wait for plugin to be ready
-   docker-compose get containers -n kube-system -w
-
-   # Restart Ollama
-   docker-compose delete container/ollama-runtime-0
-   ```
-
-2. **GPU resource not requested**
-   ```bash
-   # Edit docker/base/ollama-container.yaml
-   # Add:
-   # resources:
-   #   limits:
-   #     nvidia.com/gpu: 1
-
-   # Restart
-   make stack-apply
-   ```
-
-3. **Docker Desktop GPU support disabled**
-   ```bash
-   # In Windows: Settings > Resources > GPU
-   # Enable GPU checkbox
-
-   # Restart Docker Desktop
-   # Then restart Docker
-   ```
-
----
-
-### Control Panel Not Accessible
-
-**Symptom:** Cannot reach http://localhost:3000
-
-**Diagnosis:**
-```bash
-# Check container status
-docker-compose get container | grep panel
-
-# Check port-forward
-docker-compose port-forward service/clawdevs-panel-frontend 3000:3000
-
-# Check logs
-make panel-logs-frontend
-make panel-logs-backend
-```
-
-**Solutions:**
-
-1. **Container not running**
-   ```bash
-   # Check why
-   docker-compose describe container <panel-container>
-
-   # Restart
-   docker-compose delete container <panel-container>
-
-   # Or redeploy
-   make panel-apply
-   ```
-
-2. **Database not connected**
-   ```bash
-   # Check PostgreSQL
-   docker-compose get container | grep postgres
-
-   # Check database status
-   docker-compose logs container/postgres-xxx
-
-   # Run migrations
-   make panel-db-migrate
-   ```
-
-3. **Port 3000 already in use**
-   ```bash
-   # Kill process using port
-   netstat -ano | findstr 3000    # Windows
-   lsof -i :3000                  # macOS/Linux
-
-   # Or use different port
-   docker-compose port-forward svc/clawdevs-panel-frontend 3001:3000
-   # Access: http://localhost:3001
-   ```
-
----
-
-### Agent Stuck in Loop
-
-**Symptom:** Agent keeps retrying same task, not progressing
-
-**Diagnosis:**
-```bash
-# Watch logs
-docker-compose logs -f container/openclaw-runtime-0 | tail -50
-
-# Check specific agent
-docker-compose exec -it container/openclaw-runtime-0 -- \
-  openclaw sessions --agent dev_backend --json
-
-# Look for: error message, infinite retries
-```
-
-**Solutions:**
-
-1. **Kill stuck session**
-   ```bash
-   # Reset the session
-   docker-compose exec -it container/openclaw-runtime-0 -- \
-     openclaw session reset agent:dev_backend:main
-
-   # Or delete and recreate
-   docker-compose exec -it container/openclaw-runtime-0 -- \
-     rm -rf /data/openclaw/sessions/agent_dev_backend_main*
-   ```
-
-2. **Tool failure causing loop**
-   ```bash
-   # Disable problematic tool temporarily
-   # Edit docker/base/openclaw-config/agents/dev_backend/AGENTS.md
-   # Add to constraints: "Do not use tool X"
-
-   # Redeploy
-   make stack-apply
-   ```
-
-3. **LLM timeout**
-   ```bash
-   # Check if Ollama is responding
-   docker-compose exec -it container/ollama-runtime-0 -- \
-     curl http://localhost:11434/api/status
-
-   # Increase timeout in openclaw.json
-   # Or switch to cloud LLM:
-   # PROVEDOR_LLM=openrouter
-   # OPENROUTER_API_KEY=<key>
-   ```
-
----
-
-### Memory Issues (Out of Memory)
-
-**Symptom:** Container crashes with OOMKilled, slow performance
-
-**Diagnosis:**
-```bash
-# Check memory usage
-docker-compose top container
-
-# Check limits
-docker-compose describe container <container> | grep -A 5 "Limits"
-
-# Check node
-docker-compose describe nodes
-```
-
-**Solutions:**
-
-1. **Increase memory limit**
-   ```bash
-   # In docker/base/*.yaml, increase:
-   # resources.limits.memory: 8Gi
-
-   # Also increase Docker
-   docker delete
-   docker start --memory=8192
-   ```
-
-2. **Reduce model size**
-   ```bash
-   # Switch to smaller model
-   # In docker/base/ollama-container.yaml:
-   # ollama run nemotron-3-super:cloud
-   # Change to: qwen3-next:cloud (smaller)
-
-   make stack-apply
-   ```
-
-3. **Enable swap**
-   ```bash
-   # In Docker (Linux only)
-   docker ssh
-   sudo fallocate -l 4G /swapfile
-   sudo chmod 600 /swapfile
-   sudo mkswap /swapfile
-   sudo swapon /swapfile
-   ```
-
----
-
-### Network Connectivity Issues
-
-**Symptom:** Cannot reach GitHub, web search fails, or external APIs error
-
-**Diagnosis:**
-```bash
-# Check network policy
-docker-compose get networkpolicy
-
-# Test from container
-docker-compose exec -it container/openclaw-runtime-0 -- \
-  curl -v https://api.github.com
-
-# Check DNS
-docker-compose exec -it container/openclaw-runtime-0 -- \
-  nslookup api.github.com
-```
-
-**Solutions:**
-
-1. **Network policy blocking traffic**
-   ```bash
-   # Check what's allowed
-   docker-compose describe networkpolicy <policy>
-
-   # Temporarily disable for testing
-   docker-compose delete networkpolicy <policy>
-
-   # Or update to allow egress
-   # Edit docker/base/networkpolicy-allow-egress.yaml
-   ```
-
-2. **DNS not working**
-   ```bash
-   # Check CoreDNS
-   docker-compose get containers -n kube-system | grep coredns
-
-   # Restart if needed
-   docker-compose rollout restart deployment/coredns -n kube-system
-   ```
-
-3. **Firewall blocking**
-   ```bash
-   # On Windows, check Windows Defender Firewall
-   # Settings > Firewall & Network Protection
-   # Allow Docker Desktop through firewall
-   ```
-
----
-
-## Debug Mode
-
-Enable more verbose logging:
+**Acao:**
 
 ```bash
-# In container/.env
-DEBUG_LOG_ENABLED=true
-OPENCLAW_LOG_LEVEL=debug
-
-# Redeploy
-make stack-apply
-
-# Watch logs
 make openclaw-logs
+make openclaw-shell
 ```
 
-This increases output but helps diagnose issues.
+No shell do container, valide processo e configuracao de runtime.
 
----
+### 5) Ollama sem modelo, lento ou indisponivel
 
-## Checking Resource Usage
+**Acao:**
 
 ```bash
-# Container CPU/Memory
-docker-compose top container
-
-# Node resources
-docker-compose describe nodes
-
-# Storage
-docker-compose get pvc
-
-# Network
-docker-compose get services
-docker-compose describe svc <service>
+make ollama-logs
+make ollama-list
 ```
 
----
+Se estiver usando GPU, tente `make up-gpu` no proximo restart.
 
-## Useful Commands
+Validacao adicional:
 
 ```bash
-# Get shell access
-docker-compose exec -it container/<name> -- bash
-docker-compose exec -it statefulset/clawdevs-ai -c openclaw -- bash
-
-# View detailed container info
-docker-compose describe container <name>
-
-# Check events
-docker-compose get events
-
-# Port forwarding
-docker-compose port-forward container/<name> 8080:8080
-docker-compose port-forward svc/<name> 8080:8080
-
-# Watch deployment progress
-docker-compose get containers -w
-
-# See only errors
-docker-compose logs <container> | grep ERROR
+docker inspect clawdevs-ollama
 ```
 
----
+### 6) Migracoes do backend falhando
 
-## When All Else Fails
-
-Complete reset:
+**Acao:**
 
 ```bash
-# Stop everything
-make clawdevs-down
-
-# Delete Docker
-docker delete
-
-# Start fresh
-make clawdevs-up
-
-# This takes 5-10 minutes but usually fixes everything
+make migrate
+make backend-logs
 ```
 
----
+Se necessario, confirme conectividade do backend com banco e redis via `docker inspect clawdevs-panel-backend`.
 
-## Getting Help
+### 7) Falha de autenticacao no painel
 
-1. **Check this guide** — 80% of issues are here
-2. **Check logs** — Most errors are logged
-3. **Check Glossary** — Ensure you understand terms
-4. **Ask teammates** — Slack or in-person
-5. **Create issue** — If bug is suspected
+**Causa comum:** credenciais de admin/token inconsistentes no `.env`.
 
----
+**Acao:**
 
-**Last Updated:** March 27, 2026
+```bash
+make preflight
+make up-panel-backend
+make up-token-init
+make up-panel-frontend
+```
 
-Need help? Check [Glossary](../reference/glossary.md) or [Architecture Overview](../architecture/overview.md).
+Depois, validar com `make panel-url`.
+
+## Recuperacao rapida
+
+```bash
+make down
+make up-all-with-cache
+```
+
+## Reset destrutivo
+
+```bash
+make reset
+```
+
+## Limpeza completa da stack
+
+```bash
+make destroy
+```
+
+## Nota
+
+Este projeto usa fluxo Docker via `Makefile` e scripts em `scripts/docker/`.

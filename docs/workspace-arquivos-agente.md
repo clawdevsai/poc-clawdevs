@@ -22,13 +22,13 @@
 
 # Objetivo dos arquivos no workspace do agente
 
-Objetivo de cada arquivo no workspace (como neste repositório), alinhado à documentação OpenClaw e ao que `docker/base/openclaw-container.yaml` faz.
+Descricao tecnica de cada arquivo do workspace no estado atual do repositorio, alinhada a documentacao OpenClaw e ao runtime em `docker/base/openclaw-container.yaml`.
 
 ## Onde a OpenClaw define isso
 
-- **Mapa dos arquivos do workspace:** [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) — lista `AGENTS.md`, `SOUL.md`, `USER.md`, `IDENTITY.md`, `TOOLS.md`, `HEARTBEAT.md`, `BOOT.md`, `BOOTSTRAP.md`, etc.
-- **Como entram no prompt:** [System prompt](https://docs.openclaw.ai/concepts/system-prompt) — injeção dos “bootstrap files” no contexto (limites `bootstrapMaxChars` / `bootstrapTotalMaxChars`); subagentes só recebem `AGENTS.md` e `TOOLS.md`.
-- **RPC adapters:** [RPC](https://docs.openclaw.ai/reference/rpc) — integração de canais externos via JSON-RPC (ex.: daemon HTTP do Signal, `imsg` por stdio). Não é o mesmo conjunto de arquivos do workspace; é outra camada (CLI/provedor ↔ gateway).
+- **Mapa dos arquivos do workspace:** [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) - lista `AGENTS.md`, `SOUL.md`, `USER.md`, `IDENTITY.md`, `TOOLS.md`, `HEARTBEAT.md`, `BOOT.md`, `BOOTSTRAP.md`, etc.
+- **Como entram no prompt:** [System prompt](https://docs.openclaw.ai/concepts/system-prompt) - injecao dos bootstrap files no contexto (limites `bootstrapMaxChars` / `bootstrapTotalMaxChars`); subagentes recebem `AGENTS.md` e `TOOLS.md`.
+- **RPC adapters:** [RPC](https://docs.openclaw.ai/reference/rpc) - integracao de canais externos via JSON-RPC. Nao e o mesmo conjunto de arquivos do workspace; e outra camada (CLI/provedor -> gateway).
 
 ## Objetivo de cada arquivo
 
@@ -41,7 +41,7 @@ Objetivo de cada arquivo no workspace (como neste repositório), alinhado à doc
 | `IDENTITY.md` | Nome, papel, vibe, emoji, restrições de identidade imutáveis (anti–prompt injection de “mude quem você é”). [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `INPUT_SCHEMA.json` | **Extensão ClawDevs:** contrato JSON Schema para `intent`, `source`, `payload` (e similares), referenciado nas regras de `AGENTS.md`. Não consta no mapa padrão do workspace na doc OpenClaw. |
 | `SECURITY_TEST_CASES.md` | **Extensão ClawDevs:** casos de teste (injeção de prompt, path traversal, `gh` com repo errado, etc.) para validar comportamento de segurança esperado. |
-| `SKILL.md` | Skill no workspace (OpenClaw também suporta `skills/`). O system prompt containere listar skills elegíveis e o modelo carrega com `read` o `SKILL.md` indicado. [System prompt → Skills](https://docs.openclaw.ai/concepts/system-prompt) |
+| `SKILL.md` | Skill no workspace (OpenClaw tambem suporta `skills/`). O system prompt pode listar skills elegiveis e o modelo carrega com `read` o `SKILL.md` indicado. [System prompt -> Skills](https://docs.openclaw.ai/concepts/system-prompt) |
 | `SOUL.md` | Postura, valores não negociáveis, limites rígidos, tom — “personalidade + guardrails” persistentes. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `TOOLS.md` | Orientação: uso de `read` / `write` / `exec`, convenções (`gh`, `web-search`, `web-read`), rate limits, labels GitHub. **Não** liga ou desliga ferramentas; isso vem do gateway / `openclaw.json`. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `USER.md` | Quem é o usuário principal para o agente (ex.: PO), fuso, escalação. No CEO, `DIRECTORS_NAME` é injetado via `sed` a partir do Secret. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |

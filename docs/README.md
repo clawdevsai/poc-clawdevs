@@ -1,110 +1,111 @@
-<!-- 
-  Copyright (c) 2026 Diego Silva Morais <lukewaresoftwarehouse@gmail.com>
+# Documentacao Operacional (clawdevs-ai)
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
+Documento tecnico do estado atual implementado da plataforma.
 
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
+## Referencias principais
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
- -->
+- [Indice geral](./INDEX.md)
+- [Setup local](./guides/setup.md)
+- [Arquitetura](./architecture/overview.md)
+- [Troubleshooting](./operations/troubleshooting.md)
 
-# Documentação operacional (clawdevs-ai)
+## Conceito da plataforma
 
-## 📋 Referências Principais
+ClawDevsAI e uma plataforma de orquestracao de agentes em runtime local, com:
 
-- **Análise Completa do Projeto:** [analise-projeto.md](./analise-projeto.md) — Sumário executivo, arquitetura de alto nível, stack tecnológico e operação
-- **Arquitetura Técnica Detalhada:** [arquitetura-tecnica.md](./arquitetura-tecnica.md) — Implementação técnica, topologia de rede, fluxos de dados e troubleshooting
+- OpenClaw como gateway/orquestrador
+- Ollama como provedor de inferencia local
+- Control Panel (frontend, backend e worker) para operacao
+- Servicos de apoio (PostgreSQL, Redis, SearXNG e proxy)
 
-## 📚 Documentação Operacional
+Toda a operacao e feita por Docker e scripts do repositorio (`scripts/docker/`), acionados por alvos do `Makefile`.
 
-- **O que a aplicação faz e exemplos de uso:** [aplicacao-e-exemplos.md](./aplicacao-e-exemplos.md)
-- **Papel de cada agente (um arquivo por agente):** [agentes/README.md](./agentes/README.md)
-- **Arquivos do workspace do agente (OpenClaw + ClawDevs):** [workspace-arquivos-agente.md](./workspace-arquivos-agente.md)
-- **Engenharia de prompts (técnicas reutilizáveis):** [engenharia-de-prompts.md](./engenharia-de-prompts.md)
-- **Planos de design / implementação (rascunhos):** [plans/](./plans/)
+## Stack em execucao (as-built)
 
-## Stack Docker Compose
+O projeto roda com containers Docker, orquestrados por alvos do `Makefile`:
 
-| Recurso | Nome / observação |
-|--------|-------------------|
-| OpenClaw | `StatefulSet` `clawdevs-ai`, container típico `clawdevs-ai-0`, container `openclaw` |
-| Ollama | `Container` `ollama`, `Service` `ollama` |
-| PVC | `ollama-data` (`docker/base/ollama-pvc.yaml`) |
-| SearXNG | `docker/base/searxng-deployment.yaml` |
-| Painel de controle | `docker/base/control-panel/` — frontend, backend API, worker, Postgres, Redis (`docker-compose apply -k docker/base/control-panel/` via `make panel-apply`) |
-| Rede | `docker/base/networkpolicy-allow-egress.yaml` |
-| Segredos | `openclaw-auth`, `ollama-auth`, `clawdevs-panel-auth` gerados por `container/kustomization.yaml` a partir de `container/.env` |
-| Config agentes | `ConfigMap` `openclaw-agent-config` (arquivos em `docker/base/openclaw-config/`) |
+- `clawdevs-openclaw` (gateway + agentes)
+- `clawdevs-ollama` (LLM local)
+- `clawdevs-searxng` e `clawdevs-searxng-proxy`
+- `clawdevs-panel-backend`, `clawdevs-panel-worker`, `clawdevs-panel-frontend`
+- `clawdevs-postgres`, `clawdevs-redis`, `clawdevs-token-init`
 
-## Kustomize
+## Fluxo tecnico de inicializacao
 
-- `docker-compose apply -k container` usa apenas `docker/base` (via `container/kustomization.yaml` → `resources: [base]`).
-- GPU no Ollama: overlay `docker/overlays/gpu` (RuntimeClass, device plugin, patch do container `ollama`). Aplicar com `make openclaw-apply-gpu`, `make gpu-migrate-apply` (contexto `docker-desktop`) ou `docker-compose apply -k docker/overlays/gpu`.
+```bash
+cp .env.example .env
+make preflight
+make up-all-with-cache
+make panel-url
+```
 
-## Segredos obrigatórios (`make preflight`)
+Ordem real de bootstrap (`up-all.sh` + `run-openclaw.sh`):
 
-Chaves que devem estar preenchidas em `container/.env`:
+1. `clawdevs-postgres` (healthcheck com `pg_isready`)
+2. `clawdevs-redis` (healthcheck com `redis-cli ping`)
+3. `clawdevs-ollama` (porta `11434`, volume `ollama-data`)
+4. `clawdevs-searxng`
+5. `clawdevs-panel-backend` (executa `alembic upgrade head` no start)
+6. `clawdevs-token-init` (one-shot para token do painel em volume `panel-token`)
+7. `clawdevs-searxng-proxy` (porta `18080`)
+8. `clawdevs-panel-worker`
+9. `clawdevs-panel-frontend` (porta `3000`)
+10. `clawdevs-openclaw` (porta `18789`, volume `openclaw-data`)
+
+## Portas e endpoints locais
+
+- `3000`: frontend do painel
+- `8000`: backend do painel e docs
+- `11434`: API do Ollama
+- `18080`: proxy SearXNG
+- `18789`: gateway OpenClaw
+
+## Comandos mais usados
+
+```bash
+make status
+make logs
+make openclaw-logs
+make ollama-logs
+make frontend-logs
+make backend-logs
+make openclaw-shell
+make migrate
+make down
+```
+
+## Volumes e persistencia
+
+- `openclaw-data`: estado OpenClaw, workspaces e dados compartilhados
+- `ollama-data`: modelos e cache do Ollama
+- `postgres-data`: dados do PostgreSQL
+- `panel-token`: token do painel gerado no bootstrap
+
+## Configuracao tecnica relevante
+
+- `clawdevs-openclaw` recebe `--env-file .env` e injeta variaveis de cron por agente.
+- O gateway aponta para Ollama interno em `http://ollama:11434`.
+- O backend do painel aponta para gateway interno em `http://openclaw:18789`.
+- O frontend aponta para backend interno `http://panel-backend:8000`.
+
+## Variaveis obrigatorias
+
+As validacoes de `make preflight` exigem no minimo:
 
 - `OPENCLAW_GATEWAY_TOKEN`
 - `TELEGRAM_BOT_TOKEN_CEO`
-- `TELEGRAM_CHAT_ID_CEO`
 - `GIT_TOKEN`
 - `GIT_ORG`
-- `OLLAMA_API_KEY`
+- `PANEL_DB_PASSWORD`
+- `PANEL_REDIS_PASSWORD`
+- `PANEL_SECRET_KEY`
+- `PANEL_ADMIN_USERNAME`
+- `PANEL_ADMIN_PASSWORD`
 
-Demais variáveis: ver `container/.env.example`.
+## Estrutura de documentacao
 
-## Targets Make relevantes
-
-- `make preflight` — valida segredos em `container/.env`
-- `make manifests-validate` — `docker-compose kustomize container`
-- `make clawdevs-up` — Docker + addons + `stack-apply` + status
-- `make clawdevs-rebuild` — `destroy-all`, sobe cluster de novo, `storage-enable-expansion`, `stack-apply`
-- `make stack-apply` — `ollama-apply` + `openclaw-apply-gpu` + `panel-apply` (OpenClaw pelo overlay `docker/overlays/gpu`, como definido no `Makefile`)
-- `make openclaw-apply` — `docker-compose apply -k container` (contexto `KUBE_CONTEXT`, default `clawdevs-ai`)
-- `make openclaw-apply-gpu` — aplica `docker/overlays/gpu`
-- `make openclaw-restart` / `make openclaw-logs` — `statefulset/clawdevs-ai`
-- `make ollama-volume-apply` — PVC; `make ollama-apply` — recria container `ollama`
-- `make panel-apply` / `panel-status` / `panel-forward` / `panel-db-migrate` / `panel-restart` / `panel-destroy` — painel ClawDevs
-- `make services-expose` / `services-stop` — port-forwards locais (painel 3000/8000 + gateway 18789; ver saída do target)
-- Fluxo Docker Desktop + GPU: `gpu-doctor`, `docker-container-check`, `gpu-plugin-apply`, `gpu-node-check`, `gpu-migrate-apply`
-
-## Exec no container OpenClaw
-
-Usar o workload real, por exemplo:
-
-```bash
-docker-compose --context=clawdevs-ai exec -it statefulset/clawdevs-ai -c openclaw -- bash
-```
-
-## Estrutura `container/` (resumo)
-
-```text
-container/
-  .env
-  .env.example
-  kustomization.yaml
-  base/
-    kustomization.yaml
-    openclaw-container.yaml
-    ollama-container.yaml
-    ollama-pvc.yaml
-    networkpolicy-allow-egress.yaml
-    searxng-deployment.yaml
-    openclaw-config/
-    control-panel/
-  overlays/
-    gpu/
-```
+- `docs/INDEX.md` - mapa principal
+- `docs/guides/setup.md` - setup local
+- `docs/architecture/overview.md` - arquitetura
+- `docs/operations/troubleshooting.md` - diagnostico
+- `docs/agentes/` - papeis e responsabilidades por agente

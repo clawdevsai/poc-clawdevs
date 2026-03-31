@@ -149,27 +149,27 @@ graph TB
         Docker["🐳 Docker Desktop"]
     end
 
-    subgraph "Kubernetes Cluster"
+    subgraph "Docker Stack"
         subgraph "Workloads"
-            OpenClaw["Pod: openclaw-runtime"]
-            Ollama["Pod: ollama-runtime"]
-            Panel["Pods: panel-backend/-frontend"]
+            OpenClaw["Container: clawdevs-openclaw"]
+            Ollama["Container: clawdevs-ollama"]
+            Panel["Containers: panel-backend/-frontend/-worker"]
         end
 
         subgraph "Storage"
-            PVC1["PVC: openclaw-data<br/>100 GB"]
-            PVC2["PVC: ollama-data<br/>200 GB"]
-            PVC3["PVC: panel-db<br/>20 GB"]
+            PVC1["Volume: openclaw-data"]
+            PVC2["Volume: ollama-data"]
+            PVC3["Volume: panel-db"]
         end
 
-        subgraph "Services"
-            Svc1["Service: openclaw-gateway"]
-            Svc2["Service: panel-api"]
-            Svc3["Service: panel-ui"]
+        subgraph "Exposed Ports"
+            Svc1["OpenClaw: 18789"]
+            Svc2["Backend API: 8000"]
+            Svc3["Frontend UI: 3000"]
         end
     end
 
-    Docker -->|Minikube| Ollama
+    Docker -->|docker run| Ollama
     Ollama -->|Reads| PVC2
     OpenClaw -->|Reads/Writes| PVC1
     Panel -->|Reads/Writes| PVC3
