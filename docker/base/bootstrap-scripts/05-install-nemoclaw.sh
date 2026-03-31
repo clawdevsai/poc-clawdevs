@@ -18,22 +18,30 @@ install_nemoclaw_official() {
 }
 
 install_openshell_fallback() {
-  # Fallback: install openshell CLI from GitHub releases
+  # Fallback: install openshell CLI
   if command -v openshell >/dev/null 2>&1; then
     return 0
   fi
 
-  echo "[bootstrap] Installing OpenShell from GitHub releases..."
+  # Try official installer first
+  echo "[bootstrap] Trying official OpenShell installer..."
+  if curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh 2>/dev/null | OPENSHELL_VERSION=dev sh 2>/dev/null; then
+    echo "[bootstrap] OpenShell installed from official installer"
+    return 0
+  fi
+
+  # Fallback to GitHub releases
+  echo "[bootstrap] Trying GitHub releases..."
   OPENSHELL_VERSION="latest"
   OPENSHELL_URL="https://github.com/NVIDIA/OpenShell/releases/download/${OPENSHELL_VERSION}/openshell-linux-x64"
 
   if curl -fsSL "${OPENSHELL_URL}" -o /tmp/openshell 2>/dev/null; then
     chmod +x /tmp/openshell
     mv /tmp/openshell /usr/local/bin/openshell
-    echo "[bootstrap] OpenShell installed from GitHub"
+    echo "[bootstrap] OpenShell installed from GitHub releases"
     return 0
   else
-    echo "[bootstrap] WARNING: Could not install OpenShell from GitHub"
+    echo "[bootstrap] WARNING: Could not install OpenShell"
     return 1
   fi
 }

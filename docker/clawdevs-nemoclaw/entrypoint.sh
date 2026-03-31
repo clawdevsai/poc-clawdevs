@@ -21,17 +21,25 @@ if ! nemoclaw_runtime_ok; then
   if ! curl -fsSL "https://www.nvidia.com/nemoclaw.sh" 2>/dev/null | bash -s -- --non-interactive 2>/dev/null; then
     echo "[entrypoint] NVIDIA installer failed. Attempting fallback installation..."
 
-    # Fallback: install openshell CLI from GitHub releases
+    # Fallback 1: try official NVIDIA OpenShell installer
     if ! command -v openshell >/dev/null 2>&1; then
-      OPENSHELL_VERSION="latest"
-      OPENSHELL_URL="https://github.com/NVIDIA/OpenShell/releases/download/${OPENSHELL_VERSION}/openshell-linux-x64"
-
-      if curl -fsSL "${OPENSHELL_URL}" -o /tmp/openshell 2>/dev/null; then
-        chmod +x /tmp/openshell
-        mv /tmp/openshell /usr/local/bin/openshell
-        echo "[entrypoint] OpenShell installed from GitHub releases"
+      echo "[entrypoint] Trying official OpenShell installer..."
+      if curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh 2>/dev/null | OPENSHELL_VERSION=dev sh 2>/dev/null; then
+        echo "[entrypoint] OpenShell installed from official installer"
       else
-        echo "[entrypoint] WARNING: Could not install OpenShell from GitHub. Continuing without it..."
+        echo "[entrypoint] Official installer failed. Trying GitHub releases..."
+
+        # Fallback 2: install openshell CLI from GitHub releases
+        OPENSHELL_VERSION="latest"
+        OPENSHELL_URL="https://github.com/NVIDIA/OpenShell/releases/download/${OPENSHELL_VERSION}/openshell-linux-x64"
+
+        if curl -fsSL "${OPENSHELL_URL}" -o /tmp/openshell 2>/dev/null; then
+          chmod +x /tmp/openshell
+          mv /tmp/openshell /usr/local/bin/openshell
+          echo "[entrypoint] OpenShell installed from GitHub releases"
+        else
+          echo "[entrypoint] WARNING: Could not install OpenShell. Continuing without it..."
+        fi
       fi
     fi
   fi
