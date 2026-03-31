@@ -41,10 +41,19 @@ endif
 NULL_DEV ?= /dev/null
 
 ENV_FILE ?= .env
+-include $(ENV_FILE)
+
 OPENCLAW_VERSION ?= 2026.3.24
 IMAGE_TAG ?= local
 REMOTE_IMAGE_TAG ?= latest
 OLLAMA_GPU_FLAGS ?=
+PUSH_IMAGE ?= local
+
+ifeq ($(strip $(PUSH_IMAGE)),remote)
+EFFECTIVE_IMAGE_TAG := $(REMOTE_IMAGE_TAG)
+else
+EFFECTIVE_IMAGE_TAG := $(IMAGE_TAG)
+endif
 
 TOKEN_INIT_IMAGE_REPO    ?= clawdevsai/token-init-runtime
 POSTGRES_IMAGE_REPO      ?= clawdevsai/postgres-runtime
@@ -57,16 +66,16 @@ PANEL_WORKER_IMAGE_REPO  ?= clawdevsai/clawdevs-panel-worker
 PANEL_FRONTEND_IMAGE_REPO ?= clawdevsai/clawdevs-panel-frontend
 OPENCLAW_IMAGE_REPO      ?= clawdevsai/openclaw-runtime
 
-TOKEN_INIT_IMAGE     := $(TOKEN_INIT_IMAGE_REPO):$(IMAGE_TAG)
-POSTGRES_IMAGE       := $(POSTGRES_IMAGE_REPO):$(IMAGE_TAG)
-SEARXNG_IMAGE        := $(SEARXNG_IMAGE_REPO):$(IMAGE_TAG)
-OLLAMA_IMAGE         := $(OLLAMA_IMAGE_REPO):$(IMAGE_TAG)
-REDIS_IMAGE          := $(REDIS_IMAGE_REPO):$(IMAGE_TAG)
-PANEL_BACKEND_IMAGE  := $(PANEL_BACKEND_IMAGE_REPO):$(IMAGE_TAG)
-SEARXNG_PROXY_IMAGE  := $(SEARXNG_PROXY_IMAGE_REPO):$(IMAGE_TAG)
-PANEL_WORKER_IMAGE   := $(PANEL_WORKER_IMAGE_REPO):$(IMAGE_TAG)
-PANEL_FRONTEND_IMAGE := $(PANEL_FRONTEND_IMAGE_REPO):$(IMAGE_TAG)
-OPENCLAW_IMAGE       := $(OPENCLAW_IMAGE_REPO):$(IMAGE_TAG)
+TOKEN_INIT_IMAGE     := $(TOKEN_INIT_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+POSTGRES_IMAGE       := $(POSTGRES_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+SEARXNG_IMAGE        := $(SEARXNG_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+OLLAMA_IMAGE         := $(OLLAMA_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+REDIS_IMAGE          := $(REDIS_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+PANEL_BACKEND_IMAGE  := $(PANEL_BACKEND_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+SEARXNG_PROXY_IMAGE  := $(SEARXNG_PROXY_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+PANEL_WORKER_IMAGE   := $(PANEL_WORKER_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+PANEL_FRONTEND_IMAGE := $(PANEL_FRONTEND_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+OPENCLAW_IMAGE       := $(OPENCLAW_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 
 STACK_NETWORK ?= clawdevs
 STACK_VOLUMES := openclaw-data ollama-data postgres-data panel-token
@@ -131,6 +140,9 @@ help:
 	@echo ""
 	@echo "make up-all        Build local + sobe todos os 10 containers"
 	@echo "make up-all-with-cache  Build local (com cache) + sobe todos os 10 containers"
+	@echo "PUSH_IMAGE=local   Build local (tag IMAGE_TAG, padrao: local)"
+	@echo "PUSH_IMAGE=remote  Pull do Docker Hub (tag REMOTE_IMAGE_TAG, padrao: latest)"
+	@echo "Exemplo remoto: PUSH_IMAGE=remote make up-all-with-cache"
 	@echo "make up-gpu        Mesmo fluxo do up-all com --gpus all no Ollama"
 	@echo "make up-<service>  Sobe container individual (ex.: up-postgres)"
 	@echo "make up-openclaw / up-openclaw-with-cache  Rebuild imagem + recria so o OpenClaw (sem cache / com cache)"
@@ -439,91 +451,91 @@ destroy-complete:
 	@echo "[destroy-complete] Docker completamente limpo."
 
 token-init-image-build:
-	docker build --no-cache -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .; fi
 
 token-init-image-build-with-cache:
-	docker build -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .; fi
 
 token-init-image-push:
 	docker push $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 postgres-image-build:
-	docker build --no-cache -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(POSTGRES_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .; fi
 
 postgres-image-build-with-cache:
-	docker build -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(POSTGRES_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .; fi
 
 postgres-image-push:
 	docker push $(POSTGRES_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 searxng-image-build:
-	docker build --no-cache -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(SEARXNG_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .; fi
 
 searxng-image-build-with-cache:
-	docker build -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(SEARXNG_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .; fi
 
 searxng-image-push:
 	docker push $(SEARXNG_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 ollama-image-build:
-	docker build --no-cache -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(OLLAMA_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .; fi
 
 ollama-image-build-with-cache:
-	docker build -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(OLLAMA_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .; fi
 
 ollama-image-push:
 	docker push $(OLLAMA_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 redis-image-build:
-	docker build --no-cache -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(REDIS_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .; fi
 
 redis-image-build-with-cache:
-	docker build -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(REDIS_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .; fi
 
 redis-image-push:
 	docker push $(REDIS_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-backend-image-build:
-	docker build --no-cache -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_BACKEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend; fi
 
 panel-backend-image-build-with-cache:
-	docker build -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_BACKEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend; fi
 
 panel-backend-image-push:
 	docker push $(PANEL_BACKEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 searxng-proxy-image-build:
-	docker build --no-cache -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .; fi
 
 searxng-proxy-image-build-with-cache:
-	docker build -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .; fi
 
 searxng-proxy-image-push:
 	docker push $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-worker-image-build:
-	docker build --no-cache -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend; fi
 
 panel-worker-image-build-with-cache:
-	docker build -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend; fi
 
 panel-worker-image-push:
 	docker push $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-frontend-image-build:
-	docker build --no-cache -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend; fi
 
 panel-frontend-image-build-with-cache:
-	docker build -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend; fi
 
 panel-frontend-image-push:
 	docker push $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 openclaw-image-build:
-	docker build --no-cache --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
 
 openclaw-image-build-with-cache:
-	docker build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .; fi
 
 openclaw-image-push:
 	docker push $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
