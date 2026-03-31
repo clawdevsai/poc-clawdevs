@@ -35,7 +35,7 @@ RUN set -eux; \
     npm install --omit=dev --prefix /usr/local/lib/node_modules/openclaw/dist/extensions/discord @hono/node-server@1.19.11; \
     npm install --omit=dev --prefix /usr/local/lib/node_modules/openclaw/dist/extensions/discord/node_modules/@buape/carbon @hono/node-server@1.19.11; \
     shopt -s nullglob; \
-    PI_FILES=(/usr/local/lib/node_modules/openclaw/dist/pi-embedded-*.js); \
+    PI_FILES=(/usr/local/lib/node_modules/openclaw/dist/pi-embedded.runtime-*.js); \
     shopt -u nullglob; \
     test "${#PI_FILES[@]}" -gt 0; \
     node -e "import(process.argv[1]).catch(() => process.exit(1))" "file://${PI_FILES[0]}"; \

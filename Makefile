@@ -18,8 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# ------------------------------------------------------------------------------
+# Shell multiplataforma (Linux, macOS, Windows)
+#
+# - Linux / macOS: /bin/bash
+# - Windows: ordem de resolucao — variavel BASH, depois Git for Windows em
+#   Progra~1/Progra~2 (atalhos 8.3 evitam espacos em "Program Files"), depois
+#   bash no PATH. Se falhar: adicione Git\\bin ao PATH ou
+#     make BASH="C:/Program Files/Git/bin/bash.exe"
+#
+# Redirecionamentos usam /dev/null (valido no bash do Git for Windows e MSYS2).
+# ------------------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
-SHELL := C:/Program Files/Git/bin/bash.exe
+  WIN_GIT_BASH := $(or \
+    $(wildcard C:/Progra~1/Git/bin/bash.exe), \
+    $(wildcard C:/Progra~2/Git/bin/bash.exe))
+  SHELL := $(or $(BASH),$(WIN_GIT_BASH),bash)
+else
+  SHELL := /bin/bash
 endif
 
 NULL_DEV ?= /dev/null
@@ -110,6 +126,7 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 help:
 	@echo "════════════════════════════════════════════════════════════════"
 	@echo "  ClawDevs AI — Makefile (docker run)"
+	@echo "  Linux / macOS / Windows (Git Bash + Docker Desktop)"
 	@echo "════════════════════════════════════════════════════════════════"
 	@echo ""
 	@echo "make up-all        Build local + sobe todos os 10 containers"

@@ -45,11 +45,11 @@ Objetivo de cada arquivo no workspace (como neste repositório), alinhado à doc
 | `SOUL.md` | Postura, valores não negociáveis, limites rígidos, tom — “personalidade + guardrails” persistentes. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `TOOLS.md` | Orientação: uso de `read` / `write` / `exec`, convenções (`gh`, `web-search`, `web-read`), rate limits, labels GitHub. **Não** liga ou desliga ferramentas; isso vem do gateway / `openclaw.json`. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `USER.md` | Quem é o usuário principal para o agente (ex.: PO), fuso, escalação. No CEO, `DIRECTORS_NAME` é injetado via `sed` a partir do Secret. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
-| `MEMORY.md` | Memória de longo prazo do agente (quando habilitada em `AGENTS.md`): padrões e aprendizados por agente em `/data/openclaw/memory/<id>/MEMORY.md`; memória compartilhada em `/data/openclaw/memory/shared/SHARED_MEMORY.md` (escrita pelo Memory Curator). |
+| `MEMORY.md` | Memória de longo prazo do agente (quando habilitada em `AGENTS.md`): padrões e aprendizados por agente em `/data/openclaw/memory/<id>/MEMORY.md` (no repositório, seed em `docker/base/openclaw-config/memory/<id>/MEMORY.md`, não na pasta do workspace do agente); memória compartilhada em `/data/openclaw/memory/shared/SHARED_MEMORY.md` (escrita pelo Memory Curator). |
 
 ## Resumo prático
 
 - **OpenClaw:** workspace = “casa” do agente; arquivos padrão entram no Project Context (com truncagem). **RPC** = adaptadores de **canais**, não substituem estes `.md`.
 - **ClawDevs:** `INPUT_SCHEMA.json` e `SECURITY_TEST_CASES.md` reforçam contrato e testes de segurança além do mapa básico da doc OpenClaw.
 
-**Fonte no repo:** `docker/base/openclaw-config/<agente>/` (via ConfigMap `openclaw-agent-config`); destino em runtime: `/data/openclaw/workspace-<agente>/`.
+**Fonte no repo (workspace):** `docker/base/openclaw-config/<agente>/` (via ConfigMap `openclaw-agent-config`); destino em runtime: `/data/openclaw/workspace-<agente>/`. **Seeds de memória:** `docker/base/openclaw-config/memory/<agente>/MEMORY.md` → runtime canônico `/data/openclaw/memory/<agente>/MEMORY.md` (symlink em `workspace-<agente>/MEMORY.md`).

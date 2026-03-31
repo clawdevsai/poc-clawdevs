@@ -46,7 +46,7 @@ Persistent memory (`MEMORY.md` under `/data/openclaw/memory/<agent>/`, `SHARED_M
 
 ## Workspace context bundle (audit)
 
-Every agent workspace under `openclaw-config/<agent>/` ships **SOUL.md**, **TOOLS.md**, and a seed **MEMORY.md** copied to `/data/openclaw/memory/<agent>/MEMORY.md` on first run; `workspace-<agent>/MEMORY.md` is a symlink to that canonical file (`07-agent-workspaces.sh`). **AGENTS.md** is the runtime contract; **TOOLS.md** bounds automation; **SOUL.md** is identity. Keep this trio aligned when editing any agent profile.
+Every agent workspace under `openclaw-config/<agent>/` ships **SOUL.md** and **TOOLS.md**; the seed for long-term memory lives under `openclaw-config/memory/<agent>/MEMORY.md` and is copied to `/data/openclaw/memory/<agent>/MEMORY.md` on first run; `workspace-<agent>/MEMORY.md` is a symlink to that canonical file (`07-agent-workspaces.sh`). **AGENTS.md** is the runtime contract; **TOOLS.md** bounds automation; **SOUL.md** is identity. Keep this trio aligned when editing any agent profile.
 
 | Agent id | SOUL | TOOLS | MEMORY seed |
 |----------|------|-------|-------------|

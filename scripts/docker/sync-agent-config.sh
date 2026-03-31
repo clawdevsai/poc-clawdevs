@@ -47,7 +47,7 @@ for agent_dir in "${SRC_ROOT}"/*; do
   [ -d "${agent_dir}" ] || continue
   agent="$(basename "${agent_dir}")"
   case "${agent}" in
-    agents|shared) continue ;;
+    agents|shared|memory) continue ;;
   esac
   for file in "${agent_dir}"/*; do
     [ -f "${file}" ] || continue
@@ -71,7 +71,7 @@ required_memory_agents=(
   memory_curator
 )
 for agent in "${required_memory_agents[@]}"; do
-  copy_key "${agent}-MEMORY.md" "${SRC_ROOT}/${agent}/MEMORY.md"
+  copy_key "${agent}-MEMORY.md" "${SRC_ROOT}/memory/${agent}/MEMORY.md"
 done
 
 # 2) Skills dos agentes (openclaw-config/agents/<agente>/skills/<skill>/SKILL.md)
@@ -134,7 +134,12 @@ if [ "${had_missing_source}" -ne 0 ]; then
 fi
 
 # 6) Validacao: tudo que bootstrap referencia em /bootstrap/agent-config/ deve existir
-mapfile -t referenced_keys < <(
+# (sem mapfile: compativel com bash 3.2 / macOS)
+referenced_keys=()
+while IFS= read -r line || [ -n "${line}" ]; do
+  [ -z "${line}" ] && continue
+  referenced_keys+=("$line")
+done < <(
   grep -RhoE '/bootstrap/agent-config/[A-Za-z0-9._${}*:-]+' "${BOOTSTRAP_DIR}" \
     | sed 's#.*/##' \
     | grep -v '\*' \
@@ -143,16 +148,29 @@ mapfile -t referenced_keys < <(
     | sort -u
 )
 
-mapfile -t mem_agents < <(
-  find "${SRC_ROOT}" -mindepth 2 -maxdepth 2 -type f -name "MEMORY.md" \
-    | sed -E 's#^'"${SRC_ROOT}"'/([^/]+)/MEMORY\.md$#\1#' \
+mem_agents=()
+while IFS= read -r line || [ -n "${line}" ]; do
+  [ -z "${line}" ] && continue
+  mem_agents+=("$line")
+done < <(
+  find "${SRC_ROOT}/memory" -mindepth 2 -maxdepth 2 -type f -name "MEMORY.md" \
+    | sed -E 's#^'"${SRC_ROOT}"'/memory/([^/]+)/MEMORY\.md$#\1#' \
     | sort -u
 )
 
+# bash 3.2 + set -u: iterar por indice evita "${array[@]}" vazio como erro
 expected_keys=()
-for key in "${referenced_keys[@]}"; do
+rk_i=0
+rk_n=${#referenced_keys[@]}
+while [ "${rk_i}" -lt "${rk_n}" ]; do
+  key="${referenced_keys[$rk_i]}"
+  rk_i=$((rk_i + 1))
   if [[ "${key}" == *'${mem_agent}'* ]]; then
-    for mem_agent in "${mem_agents[@]}"; do
+    ma_i=0
+    ma_n=${#mem_agents[@]}
+    while [ "${ma_i}" -lt "${ma_n}" ]; do
+      mem_agent="${mem_agents[$ma_i]}"
+      ma_i=$((ma_i + 1))
       expected_keys+=("${key//'${mem_agent}'/${mem_agent}}")
     done
   else
@@ -160,10 +178,29 @@ for key in "${referenced_keys[@]}"; do
   fi
 done
 
-mapfile -t expected_keys < <(printf '%s\n' "${expected_keys[@]}" | sort -u)
+expected_keys_sorted=()
+while IFS= read -r line || [ -n "${line}" ]; do
+  [ -z "${line}" ] && continue
+  expected_keys_sorted+=("$line")
+done < <(
+  if [ "${#expected_keys[@]}" -gt 0 ]; then
+    printf '%s\n' "${expected_keys[@]}" | sort -u
+  fi
+)
+expected_keys=()
+eks_i=0
+eks_n=${#expected_keys_sorted[@]}
+while [ "${eks_i}" -lt "${eks_n}" ]; do
+  expected_keys+=("${expected_keys_sorted[$eks_i]}")
+  eks_i=$((eks_i + 1))
+done
 
 missing_keys=()
-for key in "${expected_keys[@]}"; do
+ek_i=0
+ek_n=${#expected_keys[@]}
+while [ "${ek_i}" -lt "${ek_n}" ]; do
+  key="${expected_keys[$ek_i]}"
+  ek_i=$((ek_i + 1))
   if [ ! -f "${DST}/${key}" ]; then
     missing_keys+=("${key}")
   fi
@@ -171,8 +208,11 @@ done
 
 if [ "${#missing_keys[@]}" -gt 0 ]; then
   echo "[sync-agent-config] ERRO: chaves ausentes no ${DST}:"
-  for key in "${missing_keys[@]}"; do
-    echo "  - ${key}"
+  mk_i=0
+  mk_n=${#missing_keys[@]}
+  while [ "${mk_i}" -lt "${mk_n}" ]; do
+    echo "  - ${missing_keys[$mk_i]}"
+    mk_i=$((mk_i + 1))
   done
   exit 1
 fi

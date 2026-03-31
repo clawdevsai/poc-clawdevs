@@ -130,7 +130,7 @@ MEM_AGENTS=(ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer sec
 for mem_agent in "${MEM_AGENTS[@]}"; do
   mkdir -p "${MEMORY_BASE}/${mem_agent}"
   if [ ! -f "${MEMORY_BASE}/${mem_agent}/MEMORY.md" ]; then
-    src="${OPENCLAW_CONFIG_DIR}/${mem_agent}/MEMORY.md"
+    src="${OPENCLAW_CONFIG_DIR}/memory/${mem_agent}/MEMORY.md"
     if [ -f "${src}" ]; then
       cp "${src}" "${MEMORY_BASE}/${mem_agent}/MEMORY.md"
     else
