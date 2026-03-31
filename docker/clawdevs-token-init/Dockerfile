@@ -20,6 +20,8 @@
 
 FROM curlimages/curl:latest
 
+ENV TZ=America/Sao_Paulo
+
 USER 0:0
 
 COPY scripts/docker/generate-panel-token.sh /usr/local/bin/generate-panel-token.sh

@@ -20,6 +20,8 @@
 
 FROM ollama/ollama:latest
 
+ENV TZ=America/Sao_Paulo
+
 COPY docker/clawdevs-ollama/start-ollama.sh /usr/local/bin/start-ollama.sh
 RUN sed -i 's/\r$//' /usr/local/bin/start-ollama.sh \
   && chmod +x /usr/local/bin/start-ollama.sh

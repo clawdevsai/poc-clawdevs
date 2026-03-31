@@ -20,6 +20,12 @@
 
 FROM public.ecr.aws/docker/library/postgres:18-alpine
 
+ENV TZ=America/Sao_Paulo
+
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
+    echo "${TZ}" > /etc/timezone
+
 RUN apk add --no-cache --virtual .build-deps \
         build-base \
         clang19 \

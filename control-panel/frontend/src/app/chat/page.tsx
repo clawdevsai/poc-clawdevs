@@ -393,6 +393,7 @@ function ChatPageContent() {
   const [selectedSessionKey, setSelectedSessionKey] = useState<string | null>(null);
   const [sessionParamError, setSessionParamError] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const pendingSessionUrlSyncRef = useRef<string | null>(null);
 
   const { data: sessionsData } = useQuery({
     queryKey: ["sessions", selectedAgent, "chat-picker"],
@@ -410,6 +411,7 @@ function ChatPageContent() {
     (nextSessionKey: string, replace = true) => {
       const params = new URLSearchParams(searchParams.toString());
       if (params.get("session") === nextSessionKey) return;
+      pendingSessionUrlSyncRef.current = nextSessionKey;
       params.set("session", nextSessionKey);
       const nextUrl = `${pathname}?${params.toString()}`;
       if (replace) {
@@ -420,6 +422,13 @@ function ChatPageContent() {
     },
     [pathname, router, searchParams]
   );
+
+  useEffect(() => {
+    if (!pendingSessionUrlSyncRef.current) return;
+    if (rawSessionParam === pendingSessionUrlSyncRef.current) {
+      pendingSessionUrlSyncRef.current = null;
+    }
+  }, [rawSessionParam]);
 
   useEffect(() => {
     if (rawSessionParam && !parsedSessionParam) {
@@ -433,6 +442,23 @@ function ChatPageContent() {
 
   useEffect(() => {
     if (parsedSessionParam) {
+      const hasLocalSelection = !!selectedAgent && !!selectedSessionKey;
+      const localMatchesUrl =
+        hasLocalSelection &&
+        selectedSessionKey === parsedSessionParam.sessionKey &&
+        selectedAgent.toLowerCase() === parsedSessionParam.agentSlug;
+
+      // While router navigation updates the URL, keep the user's latest local choice.
+      const localChangePendingUrlSync =
+        hasLocalSelection &&
+        !!pendingSessionUrlSyncRef.current &&
+        selectedSessionKey === pendingSessionUrlSyncRef.current &&
+        rawSessionParam !== pendingSessionUrlSyncRef.current;
+
+      if (localMatchesUrl || localChangePendingUrlSync) {
+        return;
+      }
+
       const knownAgent =
         agents.length === 0 ||
         agents.some((agent) => agent.slug === parsedSessionParam.agentSlug);
@@ -937,6 +963,7 @@ function ChatPageContent() {
           {
             agent_slug: selectedAgent,
             messages: next.map((m) => ({
+              id: m.id,
               role: m.role,
               content: m.content,
               ...(m.tool_calls != null ? { tool_calls: m.tool_calls } : {}),

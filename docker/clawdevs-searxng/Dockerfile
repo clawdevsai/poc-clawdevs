@@ -20,6 +20,8 @@
 
 FROM searxng/searxng:latest
 
+ENV TZ=America/Sao_Paulo
+
 COPY docker/clawdevs-searxng/limiter.toml /etc/searxng/limiter.toml
 
 RUN set -eux; \

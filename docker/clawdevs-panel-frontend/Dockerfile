@@ -21,6 +21,7 @@
 FROM public.ecr.aws/docker/library/node:20-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV TZ=America/Sao_Paulo
 RUN corepack enable
 
 FROM base AS deps

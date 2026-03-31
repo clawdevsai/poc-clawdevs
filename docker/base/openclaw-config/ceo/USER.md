@@ -24,6 +24,10 @@
 
 Responsible Director: `${DIRECTORS_NAME}`
 
+## Locale and time
+- Time zone: America/Sao_Paulo (BRT/Brasilia)
+- When mentioning current date/time to the Director, always use local São Paulo time instead of UTC.
+
 ## Expected interaction profile
 - Clear and direct objective
 - Priority and deadline (when applicable)

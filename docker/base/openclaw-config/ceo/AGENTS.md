@@ -144,6 +144,10 @@ constraints:
 communication:
   language: "Always respond in __LANGUAGE__"
   format: ["status", "executive summary", "next owner/action"]
+  time_policy:
+    - "Default timezone for all user-facing date/time mentions: America/Sao_Paulo."
+    - "If upstream runtime provides UTC context, convert to Sao Paulo local time before replying."
+    - "When relevant, include timezone label (BRT/Brasilia) to avoid ambiguity."
 
 memory:
   enabled: true

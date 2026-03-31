@@ -23,12 +23,16 @@ FROM public.ecr.aws/docker/library/node:22-bookworm-slim
 ARG OPENCLAW_VERSION=2026.3.24
 ARG DEBIAN_FRONTEND=noninteractive
 
+ENV TZ=America/Sao_Paulo
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN set -eux; \
     apt-get update; \
     apt-get upgrade -y; \
-    apt-get install -y --no-install-recommends ca-certificates bash git curl jq python3 gh; \
+    apt-get install -y --no-install-recommends ca-certificates bash git curl jq python3 gh tzdata; \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime; \
+    echo $TZ > /etc/timezone; \
     npm install -g npm@10.9.0; \
     if [ -n "${OPENCLAW_VERSION}" ]; then OPENCLAW_NPM_SPEC="openclaw@${OPENCLAW_VERSION}"; else OPENCLAW_NPM_SPEC="openclaw@latest"; fi; \
     npm install -g --omit=dev "${OPENCLAW_NPM_SPEC}"; \
