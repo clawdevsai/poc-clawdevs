@@ -525,6 +525,7 @@ function ChatPageContent() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [streamSeconds, setStreamSeconds] = useState(0);
+  const [lastStreamSeconds, setLastStreamSeconds] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
   const [agentQuery, setAgentQuery] = useState("");
@@ -532,6 +533,11 @@ function ChatPageContent() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const agentDropdownRef = useRef<HTMLDivElement | null>(null);
   const streamIntervalRef = useRef<number | null>(null);
+  const streamSecondsRef = useRef(0);
+
+  useEffect(() => {
+    streamSecondsRef.current = streamSeconds;
+  }, [streamSeconds]);
 
   useEffect(() => {
     if (historyData?.messages) {
@@ -813,6 +819,7 @@ function ChatPageContent() {
 
     setSending(true);
     setError(null);
+    setLastStreamSeconds(null);
 
     const userInput = input.trim();
     const userMsg: ChatMessage = {
@@ -933,6 +940,7 @@ function ChatPageContent() {
       setError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
       setMessages((prev) => prev.filter((message) => message.id !== assistantMsgId));
     } finally {
+      setLastStreamSeconds(streamSecondsRef.current);
       setSending(false);
     }
   }
@@ -1207,6 +1215,11 @@ function ChatPageContent() {
                 <p className="text-sm text-[hsl(var(--destructive))]">{sessionParamError}</p>
               )}
               {error && <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>}
+              {!sending && lastStreamSeconds !== null && (
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  Tempo da ultima resposta: {lastStreamSeconds}s
+                </p>
+              )}
 
               <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--background))]/80 p-2.5">
                 <textarea

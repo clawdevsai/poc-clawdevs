@@ -79,14 +79,14 @@ class ChatHistoryResponse(BaseModel):
 class ChatRequest(BaseModel):
     agent_slug: Optional[str] = Field(default=None, max_length=64)
     session_key: Optional[str] = Field(default=None, max_length=512)
-    message: str = Field(..., min_length=1, max_length=4000)
+    message: str = Field(..., min_length=1, max_length=150000)
 
 
 class ChatRagTurnRequest(BaseModel):
     agent_slug: Optional[str] = Field(default=None, max_length=64)
     session_key: str = Field(..., min_length=1, max_length=512)
     turn_id: str = Field(..., min_length=1, max_length=128)
-    user_message: str = Field(..., min_length=1, max_length=4000)
+    user_message: str = Field(..., min_length=1, max_length=150000)
     assistant_message: str = Field(..., min_length=1, max_length=40000)
 
 
@@ -99,7 +99,7 @@ class ChatTranscriptTurnRequest(BaseModel):
     agent_slug: Optional[str] = Field(default=None, max_length=64)
     session_key: str = Field(..., min_length=1, max_length=512)
     turn_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
-    user_message: str = Field(..., min_length=1, max_length=4000)
+    user_message: str = Field(..., min_length=1, max_length=150000)
     assistant_message: str = Field(..., min_length=1, max_length=40000)
 
 
