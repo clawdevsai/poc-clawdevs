@@ -32,6 +32,9 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatsCard } from "@/components/dashboard/stats-card"
+import { Phase6MetricsCards, type Phase6MetricsData } from "@/components/monitoring/phase6-metrics"
+import { Phase6DetailsTable } from "@/components/monitoring/phase6-details"
+import { OllamaHealthCard } from "@/components/monitoring/ollama-health"
 import { customInstance } from "@/lib/axios-instance"
 import { wsManager } from "@/lib/ws"
 import { cn } from "@/lib/utils"
@@ -76,6 +79,12 @@ const fetchContextModeMetrics = () =>
 const fetchAgentMetrics = () =>
   customInstance<AgentMetrics[]>({
     url: "/context-mode/metrics",
+    method: "GET",
+  })
+
+const fetchPhase6Metrics = () =>
+  customInstance<Phase6MetricsData>({
+    url: "/context-mode/phase6/metrics",
     method: "GET",
   })
 
@@ -149,6 +158,13 @@ export default function MonitoringPage() {
     queryFn: fetchAgentMetrics,
     retry: false,
     refetchInterval: 120000, // Refetch every 2 minutes
+  })
+
+  const { data: phase6Metrics, isLoading: phase6Loading } = useQuery({
+    queryKey: ["phase6", "metrics"],
+    queryFn: fetchPhase6Metrics,
+    retry: false,
+    refetchInterval: 60000, // Refetch every minute
   })
 
   // Live-update via WebSocket "context-mode-metrics" channel
@@ -341,6 +357,42 @@ export default function MonitoringPage() {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Phase 6 Section */}
+        <div className="space-y-4 border-t border-[hsl(var(--border))] pt-6">
+          <div>
+            <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
+              Phase 6: Ollama-Enhanced Optimization
+            </h2>
+            <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
+              Semantic optimization metrics for query enhancement, reranking, summarization, and anomaly detection
+            </p>
+          </div>
+
+          {/* Ollama Health */}
+          <div>
+            <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
+              Infrastructure Status
+            </h3>
+            <OllamaHealthCard />
+          </div>
+
+          {/* Phase 6 Metrics Cards */}
+          <div>
+            <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
+              Optimization Metrics
+            </h3>
+            <Phase6MetricsCards data={phase6Metrics} isLoading={phase6Loading} />
+          </div>
+
+          {/* Phase 6 Details Table */}
+          <div>
+            <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
+              Detailed Task Metrics
+            </h3>
+            <Phase6DetailsTable data={phase6Metrics} isLoading={phase6Loading} />
+          </div>
         </div>
       </div>
     </AppLayout>
