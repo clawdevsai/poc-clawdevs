@@ -102,7 +102,7 @@ class TestSyncTasks:
                 "state": "open",
                 "labels": [{"name": "backend"}],
                 "html_url": "https://github.com/acme/app/issues/101",
-                "assignee": None,
+                "assignees": [],
             }
         ]
         mock_response = MagicMock()
@@ -167,7 +167,7 @@ class TestSyncTasksGitHubIntegration:
                 "state": "open",
                 "labels": [{"name": "backend"}],
                 "html_url": "https://github.com/acme/app/issues/202",
-                "assignee": None,
+                "assignees": [],
             }
         ]
         mock_response = MagicMock()

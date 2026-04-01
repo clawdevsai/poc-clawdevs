@@ -57,6 +57,9 @@ _GITHUB_LABEL_MAP = {
     "design": "ux",
 }
 
+# Public merged label map for testing and external use
+LABEL_MAP = {**_GITHUB_LABEL_MAP, **LABEL_ALIASES}
+
 # Map GitHub issue state to task status
 STATUS_MAP = {
     "open": "inbox",
@@ -178,9 +181,8 @@ async def _sync_issue_to_task(session, issue: dict, repo: str, ceo_agent: Agent 
 
     # Try to find assigned agent
     assigned_agent_id = None
-    assignee = issue.get("assignee")
-    if assignee:
-        assignee.get("login", "")
+    assignees = issue.get("assignees", [])
+    if assignees:
         # Try to match by GitHub username (would need to store github_username in Agent model)
         # For now, try to match by name in title/description
         agent_result = await session.exec(select(Agent))

@@ -74,8 +74,9 @@ Este skill foi **otimizado para context-mode compression** (98%+ redução em ba
 #### GitHub Issues/PRs Query
 ```bash
 # ❌ NÃO USE: gh issue list (retorna tudo)
-# ✅ USE ESTE: Apenas campos necessários
-gh issue list --json number,title,assignee --limit 50
+# ✅ USE ESTE: Apenas campos necessários + assignees simplificado
+# Nota: no --json é "assignees" (array). "--assignee" é só filtro, não campo JSON.
+gh issue list --json number,title,assignees --limit 50 --jq '.[] | {number, title, assignees: ([.assignees[].login] // [])}'
 
 # Economia: 280KB → 5KB (98% ↓)
 ```
