@@ -220,6 +220,7 @@ docker run -d --name clawdevs-panel-backend --network "$STACK_NETWORK" --network
   -e PANEL_DATABASE_URL="postgresql+asyncpg://panel:${PANEL_DB_PASSWORD}@postgres:5432/clawdevs_panel" \
   -e PANEL_REDIS_URL="redis://:${PANEL_REDIS_PASSWORD}@redis:6379/0" \
   -e PANEL_OPENCLAW_GATEWAY_URL=http://openclaw:18789 \
+  -e PANEL_OPENCLAW_GATEWAY_TOKEN="$OPENCLAW_GATEWAY_TOKEN" \
   -e PANEL_SECRET_KEY="$PANEL_SECRET_KEY" \
   -e PANEL_ADMIN_USERNAME="$PANEL_ADMIN_USERNAME" \
   -e PANEL_ADMIN_PASSWORD="$PANEL_ADMIN_PASSWORD" \
