@@ -10,6 +10,7 @@ from app.services.categorizer import MemoryCategorizer
 from app.services.anomaly_detector import AnomalyDetector
 from app.services.context_suggester import ContextSuggester
 from app.services.ollama_client import OllamaClient
+from app.services.semantic_optimization_flags import flags
 
 router = APIRouter(prefix="/api/context-mode/semantic-optimization", tags=["semantic-optimization"])
 
@@ -29,6 +30,12 @@ async def enhance_query(query: str, agent_id: str):
     """Expand query with semantic variations."""
     if not query or len(query) < 2:
         raise HTTPException(status_code=400, detail="Query too short")
+
+    if not flags.is_enabled("query_enhancement", agent_id):
+        raise HTTPException(
+            status_code=503,
+            detail="Query enhancement feature is not enabled",
+        )
 
     agent_context = agent_id  # Could fetch from DB
     result = await query_enhancer.enhance_query(query, agent_context)
@@ -128,4 +135,25 @@ async def semantic_optimization_metrics(session: AsyncSession = Depends(get_sess
             "latency_p95": "0ms",
         },
         "ollama_status": "active",
+    }
+
+
+@router.get("/feature-flags")
+async def get_feature_flags():
+    """Get all semantic optimization feature flags status."""
+    return {
+        "flags": flags.get_all_status(),
+        "canary_agents": flags.get_canary_agents(),
+    }
+
+
+@router.get("/feature-flags/{task_name}")
+async def check_task_enabled(task_name: str, agent_id: str = None):
+    """Check if a specific task is enabled for an agent."""
+    is_enabled = flags.is_enabled(task_name, agent_id)
+    return {
+        "task": task_name,
+        "agent_id": agent_id,
+        "enabled": is_enabled,
+        "canary": agent_id in flags.canary_agents if agent_id else False,
     }

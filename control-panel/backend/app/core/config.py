@@ -112,6 +112,18 @@ class Settings(BaseSettings):
     QUEUE_CRITICAL_DEPTH: int = Field(default=100)
     QUEUE_CRITICAL_PROCESSING_RATE_MIN: int = Field(default=5)
 
+    # Semantic Optimization Feature Flags (Week 4 - Rollout Strategy)
+    SEMANTIC_OPT_QUERY_ENHANCEMENT: bool = Field(default=False)
+    SEMANTIC_OPT_SEMANTIC_RERANKING: bool = Field(default=False)
+    SEMANTIC_OPT_ADAPTIVE_COMPRESSION: bool = Field(default=False)
+    SEMANTIC_OPT_SUMMARIZATION: bool = Field(default=False)
+    SEMANTIC_OPT_CATEGORIZATION: bool = Field(default=False)
+    SEMANTIC_OPT_ANOMALY_DETECTION: bool = Field(default=False)
+    SEMANTIC_OPT_CONTEXT_SUGGESTION: bool = Field(default=False)
+
+    # Canary deployment agents (comma-separated)
+    SEMANTIC_OPT_CANARY_AGENTS: str = Field(default="")
+
     model_config = {"env_prefix": "PANEL_", "env_file": ".env", "extra": "allow"}
 
 
