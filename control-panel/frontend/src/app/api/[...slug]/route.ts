@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params;
-  const path = slug.join("/");
+  const path = "api/" + slug.join("/");
   const url = new URL(request.url);
   const queryString = url.search;
   const backendUrl = `${BACKEND_URL}/${path}${queryString}`;
@@ -40,7 +40,7 @@ export async function POST(
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params;
-  const path = slug.join("/");
+  const path = "api/" + slug.join("/");
   const url = new URL(request.url);
   const queryString = url.search;
   const backendUrl = `${BACKEND_URL}/${path}${queryString}`;
@@ -72,7 +72,7 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params;
-  const path = slug.join("/");
+  const path = "api/" + slug.join("/");
   const url = new URL(request.url);
   const queryString = url.search;
   const backendUrl = `${BACKEND_URL}/${path}${queryString}`;
@@ -104,7 +104,7 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params;
-  const path = slug.join("/");
+  const path = "api/" + slug.join("/");
   const url = new URL(request.url);
   const queryString = url.search;
   const backendUrl = `${BACKEND_URL}/${path}${queryString}`;
