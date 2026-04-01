@@ -159,7 +159,7 @@ app.include_router(health_api.router, tags=["health"])
 app.include_router(governance_api.router, tags=["governance"])
 app.include_router(chat_api.router, tags=["chat"])
 app.include_router(agent_permissions_api.router, tags=["agent-permissions"])
-app.include_router(context_mode_api.router, prefix="/api", tags=["context-mode"])
+app.include_router(context_mode_api.router, tags=["context-mode"])
 app.include_router(context_mode_memory_api.router, tags=["context-mode"])
 
 # WebSocket
