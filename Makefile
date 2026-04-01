@@ -131,7 +131,11 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: openclaw-image-build-with-cache
 .PHONY: images-push images-release
 .PHONY: spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist
-.PHONY: brief-template clarify-template plan-template task-template validate-template
+.PHONY: gen-secret
+
+gen-secret:
+	@python -c "import secrets; print(secrets.token_hex(32))"
+
 .PHONY: sdd-prompts sdd-example sdd-real-initiative
 
 help:
@@ -155,6 +159,7 @@ help:
 	@echo "make build         Build local das 10 imagens"
 	@echo "make build-with-cache   Build local das 10 imagens (com cache)"
 	@echo "make migrate       Executa migrations Alembic"
+	@echo "make gen-secret     Gera secret key aleatoria (32 bytes hex)"
 
 preflight:
 	@if [ ! -f "$(ENV_FILE)" ]; then \
