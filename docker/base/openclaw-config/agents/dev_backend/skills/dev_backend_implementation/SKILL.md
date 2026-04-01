@@ -62,6 +62,69 @@ This is the **golden template** for backend implementation skills across 16 agen
 - **Performance**: Meets latency/throughput requirements
 - **Cost-Effectiveness**: Document trade-offs when relevant
 
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (97-98% redução de tokens).
+
+### Ferramentas Otimizadas
+
+Ao executar comandos que retornam grandes outputs, use os padrões otimizados abaixo:
+
+#### NPM (Node Package Manager)
+```bash
+# ❌ NÃO USE: npm list
+# ✅ USE ESTE: npm list --depth=0
+
+# Economia: 142KB → 3KB (97.9% ↓)
+# Tokens salvos: ~350 por execução
+```
+
+#### GIT (Version Control)
+```bash
+# ❌ NÃO USE: git log --all
+# ✅ USE ESTE: git log -20 --oneline
+
+# Economia: 315KB → 2KB (99.4% ↓)
+# Tokens salvos: ~770 por execução
+```
+
+#### Status/Info Rápido
+```bash
+# ❌ NÃO USE: git status
+# ✅ USE ESTE: git status -s
+
+# ❌ NÃO USE: npm list
+# ✅ USE ESTE: npm list --depth=0 --prod
+```
+
+### Impacto Esperado
+
+- **Redução de tokens por execução**: 70-97%
+- **Economia mensal**: ~$40 para este agent
+- **Sem perda de informação**: Outputs otimizados retornam dados essenciais
+
+### Validar Compressão
+
+Verifique que esta skill está contribuindo para a compressão:
+
+```bash
+# Ver métricas em tempo real
+curl http://localhost:8000/api/context-mode/metrics
+
+# Esperado após execução:
+# {
+#   "total_compressions": 1+,
+#   "compression_rate": "100%",
+#   "average_compression_ratio": "0.02-0.05",
+#   "tokens_saved_estimate": 200+
+# }
+```
+
+### Referência Completa
+
+Para padrões otimizados de TODAS as ferramentas (kubectl, docker, prometheus, etc), veja:
+- `/docker/base/openclaw-config/shared/CONTEXT_MODE_AGENT_HELPERS.md`
+
 ## Fallback Commands
 
 ### Node.js

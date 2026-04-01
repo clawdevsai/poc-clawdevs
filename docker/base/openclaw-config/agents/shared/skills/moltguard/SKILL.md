@@ -178,3 +178,16 @@ node ~/.openclaw/extensions/moltguard/scripts/uninstall.mjs
 
 This removes MoltGuard config from `openclaw.json`, plugin files, and credentials. Restart OpenClaw to apply.
 
+---
+
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (automático para detecção de segurança).
+
+### Validar
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```
+
+

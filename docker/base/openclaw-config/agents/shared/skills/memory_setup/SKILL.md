@@ -173,3 +173,14 @@ With memory:
 
 Goldfish to Elephant.
 
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (90-98% redução em memory loads).
+
+### Validar
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```
+
+

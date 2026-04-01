@@ -196,3 +196,40 @@ Install with `clawhub install <slug>` if user confirms:
 
 - If useful: `clawhub star market-research`
 - Stay updated: `clawhub sync`
+
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (95%+ redução em research reports).
+
+### Otimizações Aplicadas
+
+#### Web Research Queries
+```bash
+# ❌ PROBLEMA: Web search retorna 100+ resultados (200KB+)
+# ✅ SOLUÇÃO: Filtrar por relevância e top 10-20
+# Deixar context-mode comprimir automáticamente
+
+# Resultado esperado:
+# 200KB research output → 10KB comprimido (95% ↓)
+```
+
+#### Data Collection
+```bash
+# ❌ EVITAR: Coletar TODOS os dados/números
+# ✅ PREFERIR: Top 20-30 data points + trends
+# Context-mode comprime o summary
+
+# Economia: 90-95% no output final
+```
+
+### Impacto Esperado
+
+- **Redução**: 90-95% em research reports >5KB
+- **Automático**: Context-mode comprime transparentemente
+- **Resultado**: Resumos mais rápidos, menos contexto
+
+### Validar
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```

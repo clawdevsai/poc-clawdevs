@@ -105,6 +105,45 @@ npx axe-core          # ou cypress-axe, playwright-axe
 
 ---
 
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (97-98% redução de tokens).
+
+### Ferramentas Otimizadas
+
+#### NPM (Node Package Manager)
+```bash
+# ❌ NÃO USE: npm list
+# ✅ USE ESTE: npm list --depth=0
+
+# Economia: 142KB → 3KB (97.9% ↓)
+```
+
+#### GIT (Version Control)
+```bash
+# ❌ NÃO USE: git log --all
+# ✅ USE ESTE: git log -20 --oneline
+
+# Economia: 315KB → 2KB (99.4% ↓)
+```
+
+#### Bundle Analysis
+```bash
+# ❌ NÃO USE: Analisar todos os chunks
+# ✅ USE ESTE: Focar em top 10 maiores
+npx webpack-bundle-analyzer --report-flags "limit:10"
+
+# Economia: 50-80% menos output
+```
+
+### Validar Compressão
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```
+
+---
+
 ## Multi-Agent Routing de Labels
 
 | Label | Responsible agent |

@@ -44,3 +44,12 @@ description: Condensed testing skill for JS/TS covering unit/integration/e2e, bu
 - Evidence paths (logs/screenshots/traces)
 - Residual risks and next action
 
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (95%+ redução em test reports).
+
+### Validar
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```

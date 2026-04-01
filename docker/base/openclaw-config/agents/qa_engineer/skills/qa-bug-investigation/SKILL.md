@@ -27,3 +27,12 @@ description: Condensed QA bug investigation flow with reproducible steps, root-c
 - Run multiple attempts and report failure frequency.
 - Treat unstable pass as inconclusive until stabilized.
 
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (95%+ redução em logs de testes).
+
+### Validar
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```

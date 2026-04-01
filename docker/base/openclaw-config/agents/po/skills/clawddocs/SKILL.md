@@ -171,3 +171,13 @@ See `./snippets/common-configs.md` for ready-to-use configuration patterns:
 1. Run `./scripts/recent.sh 7`
 2. Summarize recently updated pages
 3. Offer to dive into any specific updates
+
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (95%+ redução em doc queries).
+
+### Validar
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```

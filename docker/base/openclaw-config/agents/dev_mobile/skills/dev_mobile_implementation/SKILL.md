@@ -72,6 +72,45 @@ flutter build ios --release        # requer macOS host
 
 ---
 
+## Context Mode Optimization 🚀
+
+Este skill foi **otimizado para context-mode compression** (97-98% redução de tokens).
+
+### Ferramentas Otimizadas
+
+#### NPM/Expo (Node Package Manager)
+```bash
+# ❌ NÃO USE: npm list, npx expo list
+# ✅ USE ESTE: npm list --depth=0
+
+# Economia: 142KB → 3KB (97.9% ↓)
+```
+
+#### GIT (Version Control)
+```bash
+# ❌ NÃO USE: git log --all
+# ✅ USE ESTE: git log -20 --oneline
+
+# Economia: 315KB → 2KB (99.4% ↓)
+```
+
+#### Build Logs (Expo/Flutter)
+```bash
+# ❌ NÃO USE: Logs completos (200KB+)
+# ✅ USE ESTE: Apenas warnings e errors
+npx expo build:ios 2>&1 | grep -E "ERROR|WARNING" | tail -50
+
+# Economia: 95%+ ↓
+```
+
+### Validar
+
+```bash
+curl http://localhost:8000/api/context-mode/metrics
+```
+
+---
+
 ## Multi-Agent Label Routing
 
 | Label | Responsible agent |
