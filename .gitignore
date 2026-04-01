@@ -76,3 +76,4 @@ control-panel/backend/.venv/
 data/openclaw/backlog
 control-panel/frontend/next-env.d.ts
 control-panel/backend/node_modules/
+.cursor/hooks.json
