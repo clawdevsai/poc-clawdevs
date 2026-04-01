@@ -623,6 +623,7 @@ function ChatPageContent() {
     }
 
     setStreamSeconds(0);
+    setLastStreamSeconds(null);
     streamIntervalRef.current = window.setInterval(() => {
       setStreamSeconds((current) => current + 1);
     }, 1000);

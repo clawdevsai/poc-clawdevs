@@ -21,6 +21,8 @@
 FROM ollama/ollama:latest
 
 ENV TZ=America/Sao_Paulo
+# Modelos a carregar na inicializacao (separados por espaco)
+ENV OLLAMA_BOOT_MODELS="phi4-mini-reasoning nomic-embed-text"
 
 COPY docker/clawdevs-ollama/start-ollama.sh /usr/local/bin/start-ollama.sh
 RUN sed -i 's/\r$//' /usr/local/bin/start-ollama.sh \

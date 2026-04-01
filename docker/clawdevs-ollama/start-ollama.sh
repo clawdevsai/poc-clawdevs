@@ -31,15 +31,21 @@ for i in $(seq 1 60); do
   sleep 1
 done
 
-if [ "${OLLAMA_AUTO_PULL_MODELS:-false}" = "true" ]; then
+# Default models se nao configurado
+DEFAULT_MODELS="${OLLAMA_BOOT_MODELS:-phi4-mini-reasoning nomic-embed-text}"
+
+if [ -n "${DEFAULT_MODELS}" ]; then
+  echo "Carregando modelos Ollama: ${DEFAULT_MODELS}"
   # Em background: nao bloqueia o processo principal; o servidor ja responde ao healthcheck.
   (
-    for model in ${OLLAMA_BOOT_MODELS:-}; do
+    for model in ${DEFAULT_MODELS}; do
+      echo "Puxando modelo: ${model}"
       ollama pull "${model}" || echo "Aviso: pull do modelo ${model} falhou."
     done
+    echo "Modelos carregados com sucesso."
   ) &
 else
-  echo "OLLAMA_AUTO_PULL_MODELS=false: iniciando sem pulls automaticos."
+  echo "OLLAMA_BOOT_MODELS vazio: iniciando sem pulls automaticos."
 fi
 
 wait
