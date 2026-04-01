@@ -1,17 +1,16 @@
-"""Semantic reranking of search results using Ollama."""
-import json
+"""Semantic reranking of search results using Ollama embeddings."""
 import logging
 from typing import Optional
-from app.services.ollama_client import OllamaClient
+from app.services.embedding_search import EmbeddingSearch
 
 logger = logging.getLogger(__name__)
 
 
 class SemanticRanker:
-    """Rerank search results by semantic relevance."""
+    """Rerank search results by semantic relevance using embeddings."""
 
-    def __init__(self, ollama_client: Optional[OllamaClient] = None):
-        self.ollama_client = ollama_client or OllamaClient()
+    def __init__(self, embedding_search: Optional[EmbeddingSearch] = None):
+        self.embedding_search = embedding_search or EmbeddingSearch()
 
     async def rerank(
         self,
@@ -20,12 +19,12 @@ class SemanticRanker:
         bm25_scores: list[float],
         top_k: int = 5,
     ) -> list[tuple[str, float]]:
-        """Rerank chunks using semantic relevance scoring.
+        """Rerank chunks using semantic similarity (embeddings) + BM25.
 
         Args:
             query: Search query
             chunks: Content chunks to rank
-            bm25_scores: Original BM25 scores
+            bm25_scores: Original BM25 scores (0-100)
             top_k: Return top K results
 
         Returns:
@@ -34,41 +33,37 @@ class SemanticRanker:
         if not chunks or not query:
             return []
 
-        semantic_scores = []
+        # Get query embedding
+        query_emb = await self.embedding_search.embed(query)
+        if not query_emb:
+            # Fallback to BM25 if embedding fails
+            return self._rank_by_bm25(chunks, bm25_scores, top_k)
 
-        # Batch process in groups of 4
-        batch_size = 4
-        for i in range(0, len(chunks), batch_size):
-            batch = chunks[i : i + batch_size]
+        # Get chunk embeddings
+        chunk_embs = await self.embedding_search.embed_batch(chunks)
 
-            chunk_list = "\n".join(f"{j+1}. {c[:200]}" for j, c in enumerate(batch))
-            prompt = f"""Query: "{query}"
+        # Calculate semantic similarity scores (0-1)
+        semantic_scores = [
+            self.embedding_search.cosine_similarity(query_emb, emb)
+            for emb in chunk_embs
+        ]
 
-Rate relevance of each chunk (1-10 scale):
-{chunk_list}
+        # Normalize BM25 scores to 0-1 range
+        bm25_normalized = [min(s / 100.0, 1.0) for s in bm25_scores]
 
-Output JSON: {{"ratings": [1, 2, 3, ...]}}  Only numbers."""
-
-            response = await self.ollama_client.generate(
-                prompt=prompt,
-                temperature=0.2,
-                timeout=3.0,
-            )
-
-            if response:
-                try:
-                    data = json.loads(response)
-                    ratings = data.get("ratings", [])
-                    semantic_scores.extend([r / 10.0 for r in ratings[:len(batch)]])
-                except (json.JSONDecodeError, ValueError):
-                    semantic_scores.extend([0.5] * len(batch))
-            else:
-                semantic_scores.extend([0.5] * len(batch))
-
-        # Combine scores: semantic 70%, BM25 30%
+        # Combine: semantic 70%, BM25 30%
         combined = []
-        for chunk, bm25, semantic in zip(chunks, bm25_scores, semantic_scores):
-            score = semantic * 0.7 + (bm25 / 100.0) * 0.3
+        for chunk, semantic, bm25 in zip(chunks, semantic_scores, bm25_normalized):
+            score = semantic * 0.7 + bm25 * 0.3
             combined.append((chunk, score))
 
+        return sorted(combined, key=lambda x: x[1], reverse=True)[:top_k]
+
+    def _rank_by_bm25(
+        self, chunks: list[str], bm25_scores: list[float], top_k: int
+    ) -> list[tuple[str, float]]:
+        """Fallback to BM25-only ranking."""
+        combined = [
+            (chunk, min(score / 100.0, 1.0)) for chunk, score in zip(chunks, bm25_scores)
+        ]
         return sorted(combined, key=lambda x: x[1], reverse=True)[:top_k]
