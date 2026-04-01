@@ -11,6 +11,7 @@ from app.services.anomaly_detector import AnomalyDetector
 from app.services.context_suggester import ContextSuggester
 from app.services.ollama_client import OllamaClient
 from app.services.semantic_optimization_flags import flags
+from app.services.context_metrics import context_tracker
 
 router = APIRouter(prefix="/api/context-mode/semantic-optimization", tags=["semantic-optimization"])
 
@@ -121,20 +122,14 @@ async def ollama_health():
 
 @router.get("/metrics")
 async def semantic_optimization_metrics(session: AsyncSession = Depends(get_session)):
-    """Get semantic optimization metrics."""
-    # Placeholder - will track actual usage
+    """Get semantic optimization context metrics (compression tracking)."""
+    summary = context_tracker.get_summary()
+    ollama_health = await ollama_client.health_check()
+
     return {
-        "query_enhancements": {
-            "total_queries": 0,
-            "avg_expansion_terms": 0,
-            "semantic_coverage_improvement": "0%",
-        },
-        "semantic_reranking": {
-            "total_reranks": 0,
-            "avg_rerank_improvement": "0%",
-            "latency_p95": "0ms",
-        },
-        "ollama_status": "active",
+        "context_compression": summary,
+        "ollama_status": "active" if ollama_health else "unavailable",
+        "model": "phi4-mini-reasoning:latest",
     }
 
 
