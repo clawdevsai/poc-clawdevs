@@ -48,6 +48,7 @@ from app.api import memory_rag as memory_rag_api
 from app.api import governance as governance_api
 from app.api import chat as chat_api
 from app.api import agent_permissions as agent_permissions_api
+from app.api import context_mode as context_mode_api
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO)
@@ -147,6 +148,7 @@ app.include_router(health_api.router, tags=["health"])
 app.include_router(governance_api.router, tags=["governance"])
 app.include_router(chat_api.router, tags=["chat"])
 app.include_router(agent_permissions_api.router, tags=["agent-permissions"])
+app.include_router(context_mode_api.router, prefix="/api", tags=["context-mode"])
 
 # WebSocket
 app.include_router(ws_api.router, tags=["websocket"])
