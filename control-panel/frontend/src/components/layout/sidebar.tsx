@@ -20,12 +20,14 @@ import {
   Clock,
   Server,
   Settings,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/monitoring", label: "Monitoramento", icon: BarChart3 },
   { href: "/agents", label: "Agentes", icon: Bot },
   { href: "/chat", label: "Chat", icon: MessagesSquare },
   { href: "/sessions", label: "Sessões", icon: MessageSquare },
