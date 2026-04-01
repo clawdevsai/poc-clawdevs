@@ -64,12 +64,11 @@
 
 ## 🚀 Deploy Steps
 
-### Step 1: Install Context-Mode Package
-```bash
-cd control-panel/backend
-npm install mksglu/context-mode@latest
-npm list context-mode  # Verify: should show v1.0.0+
-```
+### Step 1: Docker Configuration ✅
+Context-mode é automaticamente instalado durante o build do Docker:
+- **Dockerfile**: Adiciona Node.js + npm às system dependencies
+- **package.json**: Define context-mode como dependência
+- **npm install**: Executado automaticamente durante docker build
 
 ### Step 2: Build Docker Image
 ```bash

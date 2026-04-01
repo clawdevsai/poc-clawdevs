@@ -20,18 +20,26 @@
 
 FROM public.ecr.aws/docker/library/python:3.12-slim
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+# Install system dependencies (includes Node.js for context-mode)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:0.10.12 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
-# Install dependencies
+# Install Python dependencies
 COPY pyproject.toml uv.lock* ./
 # --frozen uses lockfile if present; falls back gracefully when building without pre-committed uv.lock
 RUN uv sync --no-dev --no-install-project
+
+# Install Node.js dependencies (context-mode for compression)
+COPY package.json package-lock.json* ./
+RUN npm install --production
 
 # Copy source
 COPY . .
