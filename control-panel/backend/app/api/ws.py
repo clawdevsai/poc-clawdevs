@@ -31,7 +31,7 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-ALLOWED_CHANNELS = {"dashboard", "agents", "approvals", "cluster", "crons"}
+ALLOWED_CHANNELS = {"dashboard", "agents", "approvals", "cluster", "crons", "context-mode-metrics"}
 
 
 class ConnectionManager:

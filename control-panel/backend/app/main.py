@@ -50,6 +50,7 @@ from app.api import chat as chat_api
 from app.api import agent_permissions as agent_permissions_api
 from app.api import context_mode as context_mode_api
 from app.api import context_mode_memory as context_mode_memory_api
+from app.services.context_mode_metrics_broadcaster import ContextModeMetricsBroadcaster
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO)
@@ -102,7 +103,16 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Health monitor disabled via config")
 
+    # Start context-mode metrics broadcaster
+    metrics_broadcaster = ContextModeMetricsBroadcaster(interval_seconds=30)
+    app.state.metrics_broadcaster = metrics_broadcaster
+    await metrics_broadcaster.start()
+
     yield
+
+    # Stop context-mode metrics broadcaster
+    if hasattr(app.state, 'metrics_broadcaster'):
+        await app.state.metrics_broadcaster.stop()
 
     # Stop health monitor
     if hasattr(app.state, 'health_monitor'):

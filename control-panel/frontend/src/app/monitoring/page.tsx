@@ -155,11 +155,10 @@ export default function MonitoringPage() {
   useEffect(() => {
     if (!wsManager) return
     const unsub = wsManager.subscribe("context-mode-metrics", (event: any) => {
-      if (event.event_type === "metric_updated") {
-        queryClient.invalidateQueries({ queryKey: ["context-mode", "metrics"] })
-        queryClient.invalidateQueries({
-          queryKey: ["context-mode", "agents"],
-        })
+      // Broadcaster sends metrics directly, update query data in place
+      if (event.type === "context-mode-metrics" && event.status === "success") {
+        // Update the cached metrics with new data from WebSocket
+        queryClient.setQueryData(["context-mode", "metrics"], event)
       }
     })
     return unsub
