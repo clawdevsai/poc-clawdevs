@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "sess-001",
+      "openclaw_session_id": "oc-sess-001",
+      "openclaw_session_key": "agent:cto-agent:main",
+      "session_kind": "main",
+      "session_label": "Principal",
+      "status": "active",
+      "created_at": "2026-01-01T00:00:00Z",
+      "last_active_at": "2026-04-01T12:00:00Z"
+    },
+    {
+      "id": "sess-002",
+      "openclaw_session_id": "oc-sess-002",
+      "openclaw_session_key": "agent:cto-agent:project-x",
+      "session_kind": "topic",
+      "session_label": "Projeto X",
+      "status": "active",
+      "created_at": "2026-02-15T00:00:00Z",
+      "last_active_at": "2026-03-30T10:00:00Z"
+    }
+  ],
+  "total": 2
+}

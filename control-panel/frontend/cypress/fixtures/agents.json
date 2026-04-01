@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "slug": "cto-agent",
+      "display_name": "CTO Agent",
+      "role": "chief_technology_officer",
+      "status": "active",
+      "runtime_status": "online"
+    },
+    {
+      "slug": "dev-agent",
+      "display_name": "Dev Agent",
+      "role": "software_developer",
+      "status": "active",
+      "runtime_status": "idle"
+    },
+    {
+      "slug": "pm-agent",
+      "display_name": "PM Agent",
+      "role": "product_manager",
+      "status": "active"
+    }
+  ],
+  "total": 3
+}

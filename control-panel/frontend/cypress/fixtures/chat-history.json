@@ -1,0 +1,15 @@
+{
+  "agent_slug": "cto-agent",
+  "messages": [
+    {
+      "id": "msg-001-1700000000000",
+      "role": "user",
+      "content": "Qual a arquitetura recomendada para microsserviços?"
+    },
+    {
+      "id": "msg-002-1700000005000",
+      "role": "assistant",
+      "content": "# Arquitetura de Microsserviços\n\nRecomendo uma abordagem com **API Gateway** e **service mesh**.\n\n## Componentes principais\n\n- API Gateway (Kong/AWS)\n- Service Mesh (Istio)\n- Message Broker (Redis/Kafka)\n\nDeseja que eu detalhe algum componente?"
+    }
+  ]
+}

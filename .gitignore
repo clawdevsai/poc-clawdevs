@@ -79,3 +79,9 @@ control-panel/backend/node_modules/
 .cursor/hooks.json
 tmpxs30b2c5/
 .agents/skills/*
+
+# Cypress
+control-panel/frontend/cypress/videos/
+control-panel/frontend/cypress/screenshots/
+control-panel/frontend/cypress/downloads/
+control-panel/frontend/cypress-output.log

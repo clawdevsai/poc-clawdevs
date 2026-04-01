@@ -9,7 +9,10 @@
     "start": "next start --hostname 0.0.0.0",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "orval": "orval"
+    "orval": "orval",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:chat": "cypress run --spec cypress/e2e/chat.cy.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "1.1.10",
@@ -51,6 +54,7 @@
     "@types/node": "22.15.17",
     "@types/react": "19.1.4",
     "@types/react-dom": "19.1.2",
+    "cypress": "^15.13.0",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.0",
     "orval": "8.5.3",
