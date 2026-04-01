@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "context-mode": "github:mksglu/context-mode"
+  }
+}
