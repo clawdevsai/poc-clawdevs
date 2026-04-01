@@ -37,20 +37,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.task import Task
 from app.models.agent import Agent
 from app.models.activity_event import ActivityEvent
+from app.models.constants import get_escalation_agent
 
 logger = logging.getLogger(__name__)
-
-# Domain-specific escalation mapping
-ESCALATION_MAPPING = {
-    "back_end": "dev_backend",
-    "front_end": "dev_frontend",
-    "mobile": "dev_mobile",
-    "tests": "qa_engineer",
-    "devops": "devops_sre",
-    "dba": "dba_data_engineer",
-    "security": "security_engineer",
-    "ux": "ux_designer",
-}
 
 # Senior escalation agents (can handle escalations)
 SENIOR_AGENTS = {
@@ -66,16 +55,6 @@ class FailureDetector:
         self.db_session = db_session
         self.failure_threshold = 3  # Escalate after 3 consecutive failures
         self.backoff_base = 1.5  # Exponential backoff multiplier
-        self.domain_escalation_routing = {
-            "backend": "arquiteto",
-            "front_end": "arquiteto",
-            "mobile": "arquiteto",
-            "tests": "arquiteto",
-            "devops": "arquiteto",
-            "dba": "arquiteto",
-            "security": "arquiteto",
-            "ux": "arquiteto",
-        }
 
     async def record_failure(
         self,
@@ -224,8 +203,8 @@ class FailureDetector:
 
     def _get_escalation_target(self, label: Optional[str]) -> str:
         """Get domain-specific escalation agent."""
-        if label and label in ESCALATION_MAPPING:
-            return ESCALATION_MAPPING[label]
+        if label:
+            return get_escalation_agent(label)
         return "arquiteto"  # Default fallback
 
     async def _create_failure_event(
@@ -236,11 +215,10 @@ class FailureDetector:
     ) -> None:
         """Create activity event for task failure."""
         event = ActivityEvent(
-            task_id=task_id,
             event_type="task_failed",
-            severity="error",
-            description=f"Task failed: {error_type}",
-            details={
+            entity_type="task",
+            entity_id=str(task_id),
+            payload={
                 "error_type": error_type,
                 "error_message": error_message,
                 "timestamp": datetime.now(UTC).replace(tzinfo=None).isoformat(),
@@ -257,11 +235,10 @@ class FailureDetector:
     ) -> None:
         """Create activity event for escalation."""
         event = ActivityEvent(
-            task_id=task_id,
             event_type="task_escalated",
-            severity="warning",
-            description="Task escalated to senior agent",
-            details={
+            entity_type="task",
+            entity_id=str(task_id),
+            payload={
                 "escalated_to_agent_id": str(agent_id),
                 "reason": reason,
                 "timestamp": datetime.now(UTC).replace(tzinfo=None).isoformat(),

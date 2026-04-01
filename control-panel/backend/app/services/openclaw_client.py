@@ -154,7 +154,11 @@ class OpenClawClient:
             yield {"event": "error", "data": str(exc)}
 
     async def run_agent_turn(
-        self, agent_slug: str, message: str, session_key: str | None = None
+        self,
+        agent_slug: str,
+        message: str,
+        session_key: str | None = None,
+        timeout: float = 60.0,
     ) -> str:
         """Run a non-streaming turn and return plain text output."""
         resolved_session_key = (session_key or "").strip() or f"agent:{agent_slug}:main"
@@ -168,7 +172,7 @@ class OpenClawClient:
             "Content-Type": "application/json",
             "x-openclaw-session-key": resolved_session_key,
         }
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
                 f"{self.base_url}/v1/chat/completions",
                 headers=headers,

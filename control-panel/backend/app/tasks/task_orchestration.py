@@ -153,7 +153,7 @@ async def _ask_ceo_for_routing(session, task: Task) -> tuple[Agent, str]:
         f"Task description: {task.description or ''}\n"
         "Escolha o melhor agente para executar a task."
     )
-    raw_output = await openclaw_client.run_agent_turn("ceo", prompt)
+    raw_output = await _call_ceo_with_timeout(prompt)
     parsed = _parse_ceo_json(raw_output)
 
     decision = str(parsed.get("decision", "")).strip().lower()
@@ -189,3 +189,18 @@ def _parse_ceo_json(raw_output: str) -> dict:
     if not isinstance(parsed, dict):
         raise ValueError("CEO output JSON is not an object")
     return parsed
+
+
+async def _call_ceo_with_timeout(prompt: str, timeout: float = 30.0) -> str:
+    """Call CEO with timeout protection and fallback to default routing."""
+    try:
+        return await asyncio.wait_for(
+            openclaw_client.run_agent_turn("ceo", prompt),
+            timeout=timeout,
+        )
+    except asyncio.TimeoutError:
+        logger.warning("CEO call timed out after %ss, using fallback routing", timeout)
+        raise TimeoutError(f"CEO call timed out after {timeout}s")
+    except Exception as exc:
+        logger.exception("CEO call failed: %s", exc)
+        raise

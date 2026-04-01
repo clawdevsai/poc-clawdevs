@@ -29,7 +29,7 @@ from datetime import datetime, UTC
 from typing import Optional
 from sqlmodel import select
 
-from app.models import Task, Agent
+from app.models import Task, Agent, LABEL_ALIASES
 from app.core.config import get_settings
 from app.services.task_workflow import (
     WORKFLOW_QUEUED_TO_CEO,
@@ -43,12 +43,8 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-# Map GitHub labels to task labels
-LABEL_MAP = {
-    "back-end": "back_end",
-    "backend": "back_end",
-    "front-end": "front_end",
-    "frontend": "front_end",
+# Map GitHub labels to task labels (extends constants with GitHub-specific aliases)
+_GITHUB_LABEL_MAP = {
     "mobile": "mobile",
     "tests": "tests",
     "qa": "tests",
@@ -170,9 +166,10 @@ async def _sync_issue_to_task(session, issue: dict, repo: str, ceo_agent: Agent 
         elif "review" in labels:
             status = "review"
 
-    # Map label
+    # Map label using constants + GitHub-specific aliases
+    merged_label_map = {**_GITHUB_LABEL_MAP, **LABEL_ALIASES}
     task_label = None
-    for gh_label, task_lbl in LABEL_MAP.items():
+    for gh_label, task_lbl in merged_label_map.items():
         if gh_label in [
             label.get("name", "").lower() for label in issue.get("labels", [])
         ]:

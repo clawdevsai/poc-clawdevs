@@ -31,6 +31,14 @@ from .metric import Metric
 from .repository import Repository
 from .agent_permission import AgentPermission
 from .chat_panel_transcript import ChatPanelTranscript
+from .constants import (
+    VALID_TASK_LABELS,
+    LABEL_ALIASES,
+    LABEL_TO_AGENT_SLUG,
+    normalize_label,
+    is_valid_label,
+    get_escalation_agent,
+)
 
 __all__ = [
     "User",
@@ -46,4 +54,10 @@ __all__ = [
     "Repository",
     "AgentPermission",
     "ChatPanelTranscript",
+    "VALID_TASK_LABELS",
+    "LABEL_ALIASES",
+    "LABEL_TO_AGENT_SLUG",
+    "normalize_label",
+    "is_valid_label",
+    "get_escalation_agent",
 ]

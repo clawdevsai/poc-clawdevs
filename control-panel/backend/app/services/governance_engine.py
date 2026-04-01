@@ -36,6 +36,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.task import Task
 from app.models.agent import Agent
+from app.models.constants import VALID_TASK_LABELS, normalize_label, is_valid_label
 
 logger = logging.getLogger(__name__)
 
@@ -167,9 +168,9 @@ class GovernanceEngine:
         # Check dependency order
         valid_order = {
             "shared_lib": [],
-            "backend": ["shared_lib"],
-            "frontend": ["shared_lib", "backend"],
-            "mobile": ["shared_lib", "backend"],
+            "back_end": ["shared_lib"],
+            "front_end": ["shared_lib", "back_end"],
+            "mobile": ["shared_lib", "back_end"],
         }
 
         if repo in valid_order:
@@ -277,24 +278,14 @@ class GovernanceEngine:
         """Load MULTI_REPO_COORDINATION rules."""
         return {
             "shared_lib": {"can_depend_on": []},
-            "backend": {"can_depend_on": ["shared_lib"]},
-            "frontend": {"can_depend_on": ["shared_lib", "backend"]},
-            "mobile": {"can_depend_on": ["shared_lib", "backend"]},
+            "back_end": {"can_depend_on": ["shared_lib"]},
+            "front_end": {"can_depend_on": ["shared_lib", "back_end"]},
+            "mobile": {"can_depend_on": ["shared_lib", "back_end"]},
         }
 
     def _is_valid_label(self, label: str) -> bool:
         """Check if task label is valid."""
-        valid_labels = [
-            "back_end",
-            "front_end",
-            "mobile",
-            "tests",
-            "devops",
-            "dba",
-            "security",
-            "ux",
-        ]
-        return label in valid_labels
+        return is_valid_label(label)
 
     def _check_security_constraints(self, task_data: dict) -> List[str]:
         """Check for security constraint violations."""
