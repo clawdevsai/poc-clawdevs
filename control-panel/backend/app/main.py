@@ -50,6 +50,7 @@ from app.api import chat as chat_api
 from app.api import agent_permissions as agent_permissions_api
 from app.api import context_mode as context_mode_api
 from app.api import context_mode_memory as context_mode_memory_api
+from app.api import context_mode_phase6 as context_mode_phase6_api
 from app.services.context_mode_metrics_broadcaster import ContextModeMetricsBroadcaster
 
 settings = get_settings()
@@ -161,6 +162,7 @@ app.include_router(chat_api.router, tags=["chat"])
 app.include_router(agent_permissions_api.router, tags=["agent-permissions"])
 app.include_router(context_mode_api.router, tags=["context-mode"])
 app.include_router(context_mode_memory_api.router, tags=["context-mode"])
+app.include_router(context_mode_phase6_api.router, tags=["phase6"])
 
 # WebSocket
 app.include_router(ws_api.router, tags=["websocket"])
