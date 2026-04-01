@@ -41,6 +41,12 @@ async def sync_sessions(db_session) -> None:
     base_path = Path(settings.openclaw_data_path)
     agent_slugs = get_discovered_agent_slugs()
 
+    # Performance: Batch fetch all existing sessions to avoid N+1 queries.
+    existing_sessions_result = await db_session.exec(select(Session))
+    existing_sessions_map = {
+        s.openclaw_session_id: s for s in existing_sessions_result.all()
+    }
+
     for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
 
@@ -67,15 +73,18 @@ async def sync_sessions(db_session) -> None:
             if not session_id:
                 continue
 
-            # Try to find existing session
-            result = await db_session.exec(
-                select(Session).where(Session.openclaw_session_id == session_id)
-            )
-            existing = result.first()
+            # Performance: Use the pre-fetched map instead of per-session queries.
+            existing = existing_sessions_map.get(session_id)
 
             # Parse timestamps
             updated_at = _parse_timestamp(oc_session.get("updatedAt"))
             last_active_at = updated_at  # Use updatedAt as lastActiveAt
+
+            # Performance: Only re-process and re-read session logs if the session is new
+            # or its updatedAt timestamp has progressed. This avoids expensive Disk I/O.
+            if existing and last_active_at and existing.last_active_at:
+                if last_active_at <= existing.last_active_at:
+                    continue
 
             status = _derive_session_status(updated_at)
 
@@ -157,6 +166,8 @@ async def sync_sessions(db_session) -> None:
                     ended_at=last_active_at if status == "completed" else None,
                 )
                 db_session.add(new_session)
+                # Keep the map up to date for this sync run
+                existing_sessions_map[session_id] = new_session
 
     await db_session.commit()
 
