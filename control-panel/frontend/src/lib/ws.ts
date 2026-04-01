@@ -22,7 +22,7 @@
 
 import { getWsBaseUrl } from "./api-base-url";
 
-type WSChannel = "dashboard" | "agents" | "approvals" | "cluster" | "crons";
+type WSChannel = "dashboard" | "agents" | "approvals" | "cluster" | "crons" | "context-mode-metrics";
 
 type WSListener = (data: unknown) => void;
 
