@@ -239,27 +239,27 @@ export default function MonitoringPage() {
             <StatsCard
               label="Compression Rate"
               value={`${(metrics.compression_rate * 100).toFixed(1)}%`}
-              trend={metrics.compression_rate > 0.8 ? "↑" : "→"}
+              trend={{ value: metrics.compression_rate > 0.8 ? 5 : 0 }}
               icon={BarChart3}
             />
             <StatsCard
               label="Tokens Saved/Hour"
               value={`${(metrics.tokens_saved_estimate / 1000).toFixed(0)}K`}
-              trend="↑"
+              trend={{ value: 10 }}
               icon={BarChart3}
             />
             <StatsCard
               label="Monthly Savings"
               value={`$${metrics.monthly_savings_estimate.toFixed(0)}`}
-              trend="↑"
+              trend={{ value: 15 }}
               icon={BarChart3}
             />
             <StatsCard
               label="Indexed Agents"
               value={`${metrics.indexed_agents}/${metrics.total_agents}`}
-              trend={
-                metrics.indexed_agents === metrics.total_agents ? "✓" : "→"
-              }
+              trend={{
+                value: metrics.indexed_agents === metrics.total_agents ? 100 : 50,
+              }}
               icon={BarChart3}
             />
           </div>

@@ -81,7 +81,7 @@ export function CompressionChart() {
               borderRadius: "8px",
               color: "hsl(var(--foreground))",
             }}
-            formatter={(value: number) => `${value}%`}
+            formatter={(value: any) => value ? `${value}%` : "-"}
           />
           <Line
             type="monotone"

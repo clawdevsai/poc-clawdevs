@@ -4,7 +4,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Save } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -46,10 +46,13 @@ export function AutoTuningConfig() {
     queryKey: ["context-mode", "config"],
     queryFn: fetchConfig,
     retry: false,
-    onSuccess: (data) => {
-      setFormData(data)
-    },
   })
+
+  useEffect(() => {
+    if (data) {
+      setFormData(data)
+    }
+  }, [data])
 
   const mutation = useMutation({
     mutationFn: updateConfig,
