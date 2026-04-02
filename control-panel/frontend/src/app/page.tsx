@@ -188,7 +188,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">Dashboard</h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
-            ClawDevs AI Control Panel — real-time overview
+            Painel de Controle ClawDevs AI — visão geral em tempo real
           </p>
         </div>
 
@@ -196,25 +196,25 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             icon={Clock}
-            label="Total Sessions (24h)"
+            label="Sessões Totais (24h)"
             value={totalSessions}
             loading={statsLoading}
           />
           <StatsCard
             icon={CheckSquare}
-            label="Pending Approvals"
+            label="Aprovações Pendentes"
             value={pendingApprovals}
             loading={statsLoading}
           />
           <StatsCard
             icon={Users}
-            label="Active Agents"
+            label="Agentes Ativos"
             value={activeAgents}
             loading={statsLoading}
           />
           <StatsCard
             icon={Activity}
-            label="Total Tasks"
+            label="Total de Tarefas"
             value={totalTasks}
             loading={statsLoading}
           />
@@ -233,20 +233,20 @@ export default function DashboardPage() {
           </div>
           <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
             <h2 className="text-sm font-semibold text-[hsl(var(--foreground))] mb-4">
-              Agent Cycles
+              Ciclos dos Agentes
             </h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">Memory Curator</span>
-                <span className="text-xs text-green-500">Healthy</span>
+                <span className="text-xs text-green-500">Saudável</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">Dev Backend</span>
-                <span className="text-xs text-green-500">Healthy</span>
+                <span className="text-xs text-green-500">Saudável</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">QA Engineer</span>
-                <span className="text-xs text-yellow-500">3 retries</span>
+                <span className="text-xs text-yellow-500">3 tentativas</span>
               </div>
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
-              Agents
+              Agentes
               {!agentsLoading && (
                 <span className="ml-2 text-[hsl(var(--muted-foreground))] font-normal">
                   ({agents.length})

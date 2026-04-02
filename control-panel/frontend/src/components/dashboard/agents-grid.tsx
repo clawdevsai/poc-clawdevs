@@ -24,6 +24,7 @@
 
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentAvatar } from "@/components/agents/agent-avatar"
@@ -84,6 +85,15 @@ function AgentCardSkeleton() {
   )
 }
 
+const STATUS_MAP: Record<string, string> = {
+  online: "online",
+  working: "trabalhando",
+  idle: "ocioso",
+  offline: "offline",
+  error: "erro",
+  stopped: "parado",
+}
+
 export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
   if (loading) {
     return (
@@ -103,7 +113,8 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
         <Link
           key={agent.id}
           href={`/agents/${agent.slug}`}
-          className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3 hover:border-[hsl(var(--primary)/0.4)] hover:bg-[hsl(var(--card))/0.8] transition-colors group"
+          className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3 hover:border-[hsl(var(--primary)/0.4)] hover:bg-[hsl(var(--card))/0.8] transition-colors group focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:outline-none"
+          aria-label={`Ver detalhes do agente ${agent.display_name}`}
         >
           <div className="flex items-center gap-3">
             <AgentAvatar
@@ -130,10 +141,11 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
                     ? "bg-yellow-400"
                     : effectiveStatus === "error"
                     ? "bg-red-400"
-                    : "bg-white/30"
+                    : "bg-white/30",
+                  effectiveStatus === "working" && "animate-pulse"
                 )}
               />
-              {effectiveStatus}
+              {STATUS_MAP[effectiveStatus] || effectiveStatus}
             </Badge>
           </div>
           <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
@@ -151,7 +163,10 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
             </Tooltip>
             <span>
               {(agent.last_heartbeat ?? agent.last_heartbeat_at)
-                ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
+                ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), {
+                    addSuffix: true,
+                    locale: ptBR,
+                  })
                 : "sem heartbeat"}
             </span>
           </div>
