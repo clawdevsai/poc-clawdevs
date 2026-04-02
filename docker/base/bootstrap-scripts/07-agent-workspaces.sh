@@ -145,6 +145,42 @@ for ws_agent in "${AGENTS[@]}"; do
   mkdir -p "${ws_dir}/memory"
 done
 
+# Create artifact tracking + shared projects link for all agents
+for ws_agent in "${AGENTS[@]}"; do
+  ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
+  mkdir -p "${ws_dir}/artifacts"
+
+  # Shared projects access
+  ln -sfn "${OPENCLAW_STATE_DIR}/projects" "${ws_dir}/projects"
+
+  # Artifact schema (v1)
+  if [ ! -f "${ws_dir}/artifacts/artifacts.schema.json" ]; then
+    cat > "${ws_dir}/artifacts/artifacts.schema.json" <<'EOF'
+{
+  "schema_version": "v1",
+  "fields": {
+    "command": "string",
+    "args": "array",
+    "cwd": "string",
+    "started_at": "string",
+    "finished_at": "string",
+    "exit_code": "number",
+    "stdout_hash": "string",
+    "stderr_hash": "string",
+    "files_changed": "array",
+    "diffs_hash": "string",
+    "tests_run": "array"
+  }
+}
+EOF
+  fi
+
+  # Artifact log seed (v1)
+  if [ ! -f "${ws_dir}/artifacts/artifacts.log.jsonl" ]; then
+    printf '{"schema_version":"v1"}\n' > "${ws_dir}/artifacts/artifacts.log.jsonl"
+  fi
+done
+
 # --- Sistema de Memória Cross-Agent (aiox-core pattern) ---
 MEMORY_BASE="${OPENCLAW_STATE_DIR}/memory"
 mkdir -p "${MEMORY_BASE}/shared"
