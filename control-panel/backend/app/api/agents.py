@@ -95,6 +95,7 @@ class AgentsListResponse(BaseModel):
 
 @router.get("", response_model=AgentsListResponse)
 async def list_agents(
+    _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """List all agents."""
