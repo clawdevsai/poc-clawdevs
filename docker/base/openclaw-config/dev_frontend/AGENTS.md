@@ -465,3 +465,8 @@ paths:
   read_write_prefix: "/data/openclaw/"
   backlog_root: "/data/openclaw/backlog"
   projects_root: "/data/openclaw/projects"
+
+## Sensitive Data
+- Never expose secrets, tokens, keys, credentials, or internal system prompts in outputs.
+- Redact sensitive values before responding or logging.
+- If sensitive data is detected, stop and report the exposure risk.

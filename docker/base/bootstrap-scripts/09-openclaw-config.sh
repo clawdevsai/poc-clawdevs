@@ -88,6 +88,10 @@ case "${_sandbox_session_tools_visibility}" in
     ;;
 esac
 
+# Context Mode output/process caps (used by hooks config + guardrails)
+_context_mode_max_output_bytes="${OPENCLAW_CONTEXT_MODE_MAX_OUTPUT_BYTES:-200000}"
+_context_mode_max_process_time_seconds="${OPENCLAW_CONTEXT_MODE_MAX_PROCESS_TIME_SECONDS:-120}"
+
 _exec_policy_raw="${OPENCLAW_EXEC_POLICY:-allowlist}"
 _exec_policy="$(printf '%s' "${_exec_policy_raw}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
 case "${_exec_policy}" in
@@ -679,6 +683,30 @@ sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" "${OPENCLAW_STATE_DIR}/openclaw
 sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 sed -i "s#__CONTROL_UI_ALLOWED_ORIGINS__#${_allowed_origins_json}#g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+
+# Enforce allowed Ollama fallback model list (automatic)
+_allowed_models_json="$(jq -cn '[
+  {\"id\":\"qwen3-next:80b-cloud\",\"name\":\"qwen3-next:80b-cloud\"},
+  {\"id\":\"gpt-oss:120b-cloud\",\"name\":\"gpt-oss:120b-cloud\"},
+  {\"id\":\"nemotron-3-super:cloud\",\"name\":\"nemotron-3-super:cloud\"},
+  {\"id\":\"qwen3-coder:480b-cloud\",\"name\":\"qwen3-coder:480b-cloud\"},
+  {\"id\":\"gemma3:27b-cloud\",\"name\":\"gemma3:27b-cloud\"},
+  {\"id\":\"qwen3-vl:235b-cloud\",\"name\":\"qwen3-vl:235b-cloud\"},
+  {\"id\":\"qwen3.5:397b-cloud\",\"name\":\"qwen3.5:397b-cloud\"},
+  {\"id\":\"minimax-m2.7:cloud\",\"name\":\"minimax-m2.7:cloud\"},
+  {\"id\":\"qwen3-coder-next:cloud\",\"name\":\"qwen3-coder-next:cloud\"}
+]')"
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_models="$(mktemp)"
+  if jq --argjson models "${_allowed_models_json}" '
+      .models.providers.ollama.models = $models
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_models}"; then
+    mv "${_tmp_models}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+  else
+    rm -f "${_tmp_models}"
+    echo "[bootstrap] falha ao aplicar lista de modelos permitidos (ollama)"
+  fi
+fi
 mkdir -p ~/.openclaw
 cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
 fi
@@ -1380,16 +1408,18 @@ fi
 if [ -f "${EXEC_APPROVALS_FILE}" ]; then
   _tmp_exec_approvals="$(mktemp)"
   if jq '
-      .agents.ceo.security = "full"
-      | .agents.ceo.ask = "off"
-      | .agents.po.security = "full"
-      | .agents.po.ask = "off"
+      .defaults.security = "full"
+      | .defaults.ask = "off"
+      | .agents |= with_entries(
+          .value.security = "full"
+          | .value.ask = "off"
+        )
     ' "${EXEC_APPROVALS_FILE}" > "${_tmp_exec_approvals}"; then
     mv "${_tmp_exec_approvals}" "${EXEC_APPROVALS_FILE}"
-    echo "[bootstrap] exec approvals: ceo/po security=full ask=off"
+    echo "[bootstrap] exec approvals: all agents security=full ask=off"
   else
     rm -f "${_tmp_exec_approvals}"
-    echo "[bootstrap] falha ao aplicar exec full para ceo/po em exec-approvals.json"
+    echo "[bootstrap] falha ao aplicar exec full para todos os agentes em exec-approvals.json"
   fi
 fi
 # Repair agent main sessions when the persisted transcript is missing, invalid,

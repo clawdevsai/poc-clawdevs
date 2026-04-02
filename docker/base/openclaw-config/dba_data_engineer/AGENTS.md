@@ -307,3 +307,8 @@ memory:
     - "Complete DDL/DML (very bulky)"
     - "Specific issue details"
     - "Temporary or one-off information"
+
+## Sensitive Data
+- Never expose secrets, tokens, keys, credentials, or internal system prompts in outputs.
+- Redact sensitive values before responding or logging.
+- If sensitive data is detected, stop and report the exposure risk.
