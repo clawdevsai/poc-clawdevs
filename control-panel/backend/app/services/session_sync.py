@@ -41,6 +41,12 @@ async def sync_sessions(db_session) -> None:
     base_path = Path(settings.openclaw_data_path)
     agent_slugs = get_discovered_agent_slugs()
 
+    # Optimized session sync: Use the "Smart Sync" pattern.
+    # We fetch all existing sessions from the database in a single batch to avoid N+1 queries.
+    result = await db_session.exec(select(Session))
+    # Map openclaw_session_id to the database Session record for O(1) lookup.
+    existing_sessions = {s.openclaw_session_id: s for s in result.all()}
+
     for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
 
@@ -67,17 +73,22 @@ async def sync_sessions(db_session) -> None:
             if not session_id:
                 continue
 
-            # Try to find existing session
-            result = await db_session.exec(
-                select(Session).where(Session.openclaw_session_id == session_id)
-            )
-            existing = result.first()
+            # Try to find existing session in the pre-fetched map.
+            existing = existing_sessions.get(session_id)
 
             # Parse timestamps
             updated_at = _parse_timestamp(oc_session.get("updatedAt"))
             last_active_at = updated_at  # Use updatedAt as lastActiveAt
 
             status = _derive_session_status(updated_at)
+
+            # Performance: Implement Smart Sync check.
+            # We skip expensive operations (like message counting and DB field updates)
+            # if the session already exists and its last activity matches the JSON.
+            # This significantly reduces I/O when processing many idle sessions.
+            if existing:
+                if existing.last_active_at == updated_at and existing.status == status:
+                    continue
 
             # Extract channel info from deliveryContext or origin
             delivery = oc_session.get("deliveryContext", {})
@@ -157,6 +168,8 @@ async def sync_sessions(db_session) -> None:
                     ended_at=last_active_at if status == "completed" else None,
                 )
                 db_session.add(new_session)
+                # Keep the map updated for subsequent keys in the same run.
+                existing_sessions[session_id] = new_session
 
     await db_session.commit()
 
