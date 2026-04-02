@@ -30,6 +30,7 @@ from sqlmodel import select
 from app.core.database import AsyncSessionLocal
 from app.models import Agent, Task
 from app.services.openclaw_client import openclaw_client
+from app.services.memory_lifecycle import compact_memory
 from app.services.task_contracts import validate_contract
 from app.services.task_workflow import (
     FINAL_WORKFLOW_STATES,
@@ -367,6 +368,15 @@ async def _run_task_pipeline(session, task: Task, target_agent: Agent) -> None:
                 contract_name="consolidate",
                 prompt=consolidate_prompt,
             )
+
+            try:
+                await compact_memory(
+                    agent_slug=target_agent.slug,
+                    task_id=str(task.id),
+                    reason="task_completed",
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Memory compaction failed: %s", exc)
 
             task.status = "done"
             task.workflow_state = WORKFLOW_COMPLETED

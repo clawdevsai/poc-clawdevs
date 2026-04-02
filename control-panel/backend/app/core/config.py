@@ -141,6 +141,10 @@ class Settings(BaseSettings):
     ORCH_PARALLELISM_COST_MULTIPLIER: float = Field(default=1.2)
     ORCH_PARALLELISM_LATENCY_MULTIPLIER: float = Field(default=1.2)
 
+    # Memory compaction thresholds
+    MEMORY_COMPACTION_SIZE_THRESHOLD: int = Field(default=200_000)
+    MEMORY_COMPACTION_MAX_AGE_SECONDS: int = Field(default=86_400)
+
     model_config = {"env_prefix": "PANEL_", "env_file": ".env", "extra": "allow"}
 
 
