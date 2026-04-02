@@ -25,7 +25,12 @@
   3. Parallelism defaults to sequential and only enables after a complexity threshold is met
   4. Agents can read/write persistent memory via a unified access layer
   5. Memory lifecycle enforces create → compress → summarize → archive with versioned merge rules
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Deterministic orchestration loop + contract validation
+- [ ] 02-02-PLAN.md — Parallelism gate with adaptive thresholds
+- [ ] 02-03-PLAN.md — Unified memory lifecycle, compaction, and merge rules
 
 ### Phase 3: Monitoring + Control Panel
 **Goal**: CTO can observe system health and manage runtime settings via the control panel
