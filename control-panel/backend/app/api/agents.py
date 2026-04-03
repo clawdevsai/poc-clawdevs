@@ -26,7 +26,7 @@ from pydantic import BaseModel
 from datetime import datetime, UTC
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, AdminUser
 from app.models import Agent
 from app.services.agent_sync import sync_agents_runtime, sync_agents
 from app.services.agent_activity import get_agent_current_activity
@@ -164,7 +164,7 @@ class SyncResponse(BaseModel):
 
 @router.post("/admin/sync", response_model=SyncResponse)
 async def sync_agents_admin(
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """

@@ -26,7 +26,7 @@ from pydantic import BaseModel
 from datetime import datetime, UTC
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, AdminUser
 from app.models import Agent, CronExecution
 
 router = APIRouter()
@@ -171,7 +171,7 @@ async def list_cron_executions(
 @router.post("/{agent_slug}/trigger", response_model=TriggerCronResponse)
 async def trigger_cron_now(
     agent_slug: str,
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(select(Agent).where(Agent.slug == agent_slug))
