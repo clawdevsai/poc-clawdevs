@@ -131,8 +131,7 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: openclaw-image-build-with-cache
 .PHONY: images-push images-release
 .PHONY: spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist
-.PHONY: gen-secret
-.PHONY: cypress cypress:ui
+.PHONY: gen-secret cypress cypress-ui
 
 gen-secret:
 	@python -c "import secrets; print(secrets.token_hex(32))"
@@ -168,7 +167,7 @@ cypress:
 	@cd control-panel/frontend && pnpm exec cypress run
 	@echo "[cypress] Testes concluidos."
 
-cypress:ui:
+cypress-ui:
 	@echo "[cypress] Verificando se a aplicacao esta rodando em $(CYPRESS_FRONTEND_URL)..."
 	@if curl -s -o /dev/null -w '' "$(CYPRESS_FRONTEND_URL)" 2>/dev/null; then \
 		echo "[cypress] Aplicacao ja esta em execucao."; \
@@ -218,7 +217,7 @@ help:
 	@echo "make migrate       Executa migrations Alembic"
 	@echo "make gen-secret     Gera secret key aleatoria (32 bytes hex)"
 	@echo "make cypress        Executa testes E2E Cypress (headless, inicia app se necessario)"
-	@echo "make cypress:ui     Executa testes E2E Cypress (interface grafica, inicia app se necessario)"
+	@echo "make cypress-ui     Executa testes E2E Cypress (interface grafica, inicia app se necessario)"
 
 preflight:
 	@if [ ! -f "$(ENV_FILE)" ]; then \
