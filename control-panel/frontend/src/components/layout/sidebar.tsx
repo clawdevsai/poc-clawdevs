@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   { href: "/memory", label: "Memória", icon: Brain },
   { href: "/crons", label: "Crons", icon: Clock },
   { href: "/cluster", label: "Cluster", icon: Server },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -75,7 +75,7 @@ export function Sidebar() {
               <span className="text-[hsl(var(--primary))] font-bold text-lg">ClawDevs</span>
               <span className="text-[hsl(var(--muted-foreground))] text-xs">AI</span>
             </div>
-            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Control Panel</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Painel de Controle</p>
           </div>
         )}
         <Tooltip>
