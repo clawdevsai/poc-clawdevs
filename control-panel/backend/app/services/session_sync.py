@@ -41,6 +41,11 @@ async def sync_sessions(db_session) -> None:
     base_path = Path(settings.openclaw_data_path)
     agent_slugs = get_discovered_agent_slugs()
 
+    # Performance: Batch fetch all existing sessions to avoid N+1 queries.
+    # In systems with many sessions, this significantly reduces DB round-trips.
+    result = await db_session.exec(select(Session))
+    existing_sessions = {s.openclaw_session_id: s for s in result.all()}
+
     for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
 
@@ -67,17 +72,26 @@ async def sync_sessions(db_session) -> None:
             if not session_id:
                 continue
 
-            # Try to find existing session
-            result = await db_session.exec(
-                select(Session).where(Session.openclaw_session_id == session_id)
-            )
-            existing = result.first()
+            # Performance: Use the pre-fetched session map
+            existing = existing_sessions.get(session_id)
 
             # Parse timestamps
             updated_at = _parse_timestamp(oc_session.get("updatedAt"))
             last_active_at = updated_at  # Use updatedAt as lastActiveAt
-
             status = _derive_session_status(updated_at)
+
+            # Performance: Smart Sync - skip processing if timestamps haven't changed
+            # and status remains consistent (e.g. both completed).
+            # message counting is expensive as it requires reading the transcript file.
+            if existing and existing.last_active_at == last_active_at:
+                if existing.status == status:
+                    continue
+                # If only status changed (active -> completed due to timeout),
+                # we only update status without re-counting messages.
+                existing.status = status
+                if status == "completed" and existing.ended_at is None:
+                    existing.ended_at = last_active_at
+                continue
 
             # Extract channel info from deliveryContext or origin
             delivery = oc_session.get("deliveryContext", {})
@@ -157,6 +171,8 @@ async def sync_sessions(db_session) -> None:
                     ended_at=last_active_at if status == "completed" else None,
                 )
                 db_session.add(new_session)
+                # Ensure it's in our map for the next iteration (in case of same sessionId)
+                existing_sessions[session_id] = new_session
 
     await db_session.commit()
 
