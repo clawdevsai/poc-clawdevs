@@ -52,6 +52,7 @@ import { customInstance } from "@/lib/axios-instance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Agent {
   slug: string;
@@ -1319,60 +1320,50 @@ function ChatPageContent() {
 
                 <div className="mt-1 flex items-center justify-between px-1 pb-0.5">
                   <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
-                      aria-label="Anexar arquivo"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
-                      aria-label="Usar microfone"
-                    >
-                      <Mic className="h-4 w-4" />
-                    </button>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50" aria-label="Anexar arquivo">
+                        <Paperclip className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger><TooltipContent>Anexar arquivo</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50" aria-label="Usar microfone">
+                        <Mic className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger><TooltipContent>Usar microfone</TooltipContent></Tooltip>
                   </div>
 
                   <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
-                      aria-label="Adicionar ação"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!selectedAgent || messages.length === 0) return;
-                        const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
-                        const filename = `chat-${selectedAgent}-${stamp}.md`;
-                        downloadTextFile(
-                          buildChatExportMarkdown(
-                            messages,
-                            "Você",
-                            selectedAgentLabel || "Assistente"
-                          ),
-                          filename
-                        );
-                      }}
-                      disabled={!selectedAgent || messages.length === 0}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50 disabled:cursor-not-allowed disabled:opacity-40"
-                      aria-label="Exportar conversa"
-                      title="Exportar conversa (Markdown)"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={sendMessage}
-                      disabled={sending || !selectedAgent || !input.trim()}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
-                      aria-label="Enviar mensagem"
-                    >
-                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </button>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50" aria-label="Adicionar ação">
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger><TooltipContent>Adicionar ação</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!selectedAgent || messages.length === 0) return;
+                          const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+                          const filename = `chat-${selectedAgent}-${stamp}.md`;
+                          downloadTextFile(buildChatExportMarkdown(messages, "Você", selectedAgentLabel || "Assistente"), filename);
+                        }}
+                        disabled={!selectedAgent || messages.length === 0}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50 disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="Exportar conversa"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger><TooltipContent>Exportar conversa (Markdown)</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
+                      <button
+                        onClick={sendMessage}
+                        disabled={sending || !selectedAgent || !input.trim()}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
+                        aria-label="Enviar mensagem"
+                      >
+                        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      </button>
+                    </TooltipTrigger><TooltipContent>Enviar mensagem</TooltipContent></Tooltip>
                   </div>
                 </div>
               </div>
