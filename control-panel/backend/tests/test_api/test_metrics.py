@@ -133,3 +133,93 @@ class TestOverviewMetrics:
         assert data["backlog_count"] == 1
         assert data["tasks_in_progress"] == 1
         assert data["tasks_completed"] == 1
+
+
+class TestTaskPerformanceMetrics:
+    """Test cycle time and throughput metrics."""
+
+    @pytest.mark.asyncio
+    async def test_cycle_time_metrics_windowed(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+    ):
+        """Ensure cycle time metrics compute avg and p95 in window."""
+        now = datetime.now(UTC).replace(tzinfo=None)
+        durations = [60, 120, 300]
+        for idx, seconds in enumerate(durations):
+            db_session.add(
+                Task(
+                    title=f"Done {idx}",
+                    status="done",
+                    created_at=now - timedelta(minutes=5, seconds=seconds),
+                    updated_at=now - timedelta(minutes=5),
+                )
+            )
+        db_session.add(
+            Task(
+                title="Out of window",
+                status="done",
+                created_at=now - timedelta(hours=2),
+                updated_at=now - timedelta(hours=2),
+            )
+        )
+        await db_session.commit()
+
+        response = await client.get(
+            "/metrics/cycle-time?window_minutes=30", headers=auth_headers
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["window_minutes"] == 30
+        assert data["cycle_time_avg_seconds"] == pytest.approx(160.0)
+        assert data["cycle_time_p95_seconds"] == pytest.approx(300.0)
+
+    @pytest.mark.asyncio
+    async def test_throughput_metrics_by_label(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+    ):
+        """Ensure throughput metrics return counts by label."""
+        now = datetime.now(UTC).replace(tzinfo=None)
+        db_session.add(
+            Task(
+                title="Backend 1",
+                status="done",
+                label="back_end",
+                created_at=now - timedelta(minutes=20),
+                updated_at=now - timedelta(minutes=10),
+            )
+        )
+        db_session.add(
+            Task(
+                title="Backend 2",
+                status="done",
+                label="back_end",
+                created_at=now - timedelta(minutes=25),
+                updated_at=now - timedelta(minutes=12),
+            )
+        )
+        db_session.add(
+            Task(
+                title="Frontend",
+                status="done",
+                label="front_end",
+                created_at=now - timedelta(minutes=15),
+                updated_at=now - timedelta(minutes=5),
+            )
+        )
+        await db_session.commit()
+
+        response = await client.get(
+            "/metrics/throughput?window_minutes=30&group_by=label",
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        items = {item["group"]: item["completed_count"] for item in data["items"]}
+        assert items["back_end"] == 2
+        assert items["front_end"] == 1
