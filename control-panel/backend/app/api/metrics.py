@@ -35,6 +35,7 @@ from app.services.context_metrics import (
     DEFAULT_WINDOW_MINUTES,
     validate_window_minutes,
 )
+from app.services.task_metrics import TaskMetricsService
 
 router = APIRouter()
 
@@ -60,6 +61,23 @@ class OverviewMetrics(BaseModel):
     backlog_count: int
     tasks_in_progress: int
     tasks_completed: int
+
+
+class CycleTimeResponse(BaseModel):
+    cycle_time_avg_seconds: float
+    cycle_time_p95_seconds: float
+    window_minutes: int
+
+
+class ThroughputItem(BaseModel):
+    group: str
+    completed_count: int
+
+
+class ThroughputResponse(BaseModel):
+    window_minutes: int
+    group_by: str
+    items: list[ThroughputItem]
 
 
 class MetricResponse(BaseModel):
@@ -230,3 +248,40 @@ async def overview_metrics(
 
     payload = await compute_overview_metrics(session, window_minutes)
     return OverviewMetrics(**payload)
+
+
+@router.get("/cycle-time", response_model=CycleTimeResponse)
+async def cycle_time_metrics(
+    _: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
+):
+    try:
+        validate_window_minutes(window_minutes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    service = TaskMetricsService(session)
+    payload = await service.get_cycle_time(window_minutes)
+    return CycleTimeResponse(window_minutes=window_minutes, **payload)
+
+
+@router.get("/throughput", response_model=ThroughputResponse)
+async def throughput_metrics(
+    _: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
+    group_by: str = Query("label"),
+):
+    try:
+        validate_window_minutes(window_minutes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    service = TaskMetricsService(session)
+    try:
+        items = await service.get_throughput(window_minutes, group_by=group_by)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return ThroughputResponse(window_minutes=window_minutes, group_by=group_by, items=items)
