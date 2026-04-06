@@ -132,7 +132,7 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: images-push images-release
 .PHONY: spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist
 .PHONY: gen-secret
-.PHONY: cypress cypress:ui
+.PHONY: cypress cypress-ui
 
 gen-secret:
 	@python -c "import secrets; print(secrets.token_hex(32))"
@@ -168,7 +168,7 @@ cypress:
 	@cd control-panel/frontend && pnpm exec cypress run
 	@echo "[cypress] Testes concluidos."
 
-cypress:ui:
+cypress-ui:
 	@echo "[cypress] Verificando se a aplicacao esta rodando em $(CYPRESS_FRONTEND_URL)..."
 	@if curl -s -o /dev/null -w '' "$(CYPRESS_FRONTEND_URL)" 2>/dev/null; then \
 		echo "[cypress] Aplicacao ja esta em execucao."; \
