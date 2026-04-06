@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from datetime import datetime, UTC
-from typing import Any, Optional, Dict
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, JSON
@@ -31,7 +31,7 @@ class RuntimeSetting(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     key: str = Field(index=True)
-    value_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    value_json: Optional[Any] = Field(default=None, sa_column=Column(JSON))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
@@ -43,10 +43,10 @@ class RuntimeSettingAudit(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     setting_key: str = Field(index=True)
-    previous_value_json: Optional[Dict[str, Any]] = Field(
+    previous_value_json: Optional[Any] = Field(
         default=None, sa_column=Column(JSON)
     )
-    new_value_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    new_value_json: Optional[Any] = Field(default=None, sa_column=Column(JSON))
     action: str = Field(default="update")
     confirm_text: Optional[str] = None
     created_at: datetime = Field(
