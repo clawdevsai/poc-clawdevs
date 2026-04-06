@@ -212,30 +212,39 @@ async def overview_metrics(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    """
+    Get overview metrics for the dashboard.
+    Optimized with SQL aggregations to avoid fetching full objects.
+    """
     since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
 
-    agents_result = await session.exec(
-        select(Agent).where(col(Agent.status).in_(["online", "working"]))
+    # Use func.count() and func.sum() to perform aggregations at the database level.
+    # This reduces data transfer and memory usage by avoiding fetching full ORM objects.
+    active_agents_q = await session.exec(
+        select(func.count(Agent.id)).where(col(Agent.status).in_(["online", "working"]))
     )
-    active_agents = len(agents_result.all())
+    active_agents = active_agents_q.one()
 
-    approvals_result = await session.exec(
-        select(Approval).where(Approval.status == "pending")
+    pending_approvals_q = await session.exec(
+        select(func.count(Approval.id)).where(Approval.status == "pending")
     )
-    pending_approvals = len(approvals_result.all())
+    pending_approvals = pending_approvals_q.one()
 
-    tasks_result = await session.exec(
-        select(Task).where(col(Task.status).in_(["inbox", "in_progress", "review"]))
+    tasks_q = await session.exec(
+        select(func.count(Task.id)).where(
+            col(Task.status).in_(["inbox", "in_progress", "review"])
+        )
     )
-    open_tasks = len(tasks_result.all())
+    open_tasks = tasks_q.one()
 
-    metrics_result = await session.exec(
-        select(Metric).where(
+    tokens_24h_q = await session.exec(
+        select(func.sum(Metric.value)).where(
             col(Metric.metric_type) == "tokens_used",
             col(Metric.period_start) >= since,
         )
     )
-    tokens_24h = sum(m.value for m in metrics_result.all())
+    # Ensure we return 0.0 if there are no matching metrics.
+    tokens_24h = tokens_24h_q.one() or 0.0
 
     return OverviewMetrics(
         active_agents=active_agents,
