@@ -9,6 +9,7 @@
     "start": "next start --hostname 0.0.0.0",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",
+    "typecheck": "pnpm type-check",
     "orval": "orval",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
