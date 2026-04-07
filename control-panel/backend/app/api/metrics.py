@@ -214,28 +214,31 @@ async def overview_metrics(
 ):
     since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
 
-    agents_result = await session.exec(
-        select(Agent).where(col(Agent.status).in_(["online", "working"]))
-    )
-    active_agents = len(agents_result.all())
+    # BOLT OPTIMIZATION: Use database-level aggregations (count/sum) instead of
+    # fetching full ORM objects into Python just to count/sum them.
+    # This prevents O(N) memory overhead and significantly reduces data transfer.
 
-    approvals_result = await session.exec(
-        select(Approval).where(Approval.status == "pending")
+    active_agents_query = select(func.count(Agent.id)).where(
+        col(Agent.status).in_(["online", "working"])
     )
-    pending_approvals = len(approvals_result.all())
+    active_agents = (await session.exec(active_agents_query)).one()
 
-    tasks_result = await session.exec(
-        select(Task).where(col(Task.status).in_(["inbox", "in_progress", "review"]))
+    pending_approvals_query = select(func.count(Approval.id)).where(
+        Approval.status == "pending"
     )
-    open_tasks = len(tasks_result.all())
+    pending_approvals = (await session.exec(pending_approvals_query)).one()
 
-    metrics_result = await session.exec(
-        select(Metric).where(
-            col(Metric.metric_type) == "tokens_used",
-            col(Metric.period_start) >= since,
-        )
+    open_tasks_query = select(func.count(Task.id)).where(
+        col(Task.status).in_(["inbox", "in_progress", "review"])
     )
-    tokens_24h = sum(m.value for m in metrics_result.all())
+    open_tasks = (await session.exec(open_tasks_query)).one()
+
+    tokens_sum_query = select(func.sum(Metric.value)).where(
+        col(Metric.metric_type) == "tokens_used",
+        col(Metric.period_start) >= since,
+    )
+    tokens_sum_val = (await session.exec(tokens_sum_query)).one()
+    tokens_24h = float(tokens_sum_val or 0.0)
 
     return OverviewMetrics(
         active_agents=active_agents,
