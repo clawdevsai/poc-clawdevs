@@ -29,6 +29,17 @@ import { Search } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { customInstance } from "@/lib/axios-instance"
 
 // ---- Types -----------------------------------------------------------------
@@ -82,13 +93,13 @@ function formatDate(iso: string) {
 
 function RowSkeleton() {
   return (
-    <tr className="border-b border-[hsl(var(--border))]">
+    <TableRow className="hover:bg-transparent">
       {Array.from({ length: 7 }).map((_, i) => (
-        <td key={i} className="px-4 py-3">
+        <TableCell key={i}>
           <Skeleton className="h-4 w-full" />
-        </td>
+        </TableCell>
       ))}
-    </tr>
+    </TableRow>
   )
 }
 
@@ -135,101 +146,98 @@ export default function SessionsPage() {
           <form onSubmit={handleSearch} className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
-              <input
+              <Input
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Search by session ID or agent…"
-                className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] w-64"
+                className="h-9 w-64 pl-8"
               />
             </div>
-            <button
-              type="submit"
-              className="px-3 py-1.5 text-sm rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity"
-            >
+            <Button type="submit" size="sm">
               Search
-            </button>
+            </Button>
           </form>
         </div>
 
         {/* Table */}
-        <div className="rounded-xl border border-[hsl(var(--border))] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-[hsl(var(--muted))]/30 hover:bg-[hsl(var(--muted))]/30">
+                  <TableHead>
                     Session ID
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead>
                     Channel
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead>
                     Agent
-                  </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead className="text-right">
                     Messages
-                  </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead className="text-right">
                     Tokens
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead>
                     Started
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead>
                     Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {isLoading ? (
                   Array.from({ length: 8 }).map((_, i) => <RowSkeleton key={i} />)
                 ) : sessions.length === 0 ? (
-                  <tr>
-                    <td
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
                       colSpan={7}
-                      className="px-4 py-12 text-center text-sm text-[hsl(var(--muted-foreground))]"
+                      className="py-12 text-center text-sm text-[hsl(var(--muted-foreground))]"
                     >
                       No sessions found.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   sessions.map((session) => (
-                    <tr
+                    <TableRow
                       key={session.id}
                       onClick={() => router.push(`/sessions/${session.id}`)}
-                      className="border-b border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/20 cursor-pointer transition-colors"
+                      className="cursor-pointer"
                     >
-                      <td className="px-4 py-3 font-mono text-xs text-[hsl(var(--foreground))]">
+                      <TableCell className="font-mono text-xs text-[hsl(var(--foreground))]">
                         {(session.openclaw_session_id ?? session.id).slice(0, 16)}…
-                      </td>
-                      <td className="px-4 py-3 text-[hsl(var(--foreground))]">
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--foreground))]">
                         {session.channel_type}
-                      </td>
-                      <td className="px-4 py-3 text-[hsl(var(--foreground))]">
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--foreground))]">
                         {session.agent_slug}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-[hsl(var(--foreground))]">
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-[hsl(var(--foreground))]">
                         {session.message_count ?? 0}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-[hsl(var(--foreground))]">
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-[hsl(var(--foreground))]">
                         {(session.token_count ?? 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">
+                      </TableCell>
+                      <TableCell className="text-xs text-[hsl(var(--muted-foreground))]">
                         {formatDate(session.started_at)}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <Badge variant={statusVariant(session.status)}>
                           {session.status}
                         </Badge>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
         {/* Pagination */}
         <div className="flex items-center justify-between text-sm text-[hsl(var(--muted-foreground))]">
@@ -237,23 +245,25 @@ export default function SessionsPage() {
             {isLoading ? "Loading…" : `${total} session${total !== 1 ? "s" : ""} total`}
           </span>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || isLoading}
-              className="px-3 py-1 rounded-lg border border-[hsl(var(--border))] disabled:opacity-40 hover:bg-[hsl(var(--muted))]/30 transition-colors"
+              variant="outline"
+              size="sm"
             >
               Previous
-            </button>
+            </Button>
             <span>
               {page} / {totalPages}
             </span>
-            <button
+            <Button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || isLoading}
-              className="px-3 py-1 rounded-lg border border-[hsl(var(--border))] disabled:opacity-40 hover:bg-[hsl(var(--muted))]/30 transition-colors"
+              variant="outline"
+              size="sm"
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       </div>
