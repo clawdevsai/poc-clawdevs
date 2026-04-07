@@ -690,15 +690,15 @@ sed -i "s#__CONTROL_UI_ALLOWED_ORIGINS__#${_allowed_origins_json}#g" "${OPENCLAW
 _allowed_models_csv="qwen3-next:80b-cloud,gpt-oss:120b-cloud,nemotron-3-super:cloud,qwen3-coder:480b-cloud,gemma3:27b-cloud,qwen3-vl:235b-cloud,qwen3.5:397b-cloud,minimax-m2.7:cloud,qwen3-coder-next:cloud"
 export OPENCLAW_OLLAMA_ALLOWED_MODELS="${_allowed_models_csv}"
 _allowed_models_json="$(jq -cn '[
-  {\"id\":\"qwen3-next:80b-cloud\",\"name\":\"qwen3-next:80b-cloud\"},
-  {\"id\":\"gpt-oss:120b-cloud\",\"name\":\"gpt-oss:120b-cloud\"},
-  {\"id\":\"nemotron-3-super:cloud\",\"name\":\"nemotron-3-super:cloud\"},
-  {\"id\":\"qwen3-coder:480b-cloud\",\"name\":\"qwen3-coder:480b-cloud\"},
-  {\"id\":\"gemma3:27b-cloud\",\"name\":\"gemma3:27b-cloud\"},
-  {\"id\":\"qwen3-vl:235b-cloud\",\"name\":\"qwen3-vl:235b-cloud\"},
-  {\"id\":\"qwen3.5:397b-cloud\",\"name\":\"qwen3.5:397b-cloud\"},
-  {\"id\":\"minimax-m2.7:cloud\",\"name\":\"minimax-m2.7:cloud\"},
-  {\"id\":\"qwen3-coder-next:cloud\",\"name\":\"qwen3-coder-next:cloud\"}
+  {"id":"qwen3-next:80b-cloud","name":"qwen3-next:80b-cloud"},
+  {"id":"gpt-oss:120b-cloud","name":"gpt-oss:120b-cloud"},
+  {"id":"nemotron-3-super:cloud","name":"nemotron-3-super:cloud"},
+  {"id":"qwen3-coder:480b-cloud","name":"qwen3-coder:480b-cloud"},
+  {"id":"gemma3:27b-cloud","name":"gemma3:27b-cloud"},
+  {"id":"qwen3-vl:235b-cloud","name":"qwen3-vl:235b-cloud"},
+  {"id":"qwen3.5:397b-cloud","name":"qwen3.5:397b-cloud"},
+  {"id":"minimax-m2.7:cloud","name":"minimax-m2.7:cloud"},
+  {"id":"qwen3-coder-next:cloud","name":"qwen3-coder-next:cloud"}
 ]')"
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_models="$(mktemp)"
