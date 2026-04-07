@@ -43,9 +43,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Rework global app shell components (`layout`, `sidebar`, `header`)
-- [ ] 02-02: Align common UI primitives (cards/tables/badges/buttons/forms)
-- [ ] 02-03: Validate route navigation and responsive behavior after shell migration
+- [x] 02-01: Rework global app shell components (`layout`, `sidebar`, `header`)
+- [x] 02-02: Align common UI primitives (cards/tables/badges/buttons/forms)
+- [x] 02-03: Validate route navigation and responsive behavior after shell migration
 
 ### Phase 3: Dashboard and Chart Modernization
 **Goal**: Modernize dashboard sections and chart experience with template consistency

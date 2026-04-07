@@ -11,13 +11,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **PLAT-01**: Frontend runs on `next@16.2.2` with successful build/start in current environment
 - [x] **PLAT-02**: Tailwind CSS remains on `v4.2.x` and follows official Next.js setup (`postcss` + global css import model)
-- [ ] **PLAT-03**: Existing App Router routes remain accessible after UI migration (`/`, `/chat`, `/sessions`, `/tasks`, `/monitoring`, `/settings`, `/agents`, `/approvals`)
+- [x] **PLAT-03**: Existing App Router routes remain accessible after UI migration (`/`, `/chat`, `/sessions`, `/tasks`, `/monitoring`, `/settings`, `/agents`, `/approvals`)
 
 ### UI System & Layout
 
-- [ ] **UI-01**: Application shell (sidebar, header, content frame) is migrated to Mosaic-aligned dashboard layout patterns
-- [ ] **UI-02**: Core interface primitives (cards, tables, badges, buttons, forms) are visually harmonized with template style
-- [ ] **UI-03**: Main dashboard and shell remain responsive on desktop and mobile breakpoints
+- [x] **UI-01**: Application shell (sidebar, header, content frame) is migrated to Mosaic-aligned dashboard layout patterns
+- [x] **UI-02**: Core interface primitives (cards, tables, badges, buttons, forms) are visually harmonized with template style
+- [x] **UI-03**: Main dashboard and shell remain responsive on desktop and mobile breakpoints
 
 ### Dashboard & Charts
 
@@ -65,10 +65,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
 | QUAL-02 | Phase 1 | Complete |
-| PLAT-03 | Phase 2 | Pending |
-| UI-01 | Phase 2 | Pending |
-| UI-02 | Phase 2 | Pending |
-| UI-03 | Phase 2 | Pending |
+| PLAT-03 | Phase 2 | Complete |
+| UI-01 | Phase 2 | Complete |
+| UI-02 | Phase 2 | Complete |
+| UI-03 | Phase 2 | Complete |
 | DASH-01 | Phase 3 | Pending |
 | DASH-02 | Phase 3 | Pending |
 | DASH-03 | Phase 3 | Pending |
