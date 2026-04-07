@@ -183,17 +183,19 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-7">
         {/* Page heading */}
-        <div>
-          <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">Dashboard</h1>
-          <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
+        <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.6] px-4 py-3 sm:px-5">
+          <h1 className="text-xl font-semibold tracking-tight text-[hsl(var(--foreground))]">
+            Dashboard
+          </h1>
+          <p className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">
             ClawDevs AI Control Panel — real-time overview
           </p>
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatsCard
             icon={Clock}
             label="Total Sessions (24h)"
@@ -224,7 +226,7 @@ export default function DashboardPage() {
         <UsageChart metrics={metrics} loading={metricsLoading} />
 
         {/* Task Health */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <TaskHealth 
               data={healthData || { healthy: 0, stalled: 0, failed: 0, blocked: 0 }} 
