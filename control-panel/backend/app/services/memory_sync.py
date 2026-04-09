@@ -32,6 +32,7 @@ from sqlmodel import col, select
 
 from app.core.config import get_settings
 from app.models import MemoryEntry
+from app.services.memory_lifecycle import MemoryAccessLayer
 
 settings = get_settings()
 
@@ -52,6 +53,8 @@ async def sync_memory_entries(db_session) -> None:
     if not base_path.exists():
         return
 
+    access_layer = MemoryAccessLayer(memory_root=base_path)
+
     agent_dirs = [
         p.name for p in base_path.iterdir() if p.is_dir() and p.name != "shared"
     ]
@@ -59,14 +62,7 @@ async def sync_memory_entries(db_session) -> None:
 
     # Per-agent MEMORY.md
     for slug in agent_dirs:
-        memory_file = base_path / slug / "MEMORY.md"
-        if not memory_file.exists():
-            continue
-
-        try:
-            content = memory_file.read_text(encoding="utf-8").strip()
-        except OSError:
-            continue
+        content = access_layer.read_memory(slug).strip()
 
         if not content:
             continue
@@ -102,43 +98,38 @@ async def sync_memory_entries(db_session) -> None:
             changed = True
 
     # Shared memory
-    shared_file = base_path / "shared" / "SHARED_MEMORY.md"
-    if shared_file.exists():
-        try:
-            content = shared_file.read_text(encoding="utf-8").strip()
-        except OSError:
-            content = ""
+    content = access_layer.read_memory("shared").strip()
 
-        if content:
-            title = _extract_title(content, "Shared memory")
-            shared_result = await db_session.exec(
-                select(MemoryEntry)
-                .where(col(MemoryEntry.agent_slug).is_(None))
-                .where(col(MemoryEntry.entry_type) == "global")
-                .order_by(col(MemoryEntry.updated_at).desc())
-            )
-            shared_existing = shared_result.first()
+    if content:
+        title = _extract_title(content, "Shared memory")
+        shared_result = await db_session.exec(
+            select(MemoryEntry)
+            .where(col(MemoryEntry.agent_slug).is_(None))
+            .where(col(MemoryEntry.entry_type) == "global")
+            .order_by(col(MemoryEntry.updated_at).desc())
+        )
+        shared_existing = shared_result.first()
 
-            if shared_existing:
-                if shared_existing.body != content or shared_existing.title != title:
-                    shared_existing.title = title
-                    shared_existing.body = content
-                    shared_existing.tags = ["shared"]
-                    shared_existing.source_agents = ["shared"]
-                    shared_existing.updated_at = datetime.now(UTC).replace(tzinfo=None)
-                    changed = True
-            else:
-                db_session.add(
-                    MemoryEntry(
-                        agent_slug=None,
-                        title=title,
-                        body=content,
-                        entry_type="global",
-                        tags=["shared"],
-                        source_agents=["shared"],
-                    )
-                )
+        if shared_existing:
+            if shared_existing.body != content or shared_existing.title != title:
+                shared_existing.title = title
+                shared_existing.body = content
+                shared_existing.tags = ["shared"]
+                shared_existing.source_agents = ["shared"]
+                shared_existing.updated_at = datetime.now(UTC).replace(tzinfo=None)
                 changed = True
+        else:
+            db_session.add(
+                MemoryEntry(
+                    agent_slug=None,
+                    title=title,
+                    body=content,
+                    entry_type="global",
+                    tags=["shared"],
+                    source_agents=["shared"],
+                )
+            )
+            changed = True
 
     if changed:
         await db_session.commit()

@@ -26,7 +26,7 @@ from sqlmodel import col, select, func
 from sqlalchemy import case
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from uuid import UUID
 
 from app.core.database import get_session as get_db_session
@@ -36,6 +36,7 @@ from app.models import Session as SessionModel
 from app.services.session_sync import sync_sessions
 from app.services.session_labels import session_display_label, session_kind
 from app.services.openclaw_client import openclaw_client
+from app.services.context_metrics import validate_window_minutes
 
 router = APIRouter()
 settings = get_settings()
@@ -106,7 +107,13 @@ async def list_sessions(
     agent_slug: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    window_minutes: int | None = Query(30),
 ):
+    try:
+        validate_window_minutes(window_minutes, allow_none=True)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     # Sync sessions from OpenClaw before listing
     await sync_sessions(session)
 
@@ -125,10 +132,18 @@ async def list_sessions(
     if agent_slug:
         base_query = base_query.where(SessionModel.agent_slug == agent_slug)
 
+    if window_minutes is not None:
+        since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(
+            minutes=window_minutes
+        )
+        base_query = base_query.where(col(SessionModel.last_active_at) >= since)
+
     # Get total count using func.count()
     count_query = select(func.count(SessionModel.id))
     if agent_slug:
         count_query = count_query.where(SessionModel.agent_slug == agent_slug)
+    if window_minutes is not None:
+        count_query = count_query.where(col(SessionModel.last_active_at) >= since)
     count_result = await session.exec(count_query)
     total = count_result.one() or 0
 

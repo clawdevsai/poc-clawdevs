@@ -32,6 +32,7 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { UsageChart } from "@/components/dashboard/usage-chart"
 import { TaskHealth } from "@/components/dashboard/task-health"
 import { customInstance } from "@/lib/axios-instance"
+import { getMetricsSeries } from "@/lib/monitoring-api"
 import { wsManager } from "@/lib/ws"
 
 // ---- Types ----------------------------------------------------------------
@@ -62,12 +63,6 @@ interface ActivityEvent {
   created_at: string
 }
 
-interface Metric {
-  metric_type: string
-  value: number
-  period_start: string
-}
-
 // ---- Fetchers -------------------------------------------------------------
 
 const fetchAgents = () =>
@@ -94,10 +89,10 @@ const fetchActivity = () =>
   })
 
 const fetchMetrics = () =>
-  customInstance<PaginatedResponse<Metric>>({
-    url: "/metrics",
-    method: "GET",
-    params: { metric_type: "active_sessions", hours: 24, interval_minutes: 1 },
+  getMetricsSeries({
+    metricType: "active_sessions",
+    hours: 24,
+    intervalMinutes: 1,
   })
 
 const fetchHealthSummary = () =>
@@ -141,7 +136,7 @@ export default function DashboardPage() {
     refetchInterval: 15000,
   })
 
-   const { data: metricsData, isLoading: metricsLoading } = useQuery({
+   const { data: metricsData, isLoading: metricsLoading, isError: metricsError } = useQuery({
      queryKey: ["metrics", "active_sessions", 24, 1],
      queryFn: fetchMetrics,
      refetchInterval: 60000,
@@ -188,75 +183,67 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">Dashboard</h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
-            ClawDevs AI Control Panel — real-time overview
+            Painel de Controle ClawDevs AI — visão geral em tempo real
           </p>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatsCard
             icon={Clock}
-            label="Total Sessions (24h)"
+            label="Sessões Totais (24h)"
             value={totalSessions}
             loading={statsLoading}
           />
           <StatsCard
             icon={CheckSquare}
-            label="Pending Approvals"
+            label="Aprovações Pendentes"
             value={pendingApprovals}
             loading={statsLoading}
           />
           <StatsCard
             icon={Users}
-            label="Active Agents"
+            label="Agentes Ativos"
             value={activeAgents}
             loading={statsLoading}
           />
           <StatsCard
             icon={Activity}
-            label="Total Tasks"
+            label="Total de Tarefas"
             value={totalTasks}
             loading={statsLoading}
           />
-        </div>
+        </section>
 
-        {/* Usage chart — moved to top */}
-        <UsageChart metrics={metrics} loading={metricsLoading} />
-
-        {/* Task Health */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <TaskHealth 
-              data={healthData || { healthy: 0, stalled: 0, failed: 0, blocked: 0 }} 
-              loading={healthLoading || !healthData} 
-            />
+        <section className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-5">
+          <div className="min-w-0 xl:col-span-3">
+            <UsageChart metrics={metrics} loading={metricsLoading} error={metricsError} />
           </div>
           <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
             <h2 className="text-sm font-semibold text-[hsl(var(--foreground))] mb-4">
-              Agent Cycles
+              Ciclos dos Agentes
             </h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">Memory Curator</span>
-                <span className="text-xs text-green-500">Healthy</span>
+                <span className="text-xs text-green-500">Saudável</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">Dev Backend</span>
-                <span className="text-xs text-green-500">Healthy</span>
+                <span className="text-xs text-green-500">Saudável</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">QA Engineer</span>
-                <span className="text-xs text-yellow-500">3 retries</span>
+                <span className="text-xs text-yellow-500">3 tentativas</span>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Agents grid — full width */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
-              Agents
+              Agentes
               {!agentsLoading && (
                 <span className="ml-2 text-[hsl(var(--muted-foreground))] font-normal">
                   ({agents.length})
@@ -264,13 +251,22 @@ export default function DashboardPage() {
               )}
             </h2>
           </div>
-          <AgentsGrid agents={agents} loading={agentsLoading} />
-        </div>
-
-        {/* Recent Activity — moved to bottom with controlled height */}
-        <div className="h-[360px]">
-          <ActivityFeed events={activityEvents} loading={activityLoading} />
-        </div>
+          <div className="min-w-0 xl:col-span-2">
+            <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
+                  Agents
+                </h2>
+                {!agentsLoading && (
+                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {agents.length} active entries
+                  </span>
+                )}
+              </div>
+              <AgentsGrid agents={agents} loading={agentsLoading} />
+            </div>
+          </div>
+        </section>
       </div>
     </AppLayout>
   )

@@ -22,379 +22,317 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { formatDistanceToNow } from "date-fns"
-import Link from "next/link"
-import { AxiosError } from "axios"
-import { BarChart3, RefreshCw } from "lucide-react"
+
 import { AppLayout } from "@/components/layout/app-layout"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { StatsCard } from "@/components/dashboard/stats-card"
+import { MonitoringTabs, type MonitoringTab } from "@/components/monitoring/monitoring-tabs"
+import { MetricsCards } from "@/components/monitoring/metrics-cards"
+import { SessionsTable } from "@/components/monitoring/sessions-table"
+import { FailurePanel } from "@/components/monitoring/failure-panel"
+import { CycleTimeChart } from "@/components/monitoring/cycle-time-chart"
+import { ThroughputChart } from "@/components/monitoring/throughput-chart"
 import {
-  SemanticOptimizationMetrics,
-  type SemanticOptimizationMetricsData,
-} from "@/components/monitoring/semantic-optimization-metrics"
-import { SemanticOptimizationDetails } from "@/components/monitoring/semantic-optimization-details"
-import { OllamaHealthCard } from "@/components/monitoring/ollama-health"
-import { customInstance } from "@/lib/axios-instance"
+  getCycleTime,
+  getFailures,
+  getOverviewMetrics,
+  getThroughput,
+  listAgents,
+  listSessions,
+} from "@/lib/monitoring-api"
 import { wsManager } from "@/lib/ws"
 import { cn } from "@/lib/utils"
 
-// ---- Types ----------------------------------------------------------------
-
-interface ContextModeMetrics {
-  status: string
-  message?: string
-  compression_rate: number
-  tokens_saved_estimate: number
-  total_executions?: number
-  total_compressions?: number
-  total_agents: number
-  indexed_agents: number
-  average_compression_ratio: number
-  monthly_savings_estimate: number
-  last_updated: string
-  agents?: AgentMetrics[]
-}
-
-interface AgentMetrics {
-  agent_id: string
-  display_name?: string
-  compression_ratio: number
-  tokens_saved: number
-  indexed_at: string
-  memory_size_bytes?: number
-  status: "indexed" | "pending" | "error"
-}
-
-// ---- Fetchers -------------------------------------------------------------
-
-const fetchMonitoringMetrics = () =>
-  customInstance<ContextModeMetrics>({
-    url: "/context-mode/metrics",
-    method: "GET",
-  })
-
-const fetchSemanticOptimizationMetrics = () =>
-  customInstance<SemanticOptimizationMetricsData>({
-    url: "/context-mode/semantic-optimization/metrics",
-    method: "GET",
-  })
-
-// ---- Sub-components -------------------------------------------------------
-
-function MetricsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5"
-        >
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function AgentMetricsSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex gap-4"
-        >
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-6 w-24" />
-          <Skeleton className="h-6 w-24" />
-          <Skeleton className="h-6 w-24" />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function statusBadgeVariant(status: string) {
-  switch (status) {
-    case "indexed":
-      return "success"
-    case "pending":
-      return "warning"
-    case "error":
-      return "error"
-    default:
-      return "secondary"
-  }
-}
-
-function showCompressionOverview(metrics: ContextModeMetrics | undefined) {
-  if (!metrics) return false
-  if (metrics.status === "success") return true
-  if ((metrics.total_agents ?? 0) > 0) return true
-  if ((metrics.agents?.length ?? 0) > 0) return true
-  return false
-}
-
-// ---- Page -----------------------------------------------------------------
+const WINDOW_OPTIONS = [30, 60, 360, 1440]
 
 export default function MonitoringPage() {
   const queryClient = useQueryClient()
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [activeTab, setActiveTab] = useState<MonitoringTab>("Sessions")
+  const [windowMinutes, setWindowMinutes] = useState(30)
+  const [showAllSessions, setShowAllSessions] = useState(false)
+  const [selectedFailureId, setSelectedFailureId] = useState<string | null>(null)
 
-  const { data: metrics, isLoading, isError, error } = useQuery({
-    queryKey: ["context-mode", "metrics"],
-    queryFn: fetchMonitoringMetrics,
-    retry: false,
-    refetchInterval: 60000,
+  const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
+    queryKey: ["sessions", showAllSessions ? "all" : windowMinutes],
+    queryFn: () =>
+      listSessions({ windowMinutes: showAllSessions ? null : windowMinutes }),
   })
 
-  const { data: semanticOptimizationMetrics, isLoading: semanticOptimizationLoading } =
-    useQuery({
-      queryKey: ["semantic-optimization", "metrics"],
-      queryFn: fetchSemanticOptimizationMetrics,
-      retry: false,
-      refetchInterval: 60000,
-    })
+  const { data: overview, isLoading: overviewLoading, isError: overviewError } = useQuery({
+    queryKey: ["overview", windowMinutes],
+    queryFn: () => getOverviewMetrics({ windowMinutes }),
+  })
 
-  const agentMetrics = metrics?.agents ?? []
+  const { data: cycleTime, isLoading: cycleTimeLoading, isError: cycleTimeError } = useQuery({
+    queryKey: ["cycle-time", windowMinutes],
+    queryFn: () => getCycleTime({ windowMinutes }),
+  })
+
+  const { data: throughput, isLoading: throughputLoading, isError: throughputError } = useQuery({
+    queryKey: ["throughput", windowMinutes],
+    queryFn: () => getThroughput({ windowMinutes, groupBy: "label" }),
+  })
+
+  const { data: failures, isLoading: failuresLoading } = useQuery({
+    queryKey: ["failures"],
+    queryFn: () => getFailures(),
+  })
+
+  const { data: agents, isLoading: agentsLoading } = useQuery({
+    queryKey: ["agents"],
+    queryFn: () => listAgents(),
+  })
 
   useEffect(() => {
     if (!wsManager) return
     const unsub = wsManager.subscribe("context-mode-metrics", (event: unknown) => {
       const e = event as { type?: string }
       if (e?.type === "context-mode-metrics") {
-        queryClient.invalidateQueries({ queryKey: ["context-mode", "metrics"] })
+        queryClient.invalidateQueries({ queryKey: ["overview"] })
+        queryClient.invalidateQueries({ queryKey: ["sessions"] })
       }
     })
     return unsub
   }, [queryClient])
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await queryClient.refetchQueries({ queryKey: ["context-mode", "metrics"] })
-      await queryClient.refetchQueries({
-        queryKey: ["semantic-optimization", "metrics"],
-      })
-      await queryClient.refetchQueries({ queryKey: ["ollama", "health"] })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
+  const activeSessions = sessionsData?.total ?? 0
+  const tasksInProgress = overview?.tasks_in_progress ?? 0
+  const tokensConsumed = overview?.tokens_consumed_total ?? 0
+  const failureCount = failures?.total ?? 0
 
-  const overviewVisible = showCompressionOverview(metrics)
+  const throughputItems = throughput?.items ?? []
+  const agentItems = agents?.items ?? []
+
+  const cycleAvg = cycleTime?.cycle_time_avg_seconds ?? 0
+  const cycleP95 = cycleTime?.cycle_time_p95_seconds ?? 0
+
+  const failuresList = failures?.tasks ?? []
+  const selectedFailureTask = failuresList.find((task) => task.id === selectedFailureId)
+  const overviewStatsLoading = (overviewLoading && !overview) || overviewError
+
+  const windowLabel = useMemo(() => {
+    if (windowMinutes === 30) return "Last 30m"
+    if (windowMinutes === 60) return "Last 1h"
+    if (windowMinutes === 360) return "Last 6h"
+    if (windowMinutes === 1440) return "Last 24h"
+    return `Last ${windowMinutes}m`
+  }, [windowMinutes])
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-              Monitoring
+        <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]">
+          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.65] px-4 py-4 sm:px-5">
+            <h1 className="text-xl font-semibold tracking-tight text-[hsl(var(--foreground))]">
+              Monitoring Control Panel
             </h1>
-            <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
-              {isLoading
-                ? "Loading metrics..."
-                : `Context-mode compression metrics ${
-                    metrics?.last_updated
-                      ? `(updated ${formatDistanceToNow(new Date(metrics.last_updated), { addSuffix: true })})`
-                      : ""
-                  }`}
+            <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+              Real-time operations overview, chart telemetry, and failure visibility.
             </p>
           </div>
-
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--card)/0.8)] disabled:opacity-50 transition-colors"
-          >
-            <RefreshCw
-              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-            />
-            Refresh
-          </button>
-        </div>
-
-        {isError && (
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 text-sm text-[hsl(var(--muted-foreground))]">
-            {(error as AxiosError | null)?.response?.status === 401 ? (
-              <>
-                Session expired or not authenticated.{" "}
-                <Link
-                  href="/login"
-                  className="text-[hsl(var(--primary))] underline underline-offset-2"
+          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.65] px-4 py-4 sm:px-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+              Active Window
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {WINDOW_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setWindowMinutes(opt)}
+                  className={cn(
+                    "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                    opt === windowMinutes
+                      ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))/0.12] text-[hsl(var(--foreground))]"
+                      : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  )}
                 >
-                  Sign in again
-                </Link>
-                .
-              </>
-            ) : (
-              "Could not load monitoring metrics right now."
-            )}
-          </div>
-        )}
-
-        {isLoading ? (
-          <MetricsSkeleton />
-        ) : overviewVisible && metrics ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatsCard
-              label="Compression Rate"
-              value={`${(metrics.compression_rate * 100).toFixed(1)}%`}
-              trend={{ value: metrics.compression_rate > 0.8 ? 5 : 0 }}
-              icon={BarChart3}
-            />
-            <StatsCard
-              label="Tokens Saved/Hour"
-              value={`${(metrics.tokens_saved_estimate / 1000).toFixed(0)}K`}
-              trend={{ value: 10 }}
-              icon={BarChart3}
-            />
-            <StatsCard
-              label="Monthly Savings"
-              value={`$${metrics.monthly_savings_estimate.toFixed(0)}`}
-              trend={{ value: 15 }}
-              icon={BarChart3}
-            />
-            <StatsCard
-              label="Indexed Agents"
-              value={`${metrics.indexed_agents}/${metrics.total_agents}`}
-              trend={{
-                value:
-                  metrics.total_agents > 0 &&
-                  metrics.indexed_agents === metrics.total_agents
-                    ? 100
-                    : 50,
-              }}
-              icon={BarChart3}
-            />
-          </div>
-        ) : (
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center">
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">
-              Waiting for compression metrics. Run agents to generate data.
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
-              Per-Agent Metrics
-            </h2>
-            <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
-              Compression ratio and memory usage by agent
-            </p>
-          </div>
-
-          {isLoading ? (
-            <AgentMetricsSkeleton />
-          ) : agentMetrics.length > 0 ? (
-            <div className="rounded-lg border border-[hsl(var(--border))] overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-[hsl(var(--card))] border-b border-[hsl(var(--border))]">
-                  <tr className="text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                    <th className="px-6 py-3 text-left">Agent</th>
-                    <th className="px-6 py-3 text-left">Compression</th>
-                    <th className="px-6 py-3 text-left">Tokens Saved</th>
-                    <th className="px-6 py-3 text-left">Last Indexed</th>
-                    <th className="px-6 py-3 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[hsl(var(--border))]">
-                  {agentMetrics.map((agent) => (
-                    <tr
-                      key={agent.agent_id}
-                      className="hover:bg-[hsl(var(--card)/0.5)] transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-[hsl(var(--foreground))]">
-                        {agent.display_name || agent.agent_id}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[hsl(var(--muted-foreground))]">
-                        {(agent.compression_ratio * 100).toFixed(1)}%
-                      </td>
-                      <td className="px-6 py-4 text-sm font-mono text-[hsl(var(--muted-foreground))]">
-                        {(agent.tokens_saved / 1000).toFixed(1)}K
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[hsl(var(--muted-foreground))]">
-                        {formatDistanceToNow(new Date(agent.indexed_at), {
-                          addSuffix: true,
-                        })}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <Badge
-                          variant={
-                            statusBadgeVariant(agent.status) as
-                              | "success"
-                              | "warning"
-                              | "error"
-                              | "secondary"
-                          }
-                        >
-                          {agent.status}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  {opt === 30
+                    ? "30m"
+                    : opt === 60
+                      ? "1h"
+                      : opt === 360
+                        ? "6h"
+                        : "24h"}
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center">
-              <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                No agent metrics available yet. Compression data will appear here
-                after agents run.
+          </div>
+        </section>
+
+        <MetricsCards
+          activeSessions={activeSessions}
+          tasksInProgress={tasksInProgress}
+          tokensConsumed={tokensConsumed}
+          failures={failureCount}
+        />
+
+        <section className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.65] p-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <MonitoringTabs active={activeTab} onChange={setActiveTab} />
+            <div className="rounded-lg border border-[hsl(var(--border))] px-3 py-1.5 text-xs text-[hsl(var(--muted-foreground))]">
+              {showAllSessions ? "All sessions enabled" : `Scope: ${windowLabel}`}
+            </div>
+          </div>
+        </section>
+
+        {activeTab === "Sessions" && (
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
+                  Sessions
+                </h2>
+                <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                  Session stream and runtime activity for the selected time scope.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAllSessions((prev) => !prev)}
+                className="rounded-lg border border-[hsl(var(--border))] px-3 py-1.5 text-xs font-medium text-[hsl(var(--primary))] transition-colors hover:bg-[hsl(var(--primary))/0.1]"
+              >
+                {showAllSessions ? "Show recent" : "Show all"}
+              </button>
+            </div>
+            <SessionsTable items={sessionsData?.items ?? []} isLoading={sessionsLoading} />
+          </section>
+        )}
+
+        {activeTab === "Tasks" && (
+          <section className="space-y-4">
+            <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-5">
+              <div className="min-w-0 xl:col-span-3">
+                <CycleTimeChart
+                  averageSeconds={cycleAvg}
+                  p95Seconds={cycleP95}
+                  loading={cycleTimeLoading}
+                  error={cycleTimeError}
+                />
+              </div>
+              <div className="min-w-0 xl:col-span-2">
+                <ThroughputChart
+                  items={throughputItems}
+                  loading={throughputLoading}
+                  error={throughputError}
+                />
+              </div>
+            </div>
+
+            <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+              <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">
+                    Failures
+                  </h3>
+                  {!failuresLoading && (
+                    <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                      {failuresList.length} entries
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {failuresLoading ? (
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">Loading failures...</p>
+                  ) : failuresList.length === 0 ? (
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                      No failures detected in the current window.
+                    </p>
+                  ) : (
+                    failuresList.map((task) => (
+                      <button
+                        key={task.id}
+                        onClick={() => setSelectedFailureId(task.id)}
+                        className={cn(
+                          "w-full rounded-xl border px-3 py-2 text-left transition-colors",
+                          selectedFailureId === task.id
+                            ? "border-red-500/40 bg-red-500/10 text-[hsl(var(--foreground))]"
+                            : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/30 hover:text-[hsl(var(--foreground))]"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="truncate">{task.title}</span>
+                          <span className="shrink-0 text-xs font-medium">{task.failure_count}x</span>
+                        </div>
+                        <p className="mt-1 truncate text-xs opacity-80">
+                          {task.last_error ?? "No error recorded"}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+              <FailurePanel taskId={selectedFailureTask?.id ?? null} />
+            </div>
+          </section>
+        )}
+
+        {activeTab === "Agents" && (
+          <section className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">
+                Agents
+              </h3>
+              {!agentsLoading && (
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                  {agentItems.length} active entries
+                </span>
+              )}
+            </div>
+            <div className="space-y-2 text-sm">
+              {agentsLoading ? (
+                <p className="text-[hsl(var(--muted-foreground))]">Loading agents...</p>
+              ) : agentItems.length === 0 ? (
+                <p className="text-[hsl(var(--muted-foreground))]">No agents available.</p>
+              ) : (
+                agentItems.map((agent) => (
+                  <div
+                    key={agent.id}
+                    className="flex items-center justify-between border-b border-[hsl(var(--border))] pb-2"
+                  >
+                    <span className="text-[hsl(var(--foreground))]">{agent.display_name}</span>
+                    <span className="text-[hsl(var(--muted-foreground))]">{agent.status}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        )}
+
+        {activeTab === "Metrics" && (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] px-4 py-4">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+                Tokens avg per task
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[hsl(var(--foreground))]">
+                {overviewStatsLoading ? "—" : overview?.tokens_consumed_avg_per_task?.toFixed(1) ?? "0"}
               </p>
             </div>
-          )}
-        </div>
-
-        <div className="space-y-4 border-t border-[hsl(var(--border))] pt-6">
-          <div>
-            <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
-              Semantic Optimization: Ollama-Enhanced
-            </h2>
-            <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
-              Semantic optimization metrics for query enhancement, reranking,
-              summarization, and anomaly detection
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
-              Infrastructure Status
-            </h3>
-            <OllamaHealthCard />
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
-              Optimization Metrics
-            </h3>
-            <SemanticOptimizationMetrics
-              data={semanticOptimizationMetrics}
-              isLoading={semanticOptimizationLoading}
-            />
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
-              Detailed Task Metrics
-            </h3>
-            <SemanticOptimizationDetails
-              data={semanticOptimizationMetrics}
-              isLoading={semanticOptimizationLoading}
-            />
-          </div>
-        </div>
+            <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] px-4 py-4">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+                Backlog count
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[hsl(var(--foreground))]">
+                {overviewStatsLoading ? "—" : overview?.backlog_count ?? 0}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] px-4 py-4">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+                Tasks completed
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[hsl(var(--foreground))]">
+                {overviewStatsLoading ? "—" : overview?.tasks_completed ?? 0}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] px-4 py-4">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+                Tasks in review
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[hsl(var(--foreground))]">
+                {overviewStatsLoading ? "—" : overview?.open_tasks ?? 0}
+              </p>
+            </div>
+          </section>
+        )}
       </div>
     </AppLayout>
   )

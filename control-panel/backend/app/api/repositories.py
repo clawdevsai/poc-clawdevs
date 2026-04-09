@@ -28,7 +28,7 @@ from datetime import datetime, UTC
 from uuid import UUID
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, AdminUser
 from app.models import Repository
 
 router = APIRouter()

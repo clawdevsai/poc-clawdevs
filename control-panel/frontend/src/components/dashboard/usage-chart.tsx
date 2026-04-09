@@ -33,16 +33,12 @@ import {
 } from "recharts"
 import { format, parseISO } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
-
-interface Metric {
-  metric_type: string
-  value: number
-  period_start: string
-}
+import type { MetricsPoint } from "@/lib/monitoring-api"
 
 interface UsageChartProps {
-  metrics: Metric[]
+  metrics: MetricsPoint[]
   loading?: boolean
+  error?: boolean
 }
 
 interface CustomTooltipProps {
@@ -66,32 +62,61 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   )
 }
 
-export function UsageChart({ metrics, loading = false }: UsageChartProps) {
-  const data = metrics.map((m) => ({
-    timestamp: parseISO(m.period_start).getTime(),
-    value: m.value,
-  }))
+export function UsageChart({
+  metrics,
+  loading = false,
+  error = false,
+}: UsageChartProps) {
+  const data = metrics
+    .map((metric) => ({
+      metricType: metric.metric_type ?? "active_sessions",
+      timestamp: parseISO(metric.period_start).getTime(),
+      value: Number(metric.value),
+    }))
+    .filter(
+      (metric) =>
+        metric.metricType === "active_sessions" &&
+        Number.isFinite(metric.timestamp) &&
+        Number.isFinite(metric.value)
+    )
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((metric) => ({
+      timestamp: metric.timestamp,
+      value: metric.value,
+    }))
 
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+    <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-5">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">Uso de Sessões</h3>
-        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Sessões ativas, últimas 24 horas (1-min)</p>
+        <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">
+          Uso de Sessões
+        </h3>
+        <p className="mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
+          Sessões ativas, últimas 24 horas (1-min)
+        </p>
       </div>
       {loading ? (
-        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-[220px] w-full" />
+      ) : error ? (
+        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
+          Nao foi possivel carregar os dados de uso.
+        </div>
+      ) : data.length === 0 ? (
+        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
+          Sem dados de uso no período selecionado.
+        </div>
       ) : (
-        <ResponsiveContainer width="100%" height={180}>
+        <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
             <defs>
               <linearGradient id="primaryGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(195 100% 50%)" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="hsl(195 100% 50%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.24} />
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="hsl(0 0% 16%)"
+              stroke="hsl(var(--border))"
               vertical={false}
             />
             <XAxis
@@ -101,26 +126,33 @@ export function UsageChart({ metrics, loading = false }: UsageChartProps) {
               domain={["dataMin", "dataMax"]}
               tickFormatter={(value) => format(new Date(value), "HH:mm")}
               minTickGap={42}
-              tick={{ fill: "hsl(0 0% 55%)", fontSize: 11 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               dy={8}
             />
             <YAxis
-              tick={{ fill: "hsl(0 0% 55%)", fontSize: 11 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "hsl(195 100% 50%)", strokeWidth: 1, strokeDasharray: "4 4" }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{
+                stroke: "hsl(var(--primary))",
+                strokeWidth: 1,
+                strokeDasharray: "4 4",
+              }}
+            />
             <Area
               type="monotone"
               dataKey="value"
-              stroke="hsl(195 100% 50%)"
+              stroke="hsl(var(--primary))"
               strokeWidth={2}
               fill="url(#primaryGradient)"
               dot={false}
-              activeDot={{ r: 4, fill: "hsl(195 100% 50%)", strokeWidth: 0 }}
+              activeDot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 0 }}
             />
           </AreaChart>
         </ResponsiveContainer>

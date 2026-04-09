@@ -22,13 +22,18 @@
 
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { CheckCircle, XCircle, RefreshCw, Shield } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { customInstance } from "@/lib/axios-instance"
+import { cn } from "@/lib/utils"
+import {
+  getRuntimeSettings,
+  updateRuntimeSettings,
+} from "@/lib/monitoring-api"
 
 // ---- Types ----------------------------------------------------------------
 
@@ -362,6 +367,38 @@ export default function SettingsPage() {
     queryFn: fetchClusterInfo,
   })
 
+  const { data: runtimeSettings, isLoading: runtimeLoading } = useQuery({
+    queryKey: ["runtime-settings"],
+    queryFn: getRuntimeSettings,
+  })
+
+  const [runtimeForm, setRuntimeForm] = useState({
+    modelProvider: "",
+    modelName: "",
+    limitsJson: "",
+    flagsJson: "",
+    thresholdsJson: "",
+    agentUpdatesJson: "",
+    confirmText: "",
+  })
+  const [runtimeFeedback, setRuntimeFeedback] = useState<{
+    type: "success" | "error"
+    message: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (!runtimeSettings) return
+    setRuntimeForm((prev) => ({
+      ...prev,
+      modelProvider: runtimeSettings.model_provider ?? "",
+      modelName: runtimeSettings.model_name ?? "",
+      limitsJson: JSON.stringify(runtimeSettings.limits ?? {}, null, 2),
+      flagsJson: JSON.stringify(runtimeSettings.flags ?? {}, null, 2),
+      thresholdsJson: JSON.stringify(runtimeSettings.thresholds ?? {}, null, 2),
+      agentUpdatesJson: JSON.stringify(runtimeSettings.agent_updates ?? [], null, 2),
+    }))
+  }, [runtimeSettings])
+
   const pwMutation = useMutation({
     mutationFn: changePassword,
     onSuccess: () => {
@@ -374,6 +411,21 @@ export default function SettingsPage() {
       const msg =
         err instanceof Error ? err.message : "Failed to change password."
       setPwFeedback({ type: "error", message: msg })
+    },
+  })
+
+  const runtimeMutation = useMutation({
+    mutationFn: updateRuntimeSettings,
+    onSuccess: () => {
+      setRuntimeFeedback({
+        type: "success",
+        message: "Runtime settings updated.",
+      })
+    },
+    onError: (err: unknown) => {
+      const msg =
+        err instanceof Error ? err.message : "Failed to update runtime settings."
+      setRuntimeFeedback({ type: "error", message: msg })
     },
   })
 
@@ -414,13 +466,46 @@ export default function SettingsPage() {
   const inputClass =
     "w-full px-3 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] transition-colors"
 
+  function parseJsonInput(value: string, label: string) {
+    const trimmed = value.trim()
+    if (!trimmed) return undefined
+    try {
+      return JSON.parse(trimmed)
+    } catch {
+      throw new Error(`${label} JSON is invalid.`)
+    }
+  }
+
+  function handleRuntimeSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setRuntimeFeedback(null)
+    try {
+      const payload = {
+        model_provider: runtimeForm.modelProvider || undefined,
+        model_name: runtimeForm.modelName || undefined,
+        limits: parseJsonInput(runtimeForm.limitsJson, "Limits"),
+        flags: parseJsonInput(runtimeForm.flagsJson, "Flags"),
+        thresholds: parseJsonInput(runtimeForm.thresholdsJson, "Thresholds"),
+        agent_updates: parseJsonInput(
+          runtimeForm.agentUpdatesJson,
+          "Agent updates"
+        ),
+        confirm_text: runtimeForm.confirmText || undefined,
+      }
+      runtimeMutation.mutate(payload)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Invalid runtime payload."
+      setRuntimeFeedback({ type: "error", message: msg })
+    }
+  }
+
   return (
     <AppLayout>
       <div className="max-w-5xl w-full mx-auto flex flex-col gap-8">
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-            Settings
+            Configurações
           </h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
             Gerencie conta, conexão com gateway, cluster e repositórios.
@@ -610,6 +695,147 @@ export default function SettingsPage() {
               </FieldRow>
             </>
           )}
+        </div>
+
+        {/* ── Runtime Settings ─────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <SectionDivider
+            title="Runtime Settings"
+            description="Atualize limites, flags e modelos com confirmações obrigatórias."
+          />
+          <form onSubmit={handleRuntimeSubmit} className="flex flex-col gap-4">
+            <FieldRow label="Model Provider">
+              {runtimeLoading ? (
+                <Skeleton className="h-4 w-40" />
+              ) : (
+                <input
+                  className={inputClass}
+                  value={runtimeForm.modelProvider}
+                  onChange={(e) =>
+                    setRuntimeForm((prev) => ({
+                      ...prev,
+                      modelProvider: e.target.value,
+                    }))
+                  }
+                  placeholder="ollama"
+                />
+              )}
+            </FieldRow>
+
+            <FieldRow label="Model Name">
+              <input
+                className={inputClass}
+                value={runtimeForm.modelName}
+                onChange={(e) =>
+                  setRuntimeForm((prev) => ({
+                    ...prev,
+                    modelName: e.target.value,
+                  }))
+                }
+                placeholder="phi4-mini-reasoning:latest"
+              />
+            </FieldRow>
+
+            <FieldRow label="Limits (JSON)">
+              <textarea
+                className={`${inputClass} min-h-[120px] font-mono`}
+                value={runtimeForm.limitsJson}
+                onChange={(e) =>
+                  setRuntimeForm((prev) => ({
+                    ...prev,
+                    limitsJson: e.target.value,
+                  }))
+                }
+              />
+            </FieldRow>
+
+            <FieldRow label="Flags (JSON)">
+              <textarea
+                className={`${inputClass} min-h-[120px] font-mono`}
+                value={runtimeForm.flagsJson}
+                onChange={(e) =>
+                  setRuntimeForm((prev) => ({
+                    ...prev,
+                    flagsJson: e.target.value,
+                  }))
+                }
+              />
+            </FieldRow>
+
+            <FieldRow label="Thresholds (JSON)">
+              <textarea
+                className={`${inputClass} min-h-[120px] font-mono`}
+                value={runtimeForm.thresholdsJson}
+                onChange={(e) =>
+                  setRuntimeForm((prev) => ({
+                    ...prev,
+                    thresholdsJson: e.target.value,
+                  }))
+                }
+              />
+            </FieldRow>
+
+            <FieldRow label="Agent Updates (JSON)">
+              <textarea
+                className={`${inputClass} min-h-[120px] font-mono`}
+                value={runtimeForm.agentUpdatesJson}
+                onChange={(e) =>
+                  setRuntimeForm((prev) => ({
+                    ...prev,
+                    agentUpdatesJson: e.target.value,
+                  }))
+                }
+              />
+            </FieldRow>
+
+            <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/10 p-3 text-sm text-[hsl(var(--muted-foreground))] space-y-2">
+              <p>
+                This will switch inference provider for all agents. Type CONFIRM
+                to proceed.
+              </p>
+              <p>
+                This will remove the agent from active scheduling. Type DISABLE
+                to proceed.
+              </p>
+              <p>
+                This may affect runtime stability. Type CONFIRM to proceed.
+              </p>
+            </div>
+
+            <FieldRow label="Confirm Text">
+              <input
+                className={inputClass}
+                value={runtimeForm.confirmText}
+                onChange={(e) =>
+                  setRuntimeForm((prev) => ({
+                    ...prev,
+                    confirmText: e.target.value,
+                  }))
+                }
+                placeholder="CONFIRM or DISABLE"
+              />
+            </FieldRow>
+
+            {runtimeFeedback && (
+              <div
+                className={cn(
+                  "text-sm",
+                  runtimeFeedback.type === "success"
+                    ? "text-green-400"
+                    : "text-red-400"
+                )}
+              >
+                {runtimeFeedback.message}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[hsl(var(--primary))] text-sm font-semibold text-white hover:bg-[hsl(var(--primary))]/90 transition-colors"
+            >
+              Apply Runtime Settings
+            </button>
+          </form>
         </div>
 
         {/* ── Tokens ───────────────────────────────────────────────────── */}

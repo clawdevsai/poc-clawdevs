@@ -1,7 +1,13 @@
 """Track context window metrics: baseline vs optimized."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone, timedelta, UTC
+
+from sqlalchemy import func
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.models import Agent, Approval, Metric, Session, Task
 
 
 @dataclass
@@ -107,3 +113,97 @@ class ContextMetricsTracker:
 
 # Global singleton tracker
 context_tracker = ContextMetricsTracker()
+
+DEFAULT_WINDOW_MINUTES = 30
+WINDOW_MINUTES_OPTIONS = {30, 60, 360, 1440}
+
+
+def _to_naive_utc(dt: datetime | None) -> datetime | None:
+    """Convert any datetime to naive UTC datetime."""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(UTC).replace(tzinfo=None)
+    return dt
+
+
+def validate_window_minutes(
+    window_minutes: int | None,
+    *,
+    allow_none: bool = False,
+) -> int | None:
+    """Validate allowed time window values for monitoring queries."""
+    if window_minutes is None:
+        if allow_none:
+            return None
+        raise ValueError("window_minutes is required")
+    if window_minutes not in WINDOW_MINUTES_OPTIONS:
+        raise ValueError(
+            f"window_minutes must be one of {sorted(WINDOW_MINUTES_OPTIONS)}"
+        )
+    return window_minutes
+
+
+async def compute_overview_metrics(
+    session: AsyncSession,
+    window_minutes: int,
+) -> dict:
+    """Compute overview metrics for monitoring dashboards."""
+    window_since = _to_naive_utc(
+        datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
+    )
+    since_24h = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
+
+    agents_result = await session.exec(
+        select(Agent).where(col(Agent.status).in_(["online", "working"]))
+    )
+    active_agents = len(agents_result.all())
+
+    approvals_result = await session.exec(
+        select(Approval).where(Approval.status == "pending")
+    )
+    pending_approvals = len(approvals_result.all())
+
+    open_tasks_result = await session.exec(
+        select(Task).where(col(Task.status).in_(["inbox", "in_progress", "review"]))
+    )
+    open_tasks = len(open_tasks_result.all())
+
+    metrics_result = await session.exec(
+        select(Metric).where(
+            col(Metric.metric_type) == "tokens_used",
+            col(Metric.period_start) >= since_24h,
+        )
+    )
+    tokens_24h = sum(m.value for m in metrics_result.all())
+
+    status_counts_result = await session.exec(
+        select(Task.status, func.count(Task.id))
+        .where(col(Task.updated_at) >= window_since)
+        .group_by(Task.status)
+    )
+    status_counts = {status: count for status, count in status_counts_result.all()}
+
+    backlog_count = int(status_counts.get("inbox", 0) or 0)
+    tasks_in_progress = int(status_counts.get("in_progress", 0) or 0)
+    tasks_completed = int(status_counts.get("done", 0) or 0)
+
+    tokens_result = await session.exec(
+        select(func.coalesce(func.sum(Session.token_count), 0)).where(
+            func.coalesce(Session.last_active_at, Session.created_at) >= window_since
+        )
+    )
+    tokens_consumed_total = float(tokens_result.one() or 0)
+    tokens_consumed_avg_per_task = tokens_consumed_total / max(tasks_completed, 1)
+
+    return {
+        "active_agents": active_agents,
+        "pending_approvals": pending_approvals,
+        "open_tasks": open_tasks,
+        "tokens_24h": float(tokens_24h),
+        "tokens_consumed_total": tokens_consumed_total,
+        "tokens_consumed_avg_per_task": float(tokens_consumed_avg_per_task),
+        "backlog_count": backlog_count,
+        "tasks_in_progress": tasks_in_progress,
+        "tasks_completed": tasks_completed,
+    }
