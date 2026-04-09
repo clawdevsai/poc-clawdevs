@@ -218,7 +218,7 @@ function OverviewTab({ agent }: { agent: Agent }) {
               <button
                 onClick={() => setShowFullWork(true)}
                 className="inline-flex items-center justify-center h-6 w-6 rounded border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
-                title="View full current work"
+                aria-label="Ver trabalho atual completo"
               >
                 <Eye className="h-3.5 w-3.5" />
               </button>
@@ -289,7 +289,7 @@ function OverviewTab({ agent }: { agent: Agent }) {
               <button
                 onClick={() => setShowFullWork(false)}
                 className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
-                title="Close"
+                aria-label="Fechar"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -595,10 +595,10 @@ function MemoryTab({ slug }: { slug: string }) {
         <button
           onClick={openFullMemory}
           className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
-          title="View full MEMORY.md"
+          aria-label="Ver arquivo MEMORY.md completo"
         >
           <Eye className="h-3.5 w-3.5" />
-          Full view
+          Ver tudo
         </button>
       </div>
       <div className="space-y-3">
@@ -657,15 +657,15 @@ function MemoryTab({ slug }: { slug: string }) {
                 <button
                   onClick={downloadMemory}
                   className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
-                  title="Download MEMORY.md"
+                  aria-label="Baixar MEMORY.md"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Download
+                  Baixar
                 </button>
                 <button
                   onClick={() => setViewerOpen(false)}
                   className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
-                  title="Close"
+                  aria-label="Fechar"
                 >
                   <X className="h-4 w-4" />
                 </button>

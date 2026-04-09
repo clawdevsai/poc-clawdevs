@@ -134,195 +134,110 @@ Copy `.env.example` to `.env` and configure:
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**ClawDevs AI**
+**ClawDevs AI Panel UI Modernization (Mosaic)**
 
-ClawDevs AI is a self-hostable multi-agent software development team built on OpenClaw, designed for CTOs who want autonomous delivery with minimal human intervention. It provides a control panel, agent orchestration, and memory/coordination infrastructure so agents can plan, execute, review, and consolidate work end-to-end.
+This project modernizes the existing `control-panel/frontend` experience in a brownfield codebase. The goal is to adopt the visual/system patterns from Cruip's Tailwind dashboard template (Mosaic) while preserving current application capabilities, routes, and backend integrations.
 
-**Core Value:** Agents coordinate tasks end-to-end without human intervention while keeping cost and hardware usage low.
+The current panel already runs on Next.js App Router, Tailwind CSS v4, and chart components; this initiative upgrades visual consistency and dashboard UX without changing the product domain.
+
+**Core Value:** Operators can monitor and manage AI workflows quickly from a consistent, fast, and reliable dashboard interface without losing existing functionality.
 
 ### Constraints
 
-- **Integrations**: No new external integrations — keep scope internal
-- **Cost**: Low token consumption and low hardware requirements are mandatory
-- **Runtime**: Must support Ollama as the initial LLM provider
-- **Compatibility**: Must remain installable on conventional machines
-- **Docs**: Internal docs in `./docs` must be considered even if partially outdated
+- **Tech Stack**: Keep Next.js + React + Tailwind 4.x and existing frontend architecture
+- **Compatibility**: Preserve current route map and backend API contracts
+- **Quality**: Avoid regressions in existing task/chat/session/monitoring flows
+- **Security**: No secret leakage from `.env` or runtime configs during migration
+- **Incremental Delivery**: Execute in phased steps to keep deployability throughout
 <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:codebase/STACK.md -->
 ## Technology Stack
 
-## Languages
-- Python 3.12 - backend services and API in `control-panel/backend/app/` (version in `control-panel/backend/pyproject.toml`)
-- TypeScript/JavaScript - frontend Next.js app in `control-panel/frontend/src/` (dependencies in `control-panel/frontend/package.json`)
-- Shell - Docker/bootstrap scripts in `docker/base/bootstrap-scripts/`
-## Runtime
-- Python >=3.12,<4.0 (backend) in `control-panel/backend/pyproject.toml`
-- Node.js runtime (frontend) inferred from `control-panel/frontend/package.json` (version not pinned in repo)
-- Poetry (backend) via `control-panel/backend/pyproject.toml`
-- pnpm (frontend) via `control-panel/frontend/package.json`
-- Lockfile: `control-panel/backend/poetry.lock`, `control-panel/frontend/pnpm-lock.yaml`
-## Frameworks
-- FastAPI 0.135.1 - backend API framework in `control-panel/backend/pyproject.toml`
-- Uvicorn 0.34.0 - ASGI server in `control-panel/backend/pyproject.toml`
-- SQLModel 0.0.37 - ORM/data models in `control-panel/backend/pyproject.toml`
-- Alembic 1.18.4 - migrations in `control-panel/backend/pyproject.toml` and `control-panel/backend/alembic.ini`
-- Next.js 16.2.0 - frontend framework in `control-panel/frontend/package.json`
-- React 19.2.4 - UI runtime in `control-panel/frontend/package.json`
-- Tailwind CSS 4.2.2 - styling in `control-panel/frontend/package.json`
-- Pytest 8.4.0 + pytest-asyncio 0.25.3 - backend tests in `control-panel/backend/pyproject.toml`
-- pytest-cov 6.1.0 - backend coverage in `control-panel/backend/pyproject.toml`
-- Cypress ^15.13.0 - frontend e2e in `control-panel/frontend/package.json`
-- TypeScript 5.8.3 - type-checking in `control-panel/frontend/package.json`
-- ESLint 9.39.4 + eslint-config-next 16.2.0 - linting in `control-panel/frontend/package.json`
-- PostCSS 8.5.3 - CSS pipeline in `control-panel/frontend/package.json`
-- Orval 8.5.3 - OpenAPI client generation in `control-panel/frontend/package.json` and `control-panel/frontend/orval.config.ts`
-## Key Dependencies
-- asyncpg 0.30.0 + psycopg[binary] 3.2.4 - Postgres drivers in `control-panel/backend/pyproject.toml`
-- pgvector >=0.3.0 - vector extension support in `control-panel/backend/pyproject.toml`
-- redis[hiredis] >=6.0.0 - Redis client in `control-panel/backend/pyproject.toml`
-- rq 2.6.0 + rq-scheduler 0.14.0 - background job queue in `control-panel/backend/pyproject.toml`
-- sse-starlette 2.3.6 - SSE streaming in `control-panel/backend/pyproject.toml`
-- kubernetes 32.0.1 - K8s client used in `control-panel/backend/app/services/container_client.py`
-- passlib[bcrypt] 1.7.4 + bcrypt 4.0.1 - password hashing in `control-panel/backend/pyproject.toml` and `control-panel/backend/app/core/auth.py`
-- pyjwt[crypto] >=2.10.1 - JWT auth in `control-panel/backend/pyproject.toml` and `control-panel/backend/app/core/auth.py`
-- httpx 0.28.1 + aiohttp >=3.9.1 - outbound HTTP clients in `control-panel/backend/pyproject.toml`
-- axios 1.13.5 - frontend HTTP client in `control-panel/frontend/package.json`
-- @tanstack/react-query 5.94.5 - client caching in `control-panel/frontend/package.json`
-## Configuration
-- Backend settings via Pydantic BaseSettings with `env_prefix` = `PANEL_` and `env_file` = `.env` in `control-panel/backend/app/core/config.py`
-- Root `.env` and `.env.example` present in repo (contents not inspected): `.env`, `.env.example`
-- Frontend API routing via `BACKEND_URL`, `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL` in `control-panel/frontend/next.config.ts` and `control-panel/frontend/src/lib/api-base-url.ts`
-- Next.js configuration in `control-panel/frontend/next.config.ts`
-- OpenAPI client generation in `control-panel/frontend/orval.config.ts`
-- Alembic config in `control-panel/backend/alembic.ini`
-## Platform Requirements
-- Docker bootstrap and OpenClaw gateway scripts in `docker/base/bootstrap-scripts/`
-- OpenClaw config and agent definitions in `docker/base/openclaw-config/`
-- Not detected
+## Monorepo Context
+- Root workspace: `C:/Users/Administrator/Workspace/lukeware/clawdevs-ai`
+- Main product modules: `control-panel/frontend` and `control-panel/backend`
+- Infra and runtime orchestration: `docker/` plus root `Makefile`
+## Frontend Stack
+- Framework: `next@16.2.0` with App Router (`control-panel/frontend/src/app`)
+- React: `react@19.2.4`, `react-dom@19.2.4`
+- Language/tooling: TypeScript (`tsconfig.json`), ESLint (`eslint-config-next`)
+- Styling: `tailwindcss@4.2.2`, `@tailwindcss/postcss@4.2.2`, `postcss@8.5.3`
+- UI primitives: Radix packages (`@radix-ui/*`), `shadcn`, `lucide-react`
+- Data/UI libs: `@tanstack/react-query`, `@tanstack/react-table`, `recharts`
+- Networking: `axios`
+- E2E tests: Cypress (`cypress.config.ts`, `cypress/e2e/*.cy.ts`)
+## Backend Stack
+- Runtime: Python `>=3.12,<4.0` (see `control-panel/backend/pyproject.toml`)
+- API: FastAPI (`fastapi==0.135.1`), ASGI server `uvicorn[standard]==0.34.0`
+- ORM/data: `sqlmodel`, `alembic`, `asyncpg`, `psycopg`, `pgvector`
+- Queue/cache: `redis[hiredis]`, `rq`, `rq-scheduler`
+- Auth/security helpers: `passlib[bcrypt]`, `pyjwt[crypto]`
+- Async/HTTP: `httpx`, `aiohttp`, `anyio`, `trio`
+- Test tooling: `pytest`, `pytest-asyncio`, `pytest-cov`
+## Build and Delivery
+- Docker images under `docker/clawdevs-*`
+- Orchestration commands via root `Makefile`
+- Frontend container build file: `control-panel/frontend/Dockerfile`
+- Backend container build file: `docker/clawdevs-panel-backend/Dockerfile`
+## Notes for Requested Work
+- Tailwind v4 is already present in frontend dependencies.
+- Current Next version is `16.2.0`; user target mentions `16.2.2`.
 <!-- GSD:stack-end -->
 
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-## Naming Patterns
-- Frontend React components use kebab-case filenames: `control-panel/frontend/src/components/layout/app-layout.tsx`, `control-panel/frontend/src/components/approvals/approval-card.tsx`
-- Next.js route pages follow `src/app/<route>/page.tsx`: `control-panel/frontend/src/app/login/page.tsx`, `control-panel/frontend/src/app/chat/page.tsx`
-- Backend Python modules use snake_case: `control-panel/backend/app/services/context_metrics.py`, `control-panel/backend/app/hooks/semantic_optimization_hook.py`
-- Python functions use snake_case: `control-panel/backend/app/core/auth.py`
-- Frontend helper functions use camelCase: `control-panel/frontend/src/components/layout/app-layout.tsx`
-- Constants are uppercase in Python tests: `control-panel/backend/tests/conftest.py`
-- Frontend uses camelCase for locals and state: `control-panel/frontend/src/app/page.tsx`
-- Python classes use PascalCase: `control-panel/backend/app/services/context_metrics.py`
-- Frontend component props interfaces use PascalCase with `Props` suffix: `control-panel/frontend/src/components/ui/badge.tsx`
-## Code Style
-- No explicit formatter config detected (no `.prettierrc`, `prettier.config.*`, `biome.json`)
-- TypeScript uses double quotes and trailing commas in object literals: `control-panel/frontend/src/app/layout.tsx`, `control-panel/frontend/src/app/page.tsx`
-- Python uses double-quoted strings and module docstrings: `control-panel/backend/app/services/context_metrics.py`
-- Frontend scripts use TypeScript for linting (`tsc --noEmit`): `control-panel/frontend/package.json`
-- No ESLint config detected despite `eslint` dependency: `control-panel/frontend/package.json`
-## Import Organization
-- Use `@/*` for `src/*`: `control-panel/frontend/tsconfig.json`
-- Example usage: `control-panel/frontend/src/app/page.tsx`
-## Error Handling
-- FastAPI endpoints raise `HTTPException` for auth/authorization: `control-panel/backend/app/api/auth.py`, `control-panel/backend/app/api/deps.py`
-- Service methods guard failures with `try/except` and return safe defaults: `control-panel/backend/app/services/embedding_search.py`
-- DB session generator logs and re-raises: `control-panel/backend/app/core/database.py`
-- Global exception handler logs and returns JSON error: `control-panel/backend/app/main.py`
-## Logging
-- Module-level logger via `logging.getLogger(__name__)`: `control-panel/backend/app/core/database.py`, `control-panel/backend/app/hooks/semantic_optimization_hook.py`
-- App-level `logging.basicConfig(level=logging.INFO)`: `control-panel/backend/app/main.py`
-## Comments
-- Use module docstrings to describe purpose: `control-panel/backend/app/services/context_metrics.py`
-- Inline comments for test setup/fixtures or explain edge cases: `control-panel/backend/tests/test_context_metrics.py`
-- Minimal JSDoc on custom Cypress commands: `control-panel/frontend/cypress/support/commands.ts`
-## Function Design
-## Module Design
+## Frontend Conventions
+- TypeScript-first React codebase in `control-panel/frontend/src`.
+- App Router pages in `src/app/**/page.tsx`.
+- Shared UI atoms in `src/components/ui/*`.
+- Domain grouping pattern in `src/components/{dashboard,monitoring,approvals,...}`.
+- Utility helpers centralized in `src/lib`.
+- Styling stack assumes Tailwind utility classes plus helper libs (`clsx`, `tailwind-merge`).
+## Backend Conventions
+- Router modules segmented by capability in `control-panel/backend/app/api/*.py`.
+- Test module naming follows `test_*.py` under `control-panel/backend/tests`.
+- Async endpoints and service logic aligned with FastAPI + AnyIO stack.
+- Migrations managed in `control-panel/backend/migrations`.
+## Naming and Organization Patterns
+- Feature-based naming for page routes (`chat`, `tasks`, `sessions`, `monitoring`).
+- UI component names are descriptive and usually noun-based (`stats-card.tsx`, `usage-chart.tsx`).
+- API files map 1:1 to domain concepts (`approvals.py`, `repositories.py`, `settings.py`).
+## Tooling and Quality Hints
+- Frontend scripts emphasize type-safety (`npm/pnpm run lint` wired to `tsc --noEmit`).
+- Backend typing checks indicated by mypy cache and config in `pyproject.toml`.
+- Cypress and pytest are both present and already used.
+## Migration-Specific Convention Guidance
+- Reuse existing route/component boundaries instead of collapsing everything into one page.
+- Keep chart data plumbing consistent with existing abstractions in `src/components/dashboard` and `src/components/monitoring`.
+- Preserve `src/components/layout/*` composition contracts while replacing visuals.
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
 ## Architecture
 
-## Pattern Overview
-- API-centric backend with router modules per domain and service layer for domain logic.
-- Frontend uses Next.js App Router pages and a server-side proxy route for backend API calls.
-- Async data access via SQLModel/SQLAlchemy and background loops/services for monitoring and metrics.
-## Layers
-- Purpose: Page routing, rendering, and UI composition.
-- Location: `control-panel/frontend/src/app`
-- Contains: `page.tsx`, `layout.tsx`, route handlers (e.g., `route.ts`).
-- Depends on: UI components and client libraries.
-- Used by: Browser clients.
-- Purpose: Reusable UI blocks and layout elements.
-- Location: `control-panel/frontend/src/components`
-- Contains: Feature-specific component folders and shared UI primitives.
-- Depends on: UI utilities and CSS.
-- Used by: App Router pages.
-- Purpose: HTTP/WS clients and shared utilities.
-- Location: `control-panel/frontend/src/lib`
-- Contains: API base URL, Axios instance, React Query client, WebSocket manager.
-- Depends on: Environment variables and browser APIs.
-- Used by: Pages and components.
-- Purpose: HTTP/WebSocket endpoints and request/response models.
-- Location: `control-panel/backend/app/api`
-- Contains: `APIRouter` modules (e.g., `agents.py`, `sessions.py`, `ws.py`).
-- Depends on: Core config/db, models, services.
-- Used by: Frontend proxy and external callers.
-- Purpose: Cross-cutting concerns (config, auth, database).
-- Location: `control-panel/backend/app/core`
-- Contains: `config.py`, `auth.py`, `database.py`.
-- Depends on: SQLModel/SQLAlchemy, Pydantic settings.
-- Used by: API layer, services, tasks.
-- Purpose: Database entities and shared constants.
-- Location: `control-panel/backend/app/models`
-- Contains: SQLModel models like `agent.py`, `session.py`, `task.py`.
-- Depends on: SQLModel.
-- Used by: API and services.
-- Purpose: Business logic and integrations (agent sync, memory, governance, monitoring).
-- Location: `control-panel/backend/app/services`
-- Contains: service modules like `agent_sync.py`, `health_monitor.py`, `memory_indexing.py`.
-- Depends on: core config/db, external services, models.
-- Used by: API handlers, startup lifecycle, tasks.
-- Purpose: Periodic or orchestration workflows.
-- Location: `control-panel/backend/app/tasks`
-- Contains: task coordinators like `periodic_sync.py`, `task_orchestration.py`.
-- Depends on: services and core database.
-- Used by: scheduler/worker entrypoints.
-- Purpose: Event-driven or lifecycle hooks for features.
-- Location: `control-panel/backend/app/hooks`
-- Contains: semantic optimization hooks and tool execution hooks.
-- Depends on: services and models.
-- Used by: API or service workflows.
-## Data Flow
-- Backend state is persisted in PostgreSQL via SQLModel models in `control-panel/backend/app/models`.
-- Frontend state is managed via React Query in `control-panel/frontend/src/lib/query-client.ts` and context providers in `control-panel/frontend/src/app/providers.tsx`.
-## Key Abstractions
-- Purpose: Domain-specific endpoints.
-- Examples: `control-panel/backend/app/api/agents.py`, `control-panel/backend/app/api/sessions.py`
-- Pattern: `APIRouter` per domain with Pydantic response models.
-- Purpose: Encapsulate domain logic and integrations.
-- Examples: `control-panel/backend/app/services/agent_sync.py`, `control-panel/backend/app/services/health_monitor.py`
-- Pattern: Async functions and lightweight service classes.
-- Purpose: Database schema and ORM mappings.
-- Examples: `control-panel/backend/app/models/agent.py`, `control-panel/backend/app/models/task.py`
-- Pattern: SQLModel classes in snake_case files.
-- Purpose: Frontend → backend request forwarding.
-- Example: `control-panel/frontend/src/app/api/[...slug]/route.ts`
-- Pattern: Next.js route handler with method handlers for REST verbs.
-## Entry Points
-- Location: `control-panel/backend/app/main.py`
-- Triggers: Uvicorn/Gunicorn service start, Docker container start.
-- Responsibilities: Configure FastAPI app, register routers, startup lifecycle, middleware.
-- Location: `control-panel/frontend/src/app/layout.tsx`, `control-panel/frontend/src/app/page.tsx`
-- Triggers: Next.js server render or client navigation.
-- Responsibilities: Global layout, page routing, providers.
-- Location: `control-panel/frontend/src/app/api/[...slug]/route.ts`
-- Triggers: `/api/*` requests from the browser.
-- Responsibilities: Forward to backend and normalize response.
-## Error Handling
-- Backend global exception handler in `control-panel/backend/app/main.py`.
-- API-level HTTP errors via `HTTPException` in modules like `control-panel/backend/app/api/agents.py`.
-## Cross-Cutting Concerns
+## High-Level Shape
+- Multi-service repository with a control panel product split into:
+- Operational infrastructure and build assets live in `docker/` and root scripts.
+## Frontend Architecture
+- Next.js App Router with route-per-feature structure in `src/app`.
+- Shared UI elements in `src/components/ui`.
+- Feature components grouped by domain in `src/components/{dashboard,monitoring,approvals,...}`.
+- App shell/layout composition in:
+- Data access concentrated under `src/lib/*`.
+## Backend Architecture
+- FastAPI service with module-per-domain routers under `app/api`.
+- Core/config/service logic under `app/core` and `app/services` (by convention from tree).
+- Entrypoint is expected in `app/main.py` (`__pycache__/main.cpython-312.pyc` confirms).
+- Migrations directory present: `control-panel/backend/migrations`.
+## Data and Flow
+- Frontend server routes forward/proxy requests to backend/openclaw endpoints.
+- Backend exposes REST and websocket-style endpoints for sessions, chat, tasks, and monitoring.
+- Redis/RQ pair supports asynchronous execution paths.
+## Implication for Dashboard Template Migration
+- Landing/dashboard area likely centered on:
+- Existing monitoring charts (`src/components/monitoring/*chart*.tsx`) suggest chart abstractions already present.
 <!-- GSD:architecture-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
