@@ -38,7 +38,7 @@ const NAV_ITEMS = [
   { href: "/memory", label: "Memória", icon: Brain },
   { href: "/crons", label: "Crons", icon: Clock },
   { href: "/cluster", label: "Cluster", icon: Server },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
 type SidebarProps = {
@@ -74,22 +74,22 @@ export function Sidebar({
   }, [queryClient]);
 
   return (
-    <>
-      <button
-        type="button"
-        aria-label="Fechar navegação"
-        onClick={() => onMobileOpenChange(false)}
-        className={cn(
-          "fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden",
-          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        )}
-      />
-
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[hsl(var(--border))] bg-[hsl(var(--card))/0.96] backdrop-blur-sm transition-transform duration-200 md:static md:z-auto md:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
-          compactDesktop ? "w-72 md:w-16" : "w-72 md:w-64"
+    <aside
+      className={cn(
+        "shrink-0 h-screen flex flex-col border-r border-[hsl(var(--border))] bg-[hsl(var(--card))] transition-all duration-200",
+        collapsed ? "w-14" : "w-56"
+      )}
+    >
+      {/* Logo */}
+      <div className="p-4 border-b border-[hsl(var(--border))] flex items-center justify-between min-h-[57px]">
+        {!collapsed && (
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[hsl(var(--primary))] font-bold text-lg">ClawDevs</span>
+              <span className="text-[hsl(var(--muted-foreground))] text-xs">AI</span>
+            </div>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Painel de Controle</p>
+          </div>
         )}
       >
         <div className="flex h-14 items-center gap-2 border-b border-[hsl(var(--border))] px-3">
