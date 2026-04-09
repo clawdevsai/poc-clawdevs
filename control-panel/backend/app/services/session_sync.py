@@ -41,14 +41,9 @@ async def sync_sessions(db_session) -> None:
     base_path = Path(settings.openclaw_data_path)
     agent_slugs = get_discovered_agent_slugs()
 
-    # Performance: Batch fetch all existing sessions to avoid N+1 queries.
-    # In systems with many sessions, this significantly reduces DB round-trips.
-    result = await db_session.exec(select(Session))
-    existing_sessions = {s.openclaw_session_id: s for s in result.all()}
-
+    all_oc_sessions = {}
     for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
-
         if not sessions_file.exists():
             continue
 
@@ -61,118 +56,116 @@ async def sync_sessions(db_session) -> None:
         if not isinstance(data, dict):
             continue
 
-        # If two JSON keys share the same sessionId, the last one processed wins for
-        # the DB row (upsert by openclaw_session_id); openclaw_session_key reflects
-        # the last seen key.
         for session_key, oc_session in data.items():
             if not isinstance(oc_session, dict):
                 continue
-
             session_id = oc_session.get("sessionId")
             if not session_id:
                 continue
+            # Last seen key/agent wins for duplicate sessionIds
+            all_oc_sessions[session_id] = (agent_slug, session_key, oc_session)
 
-            # Performance: Use the pre-fetched session map
-            existing = existing_sessions.get(session_id)
+    if not all_oc_sessions:
+        return
 
-            # Parse timestamps
-            updated_at = _parse_timestamp(oc_session.get("updatedAt"))
-            last_active_at = updated_at  # Use updatedAt as lastActiveAt
-            status = _derive_session_status(updated_at)
+    # Batch fetch existing sessions to avoid N+1 queries
+    session_ids = list(all_oc_sessions.keys())
+    result = await db_session.exec(
+        select(Session).where(Session.openclaw_session_id.in_(session_ids))
+    )
+    existing_map = {s.openclaw_session_id: s for s in result.all()}
 
-            # Performance: Smart Sync - skip processing if timestamps haven't changed
-            # and status remains consistent (e.g. both completed).
-            # message counting is expensive as it requires reading the transcript file.
-            if existing and existing.last_active_at == last_active_at:
-                if existing.status == status:
-                    continue
-                # If only status changed (active -> completed due to timeout),
-                # we only update status without re-counting messages.
+    for session_id, (agent_slug, session_key, oc_session) in all_oc_sessions.items():
+        existing = existing_map.get(session_id)
+
+        # Parse timestamps
+        updated_at = _parse_timestamp(oc_session.get("updatedAt"))
+        status = _derive_session_status(updated_at)
+
+        # Extract channel info from deliveryContext or origin
+        delivery = oc_session.get("deliveryContext", {})
+        origin = oc_session.get("origin", {})
+
+        channel_type = (
+            delivery.get("channel")
+            or origin.get("provider")
+            or origin.get("surface")
+        )
+        channel_peer = delivery.get("to") or origin.get("to")
+
+        # Smart Sync: Skip processing if unchanged
+        if existing and updated_at and existing.last_active_at == updated_at:
+            # Even if timestamp matches, status might change from active to completed due to timeout
+            if existing.status != status:
                 existing.status = status
                 if status == "completed" and existing.ended_at is None:
-                    existing.ended_at = last_active_at
-                continue
+                    existing.ended_at = updated_at
+            continue
 
-            # Extract channel info from deliveryContext or origin
-            delivery = oc_session.get("deliveryContext", {})
-            origin = oc_session.get("origin", {})
-
-            channel_type = (
-                delivery.get("channel")
-                or origin.get("provider")
-                or origin.get("surface")
+        # Get token metrics from session data
+        token_count = 0
+        if "totalTokens" in oc_session:
+            token_count = oc_session.get("totalTokens", 0)
+        elif "inputTokens" in oc_session or "outputTokens" in oc_session:
+            token_count = oc_session.get("inputTokens", 0) + oc_session.get(
+                "outputTokens", 0
             )
-            channel_peer = delivery.get("to") or origin.get("to")
+        elif "contextTokens" in oc_session:
+            token_count = oc_session.get("contextTokens", 0)
 
-            # Get message count and token metrics from session data
-            message_count = 0
-            token_count = 0
-
-            # Try to get token metrics directly from session metadata
-            if "totalTokens" in oc_session:
-                token_count = oc_session.get("totalTokens", 0)
-            elif "inputTokens" in oc_session or "outputTokens" in oc_session:
-                token_count = oc_session.get("inputTokens", 0) + oc_session.get(
-                    "outputTokens", 0
-                )
-            elif "contextTokens" in oc_session:
-                token_count = oc_session.get("contextTokens", 0)
-
-            # Count messages from session file if exists
-            session_file = oc_session.get("sessionFile")
-            session_path: Path | None = None
-            if isinstance(session_file, str) and session_file:
-                # Handle both absolute and relative paths
-                if session_file.startswith("/"):
-                    session_path = Path(session_file)
-                else:
-                    session_path = base_path / session_file
+        # Message count (expensive disk I/O)
+        message_count = 0
+        session_file = oc_session.get("sessionFile")
+        session_path: Path | None = None
+        if isinstance(session_file, str) and session_file:
+            # Handle both absolute and relative paths
+            if session_file.startswith("/"):
+                session_path = Path(session_file)
             else:
-                # Some OpenClaw entries (cron/run session keys) omit sessionFile.
-                # Fallback to canonical session transcript path by sessionId.
-                session_path = (
-                    base_path
-                    / "agents"
-                    / agent_slug
-                    / "sessions"
-                    / f"{session_id}.jsonl"
-                )
+                session_path = base_path / session_file
+        else:
+            # Fallback to canonical session transcript path by sessionId
+            session_path = (
+                base_path
+                / "agents"
+                / agent_slug
+                / "sessions"
+                / f"{session_id}.jsonl"
+            )
 
-            if session_path is not None:
-                message_count = _count_messages_in_session_file(session_path)
+        if session_path is not None:
+            message_count = _count_messages_in_session_file(session_path)
 
-            if existing:
-                # Update existing session
-                existing.agent_slug = agent_slug
-                existing.openclaw_session_key = session_key
-                existing.channel_type = channel_type or existing.channel_type
-                existing.channel_peer = (
-                    str(channel_peer) if channel_peer else existing.channel_peer
-                )
-                existing.status = status
-                existing.message_count = message_count
-                existing.token_count = token_count
-                existing.last_active_at = last_active_at or existing.last_active_at
-                if status == "completed" and existing.ended_at is None:
-                    existing.ended_at = last_active_at
-            else:
-                # Create new session
-                new_session = Session(
-                    openclaw_session_id=session_id,
-                    openclaw_session_key=session_key,
-                    agent_slug=agent_slug,
-                    channel_type=channel_type,
-                    channel_peer=str(channel_peer) if channel_peer else None,
-                    status=status,
-                    message_count=message_count,
-                    token_count=token_count,
-                    started_at=last_active_at,  # Use first seen as started
-                    last_active_at=last_active_at,
-                    ended_at=last_active_at if status == "completed" else None,
-                )
-                db_session.add(new_session)
-                # Ensure it's in our map for the next iteration (in case of same sessionId)
-                existing_sessions[session_id] = new_session
+        if existing:
+            # Update existing session
+            existing.agent_slug = agent_slug
+            existing.openclaw_session_key = session_key
+            existing.channel_type = channel_type or existing.channel_type
+            existing.channel_peer = (
+                str(channel_peer) if channel_peer else existing.channel_peer
+            )
+            existing.status = status
+            existing.message_count = message_count
+            existing.token_count = token_count
+            existing.last_active_at = updated_at or existing.last_active_at
+            if status == "completed" and existing.ended_at is None:
+                existing.ended_at = updated_at
+        else:
+            # Create new session
+            new_session = Session(
+                openclaw_session_id=session_id,
+                openclaw_session_key=session_key,
+                agent_slug=agent_slug,
+                channel_type=channel_type,
+                channel_peer=str(channel_peer) if channel_peer else None,
+                status=status,
+                message_count=message_count,
+                token_count=token_count,
+                started_at=updated_at,
+                last_active_at=updated_at,
+                ended_at=updated_at if status == "completed" else None,
+            )
+            db_session.add(new_session)
 
     await db_session.commit()
 
