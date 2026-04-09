@@ -50,7 +50,7 @@ class RuntimeSettingsUpdateRequest(BaseModel):
 
 
 @router.get("/info")
-async def get_settings_info(_: CurrentUser):
+async def get_settings_info(_: AdminUser):
     cluster_info = container_client.get_cluster_info(namespace=settings.container_namespace)
     return {
         "gateway_url": settings.openclaw_gateway_url,
@@ -60,7 +60,7 @@ async def get_settings_info(_: CurrentUser):
 
 
 @router.get("/gateway-health")
-async def get_gateway_health(_: CurrentUser):
+async def get_gateway_health(_: AdminUser):
     healthy = await openclaw_client.health()
     return {"status": "ok" if healthy else "error"}
 
