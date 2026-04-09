@@ -63,6 +63,7 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,8 +90,26 @@ jobs:
           DEBUG_LOG_ENABLED=false
           ENVEOF
 
-      - name: Start services
-        run: make up-all
+      - name: Start services (with-cache, fallback)
+        run: |
+          set -x  # debug: print each command
+          make up-all-with-cache 2>&1 | tee build.log || {
+            exit_code=$?
+            echo "up-all-with-cache failed with code $exit_code"
+            echo "--- Last 100 lines of build.log ---"
+            tail -100 build.log
+            echo "--- Uploading build.log as artifact ---"
+            # Upload partial log for diagnostics even on failure
+            exit $exit_code
+          }
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ github.run_number }}
+          path: build.log
+          retention-days: 7
 
       - name: Wait for services to be healthy
         run: |
@@ -170,7 +189,7 @@ jobs:
             }
 
       - name: Upload results to GitHub Security
-        if: steps.code-scanning.outputs.enabled == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
+        if: steps.code-scanning.outputs.enabled == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.pull_request.head.repo.full_name == github.repository))
         continue-on-error: true
         uses: github/codeql-action/upload-sarif@v4
         with:
