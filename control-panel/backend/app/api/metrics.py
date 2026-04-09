@@ -241,29 +241,37 @@ async def overview_metrics(
     session: Annotated[AsyncSession, Depends(get_session)],
     window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
 ):
-    try:
-        validate_window_minutes(window_minutes)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    """
+    Get overview metrics for the dashboard.
+    Optimized with SQL aggregations to avoid fetching full objects.
+    """
+    since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
 
-    payload = await compute_overview_metrics(session, window_minutes)
-    return OverviewMetrics(**payload)
+    # BOLT OPTIMIZATION: Use database-level aggregations (count/sum) instead of
+    # fetching full ORM objects into Python just to count/sum them.
+    # This prevents O(N) memory overhead and significantly reduces data transfer.
 
+    active_agents_query = select(func.count(Agent.id)).where(
+        col(Agent.status).in_(["online", "working"])
+    )
+    active_agents = (await session.exec(active_agents_query)).one()
 
-@router.get("/cycle-time", response_model=CycleTimeResponse)
-async def cycle_time_metrics(
-    _: CurrentUser,
-    session: Annotated[AsyncSession, Depends(get_session)],
-    window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
-):
-    try:
-        validate_window_minutes(window_minutes)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    pending_approvals_query = select(func.count(Approval.id)).where(
+        Approval.status == "pending"
+    )
+    pending_approvals = (await session.exec(pending_approvals_query)).one()
 
-    service = TaskMetricsService(session)
-    payload = await service.get_cycle_time(window_minutes)
-    return CycleTimeResponse(window_minutes=window_minutes, **payload)
+    open_tasks_query = select(func.count(Task.id)).where(
+        col(Task.status).in_(["inbox", "in_progress", "review"])
+    )
+    open_tasks = (await session.exec(open_tasks_query)).one()
+
+    tokens_sum_query = select(func.sum(Metric.value)).where(
+        col(Metric.metric_type) == "tokens_used",
+        col(Metric.period_start) >= since,
+    )
+    tokens_sum_val = (await session.exec(tokens_sum_query)).one()
+    tokens_24h = float(tokens_sum_val or 0.0)
 
 
 @router.get("/throughput", response_model=ThroughputResponse)

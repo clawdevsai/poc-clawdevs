@@ -19,7 +19,7 @@ const BREADCRUMBS: Record<string, string> = {
   "/memory": "Memória",
   "/crons": "Crons",
   "/cluster": "Cluster",
-  "/settings": "Settings",
+  "/settings": "Configurações",
 };
 
 type HeaderProps = {

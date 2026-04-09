@@ -21,9 +21,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Dashboard & Charts
 
-- [ ] **DASH-01**: Home dashboard is restructured with template-style KPI/stat/activity sections
-- [ ] **DASH-02**: Existing chart areas are migrated to template-consistent visual components
-- [ ] **DASH-03**: Chart components keep real project data bindings (no permanent demo/mock-only widgets)
+- [x] **DASH-01**: Home dashboard is restructured with template-style KPI/stat/activity sections
+- [x] **DASH-02**: Existing chart areas are migrated to template-consistent visual components
+- [x] **DASH-03**: Chart components keep real project data bindings (no permanent demo/mock-only widgets)
 
 ### Compatibility & Functional Preservation
 
@@ -69,9 +69,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-01 | Phase 2 | Complete |
 | UI-02 | Phase 2 | Complete |
 | UI-03 | Phase 2 | Complete |
-| DASH-01 | Phase 3 | Pending |
-| DASH-02 | Phase 3 | Pending |
-| DASH-03 | Phase 3 | Pending |
+| DASH-01 | Phase 3 | Complete |
+| DASH-02 | Phase 3 | Complete |
+| DASH-03 | Phase 3 | Complete |
 | COMP-01 | Phase 4 | Pending |
 | COMP-02 | Phase 4 | Pending |
 | COMP-03 | Phase 4 | Pending |

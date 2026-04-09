@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from fastapi import APIRouter
-from app.api.deps import CurrentUser
+from app.api.deps import AdminUser
 from app.core.config import get_settings
 from app.services import container_client
 
@@ -28,20 +28,20 @@ router = APIRouter()
 
 
 @router.get("/pods")
-async def get_pods(_: CurrentUser):
+async def get_pods(_: AdminUser):
     return container_client.list_containers(namespace=settings.container_namespace)
 
 
 @router.get("/info")
-async def get_cluster_info(_: CurrentUser):
+async def get_cluster_info(_: AdminUser):
     return container_client.get_cluster_info(namespace=settings.container_namespace)
 
 
 @router.get("/events")
-async def get_events(_: CurrentUser):
+async def get_events(_: AdminUser):
     return container_client.list_events(namespace=settings.container_namespace)
 
 
 @router.get("/pvcs")
-async def get_pvcs(_: CurrentUser):
+async def get_pvcs(_: AdminUser):
     return container_client.list_pvcs(namespace=settings.container_namespace)

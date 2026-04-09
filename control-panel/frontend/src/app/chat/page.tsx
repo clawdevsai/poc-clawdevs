@@ -50,6 +50,7 @@ import {
 import { AppLayout } from "@/components/layout/app-layout";
 import { customInstance } from "@/lib/axios-instance";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -1085,22 +1086,27 @@ function ChatPageContent() {
                   placeholder="Digite para buscar agente"
                   className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 pr-9 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))]"
                 />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAgentDropdownOpen((open) => {
-                      const next = !open;
-                      if (next) {
-                        setAgentQuery("");
-                      }
-                      return next;
-                    });
-                  }}
-                  className="absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[hsl(var(--muted-foreground))]"
-                  aria-label="Abrir seletor de agente"
-                >
-                  <ChevronsUpDown className="h-4 w-4" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAgentDropdownOpen((open) => {
+                          const next = !open;
+                          if (next) {
+                            setAgentQuery("");
+                          }
+                          return next;
+                        });
+                      }}
+                      className="absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[hsl(var(--muted-foreground))]"
+                      aria-label="Abrir seletor de agente"
+                    >
+                      <ChevronsUpDown className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Selecionar agente</TooltipContent>
+                </Tooltip>
 
                 {agentDropdownOpen && (
                   <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1 shadow-2xl">
@@ -1326,7 +1332,7 @@ function ChatPageContent() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleComposerKeyDown}
-                  placeholder="Message Memo (Enter to send)"
+                  placeholder="Mensagem para Memo (Enter para enviar)"
                   className="min-h-[62px] max-h-44 w-full resize-none rounded-xl border border-transparent bg-transparent px-2.5 py-2 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--primary)/0.3)] focus:outline-none"
                 />
 

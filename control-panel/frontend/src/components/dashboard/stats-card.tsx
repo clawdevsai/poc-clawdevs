@@ -50,7 +50,7 @@ export function StatsCard({
     return (
       <div
         className={cn(
-          "rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 flex flex-col gap-3",
+          "rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-5 flex flex-col gap-3",
           className
         )}
       >
@@ -69,13 +69,13 @@ export function StatsCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 flex flex-col gap-2 hover:border-[hsl(var(--primary)/0.4)] transition-colors",
+        "rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-5 flex flex-col gap-2 hover:border-[hsl(var(--primary)/0.4)] transition-colors",
         className
       )}
     >
       <div className="flex items-center justify-between">
         <span className="text-sm text-[hsl(var(--muted-foreground))]">{label}</span>
-        <div className="rounded-lg bg-[hsl(var(--primary)/0.1)] p-2">
+        <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--secondary))/0.8] p-2">
           <Icon size={16} className="text-[hsl(var(--primary))]" />
         </div>
       </div>
@@ -86,7 +86,7 @@ export function StatsCard({
         <div
           className={cn(
             "text-xs font-medium",
-            trendPositive ? "text-green-400" : "text-red-400"
+            trendPositive ? "text-emerald-600" : "text-rose-600"
           )}
         >
           {trendPositive ? "+" : ""}
