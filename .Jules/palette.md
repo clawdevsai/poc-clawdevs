@@ -1,0 +1,3 @@
+## 2026-04-09 - Accessible Tooltips for Icon-Only Buttons
+**Learning:** Icon-only buttons in the chat interface lacked accessible labels for sighted users who might not recognize the icons immediately. When implementing Radix UI Tooltips, the `TooltipTrigger` must wrap the `button` with the `asChild` prop to maintain valid HTML and ensure keyboard focus correctly triggers the tooltip. Additionally, removing the native `title` attribute is essential to prevent the browser from rendering a redundant second tooltip.
+**Action:** Always wrap icon-only buttons with a `Tooltip` component using the `asChild` pattern and remove native `title` attributes in future UX enhancements.

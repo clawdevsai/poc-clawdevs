@@ -52,6 +52,7 @@ import { customInstance } from "@/lib/axios-instance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Agent {
   slug: string;
@@ -1084,6 +1085,7 @@ function ChatPageContent() {
                   placeholder="Digite para buscar agente"
                   className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 pr-9 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))]"
                 />
+                <Tooltip><TooltipTrigger asChild>
                 <button
                   type="button"
                   onClick={() => {
@@ -1100,6 +1102,7 @@ function ChatPageContent() {
                 >
                   <ChevronsUpDown className="h-4 w-4" />
                 </button>
+                </TooltipTrigger><TooltipContent>Abrir seletor de agente</TooltipContent></Tooltip>
 
                 {agentDropdownOpen && (
                   <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1 shadow-2xl">
@@ -1210,6 +1213,7 @@ function ChatPageContent() {
                         {msg.content.trim() &&
                         (msg.role === "user" || msg.role === "assistant") ? (
                           <div className="flex shrink-0 items-center gap-0.5">
+                            <Tooltip><TooltipTrigger asChild>
                             <button
                               type="button"
                               onClick={async () => {
@@ -1227,7 +1231,6 @@ function ChatPageContent() {
                               aria-label={
                                 copiedMessageId === msg.id ? "Copiado" : "Copiar texto da mensagem"
                               }
-                              title={copiedMessageId === msg.id ? "Copiado" : "Copiar"}
                             >
                               {copiedMessageId === msg.id ? (
                                 <Check className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
@@ -1235,7 +1238,9 @@ function ChatPageContent() {
                                 <Copy className="h-3.5 w-3.5" />
                               )}
                             </button>
+                            </TooltipTrigger><TooltipContent>{copiedMessageId === msg.id ? "Copiado" : "Copiar"}</TooltipContent></Tooltip>
                             {msg.role === "assistant" ? (
+                              <Tooltip><TooltipTrigger asChild>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1252,10 +1257,10 @@ function ChatPageContent() {
                                 }}
                                 className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
                                 aria-label="Baixar documento"
-                                title="Baixar documento"
                               >
                                 <Download className="h-3.5 w-3.5" />
                               </button>
+                              </TooltipTrigger><TooltipContent>Baixar documento</TooltipContent></Tooltip>
                             ) : null}
                           </div>
                         ) : null}
@@ -1319,6 +1324,7 @@ function ChatPageContent() {
 
                 <div className="mt-1 flex items-center justify-between px-1 pb-0.5">
                   <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
+                    <Tooltip><TooltipTrigger asChild>
                     <button
                       type="button"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
@@ -1326,6 +1332,8 @@ function ChatPageContent() {
                     >
                       <Paperclip className="h-4 w-4" />
                     </button>
+                    </TooltipTrigger><TooltipContent>Anexar arquivo</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
                     <button
                       type="button"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
@@ -1333,9 +1341,11 @@ function ChatPageContent() {
                     >
                       <Mic className="h-4 w-4" />
                     </button>
+                    </TooltipTrigger><TooltipContent>Usar microfone</TooltipContent></Tooltip>
                   </div>
 
                   <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
+                    <Tooltip><TooltipTrigger asChild>
                     <button
                       type="button"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
@@ -1343,6 +1353,8 @@ function ChatPageContent() {
                     >
                       <Plus className="h-4 w-4" />
                     </button>
+                    </TooltipTrigger><TooltipContent>Adicionar ação</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
                     <button
                       type="button"
                       onClick={() => {
@@ -1361,10 +1373,11 @@ function ChatPageContent() {
                       disabled={!selectedAgent || messages.length === 0}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50 disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label="Exportar conversa"
-                      title="Exportar conversa (Markdown)"
                     >
                       <Download className="h-4 w-4" />
                     </button>
+                    </TooltipTrigger><TooltipContent>Exportar conversa (Markdown)</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild>
                     <button
                       onClick={sendMessage}
                       disabled={sending || !selectedAgent || !input.trim()}
@@ -1373,6 +1386,7 @@ function ChatPageContent() {
                     >
                       {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </button>
+                    </TooltipTrigger><TooltipContent>Enviar mensagem</TooltipContent></Tooltip>
                   </div>
                 </div>
               </div>
