@@ -241,29 +241,39 @@ async def overview_metrics(
     session: Annotated[AsyncSession, Depends(get_session)],
     window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
 ):
-    try:
-        validate_window_minutes(window_minutes)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    """
+    Get overview metrics for the dashboard.
+    Optimized with SQL aggregations to avoid fetching full objects.
+    """
+    since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
 
-    payload = await compute_overview_metrics(session, window_minutes)
-    return OverviewMetrics(**payload)
+    # Use func.count() and func.sum() to perform aggregations at the database level.
+    # This reduces data transfer and memory usage by avoiding fetching full ORM objects.
+    active_agents_q = await session.exec(
+        select(func.count(Agent.id)).where(col(Agent.status).in_(["online", "working"]))
+    )
+    active_agents = active_agents_q.one()
 
+    pending_approvals_q = await session.exec(
+        select(func.count(Approval.id)).where(Approval.status == "pending")
+    )
+    pending_approvals = pending_approvals_q.one()
 
-@router.get("/cycle-time", response_model=CycleTimeResponse)
-async def cycle_time_metrics(
-    _: CurrentUser,
-    session: Annotated[AsyncSession, Depends(get_session)],
-    window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
-):
-    try:
-        validate_window_minutes(window_minutes)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    tasks_q = await session.exec(
+        select(func.count(Task.id)).where(
+            col(Task.status).in_(["inbox", "in_progress", "review"])
+        )
+    )
+    open_tasks = tasks_q.one()
 
-    service = TaskMetricsService(session)
-    payload = await service.get_cycle_time(window_minutes)
-    return CycleTimeResponse(window_minutes=window_minutes, **payload)
+    tokens_24h_q = await session.exec(
+        select(func.sum(Metric.value)).where(
+            col(Metric.metric_type) == "tokens_used",
+            col(Metric.period_start) >= since,
+        )
+    )
+    # Ensure we return 0.0 if there are no matching metrics.
+    tokens_24h = tokens_24h_q.one() or 0.0
 
 
 @router.get("/throughput", response_model=ThroughputResponse)

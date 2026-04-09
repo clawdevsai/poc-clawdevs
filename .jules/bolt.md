@@ -1,3 +1,3 @@
-## 2025-05-15 - Smart Sync for Session Synchronization
-**Learning:** Database synchronization from filesystem sources often contains duplicate unique IDs in the same source batch. Relying on a static batch-fetched map of existing records can lead to `IntegrityError` if the same ID appears twice for a new record.
-**Action:** Always update the local lookup map with newly created records within the synchronization loop to ensure subsequent duplicates in the same batch are treated as updates rather than inserts.
+## 2025-05-15 - Optimize aggregations with SQL func
+**Learning:** Fetching full ORM objects and then using `len()` or `sum()` in Python is an anti-pattern that leads to high memory usage and unnecessary data transfer.
+**Action:** Use `func.count()` and `func.sum()` within `select()` to perform aggregations at the database level.
