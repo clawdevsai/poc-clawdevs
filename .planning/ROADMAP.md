@@ -77,7 +77,7 @@ Plans:
 - [x] 04-01: Validate route-level feature compatibility (chat/tasks/sessions/monitoring/etc.)
 - [x] 04-02: Add or adjust Cypress smoke coverage for migrated entry flows
 - [x] 04-03: Final regression pass and release readiness checklist
-- [ ] 04-04: Gap closure rerun for Cypress smoke with explicit evidence artifact
+- [x] 04-04: Gap closure rerun for Cypress smoke with explicit evidence artifact
 - [ ] 04-05: HUMAN CHECK closure and verification/readiness finalization
 
 ## Progress
