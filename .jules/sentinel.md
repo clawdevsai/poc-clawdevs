@@ -1,4 +1,4 @@
-## 2026-05-22 - Broken Function Level Authorization (BFLA) in Admin/Infrastructure Endpoints
-**Vulnerability:** Several administrative and infrastructure endpoints (agent sync, cluster info, cron triggers, and repository management) were accessible to any authenticated user, regardless of their role.
-**Learning:** Defaulting to a generic `CurrentUser` dependency for all authenticated endpoints can lead to privilege escalation if not carefully reviewed. Infrastructure-related endpoints and global configuration changes must be explicitly protected with role-based checks.
-**Prevention:** Always use a specific `AdminUser` dependency (or similar RBAC check) for endpoints that expose system-wide information or allow modification of global resources. Include integration tests that specifically assert `403 Forbidden` for non-admin users on these sensitive paths.
+## 2025-04-05 - Missing Authentication on Sensitive Endpoints
+**Vulnerability:** Several sensitive API endpoints in `governance.py`, `health.py`, and `agents.py` were missing authentication/authorization dependencies, allowing unauthenticated access to system health, failure logs, and governance rules.
+**Learning:** Endpoints added during rapid development cycles (like governance and health monitoring) can easily be overlooked when applying global security policies if they are not explicitly grouped or audited.
+**Prevention:** Always verify that every new router and endpoint includes at least `CurrentUser` or `AdminUser` dependencies. Use automated integration tests to assert `401 Unauthorized` on all endpoints without a `panel_token`.

@@ -38,9 +38,9 @@ class TestAgentEndpoints:
     """Test Agent API endpoints."""
 
     @pytest.mark.asyncio
-    async def test_list_agents_empty(self, client: AsyncClient):
+    async def test_list_agents_empty(self, client: AsyncClient, auth_headers: dict):
         """Test listing agents when no agents exist."""
-        response = await client.get("/agents")
+        response = await client.get("/agents", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert "items" in data
