@@ -31,8 +31,14 @@ from rq_scheduler import Scheduler
 from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal
 from app.services.agent_sync import sync_agents_runtime
+from app.services.memory_lifecycle import (
+    MemoryAccessLayer,
+    compact_memory,
+    get_last_compaction_at,
+)
 from app.services.session_sync import sync_sessions
 from app.services.task_sync import sync_tasks
+from app.services.memory_sync import sync_memory_entries
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -74,6 +80,56 @@ async def run_sync_tasks():
         raise
 
 
+async def run_sync_memory():
+    """Sync memory entries and run compaction triggers."""
+    logger.info("[periodic_sync] Starting memory sync")
+    try:
+        async with AsyncSessionLocal() as session:
+            await sync_memory_entries(session)
+        base_path = Path(settings.openclaw_data_path) / "memory"
+        if not base_path.exists():
+            return
+
+        access_layer = MemoryAccessLayer(memory_root=base_path)
+        agent_dirs = [
+            p.name for p in base_path.iterdir() if p.is_dir() and p.name != "shared"
+        ]
+        now = datetime.now(UTC).replace(tzinfo=None)
+
+        for slug in agent_dirs:
+            content = access_layer.read_memory(slug)
+            if not content:
+                continue
+
+            if len(content) >= settings.MEMORY_COMPACTION_SIZE_THRESHOLD:
+                await compact_memory(
+                    agent_slug=slug,
+                    task_id="periodic",
+                    reason="size_threshold",
+                    memory_root=base_path,
+                )
+                continue
+
+            last_compaction_at = get_last_compaction_at(
+                memory_root=base_path, agent_slug=slug
+            )
+            if last_compaction_at is None:
+                continue
+            elapsed = (now - last_compaction_at).total_seconds()
+            if elapsed >= settings.MEMORY_COMPACTION_MAX_AGE_SECONDS:
+                await compact_memory(
+                    agent_slug=slug,
+                    task_id="periodic",
+                    reason="time_threshold",
+                    memory_root=base_path,
+                )
+
+        logger.info("[periodic_sync] Memory sync completed")
+    except Exception as e:
+        logger.error(f"[periodic_sync] Memory sync failed: {e}")
+        raise
+
+
 def schedule_periodic_tasks():
     """Schedule periodic sync tasks in RQ scheduler.
 
@@ -89,6 +145,7 @@ def schedule_periodic_tasks():
             "app.tasks.periodic_sync.run_sync_agents",
             "app.tasks.periodic_sync.run_sync_sessions",
             "app.tasks.periodic_sync.run_sync_tasks",
+            "app.tasks.periodic_sync.run_sync_memory",
         ]:
             scheduler.cancel(job)
             logger.info(f"[periodic_sync] Cancelled existing job: {job.func_name}")
@@ -122,5 +179,15 @@ def schedule_periodic_tasks():
         result_ttl=0,  # don't keep results
     )
     logger.info("[periodic_sync] Scheduled task sync every 5 minutes")
+
+    # Schedule memory sync every 5 minutes (offset by 20s)
+    scheduler.schedule(
+        scheduled_time=datetime.now(UTC) + timedelta(seconds=20),
+        func="app.tasks.periodic_sync:run_sync_memory",
+        interval=300,
+        repeat=None,
+        result_ttl=0,
+    )
+    logger.info("[periodic_sync] Scheduled memory sync every 5 minutes")
 
     return scheduler

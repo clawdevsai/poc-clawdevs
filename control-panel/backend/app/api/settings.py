@@ -19,17 +19,35 @@
 # SOFTWARE.
 
 from fastapi import APIRouter
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, AdminUser
 from app.core.config import get_settings
+from app.core.database import get_session
 from app.services.openclaw_client import openclaw_client
 from app.services import container_client
+from app.services.runtime_settings import RuntimeSettingsService
 
 settings = get_settings()
 router = APIRouter()
 
 
+class AgentUpdateRequest(BaseModel):
+    agent_id: str | None = None
+    agent_slug: str | None = None
+    enabled: bool
+
+
+class RuntimeSettingsUpdateRequest(BaseModel):
+    limits: dict | None = None
+    flags: dict | None = None
+    model_provider: str | None = None
+    model_name: str | None = None
+    agent_updates: list[AgentUpdateRequest] | None = None
+    thresholds: dict | None = None
+    confirm_text: str | None = None
+
+
 @router.get("/info")
-async def get_settings_info(_: CurrentUser):
+async def get_settings_info(_: AdminUser):
     cluster_info = container_client.get_cluster_info(namespace=settings.container_namespace)
     return {
         "gateway_url": settings.openclaw_gateway_url,
@@ -39,6 +57,35 @@ async def get_settings_info(_: CurrentUser):
 
 
 @router.get("/gateway-health")
-async def get_gateway_health(_: CurrentUser):
+async def get_gateway_health(_: AdminUser):
     healthy = await openclaw_client.health()
     return {"status": "ok" if healthy else "error"}
+
+
+@router.get("/runtime")
+async def get_runtime_settings(
+    _: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+):
+    service = RuntimeSettingsService(session, settings)
+    return await service.get_settings()
+
+
+@router.put("/runtime")
+async def update_runtime_settings(
+    body: RuntimeSettingsUpdateRequest,
+    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+):
+    service = RuntimeSettingsService(session, settings)
+    try:
+        payload = body.model_dump(exclude_unset=True)
+        payload["agent_updates"] = (
+            [item.model_dump() for item in body.agent_updates]
+            if body.agent_updates is not None
+            else None
+        )
+        result = await service.update_settings(payload, current_user)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return result

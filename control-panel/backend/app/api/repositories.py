@@ -20,6 +20,7 @@
 
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends, Response, status
+from app.api.deps import CurrentUser, AdminUser
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
@@ -27,7 +28,7 @@ from datetime import datetime, UTC
 from uuid import UUID
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, AdminUser
 from app.models import Repository
 
 router = APIRouter()
@@ -96,7 +97,7 @@ async def list_repositories(
 async def create_repository(
     body: CreateRepositoryRequest,
     response: Response,
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     from datetime import datetime
@@ -136,7 +137,7 @@ async def create_repository(
 async def update_repository(
     repo_id: str,
     body: UpdateRepositoryRequest,
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     from datetime import datetime
@@ -164,7 +165,7 @@ async def update_repository(
 @router.delete("/{repo_id}", status_code=204)
 async def delete_repository(
     repo_id: str,
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(

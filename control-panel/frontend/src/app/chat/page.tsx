@@ -50,8 +50,10 @@ import {
 import { AppLayout } from "@/components/layout/app-layout";
 import { customInstance } from "@/lib/axios-instance";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Agent {
   slug: string;
@@ -1084,22 +1086,27 @@ function ChatPageContent() {
                   placeholder="Digite para buscar agente"
                   className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 pr-9 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))]"
                 />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAgentDropdownOpen((open) => {
-                      const next = !open;
-                      if (next) {
-                        setAgentQuery("");
-                      }
-                      return next;
-                    });
-                  }}
-                  className="absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[hsl(var(--muted-foreground))]"
-                  aria-label="Abrir seletor de agente"
-                >
-                  <ChevronsUpDown className="h-4 w-4" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAgentDropdownOpen((open) => {
+                          const next = !open;
+                          if (next) {
+                            setAgentQuery("");
+                          }
+                          return next;
+                        });
+                      }}
+                      className="absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[hsl(var(--muted-foreground))]"
+                      aria-label="Abrir seletor de agente"
+                    >
+                      <ChevronsUpDown className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Selecionar agente</TooltipContent>
+                </Tooltip>
 
                 {agentDropdownOpen && (
                   <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1 shadow-2xl">
@@ -1210,52 +1217,55 @@ function ChatPageContent() {
                         {msg.content.trim() &&
                         (msg.role === "user" || msg.role === "assistant") ? (
                           <div className="flex shrink-0 items-center gap-0.5">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                try {
-                                  await navigator.clipboard.writeText(msg.content);
-                                  setCopiedMessageId(msg.id);
-                                  window.setTimeout(() => {
-                                    setCopiedMessageId((cur) => (cur === msg.id ? null : cur));
-                                  }, 2000);
-                                } catch {
-                                  console.warn("Clipboard write failed");
-                                }
-                              }}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
-                              aria-label={
-                                copiedMessageId === msg.id ? "Copiado" : "Copiar texto da mensagem"
-                              }
-                              title={copiedMessageId === msg.id ? "Copiado" : "Copiar"}
-                            >
-                              {copiedMessageId === msg.id ? (
-                                <Check className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
-                              ) : (
-                                <Copy className="h-3.5 w-3.5" />
-                              )}
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText(msg.content);
+                                      setCopiedMessageId(msg.id);
+                                      window.setTimeout(() => {
+                                        setCopiedMessageId((cur) => (cur === msg.id ? null : cur));
+                                      }, 2000);
+                                    } catch {
+                                      console.warn("Clipboard write failed");
+                                    }
+                                  }}
+                                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
+                                  aria-label={copiedMessageId === msg.id ? "Copiado" : "Copiar texto da mensagem"}
+                                >
+                                  {copiedMessageId === msg.id ? (
+                                    <Check className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
+                                  ) : (
+                                    <Copy className="h-3.5 w-3.5" />
+                                  )}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>{copiedMessageId === msg.id ? "Copiado" : "Copiar"}</TooltipContent>
+                            </Tooltip>
                             {msg.role === "assistant" ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const prevUser =
-                                    index > 0 && messages[index - 1]?.role === "user"
-                                      ? messages[index - 1].content
-                                      : undefined;
-                                  const slug = selectedAgent ?? "agent";
-                                  const payload = assistantDownloadPayload(msg.content);
-                                  downloadTextFile(
-                                    payload,
-                                    suggestFilename(payload, prevUser, slug, msg.id)
-                                  );
-                                }}
-                                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
-                                aria-label="Baixar documento"
-                                title="Baixar documento"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const prevUser =
+                                        index > 0 && messages[index - 1]?.role === "user"
+                                          ? messages[index - 1].content
+                                          : undefined;
+                                      const slug = selectedAgent ?? "agent";
+                                      const payload = assistantDownloadPayload(msg.content);
+                                      downloadTextFile(payload, suggestFilename(payload, prevUser, slug, msg.id));
+                                    }}
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
+                                    aria-label="Baixar documento"
+                                  >
+                                    <Download className="h-3.5 w-3.5" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Baixar documento</TooltipContent>
+                              </Tooltip>
                             ) : null}
                           </div>
                         ) : null}
@@ -1313,66 +1323,86 @@ function ChatPageContent() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleComposerKeyDown}
-                  placeholder="Message Memo (Enter to send)"
+                  placeholder="Mensagem para Memo (Enter para enviar)"
                   className="min-h-[62px] max-h-44 w-full resize-none rounded-xl border border-transparent bg-transparent px-2.5 py-2 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--primary)/0.3)] focus:outline-none"
                 />
 
                 <div className="mt-1 flex items-center justify-between px-1 pb-0.5">
                   <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
-                      aria-label="Anexar arquivo"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
-                      aria-label="Usar microfone"
-                    >
-                      <Mic className="h-4 w-4" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
+                          aria-label="Anexar arquivo"
+                        >
+                          <Paperclip className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Anexar arquivo</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
+                          aria-label="Usar microfone"
+                        >
+                          <Mic className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Usar microfone</TooltipContent>
+                    </Tooltip>
                   </div>
 
                   <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
-                      aria-label="Adicionar ação"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!selectedAgent || messages.length === 0) return;
-                        const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
-                        const filename = `chat-${selectedAgent}-${stamp}.md`;
-                        downloadTextFile(
-                          buildChatExportMarkdown(
-                            messages,
-                            "Você",
-                            selectedAgentLabel || "Assistente"
-                          ),
-                          filename
-                        );
-                      }}
-                      disabled={!selectedAgent || messages.length === 0}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50 disabled:cursor-not-allowed disabled:opacity-40"
-                      aria-label="Exportar conversa"
-                      title="Exportar conversa (Markdown)"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={sendMessage}
-                      disabled={sending || !selectedAgent || !input.trim()}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
-                      aria-label="Enviar mensagem"
-                    >
-                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
+                          aria-label="Adicionar ação"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Adicionar ação</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!selectedAgent || messages.length === 0) return;
+                            const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+                            const filename = `chat-${selectedAgent}-${stamp}.md`;
+                            downloadTextFile(
+                              buildChatExportMarkdown(messages, "Você", selectedAgentLabel || "Assistente"),
+                              filename
+                            );
+                          }}
+                          disabled={!selectedAgent || messages.length === 0}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50 disabled:cursor-not-allowed disabled:opacity-40"
+                          aria-label="Exportar conversa"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Exportar conversa (Markdown)</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={sendMessage}
+                          disabled={sending || !selectedAgent || !input.trim()}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
+                          aria-label="Enviar mensagem"
+                        >
+                          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Enviar mensagem</TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
               </div>

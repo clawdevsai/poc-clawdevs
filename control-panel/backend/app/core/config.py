@@ -130,6 +130,21 @@ class Settings(BaseSettings):
     # Canary deployment agents (comma-separated)
     SEMANTIC_OPT_CANARY_AGENTS: str = Field(default="")
 
+    # Orchestration parallelism gate
+    ORCH_PARALLELISM_ENABLED: bool = Field(default=False)
+    ORCH_PARALLELISM_FORCE: bool = Field(default=False)
+    ORCH_PARALLELISM_COST_THRESHOLD: float = Field(default=2.0)
+    ORCH_PARALLELISM_LATENCY_THRESHOLD_SECONDS: int = Field(default=600)
+    ORCH_PARALLELISM_LOOKBACK_TASKS: int = Field(default=25)
+    ORCH_PARALLELISM_ADAPTIVE_ENABLED: bool = Field(default=True)
+    ORCH_PARALLELISM_ADAPTIVE_MIN_SAMPLES: int = Field(default=10)
+    ORCH_PARALLELISM_COST_MULTIPLIER: float = Field(default=1.2)
+    ORCH_PARALLELISM_LATENCY_MULTIPLIER: float = Field(default=1.2)
+
+    # Memory compaction thresholds
+    MEMORY_COMPACTION_SIZE_THRESHOLD: int = Field(default=200_000)
+    MEMORY_COMPACTION_MAX_AGE_SECONDS: int = Field(default=86_400)
+
     model_config = {"env_prefix": "PANEL_", "env_file": ".env", "extra": "allow"}
 
 
