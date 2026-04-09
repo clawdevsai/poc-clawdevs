@@ -42,10 +42,9 @@ async def sync_sessions(db_session) -> None:
     agent_slugs = get_discovered_agent_slugs()
 
     # Performance: Batch fetch all existing sessions to avoid N+1 queries.
-    existing_sessions_result = await db_session.exec(select(Session))
-    existing_sessions_map = {
-        s.openclaw_session_id: s for s in existing_sessions_result.all()
-    }
+    # In systems with many sessions, this significantly reduces DB round-trips.
+    result = await db_session.exec(select(Session))
+    existing_sessions = {s.openclaw_session_id: s for s in result.all()}
 
     for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
@@ -73,28 +72,26 @@ async def sync_sessions(db_session) -> None:
             if not session_id:
                 continue
 
-            # Performance: Use the pre-fetched map instead of per-session queries.
-            existing = existing_sessions_map.get(session_id)
+            # Performance: Use the pre-fetched session map
+            existing = existing_sessions.get(session_id)
 
             # Parse timestamps
             updated_at = _parse_timestamp(oc_session.get("updatedAt"))
             last_active_at = updated_at  # Use updatedAt as lastActiveAt
-
-            # Performance: Only re-process and re-read session logs if the session is new
-            # or its updatedAt timestamp has progressed. This avoids expensive Disk I/O.
-            if existing and last_active_at and existing.last_active_at:
-                if last_active_at <= existing.last_active_at:
-                    continue
-
             status = _derive_session_status(updated_at)
 
-            # Performance: Implement Smart Sync check.
-            # We skip expensive operations (like message counting and DB field updates)
-            # if the session already exists and its last activity matches the JSON.
-            # This significantly reduces I/O when processing many idle sessions.
-            if existing:
-                if existing.last_active_at == updated_at and existing.status == status:
+            # Performance: Smart Sync - skip processing if timestamps haven't changed
+            # and status remains consistent (e.g. both completed).
+            # message counting is expensive as it requires reading the transcript file.
+            if existing and existing.last_active_at == last_active_at:
+                if existing.status == status:
                     continue
+                # If only status changed (active -> completed due to timeout),
+                # we only update status without re-counting messages.
+                existing.status = status
+                if status == "completed" and existing.ended_at is None:
+                    existing.ended_at = last_active_at
+                continue
 
             # Extract channel info from deliveryContext or origin
             delivery = oc_session.get("deliveryContext", {})
@@ -174,8 +171,8 @@ async def sync_sessions(db_session) -> None:
                     ended_at=last_active_at if status == "completed" else None,
                 )
                 db_session.add(new_session)
-                # Keep the map up to date for this sync run
-                existing_sessions_map[session_id] = new_session
+                # Ensure it's in our map for the next iteration (in case of same sessionId)
+                existing_sessions[session_id] = new_session
 
     await db_session.commit()
 

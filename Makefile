@@ -131,8 +131,7 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: openclaw-image-build-with-cache
 .PHONY: images-push images-release
 .PHONY: spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist
-.PHONY: gen-secret
-.PHONY: cypress cypress-ui
+.PHONY: gen-secret cypress cypress-ui
 
 gen-secret:
 	@python -c "import secrets; print(secrets.token_hex(32))"
