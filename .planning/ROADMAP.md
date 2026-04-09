@@ -71,12 +71,14 @@ Plans:
 2. Authentication/session behavior remains stable from user perspective
 3. Cypress smoke path verifies login and dashboard navigation
 4. No backend API contract change is required for migrated frontend flows
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
 - [x] 04-01: Validate route-level feature compatibility (chat/tasks/sessions/monitoring/etc.)
 - [x] 04-02: Add or adjust Cypress smoke coverage for migrated entry flows
 - [x] 04-03: Final regression pass and release readiness checklist
+- [ ] 04-04: Gap closure rerun for Cypress smoke with explicit evidence artifact
+- [ ] 04-05: HUMAN CHECK closure and verification/readiness finalization
 
 ## Progress
 
@@ -85,4 +87,4 @@ Plans:
 | 1. Runtime and Tailwind Baseline | 3/3 | Complete | 2026-04-07 |
 | 2. Shell and Layout Migration | 0/3 | Not started | - |
 | 3. Dashboard and Chart Modernization | 0/3 | Not started | - |
-| 4. Compatibility and Rollout Hardening | 0/3 | Not started | - |
+| 4. Compatibility and Rollout Hardening | 0/5 | Not started | - |
