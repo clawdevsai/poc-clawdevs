@@ -76,7 +76,7 @@ Plans:
 Plans:
 - [x] 04-01: Validate route-level feature compatibility (chat/tasks/sessions/monitoring/etc.)
 - [x] 04-02: Add or adjust Cypress smoke coverage for migrated entry flows
-- [ ] 04-03: Final regression pass and release readiness checklist
+- [x] 04-03: Final regression pass and release readiness checklist
 
 ## Progress
 
