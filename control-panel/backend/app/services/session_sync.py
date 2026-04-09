@@ -56,6 +56,13 @@ async def sync_sessions(db_session) -> None:
         if not isinstance(data, dict):
             continue
 
+        # Optimization: Fetch all existing sessions for this agent in a single batch.
+        # This prevents N+1 queries during the sync loop.
+        result = await db_session.exec(
+            select(Session).where(Session.agent_slug == agent_slug)
+        )
+        existing_map = {s.openclaw_session_id: s for s in result.all()}
+
         # If two JSON keys share the same sessionId, the last one processed wins for
         # the DB row (upsert by openclaw_session_id); openclaw_session_key reflects
         # the last seen key.
@@ -67,15 +74,17 @@ async def sync_sessions(db_session) -> None:
             if not session_id:
                 continue
 
-            # Try to find existing session
-            result = await db_session.exec(
-                select(Session).where(Session.openclaw_session_id == session_id)
-            )
-            existing = result.first()
+            # Try to find existing session from the pre-fetched map.
+            existing = existing_map.get(session_id)
 
             # Parse timestamps
             updated_at = _parse_timestamp(oc_session.get("updatedAt"))
             last_active_at = updated_at  # Use updatedAt as lastActiveAt
+
+            # Smart Sync: Skip processing if the session hasn't changed.
+            # We compare the source updatedAt with the DB last_active_at.
+            if existing and updated_at and existing.last_active_at == updated_at:
+                continue
 
             status = _derive_session_status(updated_at)
 
@@ -104,7 +113,8 @@ async def sync_sessions(db_session) -> None:
             elif "contextTokens" in oc_session:
                 token_count = oc_session.get("contextTokens", 0)
 
-            # Count messages from session file if exists
+            # Count messages from session file if exists.
+            # This is an expensive filesystem operation (reading/parsing JSONL).
             session_file = oc_session.get("sessionFile")
             session_path: Path | None = None
             if isinstance(session_file, str) and session_file:
@@ -157,6 +167,8 @@ async def sync_sessions(db_session) -> None:
                     ended_at=last_active_at if status == "completed" else None,
                 )
                 db_session.add(new_session)
+                # Ensure the new session is also in existing_map for current loop batch
+                existing_map[session_id] = new_session
 
     await db_session.commit()
 
