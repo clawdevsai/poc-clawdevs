@@ -1,3 +1,3 @@
-## 2026-04-04 - [Tooltips for Icon-only Buttons]
-**Learning:** Icon-only buttons (like Attach, Mic, Export) can be ambiguous even with good iconography. Adding tooltips improves discoverability without cluttering the UI. Removing the native `title` attribute is essential to prevent double-tooltips when using custom components like Radix UI Tooltip.
-**Action:** Always wrap icon-only buttons with the `Tooltip` component and ensure `TooltipTrigger` has `asChild` to preserve styling.
+## 2026-04-08 - Tooltip implementation on buttons
+**Learning:** When using Radix UI Tooltips with buttons, the `TooltipTrigger` should wrap the `button` using `asChild`. Placing the trigger inside the button (e.g., around only the icon) is an anti-pattern that reduces the trigger area to just the icon and, crucially, breaks keyboard accessibility because focusing the button via Tab won't activate the tooltip.
+**Action:** Always wrap the interactive element (button, link) with `TooltipTrigger asChild` to ensure consistent hover and focus behavior.

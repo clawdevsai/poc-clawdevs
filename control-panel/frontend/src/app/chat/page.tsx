@@ -1233,7 +1233,11 @@ function ChatPageContent() {
                                     }
                                   }}
                                   className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
-                                  aria-label={copiedMessageId === msg.id ? "Copiado" : "Copiar texto da mensagem"}
+                                  aria-label={
+                                    copiedMessageId === msg.id
+                                      ? "Copiado"
+                                      : "Copiar texto da mensagem"
+                                  }
                                 >
                                   {copiedMessageId === msg.id ? (
                                     <Check className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
@@ -1242,7 +1246,9 @@ function ChatPageContent() {
                                   )}
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent>{copiedMessageId === msg.id ? "Copiado" : "Copiar"}</TooltipContent>
+                              <TooltipContent>
+                                {copiedMessageId === msg.id ? "Copiado" : "Copiar"}
+                              </TooltipContent>
                             </Tooltip>
                             {msg.role === "assistant" ? (
                               <Tooltip>
@@ -1256,7 +1262,10 @@ function ChatPageContent() {
                                           : undefined;
                                       const slug = selectedAgent ?? "agent";
                                       const payload = assistantDownloadPayload(msg.content);
-                                      downloadTextFile(payload, suggestFilename(payload, prevUser, slug, msg.id));
+                                      downloadTextFile(
+                                        payload,
+                                        suggestFilename(payload, prevUser, slug, msg.id)
+                                      );
                                     }}
                                     className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
                                     aria-label="Baixar documento"
@@ -1377,7 +1386,11 @@ function ChatPageContent() {
                             const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
                             const filename = `chat-${selectedAgent}-${stamp}.md`;
                             downloadTextFile(
-                              buildChatExportMarkdown(messages, "Você", selectedAgentLabel || "Assistente"),
+                              buildChatExportMarkdown(
+                                messages,
+                                "Você",
+                                selectedAgentLabel || "Assistente"
+                              ),
                               filename
                             );
                           }}
@@ -1398,10 +1411,14 @@ function ChatPageContent() {
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
                           aria-label="Enviar mensagem"
                         >
-                          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          {sending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Enviar mensagem</TooltipContent>
+                      <TooltipContent>Enviar mensagem (Enter)</TooltipContent>
                     </Tooltip>
                   </div>
                 </div>
