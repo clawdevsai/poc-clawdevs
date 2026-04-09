@@ -130,3 +130,132 @@ Copy `.env.example` to `.env` and configure:
 - **API client generation**: After changing backend schemas, run `pnpm orval` in the frontend to regenerate TypeScript clients
 - **Migrations**: Model changes require a new Alembic migration; they run automatically on backend startup
 - **Documentation language**: README and docs are in Portuguese (pt-BR); code is in English
+
+<!-- GSD:project-start source:PROJECT.md -->
+## Project
+
+**ClawDevs AI Panel UI Modernization (Mosaic)**
+
+This project modernizes the existing `control-panel/frontend` experience in a brownfield codebase. The goal is to adopt the visual/system patterns from Cruip's Tailwind dashboard template (Mosaic) while preserving current application capabilities, routes, and backend integrations.
+
+The current panel already runs on Next.js App Router, Tailwind CSS v4, and chart components; this initiative upgrades visual consistency and dashboard UX without changing the product domain.
+
+**Core Value:** Operators can monitor and manage AI workflows quickly from a consistent, fast, and reliable dashboard interface without losing existing functionality.
+
+### Constraints
+
+- **Tech Stack**: Keep Next.js + React + Tailwind 4.x and existing frontend architecture
+- **Compatibility**: Preserve current route map and backend API contracts
+- **Quality**: Avoid regressions in existing task/chat/session/monitoring flows
+- **Security**: No secret leakage from `.env` or runtime configs during migration
+- **Incremental Delivery**: Execute in phased steps to keep deployability throughout
+<!-- GSD:project-end -->
+
+<!-- GSD:stack-start source:codebase/STACK.md -->
+## Technology Stack
+
+## Monorepo Context
+- Root workspace: `C:/Users/Administrator/Workspace/lukeware/clawdevs-ai`
+- Main product modules: `control-panel/frontend` and `control-panel/backend`
+- Infra and runtime orchestration: `docker/` plus root `Makefile`
+## Frontend Stack
+- Framework: `next@16.2.0` with App Router (`control-panel/frontend/src/app`)
+- React: `react@19.2.4`, `react-dom@19.2.4`
+- Language/tooling: TypeScript (`tsconfig.json`), ESLint (`eslint-config-next`)
+- Styling: `tailwindcss@4.2.2`, `@tailwindcss/postcss@4.2.2`, `postcss@8.5.3`
+- UI primitives: Radix packages (`@radix-ui/*`), `shadcn`, `lucide-react`
+- Data/UI libs: `@tanstack/react-query`, `@tanstack/react-table`, `recharts`
+- Networking: `axios`
+- E2E tests: Cypress (`cypress.config.ts`, `cypress/e2e/*.cy.ts`)
+## Backend Stack
+- Runtime: Python `>=3.12,<4.0` (see `control-panel/backend/pyproject.toml`)
+- API: FastAPI (`fastapi==0.135.1`), ASGI server `uvicorn[standard]==0.34.0`
+- ORM/data: `sqlmodel`, `alembic`, `asyncpg`, `psycopg`, `pgvector`
+- Queue/cache: `redis[hiredis]`, `rq`, `rq-scheduler`
+- Auth/security helpers: `passlib[bcrypt]`, `pyjwt[crypto]`
+- Async/HTTP: `httpx`, `aiohttp`, `anyio`, `trio`
+- Test tooling: `pytest`, `pytest-asyncio`, `pytest-cov`
+## Build and Delivery
+- Docker images under `docker/clawdevs-*`
+- Orchestration commands via root `Makefile`
+- Frontend container build file: `control-panel/frontend/Dockerfile`
+- Backend container build file: `docker/clawdevs-panel-backend/Dockerfile`
+## Notes for Requested Work
+- Tailwind v4 is already present in frontend dependencies.
+- Current Next version is `16.2.0`; user target mentions `16.2.2`.
+<!-- GSD:stack-end -->
+
+<!-- GSD:conventions-start source:CONVENTIONS.md -->
+## Conventions
+
+## Frontend Conventions
+- TypeScript-first React codebase in `control-panel/frontend/src`.
+- App Router pages in `src/app/**/page.tsx`.
+- Shared UI atoms in `src/components/ui/*`.
+- Domain grouping pattern in `src/components/{dashboard,monitoring,approvals,...}`.
+- Utility helpers centralized in `src/lib`.
+- Styling stack assumes Tailwind utility classes plus helper libs (`clsx`, `tailwind-merge`).
+## Backend Conventions
+- Router modules segmented by capability in `control-panel/backend/app/api/*.py`.
+- Test module naming follows `test_*.py` under `control-panel/backend/tests`.
+- Async endpoints and service logic aligned with FastAPI + AnyIO stack.
+- Migrations managed in `control-panel/backend/migrations`.
+## Naming and Organization Patterns
+- Feature-based naming for page routes (`chat`, `tasks`, `sessions`, `monitoring`).
+- UI component names are descriptive and usually noun-based (`stats-card.tsx`, `usage-chart.tsx`).
+- API files map 1:1 to domain concepts (`approvals.py`, `repositories.py`, `settings.py`).
+## Tooling and Quality Hints
+- Frontend scripts emphasize type-safety (`npm/pnpm run lint` wired to `tsc --noEmit`).
+- Backend typing checks indicated by mypy cache and config in `pyproject.toml`.
+- Cypress and pytest are both present and already used.
+## Migration-Specific Convention Guidance
+- Reuse existing route/component boundaries instead of collapsing everything into one page.
+- Keep chart data plumbing consistent with existing abstractions in `src/components/dashboard` and `src/components/monitoring`.
+- Preserve `src/components/layout/*` composition contracts while replacing visuals.
+<!-- GSD:conventions-end -->
+
+<!-- GSD:architecture-start source:ARCHITECTURE.md -->
+## Architecture
+
+## High-Level Shape
+- Multi-service repository with a control panel product split into:
+- Operational infrastructure and build assets live in `docker/` and root scripts.
+## Frontend Architecture
+- Next.js App Router with route-per-feature structure in `src/app`.
+- Shared UI elements in `src/components/ui`.
+- Feature components grouped by domain in `src/components/{dashboard,monitoring,approvals,...}`.
+- App shell/layout composition in:
+- Data access concentrated under `src/lib/*`.
+## Backend Architecture
+- FastAPI service with module-per-domain routers under `app/api`.
+- Core/config/service logic under `app/core` and `app/services` (by convention from tree).
+- Entrypoint is expected in `app/main.py` (`__pycache__/main.cpython-312.pyc` confirms).
+- Migrations directory present: `control-panel/backend/migrations`.
+## Data and Flow
+- Frontend server routes forward/proxy requests to backend/openclaw endpoints.
+- Backend exposes REST and websocket-style endpoints for sessions, chat, tasks, and monitoring.
+- Redis/RQ pair supports asynchronous execution paths.
+## Implication for Dashboard Template Migration
+- Landing/dashboard area likely centered on:
+- Existing monitoring charts (`src/components/monitoring/*chart*.tsx`) suggest chart abstractions already present.
+<!-- GSD:architecture-end -->
+
+<!-- GSD:workflow-start source:GSD defaults -->
+## GSD Workflow Enforcement
+
+Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+
+Use these entry points:
+- `/gsd:quick` for small fixes, doc updates, and ad-hoc tasks
+- `/gsd:debug` for investigation and bug fixing
+- `/gsd:execute-phase` for planned phase work
+
+Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+<!-- GSD:workflow-end -->
+
+<!-- GSD:profile-start -->
+## Developer Profile
+
+> Profile not yet configured. Run `/gsd:profile-user` to generate your developer profile.
+> This section is managed by `generate-claude-profile` -- do not edit manually.
+<!-- GSD:profile-end -->

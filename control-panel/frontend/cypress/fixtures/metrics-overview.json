@@ -1,0 +1,11 @@
+{
+  "active_agents": 4,
+  "pending_approvals": 2,
+  "open_tasks": 11,
+  "tokens_24h": 18420,
+  "tokens_consumed_total": 332100,
+  "tokens_consumed_avg_per_task": 1543.6,
+  "backlog_count": 47,
+  "tasks_in_progress": 9,
+  "tasks_completed": 28
+}

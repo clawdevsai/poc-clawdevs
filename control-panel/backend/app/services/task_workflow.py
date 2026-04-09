@@ -20,6 +20,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 from uuid import UUID
@@ -29,7 +30,9 @@ from rq import Queue, Retry
 from sqlmodel import select
 
 from app.core.config import get_settings
+from app.core.database import AsyncSessionLocal
 from app.models import ActivityEvent, Agent, Task
+from app.services.parallelism_gate import evaluate_parallelism_gate
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -37,10 +40,15 @@ settings = get_settings()
 WORKFLOW_QUEUED_TO_CEO = "queued_to_ceo"
 WORKFLOW_PROCESSING_BY_CEO = "processing_by_ceo"
 WORKFLOW_FORWARDED_BY_CEO = "forwarded_by_ceo"
+WORKFLOW_PLANNING = "planning"
+WORKFLOW_EXECUTING = "executing"
+WORKFLOW_SELF_REVIEW = "self_review"
+WORKFLOW_PEER_REVIEW = "peer_review"
+WORKFLOW_CONSOLIDATING = "consolidating"
 WORKFLOW_FAILED = "failed"
 WORKFLOW_COMPLETED = "completed"
 
-FINAL_WORKFLOW_STATES = {WORKFLOW_COMPLETED}
+FINAL_WORKFLOW_STATES = {WORKFLOW_COMPLETED, WORKFLOW_FAILED}
 NON_ENQUEUEABLE_STATES = FINAL_WORKFLOW_STATES | {WORKFLOW_PROCESSING_BY_CEO}
 
 
@@ -69,6 +77,33 @@ def task_workflow_job_id(task_id: UUID | str) -> str:
 def enqueue_task_for_ceo(task_id: UUID) -> tuple[bool, str | None]:
     job_id = task_workflow_job_id(task_id)
     try:
+        async def _check_gate() -> tuple[bool, str]:
+            async with AsyncSessionLocal() as session:
+                result = await session.exec(
+                    select(Task).where(Task.status == "in_progress")
+                )
+                in_progress_count = len(result.all())
+                allowed, reason = await evaluate_parallelism_gate(
+                    session, in_progress_count
+                )
+                if not allowed:
+                    await log_task_event(
+                        session,
+                        task_id=task_id,
+                        event_type="task.parallelism_blocked",
+                        description="Parallelismo bloqueado pelo gate",
+                        payload={
+                            "reason": reason,
+                            "in_progress_count": in_progress_count,
+                        },
+                    )
+                await session.commit()
+                return allowed, reason
+
+        allowed, reason = asyncio.run(_check_gate())
+        if not allowed:
+            return False, reason
+
         redis_conn = Redis.from_url(settings.redis_url)
         queue = Queue("default", connection=redis_conn)
 

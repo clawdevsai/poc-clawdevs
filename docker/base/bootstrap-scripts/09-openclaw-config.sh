@@ -88,6 +88,12 @@ case "${_sandbox_session_tools_visibility}" in
     ;;
 esac
 
+# Context Mode output/process caps (used by hooks config + guardrails)
+_context_mode_max_output_bytes="${OPENCLAW_CONTEXT_MODE_MAX_OUTPUT_BYTES:-200000}"
+_context_mode_max_process_time_seconds="${OPENCLAW_CONTEXT_MODE_MAX_PROCESS_TIME_SECONDS:-120}"
+export OPENCLAW_CONTEXT_MODE_MAX_OUTPUT_BYTES="${_context_mode_max_output_bytes}"
+export OPENCLAW_CONTEXT_MODE_MAX_PROCESS_TIME_SECONDS="${_context_mode_max_process_time_seconds}"
+
 _exec_policy_raw="${OPENCLAW_EXEC_POLICY:-allowlist}"
 _exec_policy="$(printf '%s' "${_exec_policy_raw}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
 case "${_exec_policy}" in
@@ -679,6 +685,32 @@ sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" "${OPENCLAW_STATE_DIR}/openclaw
 sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 sed -i "s#__CONTROL_UI_ALLOWED_ORIGINS__#${_allowed_origins_json}#g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+
+# Enforce allowed Ollama fallback model list (automatic)
+_allowed_models_csv="qwen3-next:80b-cloud,gpt-oss:120b-cloud,nemotron-3-super:cloud,qwen3-coder:480b-cloud,gemma3:27b-cloud,qwen3-vl:235b-cloud,qwen3.5:397b-cloud,minimax-m2.7:cloud,qwen3-coder-next:cloud"
+export OPENCLAW_OLLAMA_ALLOWED_MODELS="${_allowed_models_csv}"
+_allowed_models_json="$(jq -cn '[
+  {"id":"qwen3-next:80b-cloud","name":"qwen3-next:80b-cloud"},
+  {"id":"gpt-oss:120b-cloud","name":"gpt-oss:120b-cloud"},
+  {"id":"nemotron-3-super:cloud","name":"nemotron-3-super:cloud"},
+  {"id":"qwen3-coder:480b-cloud","name":"qwen3-coder:480b-cloud"},
+  {"id":"gemma3:27b-cloud","name":"gemma3:27b-cloud"},
+  {"id":"qwen3-vl:235b-cloud","name":"qwen3-vl:235b-cloud"},
+  {"id":"qwen3.5:397b-cloud","name":"qwen3.5:397b-cloud"},
+  {"id":"minimax-m2.7:cloud","name":"minimax-m2.7:cloud"},
+  {"id":"qwen3-coder-next:cloud","name":"qwen3-coder-next:cloud"}
+]')"
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_models="$(mktemp)"
+  if jq --argjson models "${_allowed_models_json}" '
+      .models.providers.ollama.models = $models
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_models}"; then
+    mv "${_tmp_models}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+  else
+    rm -f "${_tmp_models}"
+    echo "[bootstrap] falha ao aplicar lista de modelos permitidos (ollama)"
+  fi
+fi
 mkdir -p ~/.openclaw
 cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
 fi
@@ -1380,16 +1412,18 @@ fi
 if [ -f "${EXEC_APPROVALS_FILE}" ]; then
   _tmp_exec_approvals="$(mktemp)"
   if jq '
-      .agents.ceo.security = "full"
-      | .agents.ceo.ask = "off"
-      | .agents.po.security = "full"
-      | .agents.po.ask = "off"
+      .defaults.security = "full"
+      | .defaults.ask = "off"
+      | .agents |= with_entries(
+          .value.security = "full"
+          | .value.ask = "off"
+        )
     ' "${EXEC_APPROVALS_FILE}" > "${_tmp_exec_approvals}"; then
     mv "${_tmp_exec_approvals}" "${EXEC_APPROVALS_FILE}"
-    echo "[bootstrap] exec approvals: ceo/po security=full ask=off"
+    echo "[bootstrap] exec approvals: all agents security=full ask=off"
   else
     rm -f "${_tmp_exec_approvals}"
-    echo "[bootstrap] falha ao aplicar exec full para ceo/po em exec-approvals.json"
+    echo "[bootstrap] falha ao aplicar exec full para todos os agentes em exec-approvals.json"
   fi
 fi
 # Repair agent main sessions when the persisted transcript is missing, invalid,
@@ -1461,11 +1495,7 @@ EOF
 _provedor_raw="${PROVEDOR_LLM:-}"
 _provedor="$(printf '%s' "${_provedor_raw}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
 if [ -z "${_provedor}" ] || [ "${_provedor}" = "auto" ]; then
-  if [ -n "${OPENROUTER_API_KEY:-}" ]; then
-    _provedor="openrouter"
-  else
-    _provedor="ollama"
-  fi
+  _provedor="ollama"
 fi
 case "${_provedor}" in
   openrouter|open-router|or)
@@ -1476,51 +1506,45 @@ case "${_provedor}" in
     ;;
   *)
     echo "[bootstrap] AVISO: PROVEDOR_LLM invalido (${_provedor_raw}), aplicando fallback automatico"
-    if [ -n "${OPENROUTER_API_KEY:-}" ]; then
-      _provedor="openrouter"
-    else
-      _provedor="ollama"
-    fi
+  _provedor="ollama"
     ;;
 esac
 echo "[bootstrap] LLM provider selecionado=${_provedor}"
 
-if [ "${_provedor}" = "openrouter" ]; then
-  if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-    echo "[bootstrap] AVISO: provider=openrouter mas OPENROUTER_API_KEY nao definida; mantendo modelos atuais"
-  else
-    _tmp_or="$(mktemp)"
-    _or_model="${OPENROUTER_MODEL:-stepfun/step-3.5-flash:free}"
-    _or_base_url="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
-    case "${_or_model}" in
-      openrouter/*) _or_model_full="${_or_model}" ;;
-      *) _or_model_full="openrouter/${_or_model}" ;;
-    esac
-    _or_model_id="${_or_model_full#openrouter/}"
-    if jq \
-      --arg apiKey "${OPENROUTER_API_KEY}" \
-      --arg baseUrl "${_or_base_url}" \
-      --arg model "${_or_model_full}" \
-      --arg modelId "${_or_model_id}" \
-      '
-        .models.providers.openrouter = {
-          "apiKey": $apiKey,
-          "baseUrl": $baseUrl,
-          "models": [
-            { "id": $modelId, "name": $modelId }
-          ]
-        }
-        | .agents.defaults.model = $model
-        | (.agents.list[].model) = $model
-      ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_or}"; then
-      mv "${_tmp_or}" "${OPENCLAW_STATE_DIR}/openclaw.json"
-      mkdir -p ~/.openclaw
-      cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  _tmp_or="$(mktemp)"
+  _or_model="${OPENROUTER_MODEL:-stepfun/step-3.5-flash:free}"
+  _or_base_url="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+  case "${_or_model}" in
+    openrouter/*) _or_model_full="${_or_model}" ;;
+    *) _or_model_full="openrouter/${_or_model}" ;;
+  esac
+  _or_model_id="${_or_model_full#openrouter/}"
+  if jq \
+    --arg apiKey "${OPENROUTER_API_KEY}" \
+    --arg baseUrl "${_or_base_url}" \
+    --arg model "${_or_model_full}" \
+    --arg modelId "${_or_model_id}" \
+    '
+      .models.providers.openrouter = {
+        "apiKey": $apiKey,
+        "baseUrl": $baseUrl,
+        "models": [
+          { "id": $modelId, "name": $modelId }
+        ]
+      }
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_or}"; then
+    mv "${_tmp_or}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    if [ "${_provedor}" = "openrouter" ]; then
       echo "[bootstrap] provider=openrouter aplicado para todos os agentes (model=${_or_model_full})"
     else
-      rm -f "${_tmp_or}"
-      echo "[bootstrap] ERRO ao aplicar patch openrouter no openclaw.json"
+      echo "[bootstrap] openrouter registrado como fallback (model=${_or_model_full})"
     fi
+  else
+    rm -f "${_tmp_or}"
+    echo "[bootstrap] ERRO ao aplicar patch openrouter no openclaw.json"
   fi
 fi
 

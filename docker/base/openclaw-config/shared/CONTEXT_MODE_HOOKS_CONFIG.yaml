@@ -10,6 +10,11 @@
 #
 # Generated: 2026-03-31
 # Updated by: Context Mode Integration (Week 1)
+# Output caps: max_output_bytes=200000, max_process_time_seconds=120
+
+limits:
+  max_output_bytes: 200000
+  max_process_time_seconds: 120
 
 hooks:
   # Hook: tool.executed (Context Mode Compression)
