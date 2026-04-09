@@ -21,6 +21,17 @@ export interface SessionsResponse {
   total: number
 }
 
+export interface MetricsPoint {
+  metric_type: string | null
+  value: number
+  period_start: string
+}
+
+export interface MetricsResponse {
+  items: MetricsPoint[]
+  total: number
+}
+
 export interface OverviewMetrics {
   active_agents: number
   pending_approvals: number
@@ -114,6 +125,22 @@ export const listSessions = async (opts: { windowMinutes?: number | null }) => {
     url: "/sessions",
     method: "GET",
     params,
+  })
+}
+
+export const getMetricsSeries = async (opts: {
+  metricType?: string
+  hours?: number
+  intervalMinutes?: number
+}) => {
+  return customInstance<MetricsResponse>({
+    url: "/metrics",
+    method: "GET",
+    params: {
+      metric_type: opts.metricType ?? "active_sessions",
+      hours: opts.hours ?? 24,
+      interval_minutes: opts.intervalMinutes ?? 1,
+    },
   })
 }
 

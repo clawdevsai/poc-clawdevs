@@ -37,19 +37,28 @@ ACTIVE_WINDOW = timedelta(minutes=20)
 
 
 async def sync_sessions(db_session) -> None:
-    """Fetch sessions from OpenClaw filesystem and upsert them into the database."""
+    """Fetch sessions from OpenClaw filesystem and upsert them into the database.
+    ⚡ Bolt: Optimized using 'Collect-Batch-Compare' to avoid N+1 queries and redundant updates.
+    """
     base_path = Path(settings.openclaw_data_path)
     agent_slugs = get_discovered_agent_slugs()
+    collected: list[tuple[str, str, dict, str]] = []
+
+    # 1. Collect all session metadata from all agents first (Batching)
+    all_oc_sessions = []
+    all_session_ids = set()
 
     for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
-
         if not sessions_file.exists():
             continue
-
         try:
             with open(sessions_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                if isinstance(data, dict):
+                    for key, oc in data.items():
+                        if isinstance(oc, dict) and oc.get("sessionId"):
+                            collected.append((agent_slug, key, oc, str(oc["sessionId"])))
         except (OSError, json.JSONDecodeError):
             continue
 
@@ -69,10 +78,40 @@ async def sync_sessions(db_session) -> None:
         for session_key, oc_session in data.items():
             if not isinstance(oc_session, dict):
                 continue
-
             session_id = oc_session.get("sessionId")
-            if not session_id:
-                continue
+            if session_id:
+                all_oc_sessions.append((agent_slug, session_key, oc_session))
+                all_session_ids.add(session_id)
+
+    if not all_oc_sessions:
+        return
+
+    # 2. Batch lookup existing sessions from DB (O(1) query instead of O(N))
+    result = await db_session.exec(
+        select(Session).where(Session.openclaw_session_id.in_(list(all_session_ids)))
+    )
+    existing_map = {s.openclaw_session_id: s for s in result.all()}
+    changed = False
+
+    # 3. Process sessions and apply Smart Sync
+    for agent_slug, session_key, oc_session in all_oc_sessions:
+        session_id = oc_session.get("sessionId")
+        existing = existing_map.get(session_id)
+
+        # Parse timestamps for Smart Sync
+        updated_at = _parse_timestamp(oc_session.get("updatedAt"))
+        last_active_at = updated_at
+
+        # BOLT OPTIMIZATION: Smart Sync
+        # Skip processing if session exists and hasn't changed (based on updatedAt)
+        if (
+            existing
+            and last_active_at
+            and existing.last_active_at
+            and last_active_at == existing.last_active_at
+            and existing.status == _derive_session_status(updated_at)
+        ):
+            continue
 
             # Try to find existing session from the pre-fetched map.
             existing = existing_map.get(session_id)
@@ -88,14 +127,36 @@ async def sync_sessions(db_session) -> None:
 
             status = _derive_session_status(updated_at)
 
-            # Extract channel info from deliveryContext or origin
-            delivery = oc_session.get("deliveryContext", {})
-            origin = oc_session.get("origin", {})
+        if session_path and session_path.exists():
+            message_count = _count_messages_in_session_file(session_path)
 
-            channel_type = (
-                delivery.get("channel")
-                or origin.get("provider")
-                or origin.get("surface")
+        if existing:
+            existing.agent_slug = agent_slug
+            existing.openclaw_session_key = session_key
+            existing.channel_type = channel_type or existing.channel_type
+            existing.channel_peer = (
+                str(channel_peer) if channel_peer else existing.channel_peer
+            )
+            existing.status = status
+            existing.message_count = message_count
+            existing.token_count = token_count
+            existing.last_active_at = last_active_at or existing.last_active_at
+            if status == "completed" and existing.ended_at is None:
+                existing.ended_at = last_active_at
+            changed = True
+        else:
+            new_session = Session(
+                openclaw_session_id=session_id,
+                openclaw_session_key=session_key,
+                agent_slug=agent_slug,
+                channel_type=channel_type,
+                channel_peer=str(channel_peer) if channel_peer else None,
+                status=status,
+                message_count=message_count,
+                token_count=token_count,
+                started_at=last_active_at,
+                last_active_at=last_active_at,
+                ended_at=last_active_at if status == "completed" else None,
             )
             channel_peer = delivery.get("to") or origin.get("to")
 

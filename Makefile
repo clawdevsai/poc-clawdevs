@@ -218,7 +218,7 @@ help:
 	@echo "make migrate       Executa migrations Alembic"
 	@echo "make gen-secret     Gera secret key aleatoria (32 bytes hex)"
 	@echo "make cypress        Executa testes E2E Cypress (headless, inicia app se necessario)"
-	@echo "make cypress:ui     Executa testes E2E Cypress (interface grafica, inicia app se necessario)"
+	@echo "make cypress-ui     Executa testes E2E Cypress (interface grafica, inicia app se necessario)"
 
 preflight:
 	@if [ ! -f "$(ENV_FILE)" ]; then \

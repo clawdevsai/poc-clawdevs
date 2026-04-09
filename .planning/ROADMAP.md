@@ -58,9 +58,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Refactor dashboard composition to template-inspired sections
-- [ ] 03-02: Adapt existing chart components to new visual contracts
-- [ ] 03-03: Validate metric/data bindings across dashboard and monitoring surfaces
+- [x] 03-01: Refactor dashboard composition to template-inspired sections
+- [x] 03-02: Adapt existing chart components to new visual contracts
+- [x] 03-03: Validate metric/data bindings across dashboard and monitoring surfaces
 
 ### Phase 4: Compatibility and Rollout Hardening
 **Goal**: Ensure no functional regressions and confidence to ship

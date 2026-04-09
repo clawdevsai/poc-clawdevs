@@ -505,7 +505,7 @@ export default function SettingsPage() {
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-            Settings
+            Configurações
           </h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
             Gerencie conta, conexão com gateway, cluster e repositórios.

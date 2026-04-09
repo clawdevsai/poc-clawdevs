@@ -32,7 +32,9 @@ from fastapi import APIRouter, Depends, Query
 from sqlmodel import col
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.api.deps import CurrentUser
 from app.core.database import get_session
+from app.api.deps import CurrentUser
 from app.services.rag_retriever import RAGRetriever
 from app.services.embedding_service import EmbeddingService
 
@@ -43,6 +45,7 @@ router = APIRouter(prefix="/api/memory/rag", tags=["memory_rag"])
 
 @router.get("/search")
 async def search_memories(
+    _: CurrentUser,
     query: str = Query(..., min_length=3, max_length=1000, description="Search query"),
     top_k: int = Query(5, ge=1, le=20, description="Number of results"),
     agent_slug: Optional[str] = Query(None, description="Filter to specific agent"),
@@ -90,6 +93,7 @@ async def search_memories(
 @router.get("/agent/{agent_slug}/context")
 async def get_agent_rag_context(
     agent_slug: str,
+    _: CurrentUser,
     task_description: str = Query(..., min_length=10, max_length=1000),
     session_key: Optional[str] = Query(
         None,
@@ -129,6 +133,7 @@ async def get_agent_rag_context(
 
 @router.get("/tags")
 async def search_by_tags(
+    _: CurrentUser,
     tags: List[str] = Query(..., min_items=1, description="Tags to search for"),
     top_k: int = Query(5, ge=1, le=20),
     session: AsyncSession = Depends(get_session),
@@ -158,7 +163,7 @@ async def search_by_tags(
 
 
 @router.get("/health")
-async def rag_health() -> dict:
+async def rag_health(_: CurrentUser) -> dict:
     """
     Check RAG service health.
 
@@ -181,6 +186,7 @@ async def rag_health() -> dict:
 
 @router.post("/regenerate-embeddings")
 async def regenerate_embeddings(
+    _: CurrentUser,
     limit: int = Query(100, ge=1, le=1000, description="Max memories to regenerate"),
     session: AsyncSession = Depends(get_session),
 ) -> dict:

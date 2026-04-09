@@ -18,11 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from sqlmodel.ext.asyncio.session import AsyncSession
-
-from app.api.deps import CurrentUser
+from fastapi import APIRouter
+from app.api.deps import CurrentUser, AdminUser
 from app.core.config import get_settings
 from app.core.database import get_session
 from app.services.openclaw_client import openclaw_client
@@ -50,7 +47,7 @@ class RuntimeSettingsUpdateRequest(BaseModel):
 
 
 @router.get("/info")
-async def get_settings_info(_: CurrentUser):
+async def get_settings_info(_: AdminUser):
     cluster_info = container_client.get_cluster_info(namespace=settings.container_namespace)
     return {
         "gateway_url": settings.openclaw_gateway_url,
@@ -60,7 +57,7 @@ async def get_settings_info(_: CurrentUser):
 
 
 @router.get("/gateway-health")
-async def get_gateway_health(_: CurrentUser):
+async def get_gateway_health(_: AdminUser):
     healthy = await openclaw_client.health()
     return {"status": "ok" if healthy else "error"}
 
