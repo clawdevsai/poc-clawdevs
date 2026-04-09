@@ -31,6 +31,7 @@ from .metric import Metric
 from .repository import Repository
 from .agent_permission import AgentPermission
 from .chat_panel_transcript import ChatPanelTranscript
+from .runtime_setting import RuntimeSetting, RuntimeSettingAudit
 from .constants import (
     VALID_TASK_LABELS,
     LABEL_ALIASES,
@@ -54,6 +55,8 @@ __all__ = [
     "Repository",
     "AgentPermission",
     "ChatPanelTranscript",
+    "RuntimeSetting",
+    "RuntimeSettingAudit",
     "VALID_TASK_LABELS",
     "LABEL_ALIASES",
     "LABEL_TO_AGENT_SLUG",

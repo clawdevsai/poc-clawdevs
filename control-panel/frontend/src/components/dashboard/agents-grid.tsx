@@ -24,6 +24,7 @@
 
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentAvatar } from "@/components/agents/agent-avatar"
@@ -67,7 +68,7 @@ function statusBadgeVariant(status: string) {
 
 function AgentCardSkeleton() {
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-4">
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-full" />
         <div className="flex flex-col gap-1.5 flex-1">
@@ -84,10 +85,19 @@ function AgentCardSkeleton() {
   )
 }
 
+const STATUS_MAP: Record<string, string> = {
+  online: "online",
+  working: "trabalhando",
+  idle: "ocioso",
+  offline: "offline",
+  error: "erro",
+  stopped: "parado",
+}
+
 export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <AgentCardSkeleton key={i} />
         ))}
@@ -96,14 +106,15 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {agents.map((agent) => {
         const effectiveStatus = (agent.runtime_status ?? agent.status) as string
         return (
         <Link
           key={agent.id}
           href={`/agents/${agent.slug}`}
-          className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3 hover:border-[hsl(var(--primary)/0.4)] hover:bg-[hsl(var(--card))/0.8] transition-colors group"
+          className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3 hover:border-[hsl(var(--primary)/0.4)] hover:bg-[hsl(var(--card))/0.8] transition-colors group focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:outline-none"
+          aria-label={`Ver detalhes do agente ${agent.display_name}`}
         >
           <div className="flex items-center gap-3">
             <AgentAvatar
@@ -130,10 +141,11 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
                     ? "bg-yellow-400"
                     : effectiveStatus === "error"
                     ? "bg-red-400"
-                    : "bg-white/30"
+                    : "bg-white/30",
+                  effectiveStatus === "working" && "animate-pulse"
                 )}
               />
-              {effectiveStatus}
+              {STATUS_MAP[effectiveStatus] || effectiveStatus}
             </Badge>
           </div>
           <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
@@ -151,7 +163,10 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
             </Tooltip>
             <span>
               {(agent.last_heartbeat ?? agent.last_heartbeat_at)
-                ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
+                ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), {
+                    addSuffix: true,
+                    locale: ptBR,
+                  })
                 : "sem heartbeat"}
             </span>
           </div>

@@ -75,6 +75,10 @@ class ContextModeMetricsBroadcaster:
         from app.api.context_mode import build_monitoring_payload
         from app.api.ws import manager
         from app.core.database import AsyncSessionLocal
+        from app.services.context_metrics import (
+            compute_overview_metrics,
+            DEFAULT_WINDOW_MINUTES,
+        )
 
         while self.running:
             try:
@@ -82,6 +86,20 @@ class ContextModeMetricsBroadcaster:
 
                 async with AsyncSessionLocal() as session:
                     payload = await build_monitoring_payload(session)
+                    overview = await compute_overview_metrics(
+                        session, DEFAULT_WINDOW_MINUTES
+                    )
+                    payload.update(
+                        {
+                            "tokens_consumed_total": overview["tokens_consumed_total"],
+                            "tokens_consumed_avg_per_task": overview[
+                                "tokens_consumed_avg_per_task"
+                            ],
+                            "backlog_count": overview["backlog_count"],
+                            "tasks_in_progress": overview["tasks_in_progress"],
+                            "tasks_completed": overview["tasks_completed"],
+                        }
+                    )
                 payload["type"] = "context-mode-metrics"
 
                 await manager.broadcast("context-mode-metrics", payload)

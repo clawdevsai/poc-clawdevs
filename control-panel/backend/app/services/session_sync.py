@@ -44,6 +44,7 @@ async def sync_sessions(db_session) -> None:
     agent_slugs = get_discovered_agent_slugs()
     collected: list[tuple[str, str, dict, str]] = []
 
+    all_oc_sessions = {}
     for agent_slug in agent_slugs:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
         if not sessions_file.exists():

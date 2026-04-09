@@ -1,0 +1,18 @@
+{
+  "window_minutes": 30,
+  "group_by": "label",
+  "items": [
+    {
+      "group": "triage",
+      "completed_count": 18
+    },
+    {
+      "group": "review",
+      "completed_count": 12
+    },
+    {
+      "group": "deploy",
+      "completed_count": 7
+    }
+  ]
+}

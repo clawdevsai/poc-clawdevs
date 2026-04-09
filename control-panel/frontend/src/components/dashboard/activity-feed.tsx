@@ -86,12 +86,12 @@ function ActivitySkeleton() {
 
 export function ActivityFeed({ events, loading = false }: ActivityFeedProps) {
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-[hsl(var(--border))]">
+    <div className="flex h-full flex-col rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7]">
+      <div className="border-b border-[hsl(var(--border))] px-4 py-3">
         <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">Atividade Recente</h3>
         <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Fluxo de eventos ao vivo</p>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 divide-y divide-[hsl(var(--border))]">
+      <div className="flex-1 divide-y divide-[hsl(var(--border))] overflow-y-auto px-4">
         {loading ? (
           Array.from({ length: 8 }).map((_, i) => <ActivitySkeleton key={i} />)
         ) : events.length === 0 ? (

@@ -65,7 +65,7 @@ function EmptyState({ title }: { title: string }) {
         <span className="text-lg">—</span>
       </div>
       <p className="text-xs text-[hsl(var(--muted-foreground))] text-center">
-        No {title.toLowerCase()} requests
+        Nenhuma solicitação de {title.toLowerCase()}
       </p>
     </div>
   )
