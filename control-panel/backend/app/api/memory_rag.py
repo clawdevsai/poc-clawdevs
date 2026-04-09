@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlmodel import col
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.api.deps import CurrentUser
 from app.core.database import get_session
 from app.api.deps import CurrentUser
 from app.services.rag_retriever import RAGRetriever

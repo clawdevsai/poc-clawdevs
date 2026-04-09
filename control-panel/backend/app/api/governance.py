@@ -32,7 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 
-from app.api.deps import AdminUser
+from app.api.deps import CurrentUser
 from app.core.database import get_session
 from app.api.deps import CurrentUser
 from app.services.governance_engine import GovernanceEngine
