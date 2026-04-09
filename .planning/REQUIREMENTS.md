@@ -1,82 +1,87 @@
-# Requirements: ClawDevs AI
+# Requirements: ClawDevs AI Panel UI Modernization (Mosaic)
 
-**Defined:** 2026-04-02
-**Core Value:** Agents coordinate tasks end-to-end without human intervention while keeping cost and hardware usage low.
+**Defined:** 2026-04-07
+**Core Value:** Operators can monitor and manage AI workflows quickly from a consistent, fast, and reliable dashboard interface without losing existing functionality.
 
 ## v1 Requirements
 
-### Orchestration
+Requirements for initial release. Each maps to roadmap phases.
 
-- [ ] **ORCH-01**: System runs a deterministic plan → execute → review → consolidate loop for each task
-- [ ] **ORCH-02**: Agent handoffs use explicit contracts (inputs/outputs) and are validated
-- [ ] **ORCH-03**: Parallelism is gated (default sequential; parallel only when complexity threshold allows)
+### Platform & Runtime
 
-### Memory
+- [x] **PLAT-01**: Frontend runs on `next@16.2.2` with successful build/start in current environment
+- [x] **PLAT-02**: Tailwind CSS remains on `v4.2.x` and follows official Next.js setup (`postcss` + global css import model)
+- [x] **PLAT-03**: Existing App Router routes remain accessible after UI migration (`/`, `/chat`, `/sessions`, `/tasks`, `/monitoring`, `/settings`, `/agents`, `/approvals`)
 
-- [ ] **MEM-01**: Each agent has persistent memory storage with a unified access layer
-- [ ] **MEM-02**: Memory compaction lifecycle is enforced (create → compress → summarize → archive)
-- [ ] **MEM-03**: Memory entries support versioning/merge rules to prevent divergence
+### UI System & Layout
 
-### Monitoring
+- [x] **UI-01**: Application shell (sidebar, header, content frame) is migrated to Mosaic-aligned dashboard layout patterns
+- [x] **UI-02**: Core interface primitives (cards, tables, badges, buttons, forms) are visually harmonized with template style
+- [x] **UI-03**: Main dashboard and shell remain responsive on desktop and mobile breakpoints
 
-- [ ] **MON-01**: Control panel shows sessions for last 30 minutes + historical session list
-- [ ] **MON-02**: Control panel shows metrics: tokens consumed, backlog, tasks in progress, tasks completed
-- [ ] **MON-03**: Control panel shows cycle time per task and throughput per team
-- [ ] **MON-04**: Control panel exposes failure observability (traces/logs with evidence)
+### Dashboard & Charts
 
-### Workspace & Tooling
+- [x] **DASH-01**: Home dashboard is restructured with template-style KPI/stat/activity sections
+- [x] **DASH-02**: Existing chart areas are migrated to template-consistent visual components
+- [x] **DASH-03**: Chart components keep real project data bindings (no permanent demo/mock-only widgets)
 
-- [ ] **WORK-01**: Workspace sandbox with artifact tracking is enforced for all agents
-- [ ] **WORK-02**: Tool execution is restricted by allowlist + safety limits
-- [ ] **WORK-03**: Runtime supports Ollama-first with controlled fallback (no new external integrations)
+### Compatibility & Functional Preservation
 
-### Control Panel Management
+- [ ] **COMP-01**: Existing feature pages remain navigable through updated layout and menu structure
+- [ ] **COMP-02**: Existing authentication/session behavior remains unchanged for users
+- [ ] **COMP-03**: Frontend migration does not require backend API contract changes
 
-- [ ] **CTRL-01**: CTO can manage core runtime settings (agents, sessions, bindings, monitoring) via control panel without recreating existing features
+### Quality & Validation
 
-### Evaluation
-
-- [ ] **EVAL-01**: Minimal regression suite for critical coordination scenarios exists and is runnable
+- [ ] **QUAL-01**: Cypress smoke path validates login + dashboard navigation after migration
+- [x] **QUAL-02**: Type-check and production build pass for frontend after integration changes
 
 ## v2 Requirements
 
-### Evaluation
+Deferred to future release. Tracked but not in current roadmap.
 
-- **EVAL-02**: Autonomy health score derived from monitoring + eval signals
+### Enhancements
+
+- **ENH-01**: Add advanced Mosaic variant pages not required for current panel domain
+- **ENH-02**: Introduce additional analytics dashboards beyond existing backend-exposed metrics
+- **ENH-03**: Add broader UX animation polish once functional parity is complete
 
 ## Out of Scope
 
+Explicitly excluded. Documented to prevent scope creep.
+
 | Feature | Reason |
 |---------|--------|
-| New external integrations | Explicitly excluded in this phase |
-| Major UI redesign | Not required for refactor goal |
-| Always-on browsing | Increases cost and nondeterminism |
+| Backend API redesign | Initiative is frontend modernization only |
+| New product modules unrelated to current panel | Not part of requested migration scope |
+| Framework migration away from Next.js App Router | Unnecessary risk for requested outcome |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ORCH-01 | Phase 1 | Pending |
-| ORCH-02 | Phase 1 | Pending |
-| ORCH-03 | Phase 1 | Pending |
-| MEM-01 | Phase 2 | Pending |
-| MEM-02 | Phase 2 | Pending |
-| MEM-03 | Phase 2 | Pending |
-| MON-01 | Phase 3 | Pending |
-| MON-02 | Phase 3 | Pending |
-| MON-03 | Phase 3 | Pending |
-| MON-04 | Phase 3 | Pending |
-| WORK-01 | Phase 1 | Pending |
-| WORK-02 | Phase 3 | Pending |
-| WORK-03 | Phase 1 | Pending |
-| CTRL-01 | Phase 3 | Pending |
-| EVAL-01 | Phase 4 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
+| QUAL-02 | Phase 1 | Complete |
+| PLAT-03 | Phase 2 | Complete |
+| UI-01 | Phase 2 | Complete |
+| UI-02 | Phase 2 | Complete |
+| UI-03 | Phase 2 | Complete |
+| DASH-01 | Phase 3 | Complete |
+| DASH-02 | Phase 3 | Complete |
+| DASH-03 | Phase 3 | Complete |
+| COMP-01 | Phase 4 | Pending |
+| COMP-02 | Phase 4 | Pending |
+| COMP-03 | Phase 4 | Pending |
+| QUAL-01 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 15 total
-- Mapped to phases: 15
-- Unmapped: 0 ✓
+- v1 requirements: 14 total
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
-*Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after initial definition*
+*Requirements defined: 2026-04-07*
+*Last updated: 2026-04-07 after Phase 1 completion*

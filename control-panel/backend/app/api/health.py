@@ -32,7 +32,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.api.deps import AdminUser
 from app.core.database import get_session
+from app.api.deps import CurrentUser
 from app.models.task import Task
 from app.services.failure_detector import FailureDetector
 
@@ -68,6 +70,7 @@ class HealthSummaryResponse:
 @router.get("/tasks/{task_id}")
 async def get_task_health(
     task_id: UUID,
+    _: AdminUser,
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """Get health status of a specific task.
@@ -95,6 +98,7 @@ async def get_task_health(
 
 @router.get("/summary")
 async def get_health_summary(
+    _: AdminUser,
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """Get overall health summary across all tasks."""
@@ -128,6 +132,7 @@ async def get_health_summary(
 
 @router.get("/failures")
 async def get_failed_tasks(
+    _: AdminUser,
     session: AsyncSession = Depends(get_session),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -168,6 +173,7 @@ async def get_failed_tasks(
 
 @router.get("/escalations")
 async def get_escalated_tasks(
+    _: AdminUser,
     session: AsyncSession = Depends(get_session),
     limit: int = Query(100, ge=1, le=1000),
 ) -> dict:

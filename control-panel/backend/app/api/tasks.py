@@ -30,6 +30,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.api.deps import CurrentUser
 from app.core.database import get_session
 from app.models import ActivityEvent, Task
+from app.services.failure_detector import FailureDetector
 from app.services.task_workflow import (
     WORKFLOW_COMPLETED,
     WORKFLOW_FAILED,
@@ -76,6 +77,12 @@ class TaskTimelineEventResponse(BaseModel):
 class TaskTimelineResponse(BaseModel):
     items: list[TaskTimelineEventResponse]
     total: int
+
+
+class TaskFailureResponse(BaseModel):
+    message: str | None
+    stack_trace: str | None
+    evidence: list[str]
 
 
 class CreateTaskRequest(BaseModel):
@@ -168,7 +175,7 @@ async def task_timeline(
     result = await session.exec(
         select(ActivityEvent)
         .where(ActivityEvent.entity_type == "task")
-        .where(ActivityEvent.entity_id == task_id)
+        .where(ActivityEvent.entity_id == str(task_id))
         .order_by(col(ActivityEvent.created_at).asc())
     )
     events = result.all()
@@ -200,6 +207,28 @@ async def task_timeline(
         )
 
     return TaskTimelineResponse(items=items, total=len(items))
+
+
+@router.get("/{task_id}/failure", response_model=TaskFailureResponse)
+async def task_failure_detail(
+    task_id: UUID,
+    _: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    detector = FailureDetector(session)
+    detail = await detector.get_failure_detail(task_id)
+    if detail is None:
+        return TaskFailureResponse(message=None, stack_trace=None, evidence=[])
+
+    return TaskFailureResponse(
+        message=detail.get("message"),
+        stack_trace=detail.get("stack_trace"),
+        evidence=detail.get("evidence") or [],
+    )
 
 
 @router.post("", response_model=TaskResponse, status_code=201)

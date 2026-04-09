@@ -170,10 +170,10 @@ export default function ApprovalsPage() {
         {/* Page heading */}
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-            Approvals
+            Aprovações
           </h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
-            Review and decide on agent action requests
+            Revise e decida sobre as solicitações de ação dos agentes
           </p>
         </div>
 
@@ -181,21 +181,21 @@ export default function ApprovalsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatItem
             icon={Clock}
-            label="Pending"
+            label="Pendentes"
             value={stats?.pending}
             loading={statsLoading}
             color="#FBBF24"
           />
           <StatItem
             icon={CheckCircle}
-            label="Approved Today"
+            label="Aprovadas Hoje"
             value={stats?.approved_today}
             loading={statsLoading}
             color="#00FF9C"
           />
           <StatItem
             icon={XCircle}
-            label="Rejected Today"
+            label="Rejeitadas Hoje"
             value={stats?.rejected_today}
             loading={statsLoading}
             color="#F87171"
@@ -205,7 +205,7 @@ export default function ApprovalsPage() {
         {/* Kanban board */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
           <KanbanColumn
-            title="Pending"
+            title="Pendentes"
             approvals={pending}
             loading={pendingLoading}
             onApprove={handleApprove}
@@ -213,13 +213,13 @@ export default function ApprovalsPage() {
             accentColor="#FBBF24"
           />
           <KanbanColumn
-            title="Approved"
+            title="Aprovadas"
             approvals={approved}
             loading={approvedLoading}
             accentColor="#00FF9C"
           />
           <KanbanColumn
-            title="Rejected"
+            title="Rejeitadas"
             approvals={rejected}
             loading={rejectedLoading}
             accentColor="#F87171"
