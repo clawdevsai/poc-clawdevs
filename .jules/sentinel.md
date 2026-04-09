@@ -1,0 +1,4 @@
+## 2026-04-07 - Missing Authentication on Sensitive Endpoints
+**Vulnerability:** Multiple sensitive API endpoints (listing agents, health summaries, governance rules, and RAG search) were exposed without any authentication requirements, allowing unauthenticated attackers to view internal system state and search private memories.
+**Learning:** In FastAPI, endpoints are public by default unless a dependency (like `Depends(get_current_user)`) is explicitly added to the route function. Omission of these checks on new or legacy endpoints can lead to significant information disclosure.
+**Prevention:** Always use `Annotated[User, Depends(get_current_user)]` (aliased as `CurrentUser`) for any endpoint that exposes non-public data. Use an automated security audit test (like the one added in this PR) to verify that all intended private endpoints return 401/403 when unauthenticated.

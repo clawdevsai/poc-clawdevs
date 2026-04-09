@@ -1,62 +1,88 @@
+# Roadmap: ClawDevs AI Panel UI Modernization (Mosaic)
+
+## Overview
+
+This roadmap modernizes the existing control-panel frontend in incremental phases: first stabilize runtime and styling foundations, then migrate shell and dashboard UX to Mosaic-aligned patterns, and finally validate feature compatibility and rollout safety.
+
 ## Phases
-- [ ] **Phase 1: Runtime Foundation & Sandbox** - Agents can run in a constrained, Ollama-first runtime with enforced workspace and tool safety
-- [ ] **Phase 2: Memory + Orchestration Loop** - Tasks run through a deterministic coordination loop with validated handoffs and governed parallelism
-- [ ] **Phase 3: Monitoring + Control Panel** - CTO can observe system health and manage runtime settings via the control panel
-- [ ] **Phase 4: Evaluation Regression Suite** - Coordination regressions are detectable through a minimal runnable suite
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions when needed
+
+- [x] **Phase 1: Runtime and Tailwind Baseline** - Upgrade runtime and lock styling foundation
+- [ ] **Phase 2: Shell and Layout Migration** - Apply Mosaic layout patterns to global app chrome
+- [ ] **Phase 3: Dashboard and Chart Modernization** - Migrate dashboard visuals and chart presentation
+- [ ] **Phase 4: Compatibility and Rollout Hardening** - Preserve existing workflows and validate end-to-end behavior
 
 ## Phase Details
-### Phase 1: Runtime Foundation & Sandbox
-**Goal**: Agents can run in a constrained, Ollama-first runtime with enforced workspace and tool safety
-**Depends on**: Nothing (first phase)
-**Requirements**: WORK-01, WORK-02, WORK-03
-**Success Criteria** (what must be TRUE):
-  1. Agents operate inside a workspace sandbox with artifact tracking
-  2. Tool execution is blocked unless it is on the allowlist and within safety limits
-  3. Runtime runs Ollama-first with controlled fallback and no new external integrations
-**Plans**: TBD
 
-### Phase 2: Memory + Orchestration Loop
-**Goal**: Tasks run through a deterministic coordination loop with validated handoffs and governed parallelism
-**Depends on**: Phase 1
-**Requirements**: ORCH-01, ORCH-02, ORCH-03, MEM-01, MEM-02, MEM-03
+### Phase 1: Runtime and Tailwind Baseline
+**Goal**: Establish stable technical baseline before visual migration
+**Depends on**: Nothing (first phase)
+**Requirements**: [PLAT-01, PLAT-02, QUAL-02]
 **Success Criteria** (what must be TRUE):
-  1. Each task runs a deterministic plan → execute → review → consolidate loop
-  2. Agent handoffs require explicit input/output contracts and are rejected when invalid
-  3. Parallelism defaults to sequential and only enables after a complexity threshold is met
-  4. Agents can read/write persistent memory via a unified access layer
-  5. Memory lifecycle enforces create → compress → summarize → archive with versioned merge rules
+1. Frontend builds and starts on `next@16.2.2` without regressions
+2. Tailwind v4 utility pipeline works consistently in current app
+3. Type-check and production build pass after baseline updates
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Deterministic orchestration loop + contract validation
-- [ ] 02-02-PLAN.md — Parallelism gate with adaptive thresholds
-- [ ] 02-03-PLAN.md — Unified memory lifecycle, compaction, and merge rules
+- [x] 01-01: Upgrade Next.js and aligned frontend dependencies safely
+- [x] 01-02: Verify and normalize Tailwind/PostCSS setup against official guidance
+- [x] 01-03: Run baseline quality checks (`type-check`, `build`) and fix breakages
 
-### Phase 3: Monitoring + Control Panel
-**Goal**: CTO can observe system health and manage runtime settings via the control panel
+### Phase 2: Shell and Layout Migration
+**Goal**: Migrate shared application shell to Mosaic-style structure
+**Depends on**: Phase 1
+**Requirements**: [PLAT-03, UI-01, UI-02, UI-03]
+**Success Criteria** (what must be TRUE):
+1. Sidebar/header/content shell reflects target dashboard template style
+2. Core routes remain reachable and usable from the updated navigation
+3. Core layout is responsive across desktop and mobile breakpoints
+**Plans**: 3 plans
+
+Plans:
+- [x] 02-01: Rework global app shell components (`layout`, `sidebar`, `header`)
+- [x] 02-02: Align common UI primitives (cards/tables/badges/buttons/forms)
+- [x] 02-03: Validate route navigation and responsive behavior after shell migration
+
+### Phase 3: Dashboard and Chart Modernization
+**Goal**: Modernize dashboard sections and chart experience with template consistency
 **Depends on**: Phase 2
-**Requirements**: MON-01, MON-02, MON-03, MON-04, CTRL-01
+**Requirements**: [DASH-01, DASH-02, DASH-03]
 **Success Criteria** (what must be TRUE):
-  1. Control panel shows last 30 minutes of sessions plus historical session list
-  2. Control panel shows tokens consumed, backlog, tasks in progress, and tasks completed
-  3. Control panel shows cycle time per task and throughput per team
-  4. Control panel exposes failure traces/logs with evidence
-  5. CTO can change core runtime settings without recreating existing features
-**Plans**: TBD
-**UI hint**: yes
+1. Home dashboard uses Mosaic-like sections for KPI/stat/activity blocks
+2. Chart widgets follow template-consistent styling and interaction patterns
+3. Charts continue rendering real project data (not static demo-only output)
+**Plans**: 3 plans
 
-### Phase 4: Evaluation Regression Suite
-**Goal**: Coordination regressions are detectable through a minimal runnable suite
+Plans:
+- [x] 03-01: Refactor dashboard composition to template-inspired sections
+- [x] 03-02: Adapt existing chart components to new visual contracts
+- [x] 03-03: Validate metric/data bindings across dashboard and monitoring surfaces
+
+### Phase 4: Compatibility and Rollout Hardening
+**Goal**: Ensure no functional regressions and confidence to ship
 **Depends on**: Phase 3
-**Requirements**: EVAL-01
+**Requirements**: [COMP-01, COMP-02, COMP-03, QUAL-01]
 **Success Criteria** (what must be TRUE):
-  1. A minimal regression suite for critical coordination scenarios runs on demand and reports pass/fail
-**Plans**: TBD
+1. Existing feature pages remain functional under migrated shell/UI
+2. Authentication/session behavior remains stable from user perspective
+3. Cypress smoke path verifies login and dashboard navigation
+4. No backend API contract change is required for migrated frontend flows
+**Plans**: 3 plans
+
+Plans:
+- [ ] 04-01: Validate route-level feature compatibility (chat/tasks/sessions/monitoring/etc.)
+- [ ] 04-02: Add or adjust Cypress smoke coverage for migrated entry flows
+- [ ] 04-03: Final regression pass and release readiness checklist
 
 ## Progress
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Runtime Foundation & Sandbox | 0/0 | Not started | - |
-| 2. Memory + Orchestration Loop | 0/0 | Not started | - |
-| 3. Monitoring + Control Panel | 0/0 | Not started | - |
-| 4. Evaluation Regression Suite | 0/0 | Not started | - |
+
+| Phase | Plans | Status | Completed |
+|-------|-------|--------|-----------|
+| 1. Runtime and Tailwind Baseline | 3/3 | Complete | 2026-04-07 |
+| 2. Shell and Layout Migration | 0/3 | Not started | - |
+| 3. Dashboard and Chart Modernization | 0/3 | Not started | - |
+| 4. Compatibility and Rollout Hardening | 0/3 | Not started | - |

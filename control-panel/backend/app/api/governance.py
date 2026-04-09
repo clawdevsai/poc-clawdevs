@@ -32,13 +32,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 
+from app.api.deps import AdminUser
 from app.core.database import get_session
+from app.api.deps import CurrentUser
 from app.services.governance_engine import GovernanceEngine
 from app.services.cost_tracker import CostTracker
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/governance", tags=["governance"])
+router = APIRouter(
+    prefix="/api/governance",
+    tags=["governance"],
+    dependencies=[Depends(require_admin)],
+)
 
 
 class TaskValidationRequest(BaseModel):
@@ -63,6 +69,7 @@ class MultiRepoChangeRequest(BaseModel):
 @router.post("/validate/task-creation")
 async def validate_task_creation(
     request: TaskValidationRequest,
+    _: CurrentUser,
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
@@ -98,6 +105,7 @@ async def validate_task_creation(
 @router.post("/validate/code-change")
 async def validate_code_change(
     request: CodeChangeRequest,
+    _: CurrentUser,
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
@@ -137,6 +145,7 @@ async def validate_code_change(
 @router.post("/validate/multi-repo")
 async def validate_multi_repo_change(
     request: MultiRepoChangeRequest,
+    _: CurrentUser,
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
@@ -175,6 +184,7 @@ async def validate_multi_repo_change(
 
 @router.post("/cost/estimate")
 async def estimate_cost(
+    _: CurrentUser,
     task_type: str = Query(...),
     complexity: str = Query(..., pattern="^(simple|medium|complex)$"),
     session: AsyncSession = Depends(get_session),
@@ -205,6 +215,7 @@ async def estimate_cost(
 @router.post("/cost/track")
 async def track_cost(
     task_id: UUID,
+    _: CurrentUser,
     tokens_used: int = Body(..., ge=1),
     model: str = Body(...),
     session: AsyncSession = Depends(get_session),
@@ -237,8 +248,10 @@ async def track_cost(
 @router.get("/cost/budget/{agent_id}")
 async def check_budget(
     agent_id: UUID,
+    _: CurrentUser,
     tier: str = Query("medium", pattern="^(local|medium|premium)$"),
     session: AsyncSession = Depends(get_session),
+    tier: str = Query("medium", pattern="^(local|medium|premium)$"),
 ) -> dict:
     """
     Check if agent has budget available for task tier.
@@ -265,8 +278,10 @@ async def check_budget(
 @router.get("/cost/spending/{agent_id}")
 async def get_agent_spending(
     agent_id: UUID,
+    _: CurrentUser,
     days: int = Query(30, ge=1, le=365),
     session: AsyncSession = Depends(get_session),
+    days: int = Query(30, ge=1, le=365),
 ) -> dict:
     """
     Get agent's spending summary.
@@ -289,8 +304,10 @@ async def get_agent_spending(
 
 @router.get("/cost/team-spending")
 async def get_team_spending(
+    _: CurrentUser,
     days: int = Query(30, ge=1, le=365),
     session: AsyncSession = Depends(get_session),
+    days: int = Query(30, ge=1, le=365),
 ) -> dict:
     """
     Get team-wide spending summary.
@@ -311,7 +328,7 @@ async def get_team_spending(
 
 
 @router.get("/constitution/rules")
-async def get_constitution_rules() -> dict:
+async def get_constitution_rules(_: CurrentUser) -> dict:
     """
     Get CONSTITUTION.md rules summary.
 
@@ -333,7 +350,7 @@ async def get_constitution_rules() -> dict:
 
 
 @router.get("/multi-repo/rules")
-async def get_multi_repo_rules() -> dict:
+async def get_multi_repo_rules(_: CurrentUser) -> dict:
     """
     Get MULTI_REPO_COORDINATION.md rules.
 
@@ -352,7 +369,7 @@ async def get_multi_repo_rules() -> dict:
 
 
 @router.get("/cost-orchestration/rules")
-async def get_cost_orchestration_rules() -> dict:
+async def get_cost_orchestration_rules(_: CurrentUser) -> dict:
     """
     Get DYNAMIC_COST_ORCHESTRATION.md rules.
 

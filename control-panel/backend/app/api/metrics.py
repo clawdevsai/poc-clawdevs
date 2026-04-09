@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import col, select
 from sqlalchemy import func
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -29,7 +29,13 @@ from uuid import UUID
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
-from app.models import Metric, Approval, Task, Agent, Session
+from app.models import Metric, Session
+from app.services.context_metrics import (
+    compute_overview_metrics,
+    DEFAULT_WINDOW_MINUTES,
+    validate_window_minutes,
+)
+from app.services.task_metrics import TaskMetricsService
 
 router = APIRouter()
 
@@ -50,6 +56,28 @@ class OverviewMetrics(BaseModel):
     pending_approvals: int
     open_tasks: int
     tokens_24h: float
+    tokens_consumed_total: float
+    tokens_consumed_avg_per_task: float
+    backlog_count: int
+    tasks_in_progress: int
+    tasks_completed: int
+
+
+class CycleTimeResponse(BaseModel):
+    cycle_time_avg_seconds: float
+    cycle_time_p95_seconds: float
+    window_minutes: int
+
+
+class ThroughputItem(BaseModel):
+    group: str
+    completed_count: int
+
+
+class ThroughputResponse(BaseModel):
+    window_minutes: int
+    group_by: str
+    items: list[ThroughputItem]
 
 
 class MetricResponse(BaseModel):
@@ -211,7 +239,12 @@ async def list_metrics(
 async def overview_metrics(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
+    window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
 ):
+    """
+    Get overview metrics for the dashboard.
+    Optimized with SQL aggregations to avoid fetching full objects.
+    """
     since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
 
     # BOLT OPTIMIZATION: Use database-level aggregations (count/sum) instead of
@@ -240,9 +273,23 @@ async def overview_metrics(
     tokens_sum_val = (await session.exec(tokens_sum_query)).one()
     tokens_24h = float(tokens_sum_val or 0.0)
 
-    return OverviewMetrics(
-        active_agents=active_agents,
-        pending_approvals=pending_approvals,
-        open_tasks=open_tasks,
-        tokens_24h=tokens_24h,
-    )
+
+@router.get("/throughput", response_model=ThroughputResponse)
+async def throughput_metrics(
+    _: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
+    group_by: str = Query("label"),
+):
+    try:
+        validate_window_minutes(window_minutes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    service = TaskMetricsService(session)
+    try:
+        items = await service.get_throughput(window_minutes, group_by=group_by)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return ThroughputResponse(window_minutes=window_minutes, group_by=group_by, items=items)

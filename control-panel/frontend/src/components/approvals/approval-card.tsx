@@ -23,6 +23,7 @@
 "use client"
 
 import { formatDistanceToNow } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { AgentAvatar } from "@/components/agents/agent-avatar"
 import { Badge } from "@/components/ui/badge"
 import type { Approval } from "./types"
@@ -41,7 +42,7 @@ export function ApprovalCard({
   const description =
     approval.payload?.description ??
     approval.payload?.action_type ??
-    "No description"
+    "Sem descrição"
 
   const rubricEntries = approval.rubric_scores
     ? Object.entries(approval.rubric_scores)
@@ -63,7 +64,7 @@ export function ApprovalCard({
             {approval.agent_id}
           </span>
           <span className="text-xs text-[hsl(var(--muted-foreground))] truncate">
-            session:{" "}
+            sessão:{" "}
             <span className="font-mono">
               {approval.openclaw_session_id.slice(0, 8)}…
             </span>
@@ -107,6 +108,7 @@ export function ApprovalCard({
         <span className="text-xs text-[hsl(var(--muted-foreground))]">
           {formatDistanceToNow(new Date(approval.created_at), {
             addSuffix: true,
+            locale: ptBR,
           })}
         </span>
 
@@ -116,13 +118,13 @@ export function ApprovalCard({
               onClick={() => onReject(approval)}
               className="px-2.5 py-1 rounded-md text-xs font-medium bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 transition-colors"
             >
-              Reject
+              Rejeitar
             </button>
             <button
               onClick={() => onApprove(approval)}
               className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#00FF9C]/15 text-[#00FF9C] border border-[#00FF9C]/25 hover:bg-[#00FF9C]/25 transition-colors"
             >
-              Approve
+              Aprovar
             </button>
           </div>
         )}

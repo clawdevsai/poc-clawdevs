@@ -369,6 +369,51 @@ class TestTaskTimeline:
         assert payload["items"][1]["to_agent_slug"] == "backend"
 
 
+class TestTaskFailureDetail:
+    """Test GET /api/tasks/{task_id}/failure endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_task_failure_detail(
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_headers: dict,
+    ):
+        task = Task(
+            title="Failed task",
+            status="in_progress",
+            failure_count=1,
+            consecutive_failures=1,
+            last_error="Boom",
+            error_reason="execution_error",
+            last_failed_at=datetime.now(UTC).replace(tzinfo=None),
+        )
+        db_session.add(task)
+        await db_session.commit()
+        await db_session.refresh(task)
+
+        db_session.add(
+            ActivityEvent(
+                event_type="task_failed",
+                entity_type="task",
+                entity_id=str(task.id),
+                payload={
+                    "error_message": "Boom",
+                    "stack_trace": "Traceback: boom",
+                    "evidence": ["stderr: boom", "context: run 1"],
+                },
+            )
+        )
+        await db_session.commit()
+
+        response = await client.get(f"/tasks/{task.id}/failure", headers=auth_headers)
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["message"] == "Boom"
+        assert payload["stack_trace"] == "Traceback: boom"
+        assert payload["evidence"] == ["stderr: boom", "context: run 1"]
+
+
 class TestTasksResponseModels:
     """Test Tasks response model structure."""
 
