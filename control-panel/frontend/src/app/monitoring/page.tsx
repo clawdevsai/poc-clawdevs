@@ -58,17 +58,17 @@ export default function MonitoringPage() {
       listSessions({ windowMinutes: showAllSessions ? null : windowMinutes }),
   })
 
-  const { data: overview, isLoading: overviewLoading } = useQuery({
+  const { data: overview, isLoading: overviewLoading, isError: overviewError } = useQuery({
     queryKey: ["overview", windowMinutes],
     queryFn: () => getOverviewMetrics({ windowMinutes }),
   })
 
-  const { data: cycleTime, isLoading: cycleTimeLoading } = useQuery({
+  const { data: cycleTime, isLoading: cycleTimeLoading, isError: cycleTimeError } = useQuery({
     queryKey: ["cycle-time", windowMinutes],
     queryFn: () => getCycleTime({ windowMinutes }),
   })
 
-  const { data: throughput, isLoading: throughputLoading } = useQuery({
+  const { data: throughput, isLoading: throughputLoading, isError: throughputError } = useQuery({
     queryKey: ["throughput", windowMinutes],
     queryFn: () => getThroughput({ windowMinutes, groupBy: "label" }),
   })
@@ -108,7 +108,7 @@ export default function MonitoringPage() {
 
   const failuresList = failures?.tasks ?? []
   const selectedFailureTask = failuresList.find((task) => task.id === selectedFailureId)
-  const overviewStatsLoading = overviewLoading && !overview
+  const overviewStatsLoading = (overviewLoading && !overview) || overviewError
 
   const windowLabel = useMemo(() => {
     if (windowMinutes === 30) return "Last 30m"
@@ -205,10 +205,15 @@ export default function MonitoringPage() {
                   averageSeconds={cycleAvg}
                   p95Seconds={cycleP95}
                   loading={cycleTimeLoading}
+                  error={cycleTimeError}
                 />
               </div>
               <div className="min-w-0 xl:col-span-2">
-                <ThroughputChart items={throughputItems} loading={throughputLoading} />
+                <ThroughputChart
+                  items={throughputItems}
+                  loading={throughputLoading}
+                  error={throughputError}
+                />
               </div>
             </div>
 

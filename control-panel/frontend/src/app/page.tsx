@@ -32,6 +32,7 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { UsageChart } from "@/components/dashboard/usage-chart"
 import { TaskHealth } from "@/components/dashboard/task-health"
 import { customInstance } from "@/lib/axios-instance"
+import { getMetricsSeries } from "@/lib/monitoring-api"
 import { wsManager } from "@/lib/ws"
 
 // ---- Types ----------------------------------------------------------------
@@ -62,12 +63,6 @@ interface ActivityEvent {
   created_at: string
 }
 
-interface Metric {
-  metric_type: string
-  value: number
-  period_start: string
-}
-
 // ---- Fetchers -------------------------------------------------------------
 
 const fetchAgents = () =>
@@ -94,10 +89,10 @@ const fetchActivity = () =>
   })
 
 const fetchMetrics = () =>
-  customInstance<PaginatedResponse<Metric>>({
-    url: "/metrics",
-    method: "GET",
-    params: { metric_type: "active_sessions", hours: 24, interval_minutes: 1 },
+  getMetricsSeries({
+    metricType: "active_sessions",
+    hours: 24,
+    intervalMinutes: 1,
   })
 
 const fetchHealthSummary = () =>
@@ -141,7 +136,7 @@ export default function DashboardPage() {
     refetchInterval: 15000,
   })
 
-   const { data: metricsData, isLoading: metricsLoading } = useQuery({
+   const { data: metricsData, isLoading: metricsLoading, isError: metricsError } = useQuery({
      queryKey: ["metrics", "active_sessions", 24, 1],
      queryFn: fetchMetrics,
      refetchInterval: 60000,
@@ -247,7 +242,7 @@ export default function DashboardPage() {
 
         <section className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-5">
           <div className="min-w-0 xl:col-span-3">
-            <UsageChart metrics={metrics} loading={metricsLoading} />
+            <UsageChart metrics={metrics} loading={metricsLoading} error={metricsError} />
           </div>
           <div className="min-w-0 space-y-4 xl:col-span-2">
             <TaskHealth

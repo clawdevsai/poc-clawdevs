@@ -13,6 +13,7 @@ import type { ThroughputItem } from "@/lib/monitoring-api"
 interface ThroughputChartProps {
   items: ThroughputItem[]
   loading?: boolean
+  error?: boolean
 }
 
 interface TooltipProps {
@@ -33,13 +34,21 @@ function ThroughputTooltip({ active, payload, label }: TooltipProps) {
   )
 }
 
-export function ThroughputChart({ items, loading = false }: ThroughputChartProps) {
+export function ThroughputChart({
+  items,
+  loading = false,
+  error = false,
+}: ThroughputChartProps) {
   const data = [...items]
-    .sort((a, b) => b.completed_count - a.completed_count)
+    .map((item) => ({
+      group: item.group ?? "unlabeled",
+      completedCount: Number.isFinite(item.completed_count) ? item.completed_count : 0,
+    }))
+    .sort((a, b) => b.completedCount - a.completedCount)
     .slice(0, 8)
     .map((item) => ({
       label: item.group || "unlabeled",
-      completed: Math.max(0, item.completed_count),
+      completed: Math.max(0, item.completedCount),
     }))
 
   return (
@@ -54,6 +63,10 @@ export function ThroughputChart({ items, loading = false }: ThroughputChartProps
       </div>
       {loading ? (
         <Skeleton className="h-[220px] w-full" />
+      ) : error ? (
+        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
+          Nao foi possivel carregar os dados de throughput.
+        </div>
       ) : data.length === 0 ? (
         <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
           Sem dados de throughput no período selecionado.

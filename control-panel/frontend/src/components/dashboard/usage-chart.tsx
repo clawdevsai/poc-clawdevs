@@ -33,16 +33,12 @@ import {
 } from "recharts"
 import { format, parseISO } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
-
-interface Metric {
-  metric_type: string
-  value: number
-  period_start: string
-}
+import type { MetricsPoint } from "@/lib/monitoring-api"
 
 interface UsageChartProps {
-  metrics: Metric[]
+  metrics: MetricsPoint[]
   loading?: boolean
+  error?: boolean
 }
 
 interface CustomTooltipProps {
@@ -66,14 +62,28 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   )
 }
 
-export function UsageChart({ metrics, loading = false }: UsageChartProps) {
+export function UsageChart({
+  metrics,
+  loading = false,
+  error = false,
+}: UsageChartProps) {
   const data = metrics
-    .filter((m) => !m.metric_type || m.metric_type === "active_sessions")
-    .map((m) => ({
-      timestamp: parseISO(m.period_start).getTime(),
-      value: m.value,
+    .map((metric) => ({
+      metricType: metric.metric_type ?? "active_sessions",
+      timestamp: parseISO(metric.period_start).getTime(),
+      value: Number(metric.value),
     }))
-    .filter((entry) => Number.isFinite(entry.timestamp))
+    .filter(
+      (metric) =>
+        metric.metricType === "active_sessions" &&
+        Number.isFinite(metric.timestamp) &&
+        Number.isFinite(metric.value)
+    )
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((metric) => ({
+      timestamp: metric.timestamp,
+      value: metric.value,
+    }))
 
   return (
     <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-5">
@@ -87,6 +97,10 @@ export function UsageChart({ metrics, loading = false }: UsageChartProps) {
       </div>
       {loading ? (
         <Skeleton className="h-[220px] w-full" />
+      ) : error ? (
+        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
+          Nao foi possivel carregar os dados de uso.
+        </div>
       ) : data.length === 0 ? (
         <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
           Sem dados de uso no período selecionado.

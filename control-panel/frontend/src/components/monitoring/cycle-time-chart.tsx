@@ -13,6 +13,7 @@ interface CycleTimeChartProps {
   averageSeconds: number
   p95Seconds: number
   loading?: boolean
+  error?: boolean
 }
 
 interface TooltipProps {
@@ -37,10 +38,13 @@ export function CycleTimeChart({
   averageSeconds,
   p95Seconds,
   loading = false,
+  error = false,
 }: CycleTimeChartProps) {
+  const averageValue = Number.isFinite(averageSeconds) ? Math.max(0, Math.round(averageSeconds)) : 0
+  const p95Value = Number.isFinite(p95Seconds) ? Math.max(0, Math.round(p95Seconds)) : 0
   const data = [
-    { name: "Average", value: Math.max(0, Math.round(averageSeconds)) },
-    { name: "P95", value: Math.max(0, Math.round(p95Seconds)) },
+    { name: "Average", value: averageValue },
+    { name: "P95", value: p95Value },
   ].filter((entry) => entry.value > 0)
 
   return (
@@ -55,6 +59,10 @@ export function CycleTimeChart({
       </div>
       {loading ? (
         <Skeleton className="h-[220px] w-full" />
+      ) : error ? (
+        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
+          Nao foi possivel carregar os dados de cycle time.
+        </div>
       ) : data.length === 0 ? (
         <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]">
           Sem dados de cycle time no período selecionado.
