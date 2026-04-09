@@ -88,6 +88,14 @@ async def sync_sessions(db_session) -> None:
 
             status = _derive_session_status(updated_at)
 
+            # Performance: Implement Smart Sync check.
+            # We skip expensive operations (like message counting and DB field updates)
+            # if the session already exists and its last activity matches the JSON.
+            # This significantly reduces I/O when processing many idle sessions.
+            if existing:
+                if existing.last_active_at == updated_at and existing.status == status:
+                    continue
+
             # Extract channel info from deliveryContext or origin
             delivery = oc_session.get("deliveryContext", {})
             origin = oc_session.get("origin", {})
