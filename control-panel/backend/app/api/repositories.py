@@ -20,6 +20,7 @@
 
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends, Response, status
+from app.api.deps import CurrentUser, AdminUser
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel

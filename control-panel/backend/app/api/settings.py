@@ -18,11 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from sqlmodel.ext.asyncio.session import AsyncSession
-
-from app.api.deps import CurrentUser
+from fastapi import APIRouter
+from app.api.deps import CurrentUser, AdminUser
 from app.core.config import get_settings
 from app.core.database import get_session
 from app.services.openclaw_client import openclaw_client
