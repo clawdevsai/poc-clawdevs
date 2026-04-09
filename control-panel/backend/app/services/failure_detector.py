@@ -31,7 +31,7 @@ from datetime import datetime, timedelta, UTC
 from typing import Optional
 from uuid import UUID
 
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.task import Task
@@ -274,4 +274,45 @@ class FailureDetector:
                 str(task.escalated_to_agent_id) if task.escalated_to_agent_id else None
             ),
             "escalation_reason": task.escalation_reason,
+        }
+
+    async def get_failure_detail(self, task_id: UUID) -> dict | None:
+        """Get latest failure detail for a task."""
+        task = (
+            await self.db_session.exec(select(Task).where(Task.id == task_id))
+        ).first()
+        if not task:
+            return None
+
+        event = (
+            await self.db_session.exec(
+                select(ActivityEvent)
+                .where(ActivityEvent.entity_type == "task")
+                .where(ActivityEvent.entity_id == str(task_id))
+                .where(col(ActivityEvent.event_type).in_(["task_failed", "task.failed"]))
+                .order_by(col(ActivityEvent.created_at).desc())
+            )
+        ).first()
+
+        message = task.last_error
+        stack_trace = None
+        evidence: list[str] = []
+        if event and isinstance(event.payload, dict):
+            payload = event.payload
+            message = (
+                payload.get("error_message")
+                or payload.get("message")
+                or message
+            )
+            stack_trace = payload.get("stack_trace") or payload.get("trace")
+            raw_evidence = payload.get("evidence") or payload.get("artifacts")
+            if isinstance(raw_evidence, list):
+                evidence = [str(item) for item in raw_evidence]
+            elif isinstance(raw_evidence, str):
+                evidence = [raw_evidence]
+
+        return {
+            "message": message,
+            "stack_trace": stack_trace,
+            "evidence": evidence,
         }

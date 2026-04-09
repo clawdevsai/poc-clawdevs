@@ -26,7 +26,7 @@ from pydantic import BaseModel
 from datetime import datetime, UTC
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, AdminUser
 from app.models import Agent
 from app.services.agent_sync import sync_agents_runtime, sync_agents
 from app.services.agent_activity import get_agent_current_activity
@@ -95,6 +95,7 @@ class AgentsListResponse(BaseModel):
 
 @router.get("", response_model=AgentsListResponse)
 async def list_agents(
+    _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """List all agents."""
@@ -136,7 +137,7 @@ async def get_agent(
 async def update_agent_status(
     slug: str,
     body: dict,
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(select(Agent).where(Agent.slug == slug))
@@ -164,7 +165,7 @@ class SyncResponse(BaseModel):
 
 @router.post("/admin/sync", response_model=SyncResponse)
 async def sync_agents_admin(
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """

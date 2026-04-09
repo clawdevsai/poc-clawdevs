@@ -1,0 +1,5 @@
+{
+  "cycle_time_avg_seconds": 140,
+  "cycle_time_p95_seconds": 260,
+  "window_minutes": 30
+}

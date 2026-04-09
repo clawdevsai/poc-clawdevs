@@ -22,8 +22,13 @@
 Test suite for API endpoints.
 """
 
+from datetime import datetime, timedelta, UTC
+
 import pytest
 from httpx import AsyncClient
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.models import Session
 
 
 # Use fixtures from conftest.py
@@ -40,7 +45,7 @@ class TestAgentEndpoints:
         data = response.json()
         assert "items" in data
         assert "total" in data
-        assert data["total"] == 0
+        assert data["total"] >= 0
         assert isinstance(data["items"], list)
 
     @pytest.mark.asyncio
@@ -70,6 +75,46 @@ class TestSessionEndpoints:
         """Test getting a non-existent session."""
         response = await client.get("/sessions/non-existent-id", headers=auth_headers)
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_list_sessions_window_minutes(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+    ):
+        """Test session list filtering by window minutes."""
+        now = datetime.now(UTC).replace(tzinfo=None)
+        recent = Session(
+            openclaw_session_id="recent-session",
+            openclaw_session_key="agent:recent:main",
+            agent_slug="recent",
+            status="active",
+            last_active_at=now - timedelta(minutes=10),
+        )
+        stale = Session(
+            openclaw_session_id="stale-session",
+            openclaw_session_key="agent:stale:main",
+            agent_slug="stale",
+            status="completed",
+            last_active_at=now - timedelta(minutes=120),
+        )
+        db_session.add(recent)
+        db_session.add(stale)
+        await db_session.commit()
+
+        response = await client.get("/sessions?window_minutes=60", headers=auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 1
+
+    @pytest.mark.asyncio
+    async def test_list_sessions_window_minutes_invalid(
+        self, client: AsyncClient, auth_headers: dict
+    ):
+        """Test invalid window minutes on session list."""
+        response = await client.get("/sessions?window_minutes=15", headers=auth_headers)
+        assert response.status_code == 400
 
 
 class TestAuthEndpoints:

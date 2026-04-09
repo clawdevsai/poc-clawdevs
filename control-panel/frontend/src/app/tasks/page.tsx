@@ -28,6 +28,18 @@ import { Clock3, LayoutGrid, List, Plus, Trash2, X } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select } from "@/components/ui/select"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { customInstance } from "@/lib/axios-instance"
 
 // ---- Types -----------------------------------------------------------------
@@ -397,12 +409,12 @@ function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSucce
             <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">
               Title <span className="text-red-400">*</span>
             </label>
-            <input
+            <Input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title…"
-              className="px-3 py-2 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+              className="h-10"
             />
           </div>
 
@@ -410,28 +422,28 @@ function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSucce
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Label / Track</label>
-              <select
+              <Select
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                className="px-3 py-2 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                className="h-10"
               >
                 {LABELS.map((l) => (
                   <option key={l.value} value={l.value}>{l.label}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-[hsl(var(--muted-foreground))]">Repositório</label>
-              <select
+              <Select
                 value={githubRepo}
                 onChange={(e) => setGithubRepo(e.target.value)}
-                className="px-3 py-2 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                className="h-10"
               >
                 <option value="">Selecionar…</option>
                 {repos.map((r) => (
                   <option key={r.id} value={r.full_name}>{r.name}</option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 
@@ -449,20 +461,19 @@ function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSucce
 
           {error && <p className="text-xs text-red-400">{error}</p>}
           <div className="flex items-center justify-end gap-2 mt-2">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm rounded-lg border border-[hsl(var(--border))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/30"
+              variant="outline"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={mutation.isPending}
-              className="px-4 py-2 text-sm rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
             >
               {mutation.isPending ? "Creating…" : "Create"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -531,13 +542,13 @@ function TimelineDialog({ task, onClose }: { task: Task; onClose: () => void }) 
 
 function ListRowSkeleton() {
   return (
-    <tr className="border-b border-[hsl(var(--border))]">
+    <TableRow className="hover:bg-transparent">
       {Array.from({ length: 9 }).map((_, i) => (
-        <td key={i} className="px-4 py-3">
+        <TableCell key={i}>
           <Skeleton className="h-4 w-full" />
-        </td>
+        </TableCell>
       ))}
-    </tr>
+    </TableRow>
   )
 }
 
@@ -622,37 +633,34 @@ export default function TasksPage() {
           <div className="flex items-center gap-2">
             {/* View toggle */}
             <div className="flex rounded-lg border border-[hsl(var(--border))] overflow-hidden">
-              <button
+              <Button
                 onClick={() => setView("board")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${
-                  view === "board"
-                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                    : "text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/30"
-                }`}
+                size="sm"
+                variant={view === "board" ? "default" : "ghost"}
+                className="rounded-none border-0"
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
                 Board
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setView("list")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${
-                  view === "list"
-                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                    : "text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/30"
-                }`}
+                size="sm"
+                variant={view === "list" ? "default" : "ghost"}
+                className="rounded-none border-0"
               >
                 <List className="h-3.5 w-3.5" />
                 List
-              </button>
+              </Button>
             </div>
 
-            <button
+            <Button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity"
+              size="sm"
+              className="h-9"
             >
               <Plus className="h-3.5 w-3.5" />
               Create Task
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -676,62 +684,61 @@ export default function TasksPage() {
         {/* List view */}
         {view === "list" && (
           <>
-            <div className="rounded-xl border border-[hsl(var(--border))] overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30">
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-[hsl(var(--muted))]/30 hover:bg-[hsl(var(--muted))]/30">
+                      <TableHead>
                         Title
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Status
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Priority
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Agent
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Workflow
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Label
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Repo
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Created
-                      </th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                      </TableHead>
+                      <TableHead>
                         Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {listLoading ? (
                       Array.from({ length: 8 }).map((_, i) => <ListRowSkeleton key={i} />)
                     ) : listItems.length === 0 ? (
-                      <tr>
-                        <td
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell
                           colSpan={9}
-                          className="px-4 py-12 text-center text-sm text-[hsl(var(--muted-foreground))]"
+                          className="py-12 text-center text-sm text-[hsl(var(--muted-foreground))]"
                         >
                           No tasks found.
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ) : (
                       listItems.map((task) => (
-                        <tr
+                        <TableRow
                           key={task.id}
-                          className="border-b border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/20 transition-colors"
                         >
-                          <td className="px-4 py-3 font-medium text-[hsl(var(--foreground))] max-w-xs truncate">
+                          <TableCell className="max-w-xs truncate font-medium text-[hsl(var(--foreground))]">
                             {task.title}
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell>
                             <span
                               className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                               style={{
@@ -742,8 +749,8 @@ export default function TasksPage() {
                             >
                               {statusLabel(task.status)}
                             </span>
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell>
                             {task.priority ? (
                               <Badge variant={priorityVariant(task.priority)}>
                                 {task.priority}
@@ -751,11 +758,11 @@ export default function TasksPage() {
                             ) : (
                               <span className="text-[hsl(var(--muted-foreground))] text-xs">—</span>
                             )}
-                          </td>
-                          <td className="px-4 py-3 text-[hsl(var(--muted-foreground))] text-xs">
+                          </TableCell>
+                          <TableCell className="text-xs text-[hsl(var(--muted-foreground))]">
                             {task.assigned_agent_slug ?? "—"}
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell>
                             <div className="flex flex-col gap-1">
                               <span
                                 className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium w-fit"
@@ -773,8 +780,8 @@ export default function TasksPage() {
                                 </span>
                               )}
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell>
                             {task.label ? (
                               <span
                                 className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
@@ -789,14 +796,14 @@ export default function TasksPage() {
                             ) : (
                               <span className="text-[hsl(var(--muted-foreground))] text-xs">—</span>
                             )}
-                          </td>
-                          <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))] truncate max-w-[120px]">
+                          </TableCell>
+                          <TableCell className="max-w-[120px] truncate text-xs text-[hsl(var(--muted-foreground))]">
                             {task.github_repo ?? "—"}
-                          </td>
-                          <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">
+                          </TableCell>
+                          <TableCell className="text-xs text-[hsl(var(--muted-foreground))]">
                             {formatDate(task.created_at)}
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-3">
                               <button
                                 type="button"
@@ -816,14 +823,14 @@ export default function TasksPage() {
                                 {deletingTaskId === task.id ? "Excluindo..." : "Excluir"}
                               </button>
                             </div>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))
                     )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
 
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-[hsl(var(--muted-foreground))]">
@@ -831,23 +838,25 @@ export default function TasksPage() {
                 {listLoading ? "Loading…" : `${listTotal} task${listTotal !== 1 ? "s" : ""} total`}
               </span>
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   onClick={() => setListPage((p) => Math.max(1, p - 1))}
                   disabled={listPage <= 1 || listLoading}
-                  className="px-3 py-1 rounded-lg border border-[hsl(var(--border))] disabled:opacity-40 hover:bg-[hsl(var(--muted))]/30 transition-colors"
+                  variant="outline"
+                  size="sm"
                 >
                   Previous
-                </button>
+                </Button>
                 <span>
                   {listPage} / {listTotalPages}
                 </span>
-                <button
+                <Button
                   onClick={() => setListPage((p) => Math.min(listTotalPages, p + 1))}
                   disabled={listPage >= listTotalPages || listLoading}
-                  className="px-3 py-1 rounded-lg border border-[hsl(var(--border))] disabled:opacity-40 hover:bg-[hsl(var(--muted))]/30 transition-colors"
+                  variant="outline"
+                  size="sm"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           </>
