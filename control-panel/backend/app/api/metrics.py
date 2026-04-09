@@ -247,33 +247,31 @@ async def overview_metrics(
     """
     since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
 
-    # Use func.count() and func.sum() to perform aggregations at the database level.
-    # This reduces data transfer and memory usage by avoiding fetching full ORM objects.
-    active_agents_q = await session.exec(
-        select(func.count(Agent.id)).where(col(Agent.status).in_(["online", "working"]))
-    )
-    active_agents = active_agents_q.one()
+    # BOLT OPTIMIZATION: Use database-level aggregations (count/sum) instead of
+    # fetching full ORM objects into Python just to count/sum them.
+    # This prevents O(N) memory overhead and significantly reduces data transfer.
 
-    pending_approvals_q = await session.exec(
-        select(func.count(Approval.id)).where(Approval.status == "pending")
+    active_agents_query = select(func.count(Agent.id)).where(
+        col(Agent.status).in_(["online", "working"])
     )
-    pending_approvals = pending_approvals_q.one()
+    active_agents = (await session.exec(active_agents_query)).one()
 
-    tasks_q = await session.exec(
-        select(func.count(Task.id)).where(
-            col(Task.status).in_(["inbox", "in_progress", "review"])
-        )
+    pending_approvals_query = select(func.count(Approval.id)).where(
+        Approval.status == "pending"
     )
-    open_tasks = tasks_q.one()
+    pending_approvals = (await session.exec(pending_approvals_query)).one()
 
-    tokens_24h_q = await session.exec(
-        select(func.sum(Metric.value)).where(
-            col(Metric.metric_type) == "tokens_used",
-            col(Metric.period_start) >= since,
-        )
+    open_tasks_query = select(func.count(Task.id)).where(
+        col(Task.status).in_(["inbox", "in_progress", "review"])
     )
-    # Ensure we return 0.0 if there are no matching metrics.
-    tokens_24h = tokens_24h_q.one() or 0.0
+    open_tasks = (await session.exec(open_tasks_query)).one()
+
+    tokens_sum_query = select(func.sum(Metric.value)).where(
+        col(Metric.metric_type) == "tokens_used",
+        col(Metric.period_start) >= since,
+    )
+    tokens_sum_val = (await session.exec(tokens_sum_query)).one()
+    tokens_24h = float(tokens_sum_val or 0.0)
 
 
 @router.get("/throughput", response_model=ThroughputResponse)
