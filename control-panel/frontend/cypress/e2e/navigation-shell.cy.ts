@@ -16,7 +16,7 @@ const CORE_ROUTES = [
 const SESSION_TOKEN_KEY = "panel_token";
 
 function sidebarLink(href: string) {
-  return cy.get(`aside nav a[href="${href}"]`).first();
+  return cy.get(`aside nav a[href="${href}"]`).filter(":visible").first();
 }
 
 function assertNoHorizontalOverflow() {
@@ -210,9 +210,9 @@ describe("Shell navigation smoke", () => {
 
     cy.get("aside").should("have.class", "-translate-x-full");
     cy.get('[aria-label="Abrir menu"]').should("be.visible").click();
-    sidebarLink("/sessions").should("be.visible");
+    sidebarLink("/sessions").scrollIntoView().should("be.visible");
 
-    sidebarLink("/sessions").should("be.visible").click();
+    sidebarLink("/sessions").scrollIntoView().should("be.visible").click();
     cy.location("pathname").should("eq", "/sessions");
     cy.get("aside").should("have.class", "-translate-x-full");
 
@@ -225,7 +225,7 @@ describe("Shell navigation smoke", () => {
     cy.get("aside").should("have.class", "-translate-x-full");
 
     cy.get('[aria-label="Abrir menu"]').click();
-    sidebarLink("/monitoring").should("be.visible").click();
+    sidebarLink("/monitoring").scrollIntoView().should("be.visible").click();
     cy.location("pathname").should("eq", "/monitoring");
     cy.contains("Monitoring Control Panel").should("be.visible");
     assertPanelSession();
