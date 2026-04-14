@@ -34,7 +34,6 @@ from pydantic import BaseModel
 
 from app.api.deps import CurrentUser
 from app.core.database import get_session
-from app.api.deps import CurrentUser
 from app.services.governance_engine import GovernanceEngine
 from app.services.cost_tracker import CostTracker
 
@@ -251,7 +250,6 @@ async def check_budget(
     _: CurrentUser,
     tier: str = Query("medium", pattern="^(local|medium|premium)$"),
     session: AsyncSession = Depends(get_session),
-    tier: str = Query("medium", pattern="^(local|medium|premium)$"),
 ) -> dict:
     """
     Check if agent has budget available for task tier.
@@ -281,7 +279,6 @@ async def get_agent_spending(
     _: CurrentUser,
     days: int = Query(30, ge=1, le=365),
     session: AsyncSession = Depends(get_session),
-    days: int = Query(30, ge=1, le=365),
 ) -> dict:
     """
     Get agent's spending summary.
@@ -307,7 +304,6 @@ async def get_team_spending(
     _: CurrentUser,
     days: int = Query(30, ge=1, le=365),
     session: AsyncSession = Depends(get_session),
-    days: int = Query(30, ge=1, le=365),
 ) -> dict:
     """
     Get team-wide spending summary.
